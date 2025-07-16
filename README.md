@@ -8,7 +8,7 @@ Database Structure
 
 - Admin panel
 
-CREATE TABLE users (
+CREATE TABLE admin_users (
 user_id INT AUTO_INCREMENT PRIMARY KEY,
 name VARCHAR(100) NOT NULL,
 email VARCHAR(100) NOT NULL UNIQUE,
@@ -47,7 +47,7 @@ quantity_in INT NOT NULL,
 received_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 warehouse_user INT NOT NULL,
 FOREIGN KEY (item_code) REFERENCES styles(item_code) ON DELETE CASCADE,
-FOREIGN KEY (warehouse_user) REFERENCES users(user_id) ON DELETE CASCADE
+FOREIGN KEY (warehouse_user) REFERENCES admin_users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE issuing (
@@ -57,7 +57,7 @@ quantity_out INT NOT NULL,
 issued_date DATETIME DEFAULT CURRENT_TIMESTAMP,
 warehouse_user INT NOT NULL,
 FOREIGN KEY (item_code) REFERENCES styles(item_code) ON DELETE CASCADE,
-FOREIGN KEY (warehouse_user) REFERENCES users(user_id) ON DELETE CASCADE
+FOREIGN KEY (warehouse_user) REFERENCES admin_users(user_id) ON DELETE CASCADE
 );
 
 
