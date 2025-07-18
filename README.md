@@ -33,10 +33,8 @@ size VARCHAR(50),
 color VARCHAR(50),
 fit VARCHAR(50),
 material VARCHAR(100),
-style_type VARCHAR(50),
 image VARCHAR(255),
 price DECIMAL(10,2),
-quantity INT DEFAULT 0,
 FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
 );
 
