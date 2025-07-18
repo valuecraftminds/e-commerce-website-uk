@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Collapse, Nav } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -152,16 +152,14 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
                 Settings
               </Nav.Link>
             </Nav.Item>
-            <Nav.Item className="mt-4">
               <Button 
-                variant="none"
-                className="nav-link text-danger border-0 bg-transparent w-100 text-start"
+                variant="outline-danger"
+                className="w-100 text-start mt-2 logout-btn"
                 onClick={handleLogout}
               >
                 <i className="bi bi-box-arrow-right me-2"></i>
                 Logout
               </Button>
-            </Nav.Item>
           </Nav>
         </nav>
       </div>

@@ -241,6 +241,29 @@
   border-radius: 0.25rem;
 }
 
+.logout-btn {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+  border: none !important;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white !important;
+  font-size: 0.9rem;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 15px rgba(229, 62, 62, 0.2);
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #c53030 0%, #9c2626 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(229, 62, 62, 0.3);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 280px;

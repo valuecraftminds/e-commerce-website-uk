@@ -34,7 +34,7 @@ export default function Header() {
             )}
             
             <Navbar.Brand className="mb-0 text-muted">
-              E-Commerce Admin Panel
+              Admin Panel
             </Navbar.Brand>
           </div>
 

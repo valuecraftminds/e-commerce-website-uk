@@ -1,3 +1,5 @@
+import 'bootstrap-icons/font/bootstrap-icons.css'; // Add this line
+import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client'; // if React 18
 import { BrowserRouter } from 'react-router-dom';
