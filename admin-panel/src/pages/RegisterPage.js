@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import '../styles/RegisterPage.css';
+import { Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -23,6 +25,10 @@ export default function RegisterPage() {
   });
   const [showRules, setShowRules] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const navigate = useNavigate();
 
   // prevent entering numbers or symbols to name field
   const handleNameChange = (e) => {
@@ -84,7 +90,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        alert('User registered successfully!');
+        setSuccessMsg('User registered successfully!');
         setFormData({
           name: '',
           email: '',
@@ -93,11 +99,11 @@ export default function RegisterPage() {
           password: ''
         });
       } else {
-        alert(data.message || 'Registration failed');
+        setErrorMsg(data.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Error registering user:', error);
-      alert('Something went wrong');
+      setErrorMsg('Something went wrong');
     } finally {
       setIsLoading(false);
     }
@@ -107,8 +113,28 @@ export default function RegisterPage() {
     <div className="register-container">
       <Container>
         <Card className="register-card">
+
+          <Button 
+            variant="primary" 
+            className=" btn-custom-primary" 
+            onClick={() => navigate('/dashboard/users')}
+          >
+            ← Back
+          </Button>
+
           <Card.Body>
             <h2 className="register-title">Add New Admin</h2>
+            
+            {successMsg && (
+              <div className="mb-3 text-success text-center fw-semibold">
+                {successMsg}
+              </div>
+            )}
+            {errorMsg && (
+              <Alert variant="danger" className="text-center">
+                {errorMsg}
+              </Alert>
+            )}
 
             <Form className="register-form" onSubmit={handleSubmit}>
               <Row>

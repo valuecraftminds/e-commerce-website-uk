@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Button, Card, Container, Form, Spinner } from 'react-bootstrap';
+import { Button, Card, Container, Form, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/LoginPage.css';
@@ -16,6 +16,7 @@ export default function LoginPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -54,11 +55,11 @@ export default function LoginPage() {
             break;
           }
         } else {
-        alert(data.message || "Login failed");
+          setErrorMsg(data.message || "Login failed");
         }
     } catch (error) {
       console.error("Error during login:", error);
-      alert("Something went wrong. Please try again.");
+      setErrorMsg("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +77,12 @@ export default function LoginPage() {
           <Card.Body>
             <h1 className="login-title">Welcome Back</h1>
             
+            {errorMsg && (
+              <Alert variant="danger" className="text-center">
+                {errorMsg}
+              </Alert>
+            )}
+
             <Form className="login-form" onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
                 <Form.Label htmlFor="email">Email Address</Form.Label>

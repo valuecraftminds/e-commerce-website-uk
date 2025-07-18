@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const e = require('express');
 require('dotenv').config();
 
 const app = express();
@@ -117,6 +118,8 @@ app.post('/api/register', async (req, res) => {
 });
 
 // User Login Endpoint
+const dbPromise = db.promise();
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -157,6 +160,76 @@ app.post('/api/login', async (req, res) => {
     });
   });
 })
+
+// display all admin users
+app.get('/api/viewAdmins', (req, res) => {
+  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    res.json({ success: true, admins: results });
+  });
+});
+
+// Get admin by ID
+app.get('/api/admin/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const [result] = await dbPromise.query('SELECT * FROM admin_users WHERE user_id = ?', [user_id]);
+    if (result.length === 0) {
+      return res.json({ success: false, message: 'Admin not found' });
+    }
+    res.json({ success: true, admin: result[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Server error' });
+  }
+});
+
+// Edit admin details
+app.put('/api/editAdmin/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  const { name, email, phone_number, role } = req.body;
+
+  if (!name || !email || !phone_number || !role) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  try {
+    const [result] = await dbPromise.query(
+      'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ? WHERE user_id = ?',
+      [name, email, phone_number, role, user_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Admin not found' });
+    }
+
+    res.json({ success: true, message: 'Admin updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Server error' });
+  }
+});
+
+
+// Delete admin
+app.delete('/api/deleteAdmin/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const [result] = await dbPromise.query('DELETE FROM admin_users WHERE user_id = ?', [user_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Admin not found or already deleted' });
+    }
+
+    res.json({ success: true, message: 'Admin deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 
 
