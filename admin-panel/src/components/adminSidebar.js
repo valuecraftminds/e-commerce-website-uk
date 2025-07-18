@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Collapse, Nav } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/authContext';
 import '../styles/AdminSidebar.css';
 
 export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {

@@ -2,13 +2,13 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Container, Card, Row, Col } from 'react-bootstrap';
 import RegisterPage from './RegisterPage';
-import Header from '../components/Header';
+import Header from '../components/header';
 import '../styles/AdminDashboard.css';
 
 export default function AdminDashboard() {
   return (
     <div className="dashboard-container">
-      <Header data-testid="header-toggle-button" />
+      <Header role='Admin' data-testid="header-toggle-button" />
       
       <main className="dashboard-content">
         <Routes>

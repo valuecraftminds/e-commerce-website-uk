@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Button, Card, Container, Form, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/authContext';
 import '../styles/LoginPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -32,10 +32,30 @@ export default function LoginPage() {
 
       if (response.ok && data.success) {
         login(data.token);
-        navigate('/dashboard');
-      } else {
+        const role = data.user.role;
+        console.log("User role:", role);
+
+        // Navigate based on role
+        switch (role) {
+          case 'Admin':
+            navigate('/dashboard');
+            break;
+          case 'PDC':
+            navigate('/pdcDashboard');
+            break;
+          case 'Warehouse_GRN':
+            navigate('/warehouseGRNDashboard');
+            break;
+          case 'Warehouse_Issuing':
+            navigate('/warehouseIssuingDashboard');
+            break;
+          case 'order':
+            navigate('/orderingDashboard');
+            break;
+          }
+        } else {
         alert(data.message || "Login failed");
-      }
+        }
     } catch (error) {
       console.error("Error during login:", error);
       alert("Something went wrong. Please try again.");

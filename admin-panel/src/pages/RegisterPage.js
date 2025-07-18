@@ -72,6 +72,8 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log("Form Data:", formData.role);
+
     try {
       const response = await fetch(`${BASE_URL}/api/register`, {
         method: 'POST',
