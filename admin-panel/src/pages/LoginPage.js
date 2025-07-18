@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Button, Card, Container, Form, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/authContext';
+import { AuthContext } from '../context/AuthContext';
 import '../styles/LoginPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;

@@ -1,13 +1,13 @@
 import React, { useContext, useState } from 'react';
 import { Button, Container, Navbar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/authContext';
+import { AuthContext } from '../context/AuthContext';
 import '../styles/Header.css';
-import AdminSidebar from './adminSidebar';
-import OrderSidebar from './orderSidebar';
-import PdcSidebar from './pdcSidebar';
-import WarehouseGRNSidebar from './warehouseGRNSidebar';
-import WarehouseIssuingSidebar from './warehouseIssuingSidebar';
+import AdminSidebar from './AdminSidebar';
+import OrderSidebar from './OrderSidebar';
+import PdcSidebar from './PdcSidebar';
+import WarehouseGRNSidebar from './WarehouseGRNSidebar';
+import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
 
 export default function Header( {role} ) {
   const navigate = useNavigate();
