@@ -1,9 +1,9 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Container, Card, Row, Col } from 'react-bootstrap';
-import RegisterPage from './RegisterPage';
+import ViewAdmins from './ViewAdmins';
 import Header from '../components/Header';
-import Category from '../pages/Category';
+import Category from './Category';
 import '../styles/AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -14,9 +14,8 @@ export default function AdminDashboard() {
       <main className="dashboard-content">
         <Routes>
           <Route path="" element={<DashboardHome />} />
-          <Route path="users" element={<RegisterPage />} />
+          <Route path="users" element={<ViewAdmins />} />
           <Route path="category" element={<Category />} />
-
         </Routes>
       </main>
     </div>

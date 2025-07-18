@@ -1,0 +1,53 @@
+.admin-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 75%;
+  margin: 2rem auto;
+}
+
+.admin-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+
+  /* Gradient text effect */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-weight: bold;
+}
+
+th, td, tr {
+  text-align: left;
+  border: 1px solid #9c9999;
+}
+
+th.table-header {
+    background-color: #667eea;
+    text-align: center;
+}
+
+tbody tr:hover td {
+  background-color: #dbd8df;
+  color: black;
+  transition: background-color 0.3s ease;
+}
+
+button{
+  color: white;
+}
+
+DeleteAdmin {
+  background-color: #ff4d4d;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
