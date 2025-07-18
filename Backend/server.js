@@ -158,6 +158,209 @@ app.post('/api/login', async (req, res) => {
   });
 })
 
+
+
+// Category Management Endpoints
+
+// Get all categories with their subcategories
+app.get('/api/categories', (req, res) => {
+  const sql = `
+    SELECT 
+      c1.category_id,
+      c1.category_name,
+      c1.parent_id,
+      c2.category_name as parent_name
+    FROM categories c1
+    LEFT JOIN categories c2 ON c1.parent_id = c2.category_id
+    ORDER BY COALESCE(c1.parent_id, c1.category_id), c1.category_id
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+
+    // Organize categories hierarchically
+    const categories = [];
+    const categoryMap = {};
+
+    results.forEach(row => {
+      if (!row.parent_id) {
+        // Main category
+        categoryMap[row.category_id] = {
+          category_id: row.category_id,
+          category_name: row.category_name,
+          subcategories: []
+        };
+        categories.push(categoryMap[row.category_id]);
+      } else {
+        // Subcategory
+        if (categoryMap[row.parent_id]) {
+          categoryMap[row.parent_id].subcategories.push({
+            category_id: row.category_id,
+            category_name: row.category_name,
+            parent_id: row.parent_id
+          });
+        }
+      }
+    });
+
+    res.json({ success: true, categories });
+  });
+});
+
+// Add new category
+app.post('/api/categories', (req, res) => {
+  const { category_name, parent_id } = req.body;
+
+  if (!category_name) {
+    return res.status(400).json({ success: false, message: 'Category name is required' });
+  }
+
+  // Check if category already exists
+  const checkSql = 'SELECT * FROM categories WHERE category_name = ? AND parent_id = ?';
+  db.query(checkSql, [category_name, parent_id || null], (checkErr, checkResults) => {
+    if (checkErr) {
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+
+    if (checkResults.length > 0) {
+      return res.status(409).json({ success: false, message: 'Category already exists' });
+    }
+
+    // Insert new category
+    const insertSql = 'INSERT INTO categories (category_name, parent_id) VALUES (?, ?)';
+    db.query(insertSql, [category_name, parent_id || null], (insertErr, results) => {
+      if (insertErr) {
+        console.error('Insert error:', insertErr);
+        return res.status(500).json({ success: false, message: 'Error adding category' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Category added successfully',
+        category_id: results.insertId
+      });
+    });
+  });
+});
+
+// Update category
+app.put('/api/categories/:id', (req, res) => {
+  const { id } = req.params;
+  const { category_name, parent_id } = req.body;
+
+  if (!category_name) {
+    return res.status(400).json({ success: false, message: 'Category name is required' });
+  }
+
+  // Prevent setting a category as its own parent or creating circular references
+  if (parent_id && parseInt(parent_id) === parseInt(id)) {
+    return res.status(400).json({ success: false, message: 'A category cannot be its own parent' });
+  }
+
+  // Check if the new parent exists (if parent_id is provided)
+  if (parent_id) {
+    const checkParentSql = 'SELECT category_id FROM categories WHERE category_id = ?';
+    db.query(checkParentSql, [parent_id], (checkErr, checkResults) => {
+      if (checkErr) {
+        return res.status(500).json({ success: false, message: 'Database error checking parent category' });
+      }
+      
+      if (checkResults.length === 0) {
+        return res.status(400).json({ success: false, message: 'Parent category does not exist' });
+      }
+
+      // Check for duplicate category name within the same parent
+      const duplicateCheckSql = 'SELECT category_id FROM categories WHERE category_name = ? AND parent_id = ? AND category_id != ?';
+      db.query(duplicateCheckSql, [category_name, parent_id, id], (dupErr, dupResults) => {
+        if (dupErr) {
+          return res.status(500).json({ success: false, message: 'Database error checking duplicates' });
+        }
+
+        if (dupResults.length > 0) {
+          return res.status(409).json({ success: false, message: 'Category name already exists under this parent category' });
+        }
+
+        // Update the category
+        updateCategory();
+      });
+    });
+  } else {
+    // Check for duplicate main category name
+    const duplicateCheckSql = 'SELECT category_id FROM categories WHERE category_name = ? AND parent_id IS NULL AND category_id != ?';
+    db.query(duplicateCheckSql, [category_name, id], (dupErr, dupResults) => {
+      if (dupErr) {
+        return res.status(500).json({ success: false, message: 'Database error checking duplicates' });
+      }
+
+      if (dupResults.length > 0) {
+        return res.status(409).json({ success: false, message: 'Main category name already exists' });
+      }
+
+      updateCategory();
+    });
+  }
+
+  function updateCategory() {
+    const sql = 'UPDATE categories SET category_name = ?, parent_id = ? WHERE category_id = ?';
+    db.query(sql, [category_name, parent_id || null, id], (err, results) => {
+      if (err) {
+        console.error('Update error:', err);
+        return res.status(500).json({ success: false, message: 'Database error updating category' });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Category not found' });
+      }
+
+      res.json({ success: true, message: 'Category updated successfully' });
+    });
+  }
+});
+
+// Delete category
+app.delete('/api/categories/:id', (req, res) => {
+  const { id } = req.params;
+
+  // Check if category has subcategories
+  const checkSubcategoriesSql = 'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?';
+  db.query(checkSubcategoriesSql, [id], (checkErr, checkResults) => {
+    if (checkErr) {
+      return res.status(500).json({ success: false, message: 'Database error checking subcategories' });
+    }
+
+    const subcategoryCount = checkResults[0].count;
+    if (subcategoryCount > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot delete category. It has ${subcategoryCount} subcategories. Please delete subcategories first.` 
+      });
+    }
+
+    // Delete the category
+    const sql = 'DELETE FROM categories WHERE category_id = ?';
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error('Delete error:', err);
+        return res.status(500).json({ success: false, message: 'Database error deleting category' });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Category not found' });
+      }
+
+      res.json({ success: true, message: 'Category deleted successfully' });
+    });
+  });
+});
+
+
+
+
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

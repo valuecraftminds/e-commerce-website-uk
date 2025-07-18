@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { Container, Card, Row, Col } from 'react-bootstrap';
 import RegisterPage from './RegisterPage';
 import Header from '../components/Header';
+import Category from '../pages/Category';
 import '../styles/AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -14,6 +15,8 @@ export default function AdminDashboard() {
         <Routes>
           <Route path="" element={<DashboardHome />} />
           <Route path="users" element={<RegisterPage />} />
+          <Route path="category" element={<Category />} />
+
         </Routes>
       </main>
     </div>
