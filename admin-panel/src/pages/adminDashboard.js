@@ -1,49 +1,74 @@
-import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-
-import AdminSidebar from '../components/adminSidebar';
-import AdminRegistration from './adminRegistration';
+import React from 'react';
+import { Route, Routes } from 'react-router-dom';
+import { Container, Card, Row, Col } from 'react-bootstrap';
+import RegisterPage from './RegisterPage';
+import Header from '../components/Header';
+import '../styles/AdminDashboard.css';
 
 export default function AdminDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
   return (
-    <div className="d-flex">
+    <div className="dashboard-container">
+      <Header data-testid="header-toggle-button" />
       
-      {/* Sidebar component */}
-      <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-      {/* Main content wrapper */}
-      <div
-        className="flex-grow-1"
-        style={{
-          marginLeft: sidebarOpen ? '250px' : '0',
-          transition: 'margin-left 0.3s ease-in-out',
-          minHeight: '100vh',
-        }}
-      >
-        {/* toggle button */}
-        <nav className="navbar">
-          {!sidebarOpen && (
-            <button
-              className="btn btn-primary"
-              onClick={toggleSidebar}
-            >
-              &#9776;
-            </button>
-          )}
-        </nav>
-
-        <main className="col-12 col-md-9 p-4">
-          <Routes>
-            <Route path="" element={<h2>Admin Dashboard</h2>} />
-            <Route path="users" element={<AdminRegistration />} />
-          </Routes>
-        </main>
-      </div>
+      <main className="dashboard-content">
+        <Routes>
+          <Route path="" element={<DashboardHome />} />
+          <Route path="users" element={<RegisterPage />} />
+        </Routes>
+      </main>
     </div>
+  );
+}
+
+function DashboardHome() {
+  return (
+    <Container fluid>
+      <Card className="dashboard-card">
+        <Card.Body>
+          <div className="welcome-section">
+            <h1 className="welcome-title">Welcome to Admin Dashboard</h1>
+            <p className="welcome-subtitle">
+              Manage your e-commerce platform efficiently with our comprehensive admin tools
+            </p>
+            
+            <Row className="stats-grid">
+              <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-4">
+                <Card className="stat-card h-100">
+                  <Card.Body className="text-center">
+                    <div className="stat-number">12</div>
+                    <div className="stat-label">Total Users</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-4">
+                <Card className="stat-card h-100">
+                  <Card.Body className="text-center">
+                    <div className="stat-number">45</div>
+                    <div className="stat-label">Categories</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-4">
+                <Card className="stat-card h-100">
+                  <Card.Body className="text-center">
+                    <div className="stat-number">128</div>
+                    <div className="stat-label">Products</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-4">
+                <Card className="stat-card h-100">
+                  <Card.Body className="text-center">
+                    <div className="stat-number">89</div>
+                    <div className="stat-label">Orders</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </div>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 }
 
