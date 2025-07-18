@@ -9,7 +9,7 @@ import '../styles/AdminDashboard.css';
 export default function AdminDashboard() {
   return (
     <div className="dashboard-container">
-      <Header data-testid="header-toggle-button" />
+      <Header role='Admin' data-testid="header-toggle-button" />
       
       <main className="dashboard-content">
         <Routes>

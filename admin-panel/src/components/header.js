@@ -4,8 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Header.css';
 import AdminSidebar from './AdminSidebar';
+import OrderSidebar from './OrderSidebar';
+import PdcSidebar from './PdcSidebar';
+import WarehouseGRNSidebar from './WarehouseGRNSidebar';
+import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
 
-export default function Header() {
+export default function Header( {role} ) {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,8 +58,25 @@ export default function Header() {
       </Navbar>
       
       {isLoggedIn && (
-        <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      )}
+        <>
+          {role === 'Admin' && (
+            <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          )}
+          {role === 'order' && (
+            <OrderSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          )}
+          {role === 'PDC' && (
+            <PdcSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          )}
+          {role === 'Warehouse_GRN' && (
+            <WarehouseGRNSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          )}
+          {role === 'Warehouse_Issuing' && (
+            <WarehouseIssuingSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          )}
+
+        </>
+    )}
     </>
   );
 }
