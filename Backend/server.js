@@ -236,7 +236,7 @@ app.delete('/api/deleteAdmin/:user_id', async (req, res) => {
 // Category Management Endpoints
 
 // Get all categories with their subcategories
-app.get('/api/categories', (req, res) => {
+app.get('/api/get-categories', (req, res) => {
   const sql = `
     SELECT 
       c1.category_id,
@@ -284,7 +284,7 @@ app.get('/api/categories', (req, res) => {
 });
 
 // Add new category
-app.post('/api/categories', (req, res) => {
+app.post('/api/add-categories', (req, res) => {
   const { category_name, parent_id } = req.body;
 
   if (!category_name) {
@@ -320,7 +320,7 @@ app.post('/api/categories', (req, res) => {
 });
 
 // Update category
-app.put('/api/categories/:id', (req, res) => {
+app.put('/api/update-categories/:id', (req, res) => {
   const { id } = req.params;
   const { category_name, parent_id } = req.body;
 
@@ -394,7 +394,7 @@ app.put('/api/categories/:id', (req, res) => {
 });
 
 // Delete category
-app.delete('/api/categories/:id', (req, res) => {
+app.delete('/api/delete-categories/:id', (req, res) => {
   const { id } = req.params;
 
   // Check if category has subcategories
@@ -428,6 +428,8 @@ app.delete('/api/categories/:id', (req, res) => {
     });
   });
 });
+
+
 
 
 

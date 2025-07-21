@@ -19,9 +19,11 @@ created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 
 CREATE TABLE categories (
 category_id INT AUTO_INCREMENT PRIMARY KEY,
+company_code VARCHAR(10) NULL,
 category_name VARCHAR(100) NOT NULL,
 parent_id INT NULL,
 FOREIGN KEY (parent_id) REFERENCES categories(category_id) ON DELETE CASCADE
+
 );
 
 CREATE TABLE styles (

@@ -1,10 +1,11 @@
 import React from 'react';
+import { Card, Container } from 'react-bootstrap';
 import { Route, Routes } from 'react-router-dom';
-import { Container, Card, Row, Col } from 'react-bootstrap';
-import ViewAdmins from './ViewAdmins';
 import Header from '../components/Header';
-import Category from './Category';
 import '../styles/AdminDashboard.css';
+import Category from './Category';
+import Style from './Style';
+import ViewAdmins from './ViewAdmins';
 
 export default function AdminDashboard() {
   return (
@@ -16,6 +17,8 @@ export default function AdminDashboard() {
           <Route path="" element={<DashboardHome />} />
           <Route path="users" element={<ViewAdmins />} />
           <Route path="category" element={<Category />} />
+          <Route path="style" element={<Style />} />
+
         </Routes>
       </main>
     </div>
@@ -33,7 +36,7 @@ function DashboardHome() {
               Manage your e-commerce platform efficiently with our comprehensive admin tools
             </p>
             
-            <Row className="stats-grid">
+            {/* <Row className="stats-grid">
               <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-4">
                 <Card className="stat-card h-100">
                   <Card.Body className="text-center">
@@ -66,7 +69,7 @@ function DashboardHome() {
                   </Card.Body>
                 </Card>
               </Col>
-            </Row>
+            </Row> */}
           </div>
         </Card.Body>
       </Card>

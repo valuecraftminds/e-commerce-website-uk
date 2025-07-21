@@ -153,8 +153,8 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
               </Nav.Link>
             </Nav.Item>
               <Button 
-                variant="outline-danger"
-                className="w-100 text-start mt-2 logout-btn"
+                
+                className=" text-start mt-2 logout-btn"
                 onClick={handleLogout}
               >
                 <i className="bi bi-box-arrow-right me-2"></i>

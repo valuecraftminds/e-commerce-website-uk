@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Container, Form, Modal, Spinner } from 'react-bootstrap';
+import { Accordion, Alert, Badge, Button, Card, Container, Form, Modal, Spinner } from 'react-bootstrap';
 import '../styles/Category.css';
     
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -17,11 +17,12 @@ export default function Category() {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [formErrors, setFormErrors] = useState({});
+  const [activeAccordionKey, setActiveAccordionKey] = useState(null);
 
   const fetchCategories = useCallback(async () => {
     setFetchLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/categories`);
+      const response = await fetch(`${BASE_URL}/api/get-categories`);
       const data = await response.json();
       
       if (data.success) {
@@ -71,7 +72,7 @@ export default function Category() {
     try {
       if (editingCategory) {
         // Handle editing existing category
-        const url = `${BASE_URL}/api/categories/${editingCategory.category_id}`;
+        const url = `${BASE_URL}/api/update-categories/${editingCategory.category_id}`;
         const response = await fetch(url, {
           method: 'PUT',
           headers: {
@@ -99,7 +100,7 @@ export default function Category() {
           
           if (validSubcategories.length > 0) {
             const subPromises = validSubcategories.map(subcategory => 
-              fetch(`${BASE_URL}/api/categories`, {
+              fetch(`${BASE_URL}/api/add-categories`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ export default function Category() {
           
           if (validSubcategories.length === 0) {
             // Create main category only
-            const response = await fetch(`${BASE_URL}/api/categories`, {
+            const response = await fetch(`${BASE_URL}/api/add-categories`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -157,7 +158,7 @@ export default function Category() {
             }
           } else {
             // Create main category first, then subcategories
-            const mainResponse = await fetch(`${BASE_URL}/api/categories`, {
+            const mainResponse = await fetch(`${BASE_URL}/api/add-categories`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -176,7 +177,7 @@ export default function Category() {
               
               // Create subcategories under the new main category
               const subPromises = validSubcategories.map(subcategory => 
-                fetch(`${BASE_URL}/api/categories`, {
+                fetch(`${BASE_URL}/api/add-categories`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -242,7 +243,7 @@ export default function Category() {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/categories/${categoryId}`, {
+      const response = await fetch(`${BASE_URL}/api/delete-categories/${categoryId}`, {
         method: 'DELETE',
       });
 
@@ -348,17 +349,26 @@ export default function Category() {
             className="btn-custom-primary"
             size="lg"
           >
-            <i className="fas fa-plus me-2"></i>
+            <i className="bi bi-plus me-2"></i>
             Add Category
           </Button>
         </div>
 
-        <div className="quick-actions mb-4">
-          <div className="d-flex gap-2">
-            <div className="ms-auto">
-              <Badge bg="info" className="fs-6">
-                {categories.length} Categories
-              </Badge>
+        <div className="category-stats">
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-number">{getMainCategories().length}</div>
+              <div className="stat-label">Main Categories</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">
+                {categories.reduce((total, cat) => total + (cat.subcategories?.length || 0), 0)}
+              </div>
+              <div className="stat-label">Subcategories</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">{categories.length}</div>
+              <div className="stat-label">Total Categories</div>
             </div>
           </div>
         </div>
@@ -366,7 +376,7 @@ export default function Category() {
 
       {message.text && (
         <Alert variant={message.type === 'success' ? 'success' : 'danger'} dismissible onClose={() => setMessage({ type: '', text: '' })} className="custom-alert">
-          <i className={`fas ${message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
+          <i className={`bi ${message.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
           {message.text}
         </Alert>
       )}
@@ -375,7 +385,7 @@ export default function Category() {
         <div className="empty-state">
           <div className="empty-state-content">
             <div className="empty-state-icon">
-              <i className="fas fa-sitemap"></i>
+              <i className="bi bi-diagram-3"></i>
             </div>
             <h3>No categories found</h3>
             <p>Start organizing your products by creating your first category</p>
@@ -385,104 +395,154 @@ export default function Category() {
               className="btn-custom-primary"
               size="lg"
             >
-              <i className="fas fa-plus me-2"></i>
+              <i className="bi bi-plus me-2"></i>
               Create Your First Category
             </Button>
           </div>
         </div>
       ) : (
-        <div className="categories-simple-list">
-          <Card className="category-list-card">
+        <div className="category-accordion-container">
+          <Card className="accordion-wrapper-card">
             <Card.Body className="p-0">
-              {categories.map(category => (
-                <div key={category.category_id}>
-                  {/* Main Category */}
-                  <div className="category-list-item main-category-item">
-                    <div className="category-item-content">
-                      <div className="category-name-section">
-                        <h5 className="category-name-text">
-                          <i className="fas fa-folder me-2"></i>
-                          {category.category_name}
-                        </h5>
-                        <div className="category-badges">
-                          <Badge bg="primary" className="me-2">Main Category</Badge>
-                          {category.subcategories && category.subcategories.length > 0 && (
-                            <Badge bg="secondary">
-                              {category.subcategories.length} Subcategories
-                            </Badge>
-                          )}
+              <Accordion 
+                activeKey={activeAccordionKey} 
+                onSelect={(key) => setActiveAccordionKey(key)}
+                className="category-accordion"
+              >
+                {getMainCategories().map((category, index) => (
+                  <Accordion.Item 
+                    eventKey={category.category_id.toString()} 
+                    key={category.category_id}
+                    className="category-accordion-item"
+                  >
+                    <Accordion.Header className="category-accordion-header">
+                      <div className="accordion-header-content">
+                        <div className="category-icon-section">
+                          <i className="bi bi-folder category-folder-icon"></i>
+                        </div>
+                        <div className="category-header-info">
+                          <h5 className="category-header-title">{category.category_name}</h5>
+                          <div className="category-header-badges">
+                            <Badge bg="primary" className="me-2">Main Category</Badge>
+                            {category.subcategories && category.subcategories.length > 0 && (
+                              <Badge bg="secondary">
+                                {category.subcategories.length} Subcategories
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="category-header-actions" onClick={(e) => e.stopPropagation()}>
+                          <Button 
+                            variant="outline-success" 
+                            size="sm" 
+                            className="me-2 action-btn-header"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddSubcategory(category);
+                            }}
+                            title="Add Subcategory"
+                          >
+                            <i className="bi bi-plus"></i>
+                          </Button>
+                          <Button 
+                            variant="outline-warning" 
+                            size="sm" 
+                            className="me-2 action-btn-header"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(category);
+                            }}
+                            title="Edit Category"
+                          >
+                            <i className="bi bi-pencil"></i>
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            className="action-btn-header"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(category.category_id);
+                            }}
+                            title="Delete Category"
+                          >
+                            <i className="bi bi-trash"></i>
+                          </Button>
                         </div>
                       </div>
-                      <div className="category-actions">
-                        <Button 
-                          variant="outline-success" 
-                          size="sm" 
-                          className="me-2"
-                          onClick={() => handleAddSubcategory(category)}
-                          title="Add Subcategory"
-                        >
-                          <i className="fas fa-plus"></i>
-                        </Button>
-                        <Button 
-                          variant="outline-warning" 
-                          size="sm" 
-                          className="me-2"
-                          onClick={() => handleEdit(category)}
-                          title="Edit Category"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm"
-                          onClick={() => handleDelete(category.category_id)}
-                          title="Delete Category"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Subcategories */}
-                  {category.subcategories && category.subcategories.length > 0 && (
-                    category.subcategories.map(sub => (
-                      <div key={sub.category_id} className="category-list-item subcategory-item">
-                        <div className="category-item-content">
-                          <div className="category-name-section">
-                            <h6 className="category-name-text subcategory-name">
-                              <i className="fas fa-folder-open me-2"></i>
-                              {sub.category_name}
-                            </h6>
-                            <div className="category-badges">
-                              <Badge bg="warning" text="dark">Subcategory</Badge>
+                    </Accordion.Header>
+                    
+                    <Accordion.Body className="category-accordion-body">
+                      {category.subcategories && category.subcategories.length > 0 ? (
+                        <div className="subcategories-list">
+                          {category.subcategories.map((subcategory, subIndex) => (
+                            <div key={subcategory.category_id} className="subcategory-card">
+                              <div className="subcategory-content">
+                                <div className="subcategory-info">
+                                  <div className="subcategory-icon">
+                                    <i className="bi bi-folder2-open"></i>
+                                  </div>
+                                  <div className="subcategory-details">
+                                    <h6 className="subcategory-title">{subcategory.category_name}</h6>
+                                    <Badge bg="warning" text="dark" className="subcategory-badge">
+                                      Subcategory
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="subcategory-actions">
+                                  <Button 
+                                    variant="outline-warning" 
+                                    size="sm" 
+                                    className="me-2 subcategory-action-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEdit(subcategory);
+                                    }}
+                                    title="Edit Subcategory"
+                                  >
+                                    <i className="bi bi-pencil"></i>
+                                  </Button>
+                                  <Button 
+                                    variant="outline-danger" 
+                                    size="sm"
+                                    className="subcategory-action-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(subcategory.category_id);
+                                    }}
+                                    title="Delete Subcategory"
+                                  >
+                                    <i className="bi bi-trash"></i>
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="category-actions">
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="no-subcategories">
+                          <div className="no-subcategories-content">
+                            <i className="bi bi-info-circle me-2"></i>
+                            <span>No subcategories found for this category.</span>
                             <Button 
-                              variant="outline-warning" 
+                              variant="outline-primary" 
                               size="sm" 
-                              className="me-2"
-                              onClick={() => handleEdit(sub)}
-                              title="Edit Subcategory"
+                              className="ms-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddSubcategory(category);
+                              }}
                             >
-                              <i className="fas fa-edit"></i>
-                            </Button>
-                            <Button 
-                              variant="outline-danger" 
-                              size="sm"
-                              onClick={() => handleDelete(sub.category_id)}
-                              title="Delete Subcategory"
-                            >
-                              <i className="fas fa-trash"></i>
+                              <i className="bi bi-plus me-1"></i>
+                              Add First Subcategory
                             </Button>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))}
+                      )}
+                    </Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
             </Card.Body>
           </Card>
         </div>

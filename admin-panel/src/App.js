@@ -2,14 +2,14 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 
-import AdminDashboard from './pages/AdminDashboard';
-import LoginPage from './pages/LoginPage';
-import ViewAdmins from './pages/ViewAdmins';
-import RegisterPage from './pages/RegisterPage';
-import EditAdmin from './pages/EditAdmins';
+import AdminDashboard from './pages/adminDashboard';
 import DeleteAdmin from './pages/DeleteAdmin';
+import EditAdmin from './pages/EditAdmins';
+import LoginPage from './pages/LoginPage';
 import OrderingDashboard from './pages/OrderingDashboard';
 import PdcDashboard from './pages/PdcDashboard';
+import RegisterPage from './pages/RegisterPage';
+import ViewAdmins from './pages/ViewAdmins';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
 
