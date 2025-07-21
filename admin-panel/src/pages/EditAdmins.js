@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Button, Alert, Spinner, Row, Col, Card, Container } from 'react-bootstrap';
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
 export default function EditAdmin() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ export default function EditAdmin() {
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    fetch(`http://localhost:8081/api/admin/${id}`)
+    fetch(`${BASE_URL}/api/admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -77,7 +79,7 @@ export default function EditAdmin() {
     setSuccessMsg('');
 
     try {
-      const res = await fetch(`http://localhost:8081/api/editAdmin/${id}`, {
+      const res = await fetch(`${BASE_URL}/api/editAdmin/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -182,7 +184,7 @@ export default function EditAdmin() {
                       required
                     >
                       <option value="">Select Role</option>
-                      <option value="admin">Admin</option>
+                      <option value="company_admin">Company Admin</option>
                       <option value="pdc">PDC</option>
                       <option value="warehouse_grn">Warehouse GRN</option>
                       <option value="warehouse_issuing">Warehouse Issuing</option>

@@ -23,7 +23,7 @@ function RegisterCompanyAdminsHome() {
     name: '',
     email: '',
     phone: '',
-    role: '',
+    role: 'Company_Admin',
     password: ''
   });
 
@@ -120,7 +120,7 @@ function RegisterCompanyAdminsHome() {
           <Button 
             variant="primary" 
             className="btn-custom-primary mb-3" 
-            onClick={() => navigate('/vcm-admin-dashboard')}
+            onClick={() => navigate('/vcm-admin-dashboard/view-company-admins')}
           >
             ← Back
           </Button>
@@ -189,25 +189,6 @@ function RegisterCompanyAdminsHome() {
                     <Form.Control.Feedback type="invalid">
                       {phoneError}
                     </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Role</Form.Label>
-                    <Form.Select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Role</option>
-                      <option value="Company_Admin">Company Admin</option>
-                      {/* <option value="pdc">PDC</option>
-                      <option value="warehouse_grn">Warehouse GRN</option>
-                      <option value="warehouse_issuing">Warehouse Issuing</option>
-                      <option value="order">Ordering</option> */}
-                    </Form.Select>
                   </Form.Group>
                 </Col>
               </Row>

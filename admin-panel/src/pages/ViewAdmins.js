@@ -66,9 +66,32 @@ export default function ViewAdmins() {
                         <td>{admin_users.Email}</td>
                         <td>{admin_users.Phone}</td>
                         <td>{admin_users.Role}</td>
-                        <td>
-                            <button className="btn-custom-primary" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}>Edit</button>
+                        {/* <td>
+                            <button className="btn-custom-primary" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}>
+                                <i className='bi-pencil'></i>
+                            </button>
                             <DeleteAdmin adminId={admin_users.user_id} onDeleteSuccess={() => setAdmins(admins.filter(admin => admin.user_id !== admin_users.user_id))} />
+                        </td> */}
+
+                        {/* hide the edit and delete buttons for VCM_Admin role */}
+                        <td>
+                        {admin_users.Role !== 'VCM_Admin' && (
+                            <div className="d-flex align-items-center gap-2 justify-content-center">
+                            <button
+                                className="btn-custom-primary"
+                                onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}
+                            >
+                                <i className="bi bi-pencil"></i>
+                            </button>
+
+                            <DeleteAdmin
+                                adminId={admin_users.user_id}
+                                onDeleteSuccess={() =>
+                                setAdmins(admins.filter(admin => admin.user_id !== admin_users.user_id))
+                                }
+                            />
+                            </div>
+                        )}
                         </td>
                     </tr>
                     ))}
