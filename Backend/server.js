@@ -264,7 +264,7 @@ app.post('/api/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user.id,
+        id: user.user_id,  
         company_code: user.company_code,
         name: user.name,
         phone_number: user.phone_number,
@@ -274,6 +274,7 @@ app.post('/api/login', async (req, res) => {
     });
   });
 });
+
 
 // Display Company admins only
 app.get('/api/company-admins', (req, res) => {
@@ -292,6 +293,18 @@ app.get('/api/company-admins', (req, res) => {
 app.get('/api/view-admins', (req, res) => {
   const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users';
   db.query(sql, (err, results) => {
+=======
+
+// display all admin users
+app.get('/api/viewAdmins', (req, res) => {
+  const { company_code } = req.query;
+
+  if (!company_code) {
+    return res.status(400).json({ success: false, message: 'Company code is required' });
+  }
+
+  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users WHERE company_code = ? AND role != "VCM_Admin" AND role != "Company_Admin"';  
+  db.query(sql, [company_code], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ success: false, message: err.message });
@@ -299,6 +312,8 @@ app.get('/api/view-admins', (req, res) => {
     res.json({ success: true, admins: results });
   });
 });
+
+
 
 // Get admin by ID
 app.get('/api/admin/:user_id', async (req, res) => {
@@ -314,26 +329,61 @@ app.get('/api/admin/:user_id', async (req, res) => {
   }
 });
 
-// Edit admin details
+// Edit admin details with optional password change
 app.put('/api/editAdmin/:user_id', async (req, res) => {
   const { user_id } = req.params;
-  const { name, email, phone_number, role } = req.body;
+  const { name, email, phone_number, role, currentPassword, newPassword } = req.body;
 
   if (!name || !email || !phone_number || !role) {
-    return res.status(400).json({ success: false, message: 'All fields are required' });
+    return res.status(400).json({ success: false, message: 'All basic fields are required' });
   }
 
   try {
-    const [result] = await dbPromise.query(
-      'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ? WHERE user_id = ?',
-      [name, email, phone_number, role, user_id]
-    );
+    // If password change is requested
+    if (currentPassword && newPassword) {
+      // First verify the current password
+      const [userRows] = await dbPromise.query(
+        'SELECT password FROM admin_users WHERE user_id = ?',
+        [user_id]
+      );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Admin not found' });
+      if (userRows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, userRows[0].password);
+      
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+      }
+
+      // Hash the new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update admin with new password
+      const [result] = await dbPromise.query(
+        'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ?, password = ? WHERE user_id = ?',
+        [name, email, phone_number, role, hashedNewPassword, user_id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      res.json({ success: true, message: 'Admin updated successfully with new password' });
+    } else {
+      // Update admin without password change
+      const [result] = await dbPromise.query(
+        'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ? WHERE user_id = ?',
+        [name, email, phone_number, role, user_id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      res.json({ success: true, message: 'Admin updated successfully' });
     }
-
-    res.json({ success: true, message: 'Admin updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Server error' });
   }

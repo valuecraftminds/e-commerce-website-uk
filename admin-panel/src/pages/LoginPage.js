@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Button, Card, Container, Form, Spinner, Alert } from 'react-bootstrap';
+import { Alert, Button, Card, Container, Form, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/LoginPage.css';
@@ -32,9 +32,18 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        login(data.token);
+        // Save user data along with token
+        const userData = {
+          id: data.user.id,
+          company_code: data.user.company_code,
+          name: data.user.name,
+          phone_number: data.user.phone_number,
+          email: data.user.email,
+          role: data.user.role,
+        };
+        
+        login(data.token, userData);
         const role = data.user.role;
-        console.log("User role:", role);
 
         // Navigate based on role
         switch (role) {
@@ -56,10 +65,13 @@ export default function LoginPage() {
           case 'order':
             navigate('/orderingDashboard');
             break;
-          }
-        } else {
-          setErrorMsg(data.message || "Login failed");
+          default:
+            setErrorMsg('Unknown user role. Please contact administrator.');
+            break;
         }
+      } else {
+        setErrorMsg(data.message || "Login failed");
+      }
     } catch (error) {
       console.error("Error during login:", error);
       setErrorMsg("Something went wrong. Please try again.");
