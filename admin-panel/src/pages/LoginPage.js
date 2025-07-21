@@ -38,7 +38,10 @@ export default function LoginPage() {
 
         // Navigate based on role
         switch (role) {
-          case 'Admin':
+          case 'VCM_Admin':
+            navigate('/vcm-admin-dashboard');
+            break;
+          case 'Company_Admin':
             navigate('/dashboard');
             break;
           case 'PDC':

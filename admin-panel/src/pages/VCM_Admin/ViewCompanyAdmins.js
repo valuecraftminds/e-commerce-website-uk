@@ -1,13 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
-import DeleteAdmin from '../components/DeleteAdmin';
-import '../styles/ViewAdmins.css';
+import Header from '../../components/Header';
+import DeleteAdmin from '../../components/DeleteAdmin';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-export default function ViewAdmins() {
+export default function ViewCompanyAdmins() {
+  return (
+    <div className="dashboard-container">
+      <Header role="VCM_Admin" data-testid="header-toggle-button" />
+      <main className="dashboard-content">
+        <Routes>
+          <Route path="/" element={<ViewCompanyAdminsHome />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function ViewCompanyAdminsHome() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -17,7 +31,7 @@ export default function ViewAdmins() {
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/api/view-admins`);
+                const response = await fetch(`${BASE_URL}/api/company-admins`);
                 const data = await response.json();
 
                 if (response.ok && data.success) {
@@ -39,8 +53,8 @@ export default function ViewAdmins() {
     return (
         <div className="admin-container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
-            <h3 className="admin-title m-0">Admin Users</h3>
-            <button className="btn-custom-primary" onClick={() => navigate('/register')}>Add Admin</button>
+            <h3 className="admin-title m-0">Company Admin Users</h3>
+            <button className="btn-custom-primary" onClick={() => navigate('/vcm-admin-dashboard/register-company-admins/')}>Add Company Admin</button>
             </div>
 
             {errorMsg && <Alert variant="danger" className="mt-3">{errorMsg}</Alert>}
@@ -54,7 +68,7 @@ export default function ViewAdmins() {
                     <th className='table-header'>Name</th>
                     <th className='table-header'>Email</th>
                     <th className='table-header'>Phone</th>
-                    <th className='table-header'>Role</th>
+                    <th className='table-header'>Company Code</th>
                     <th className='table-header'>Actions</th>
                     </tr>
                 </thead>
@@ -65,9 +79,9 @@ export default function ViewAdmins() {
                         <td>{admin_users.Name}</td>
                         <td>{admin_users.Email}</td>
                         <td>{admin_users.Phone}</td>
-                        <td>{admin_users.Role}</td>
+                        <td>{admin_users.Company_Code}</td>
                         <td>
-                            <button className="btn-custom-primary" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}>Edit</button>
+                            {/* <button className="btn-custom-primary" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}>Edit</button> */}
                             <DeleteAdmin adminId={admin_users.user_id} onDeleteSuccess={() => setAdmins(admins.filter(admin => admin.user_id !== admin_users.user_id))} />
                         </td>
                     </tr>

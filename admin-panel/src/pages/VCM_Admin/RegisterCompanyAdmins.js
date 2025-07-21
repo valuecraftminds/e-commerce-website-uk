@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Container, Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
-import '../styles/RegisterPage.css';
-import { Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import Header from '../../components/Header';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Container, Card, Button, Row, Col, Form, Alert, Spinner } from 'react-bootstrap';
 
-const BASE_URL = process.env.REACT_APP_API_URL;
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-export default function RegisterPage() {
+export default function RegisterCompanyAdmins() {
+  return (
+    <div className="dashboard-container">
+      <Header role="VCM_Admin" data-testid="header-toggle-button" />
+      <main className="dashboard-content">
+        <Routes>
+          <Route path="/" element={<RegisterCompanyAdminsHome />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function RegisterCompanyAdminsHome() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,22 +42,14 @@ export default function RegisterPage() {
 
   const navigate = useNavigate();
 
-  // prevent entering numbers or symbols to name field
   const handleNameChange = (e) => {
-    let value = e.target.value;
-    value = value.replace(/[^a-zA-Z\s]/g, '');
+    let value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
     setFormData((prev) => ({ ...prev, name: value }));
   };
 
-  // prevent entering letters and symbols and limit to 10 digits starting with 07
   const handlePhoneChange = (e) => {
-    let value = e.target.value;
-    value = value.replace(/\D/g, '');
-
-    if (value.length > 10) {
-      value = value.slice(0, 10);
-    }
-
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 10) value = value.slice(0, 10);
     setFormData((prev) => ({ ...prev, phone: value }));
 
     if (value && !value.startsWith('07')) {
@@ -77,14 +81,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
-    console.log("Form Data:", formData.role);
+    setSuccessMsg('');
+    setErrorMsg('');
 
     try {
-      const response = await fetch(`${BASE_URL}/api/register`, {
+      const response = await fetch(`${BASE_URL}/api/admin-register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       });
 
       const data = await response.json();
@@ -113,18 +117,17 @@ export default function RegisterPage() {
     <div className="register-container">
       <Container>
         <Card className="register-card">
-
           <Button 
             variant="primary" 
-            className=" btn-custom-primary" 
-            onClick={() => navigate('/dashboard/users')}
+            className="btn-custom-primary mb-3" 
+            onClick={() => navigate('/vcm-admin-dashboard')}
           >
             ← Back
           </Button>
 
           <Card.Body>
-            <h2 className="register-title">Add New Admin</h2>
-            
+            <h2 className="register-title">Add Company Admin</h2>
+
             {successMsg && (
               <div className="mb-3 text-success text-center fw-semibold">
                 {successMsg}
@@ -140,9 +143,8 @@ export default function RegisterPage() {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label htmlFor="name">Full Name</Form.Label>
+                    <Form.Label>Full Name</Form.Label>
                     <Form.Control
-                      id="name"
                       type="text"
                       name="name"
                       value={formData.name}
@@ -155,9 +157,8 @@ export default function RegisterPage() {
 
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label htmlFor="email">Email Address</Form.Label>
+                    <Form.Label>Email Address</Form.Label>
                     <Form.Control
-                      id="email"
                       type="email"
                       name="email"
                       value={formData.email}
@@ -172,15 +173,14 @@ export default function RegisterPage() {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label htmlFor="phone">Phone Number</Form.Label>
+                    <Form.Label>Phone Number</Form.Label>
                     <Form.Control
-                      id="phone"
                       type="text"
                       name="phone"
-                      value={formData.phone} 
+                      value={formData.phone}
                       onChange={handlePhoneChange}
                       isInvalid={!!phoneError}
-                      inputMode='numeric'
+                      inputMode="numeric"
                       pattern="[0-9]*"
                       maxLength="10"
                       placeholder="07xxxxxxxx"
@@ -194,28 +194,27 @@ export default function RegisterPage() {
 
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label htmlFor="role">Role</Form.Label>
+                    <Form.Label>Role</Form.Label>
                     <Form.Select
-                      id="role"
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
                       required
                     >
                       <option value="">Select Role</option>
-                      <option value="pdc">PDC</option>
+                      <option value="Company_Admin">Company Admin</option>
+                      {/* <option value="pdc">PDC</option>
                       <option value="warehouse_grn">Warehouse GRN</option>
                       <option value="warehouse_issuing">Warehouse Issuing</option>
-                      <option value="order">Ordering</option>
+                      <option value="order">Ordering</option> */}
                     </Form.Select>
                   </Form.Group>
                 </Col>
               </Row>
 
               <Form.Group className="mb-3">
-                <Form.Label htmlFor="password">Password</Form.Label>
+                <Form.Label>Password</Form.Label>
                 <Form.Control
-                  id="password"
                   type="password"
                   name="password"
                   value={formData.password}
@@ -226,23 +225,23 @@ export default function RegisterPage() {
                   required
                 />
                 {showRules && (
-                  <div className='password-rules'>
+                  <div className="password-rules mt-2">
                     <small>Password requirements:</small>
-                    <ul className='list-unstyled ms-2'>
+                    <ul className="list-unstyled ms-2">
                       <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
                         {passwordRules.length ? '✅' : '❌'} 8-12 characters
                       </li>
                       <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.uppercase ? '✅' : '❌'} At least one uppercase letter 
+                        {passwordRules.uppercase ? '✅' : '❌'} At least one uppercase letter
                       </li>
                       <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
                         {passwordRules.lowercase ? '✅' : '❌'} At least one lowercase letter
                       </li>
                       <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.number ? '✅' : '❌'} At least one number  
+                        {passwordRules.number ? '✅' : '❌'} At least one number
                       </li>
                       <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.specialChar ? '✅' : '❌'} At least one special character 
+                        {passwordRules.specialChar ? '✅' : '❌'} At least one special character
                       </li>
                     </ul>
                   </div>

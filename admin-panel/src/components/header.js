@@ -8,6 +8,7 @@ import OrderSidebar from './OrderSidebar';
 import PdcSidebar from './PdcSidebar';
 import WarehouseGRNSidebar from './WarehouseGRNSidebar';
 import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
+import VcmAdminSidebar from './VcmAdminSidebar';
 
 export default function Header( {role} ) {
   const navigate = useNavigate();
@@ -59,7 +60,10 @@ export default function Header( {role} ) {
       
       {isLoggedIn && (
         <>
-          {role === 'Admin' && (
+          {role === 'VCM_Admin' && (
+            <VcmAdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          )}
+          {role === 'Company_Admin' && (
             <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
           )}
           {role === 'order' && (

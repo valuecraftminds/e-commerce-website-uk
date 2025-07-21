@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
 function DeleteAdmin({ adminId, onDeleteSuccess }) {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -10,7 +12,7 @@ function DeleteAdmin({ adminId, onDeleteSuccess }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`http://localhost:8081/api/deleteAdmin/${adminId}`, {
+      const res = await fetch(`${BASE_URL}/api/delete-admin/${adminId}`, {
         method: 'DELETE',
       });
       const data = await res.json();
