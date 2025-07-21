@@ -266,6 +266,10 @@ export default function EditAdmin() {
                       <option value="warehouse_grn">Warehouse GRN</option>
                       <option value="warehouse_issuing">Warehouse Issuing</option>
                       <option value="order">Ordering</option>
+                      <option value="PDC">PDC</option>
+                      <option value="Warehouse GRN">Warehouse GRN</option>
+                      <option value="Warehouse Issuing">Warehouse Issuing</option>
+                      <option value="Ordering">Ordering</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>

@@ -275,10 +275,41 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
+// Display Company admins only
+app.get('/api/company-admins', (req, res) => {
+  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, company_code AS Company_Code FROM admin_users WHERE role = "Company_Admin"';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    res.json({ success: true, admins: results });
+  });
+});
+
+
 // display all admin users
 app.get('/api/view-admins', (req, res) => {
   const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users';
   db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    res.json({ success: true, admins: results });
+  });
+});
+
+// display all admin users
+app.get('/api/viewAdmins', (req, res) => {
+  const { company_code } = req.query;
+
+  if (!company_code) {
+    return res.status(400).json({ success: false, message: 'Company code is required' });
+  }
+
+  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users WHERE company_code = ? AND role != "VCM_Admin" AND role != "Company_Admin"';  
+  db.query(sql, [company_code], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ success: false, message: err.message });
