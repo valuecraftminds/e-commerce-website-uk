@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, Container } from 'react-bootstrap';
 import { Route, Routes } from 'react-router-dom';
-import Header from '../components/Header';
-import '../styles/AdminDashboard.css';
-import Category from './Category';
-import Style from './Style';
+import Header from '../../components/Header';
+import '../../styles/AdminDashboard.css';
+import Category from '../Category';
+import Style from '../Style';
 import ViewAdmins from './ViewAdmins';
 
 export default function AdminDashboard() {

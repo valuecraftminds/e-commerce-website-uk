@@ -41,8 +41,8 @@ app.get('/', (req, res) => {
 
 //----------Starting endpoints------------
 
-// Admin Registration Endpoint
-app.post('/api/admin-register', async (req, res) => {
+// Company Admin Registration Endpoint
+app.post('/api/company-admin-register', async (req, res) => {
   const { name, email, phone, role, password } = req.body;
 
   if (!name || !email || !phone || !role || !password) {
@@ -228,6 +228,7 @@ app.post('/api/register', async (req, res) => {
 });
 });
 
+
 // User Login Endpoint
 const dbPromise = db.promise();
 
@@ -311,7 +312,7 @@ app.get('/api/view-admins', (req, res) => {
 
 
 // Get admin by ID
-app.get('/api/admin/:user_id', async (req, res) => {
+app.get('/api/get-admin/:user_id', async (req, res) => {
   const { user_id } = req.params;
   try {
     const [result] = await dbPromise.query('SELECT * FROM admin_users WHERE user_id = ?', [user_id]);
@@ -325,7 +326,7 @@ app.get('/api/admin/:user_id', async (req, res) => {
 });
 
 // Edit admin details with optional password change
-app.put('/api/editAdmin/:user_id', async (req, res) => {
+app.put('/api/edit-admin/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { name, email, phone_number, role, currentPassword, newPassword } = req.body;
 
