@@ -41,7 +41,7 @@ app.get('/', (req, res) => {
 
 //----------Starting endpoints------------
 
-// User Registration Endpoint
+// Admin Registration Endpoint
 app.post('/api/admin-register', async (req, res) => {
   const { name, email, phone, role, password } = req.body;
 
@@ -152,9 +152,9 @@ const generateCompanyCode = (callback) => {
 });
 
 
-// User Registration Endpoint
+// Admin Registration Endpoint
 app.post('/api/register', async (req, res) => {
-  const { company_code,name, email, phone, role, password } = req.body;
+  const { company_code, name, email, phone, role, password } = req.body;
 
   if (!company_code || !name || !email || !phone || !role || !password) {
     return res.status(400).json({ success: false, message: 'All fields are required' });
@@ -276,6 +276,25 @@ app.post('/api/login', async (req, res) => {
 });
 
 
+// Display Company admins only
+app.get('/api/company-admins', (req, res) => {
+  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, company_code AS Company_Code FROM admin_users WHERE role = "Company_Admin"';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    res.json({ success: true, admins: results });
+  });
+});
+
+
+// display all admin users
+app.get('/api/view-admins', (req, res) => {
+  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users';
+  db.query(sql, (err, results) => {
+=======
+
 // display all admin users
 app.get('/api/viewAdmins', (req, res) => {
   const { company_code } = req.query;
@@ -372,7 +391,7 @@ app.put('/api/editAdmin/:user_id', async (req, res) => {
 
 
 // Delete admin
-app.delete('/api/deleteAdmin/:user_id', async (req, res) => {
+app.delete('/api/delete-admin/:user_id', async (req, res) => {
   const { user_id } = req.params;
 
   try {

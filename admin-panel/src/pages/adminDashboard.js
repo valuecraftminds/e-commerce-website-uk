@@ -10,7 +10,7 @@ import ViewAdmins from './ViewAdmins';
 export default function AdminDashboard() {
   return (
     <div className="dashboard-container">
-      <Header role='Admin' data-testid="header-toggle-button" />
+      <Header role='Company_Admin' data-testid="header-toggle-button" />
       
       <main className="dashboard-content">
         <Routes>

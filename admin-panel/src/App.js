@@ -2,8 +2,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 
+import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
+import RegisterCompanyAdmins from './pages/VCM_Admin/RegisterCompanyAdmins';
+import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import AdminDashboard from './pages/adminDashboard';
-import DeleteAdmin from './pages/DeleteAdmin';
+import DeleteAdmin from './components/DeleteAdmin';
 import EditAdmin from './pages/EditAdmins';
 import LoginPage from './pages/LoginPage';
 import OrderingDashboard from './pages/OrderingDashboard';
@@ -19,6 +22,9 @@ function App() {
     <>
       <Routes>
         <Route path='/' element={<LoginPage />} />
+        <Route path='/vcm-admin-dashboard/*' element={<VcmAdminDashboard />} />
+        <Route path='/vcm-admin-dashboard/register-company-admins/*' element={<RegisterCompanyAdmins />} />
+        <Route path='/vcm-admin-dashboard/view-company-admins/*' element={<ViewCompanyAdmins />} />
         <Route path='ViewAdmins' element={<ViewAdmins />} />
         <Route path='register' element={<RegisterPage />} />
         <Route path='EditAdmins/:id' element={<EditAdmin />} />

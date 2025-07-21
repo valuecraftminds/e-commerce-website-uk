@@ -4,6 +4,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/RegisterPage.css';
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
 export default function EditAdmin() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export default function EditAdmin() {
   const [changePassword, setChangePassword] = useState(false);
 
   useEffect(() => {
-    fetch(`http://localhost:8081/api/admin/${id}`)
+    fetch(`${BASE_URL}/api/admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -139,6 +141,8 @@ export default function EditAdmin() {
     setSuccessMsg('');
 
     try {
+      const res = await fetch(`${BASE_URL}/api/editAdmin/${id}`, {
+
       const requestBody = {
         name: formData.name,
         email: formData.email,
@@ -153,6 +157,7 @@ export default function EditAdmin() {
       }
 
       const res = await fetch(`http://localhost:8081/api/editAdmin/${id}`, {
+        main
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -276,6 +281,11 @@ export default function EditAdmin() {
                       required
                     >
                       <option value="">Select Role</option>
+                      <option value="company_admin">Company Admin</option>
+                      <option value="pdc">PDC</option>
+                      <option value="warehouse_grn">Warehouse GRN</option>
+                      <option value="warehouse_issuing">Warehouse Issuing</option>
+                      <option value="order">Ordering</option>
                       <option value="PDC">PDC</option>
                       <option value="Warehouse GRN">Warehouse GRN</option>
                       <option value="Warehouse Issuing">Warehouse Issuing</option>
