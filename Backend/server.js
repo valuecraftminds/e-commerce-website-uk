@@ -42,10 +42,121 @@ app.get('/', (req, res) => {
 //----------Starting endpoints------------
 
 // User Registration Endpoint
-app.post('/api/register', async (req, res) => {
+app.post('/api/admin-register', async (req, res) => {
   const { name, email, phone, role, password } = req.body;
 
   if (!name || !email || !phone || !role || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  // Name validation - no numbers or special chars
+  if (!/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
+  }
+
+// Generate company code automatically
+const generateCompanyCode = (callback) => {
+  db.query('SELECT company_code FROM admin_users WHERE company_code IS NOT NULL ORDER BY company_code DESC LIMIT 1', (err, results) => {
+    if (err) {
+      return callback(err, null);
+    }
+    
+    let newCompanyCode;
+    if (results.length === 0 || !results[0].company_code) {
+      // First user or no valid company codes, start with C001
+      newCompanyCode = 'C001';
+    } else {
+      // Extract number from last company code and increment
+      const lastCode = results[0].company_code;
+      const lastNumber = parseInt(lastCode.substring(1));
+      const newNumber = lastNumber + 1;
+      newCompanyCode = 'C' + newNumber.toString().padStart(3, '0');
+    }
+    
+    callback(null, newCompanyCode);
+  });
+};
+
+  // Generate company code first
+  generateCompanyCode((codeErr, companyCode) => {
+    if (codeErr) {
+      return res.status(500).json({ success: false, message: 'Error generating company code' });
+    }
+
+    // Check for duplicate email
+    db.query('SELECT * FROM admin_users WHERE email = ?', [email], (emailErr, emailRows) => {
+      if (emailErr) {
+        return res.status(500).json({ success: false, message: 'Error checking email (DB error)' });
+      }
+
+      if (emailRows.length > 0) {
+        return res.status(409).json({ success: false, message: 'Email already exists' });
+      }
+
+      // Check for duplicate phone number and validate phone number
+      db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (phoneErr, phoneRows) => {
+        if (phoneErr) {
+          return res.status(500).json({ success: false, message: 'Database error' });
+        }
+        if (!/^07\d{8}$/.test(phone)) {
+          return res.status(400).json({ success: false, message: 'Phone number must start with 07 and be exactly 10 digits' });
+        } else if (phoneRows.length > 0) {
+          return res.status(409).json({ success: false, message: 'Phone number already exists' });
+        }
+
+        // Local password validation function
+        function isValidPassword(password) {
+          const lengthValid = password.length >= 8 && password.length <= 12;
+          const hasUppercase = /[A-Z]/.test(password);
+          const hasLowercase = /[a-z]/.test(password);
+          const hasNumber = /\d/.test(password);
+          const hasSpecialChar = /[\W_]/.test(password);
+        
+          return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+        }
+
+        if (!isValidPassword(password)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid password'
+          });
+        }
+
+        // Hash the password
+        bcrypt.hash(password, 10, (hashErr, hashedPassword) => {
+          if (hashErr) {
+            return res.status(500).json({ success: false, message: 'Error hashing password' });
+          }
+
+          // Insert new user with auto-generated company code
+          db.query(
+            'INSERT INTO admin_users (name, email, phone_number, role, password, company_code) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, email, phone, role, hashedPassword, companyCode],
+            (insertErr, results) => {
+              if (insertErr) {
+                console.log("Insert error: ", insertErr);
+                return res.status(500).json({ success: false, message: 'Database error inserting user' });
+              }
+
+              res.json({ 
+                success: true, 
+                message: 'Admin registered successfully',
+                companyCode: companyCode
+              });
+            }
+          );
+        });
+      });
+    });
+  });
+});
+
+
+// User Registration Endpoint
+app.post('/api/register', async (req, res) => {
+  const { company_code,name, email, phone, role, password } = req.body;
+
+  if (!company_code || !name || !email || !phone || !role || !password) {
     return res.status(400).json({ success: false, message: 'All fields are required' });
   }
 
@@ -101,8 +212,8 @@ app.post('/api/register', async (req, res) => {
 
     // Insert new user
     db.query(
-      'INSERT INTO admin_users (name, email, phone_number, role, password) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone, role, hashedPassword],
+      'INSERT INTO admin_users (company_code,name, email, phone_number, role, password) VALUES (?, ?, ?, ?, ?,?)',
+      [company_code,name, email, phone, role, hashedPassword],
       (insertErr, results) => {
         if (insertErr) {
           console.log("Insert error: ", insertErr);
@@ -154,12 +265,15 @@ app.post('/api/login', async (req, res) => {
       token,
       user: {
         id: user.id,
+        company_code: user.company_code,
+        name: user.name,
+        phone_number: user.phone_number,
         email: user.email,
         role: user.role,
       },
     });
   });
-})
+});
 
 // display all admin users
 app.get('/api/viewAdmins', (req, res) => {
