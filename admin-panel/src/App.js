@@ -5,14 +5,14 @@ import { Route, Routes } from 'react-router-dom';
 import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
 import RegisterCompanyAdmins from './pages/VCM_Admin/RegisterCompanyAdmins';
 import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/Company_Admin/AdminDashboard';
 import DeleteAdmin from './components/DeleteAdmin';
-import EditAdmin from './pages/EditAdmins';
+import EditAdmin from './pages/Company_Admin/EditAdmins';
 import LoginPage from './pages/LoginPage';
 import OrderingDashboard from './pages/OrderingDashboard';
 import PdcDashboard from './pages/PdcDashboard';
-import RegisterPage from './pages/RegisterPage';
-import ViewAdmins from './pages/ViewAdmins';
+import RegisterPage from './pages/Company_Admin/RegisterPage';
+import ViewAdmins from './pages/Company_Admin/ViewAdmins';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
 

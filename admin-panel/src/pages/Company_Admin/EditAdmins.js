@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../styles/RegisterPage.css';
+import '../../styles/RegisterPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -39,7 +39,7 @@ export default function EditAdmin() {
   const [changePassword, setChangePassword] = useState(false);
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/admin/${id}`)
+    fetch(`${BASE_URL}/api/get-admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -154,7 +154,7 @@ export default function EditAdmin() {
         requestBody.newPassword = formData.newPassword;
       }
 
-      const res = await fetch(`${BASE_URL}/api/editAdmin/${id}`, {
+      const res = await fetch(`${BASE_URL}/api/edit-admin/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)

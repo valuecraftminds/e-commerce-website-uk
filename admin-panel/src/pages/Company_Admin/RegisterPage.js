@@ -2,8 +2,8 @@ import React, { useState,useContext } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import '../styles/RegisterPage.css';
-import { AuthContext } from '../context/AuthContext';
+import '../../styles/RegisterPage.css';
+import { AuthContext } from '../../context/AuthContext';
 
 
 const BASE_URL = process.env.REACT_APP_API_URL;

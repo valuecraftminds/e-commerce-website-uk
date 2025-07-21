@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Alert, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 
-import '../styles/ViewAdmins.css';
-import DeleteAdmin from '../components/DeleteAdmin';
+import '../../styles/ViewAdmins.css';
+import DeleteAdmin from '../../components/DeleteAdmin';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
