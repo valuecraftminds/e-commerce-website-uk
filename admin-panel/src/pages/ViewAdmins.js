@@ -6,6 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 import '../styles/ViewAdmins.css';
 import DeleteAdmin from '../components/DeleteAdmin';
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
 export default function ViewAdmins() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ export default function ViewAdmins() {
       }
 
       try {
-        const response = await fetch(`http://localhost:8081/api/viewAdmins?company_code=${company_code}`);
+        const response = await fetch(`${BASE_URL}/api/view-admins?company_code=${company_code}`);
         const data = await response.json();
 
         if (response.ok && data.success) {
