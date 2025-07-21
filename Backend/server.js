@@ -291,7 +291,7 @@ app.get('/api/company-admins', (req, res) => {
 
 
 // display all admin users
-app.get('/api/viewAdmins', (req, res) => {
+app.get('/api/view-admins', (req, res) => {
   const { company_code } = req.query;
 
   if (!company_code) {

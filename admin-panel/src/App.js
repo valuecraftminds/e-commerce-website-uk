@@ -5,7 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
 import RegisterCompanyAdmins from './pages/VCM_Admin/RegisterCompanyAdmins';
 import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
-import AdminDashboard from './pages/adminDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import DeleteAdmin from './components/DeleteAdmin';
 import EditAdmin from './pages/EditAdmins';
 import LoginPage from './pages/LoginPage';

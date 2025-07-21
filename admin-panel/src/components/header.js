@@ -10,7 +10,7 @@ import WarehouseGRNSidebar from './WarehouseGRNSidebar';
 import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
 import VcmAdminSidebar from './VcmAdminSidebar';
 
-export default function Header( {role} ) {
+export default function Header( {role} ) {   
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
