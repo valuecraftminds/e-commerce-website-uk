@@ -1,12 +1,11 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Button, Collapse, Nav } from 'react-bootstrap';
+import React, { useContext, useEffect, useRef } from 'react';
+import { Button, Nav } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 export default function OrderSidebar({ sidebarOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
-  const [warehouseDropdownOpen, setWarehouseDropdownOpen] = useState(false);
   const sidebarRef = useRef(null);
 
   const handleLogout = () => {

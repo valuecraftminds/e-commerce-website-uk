@@ -289,11 +289,6 @@ app.get('/api/company-admins', (req, res) => {
 });
 
 
-// display all admin users
-app.get('/api/view-admins', (req, res) => {
-  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users';
-  db.query(sql, (err, results) => {
-=======
 
 // display all admin users
 app.get('/api/viewAdmins', (req, res) => {

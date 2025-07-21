@@ -141,8 +141,6 @@ export default function EditAdmin() {
     setSuccessMsg('');
 
     try {
-      const res = await fetch(`${BASE_URL}/api/editAdmin/${id}`, {
-
       const requestBody = {
         name: formData.name,
         email: formData.email,
@@ -156,8 +154,7 @@ export default function EditAdmin() {
         requestBody.newPassword = formData.newPassword;
       }
 
-      const res = await fetch(`http://localhost:8081/api/editAdmin/${id}`, {
-        main
+      const res = await fetch(`${BASE_URL}/api/editAdmin/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
