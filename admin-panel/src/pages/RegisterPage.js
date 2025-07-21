@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { Container, Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
-import '../styles/RegisterPage.css';
-import { Alert } from 'react-bootstrap';
+import React, { useState,useContext } from 'react';
+import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import '../styles/RegisterPage.css';
+import { AuthContext } from '../context/AuthContext';
+
 
 const BASE_URL = process.env.REACT_APP_API_URL;
+
+
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,10 +16,12 @@ export default function RegisterPage() {
     email: '',
     phone: '',
     role: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const [phoneError, setPhoneError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [passwordRules, setPasswordRules] = useState({
     length: false,
     uppercase: false,
@@ -24,11 +30,18 @@ export default function RegisterPage() {
     specialChar: false
   });
   const [showRules, setShowRules] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const { userData } = useContext(AuthContext);
+
 
   const navigate = useNavigate();
+
+  const company_code = userData?.company_code;
+
 
   // prevent entering numbers or symbols to name field
   const handleNameChange = (e) => {
@@ -69,6 +82,22 @@ export default function RegisterPage() {
         specialChar: /[\W_]/.test(value)
       };
       setPasswordRules(rules);
+      
+      // Check if passwords match when password changes
+      if (formData.confirmPassword && value !== formData.confirmPassword) {
+        setPasswordError('Passwords do not match');
+      } else {
+        setPasswordError('');
+      }
+    }
+
+    if (name === 'confirmPassword') {
+      // Check if passwords match when confirm password changes
+      if (value !== formData.password) {
+        setPasswordError('Passwords do not match');
+      } else {
+        setPasswordError('');
+      }
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -76,6 +105,13 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if passwords match before submitting
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    
     setIsLoading(true);
 
     console.log("Form Data:", formData.role);
@@ -84,7 +120,14 @@ export default function RegisterPage() {
       const response = await fetch(`${BASE_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          company_code: company_code,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role,
+          password: formData.password
+        }),
       });
 
       const data = await response.json();
@@ -96,8 +139,10 @@ export default function RegisterPage() {
           email: '',
           phone: '',
           role: '',
-          password: ''
+          password: '',
+          confirmPassword: ''
         });
+        setPasswordError('');
       } else {
         setErrorMsg(data.message || 'Registration failed');
       }
@@ -203,7 +248,6 @@ export default function RegisterPage() {
                       required
                     >
                       <option value="">Select Role</option>
-                      <option value="admin">Admin</option>
                       <option value="pdc">PDC</option>
                       <option value="warehouse_grn">Warehouse GRN</option>
                       <option value="warehouse_issuing">Warehouse Issuing</option>
@@ -212,20 +256,31 @@ export default function RegisterPage() {
                   </Form.Group>
                 </Col>
               </Row>
-
-              <Form.Group className="mb-3">
+              <Row>
+                <Col>
+                
+                <Form.Group className="mb-3">
                 <Form.Label htmlFor="password">Password</Form.Label>
-                <Form.Control
-                  id="password"
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
-                  onFocus={() => setShowRules(true)}
-                  onBlur={() => setShowRules(false)}
-                  required
-                />
+                <InputGroup>
+                  <Form.Control
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter password"
+                    onFocus={() => setShowRules(true)}
+                    onBlur={() => setShowRules(false)}
+                    required
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </Button>
+                </InputGroup>
                 {showRules && (
                   <div className='password-rules'>
                     <small>Password requirements:</small>
@@ -249,6 +304,41 @@ export default function RegisterPage() {
                   </div>
                 )}
               </Form.Group>
+
+              
+                </Col>
+                <Col>
+                <Form.Group className="mb-3">
+                <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
+                <InputGroup>
+                  <Form.Control
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirm your password"
+                    isInvalid={!!passwordError}
+                    required
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </Button>
+                </InputGroup>
+                {passwordError && (
+                  <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
+                    {passwordError}
+                  </Form.Control.Feedback>
+                )}
+              </Form.Group>
+                </Col>
+              </Row>
+
+              
 
               <div className="text-center">
                 <Button 

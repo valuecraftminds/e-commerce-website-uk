@@ -23,14 +23,13 @@ export default function EditAdmin() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          console.log(formData);
-
           setFormData({
             name: data.admin.name,
             email: data.admin.email,
             phone_number: data.admin.phone_number,
             role: data.admin.role
           });
+          console.log('Admin data loaded:', data.admin);
         } else {
           setErrorMsg(data.message || 'Admin not found');
         }
@@ -182,7 +181,6 @@ export default function EditAdmin() {
                       required
                     >
                       <option value="">Select Role</option>
-                      <option value="admin">Admin</option>
                       <option value="pdc">PDC</option>
                       <option value="warehouse_grn">Warehouse GRN</option>
                       <option value="warehouse_issuing">Warehouse Issuing</option>
