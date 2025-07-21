@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, Button, Alert, Spinner, Row, Col, Card, Container } from 'react-bootstrap';
+import { 
+  Form, Button, Alert, Spinner, Row, Col, Card, Container, InputGroup 
+} from 'react-bootstrap';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function EditAdmin() {
   const { id } = useParams();
@@ -35,7 +40,7 @@ export default function EditAdmin() {
   const [changePassword, setChangePassword] = useState(false);
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/admin/${id}`)
+    fetch(`${BASE_URL}/api/get-admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -45,8 +50,6 @@ export default function EditAdmin() {
             phone_number: data.admin.phone_number,
             role: data.admin.role 
           });
-          console.log('Admin data loaded:', data.admin);
-          console.log('Role value:', data.admin.role); // Debug log
         } else {
           setErrorMsg(data.message || 'Admin not found');
         }
@@ -88,7 +91,6 @@ export default function EditAdmin() {
       };
       setPasswordRules(rules);
       
-      // Check if passwords match when new password changes
       if (formData.confirmNewPassword && value !== formData.confirmNewPassword) {
         setPasswordError('New passwords do not match');
       } else {
@@ -97,7 +99,6 @@ export default function EditAdmin() {
     }
 
     if (name === 'confirmNewPassword') {
-      // Check if passwords match when confirm new password changes
       if (value !== formData.newPassword) {
         setPasswordError('New passwords do not match');
       } else {
@@ -116,7 +117,6 @@ export default function EditAdmin() {
       return;
     }
 
-    // If changing password, validate new password fields
     if (changePassword) {
       if (!formData.currentPassword) {
         setErrorMsg('Current password is required to change password.');
@@ -136,8 +136,20 @@ export default function EditAdmin() {
     setErrorMsg('');
     setSuccessMsg('');
 
+    // Prepare request body depending on whether password change is requested
+    const requestBody = {
+      name: formData.name,
+      email: formData.email,
+      phone_number: formData.phone_number,
+      role: formData.role,
+      ...(changePassword && {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      })
+    };
+
     try {
-      const res = await fetch(`${BASE_URL}/api/editAdmin/${id}`, {
+      const res = await fetch(`${BASE_URL}/api/edit-admin/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
@@ -266,16 +278,11 @@ export default function EditAdmin() {
                       <option value="warehouse_grn">Warehouse GRN</option>
                       <option value="warehouse_issuing">Warehouse Issuing</option>
                       <option value="order">Ordering</option>
-                      <option value="PDC">PDC</option>
-                      <option value="Warehouse GRN">Warehouse GRN</option>
-                      <option value="Warehouse Issuing">Warehouse Issuing</option>
-                      <option value="Ordering">Ordering</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
               </Row>
 
-              {/* Password Change Section */}
               <div className="mb-4">
                 <Form.Check
                   type="checkbox"

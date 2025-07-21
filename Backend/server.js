@@ -287,21 +287,8 @@ app.get('/api/company-admins', (req, res) => {
   });
 });
 
-
 // display all admin users
 app.get('/api/view-admins', (req, res) => {
-  const sql = 'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, role AS Role FROM admin_users';
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ success: false, message: err.message });
-    }
-    res.json({ success: true, admins: results });
-  });
-});
-
-// display all admin users
-app.get('/api/viewAdmins', (req, res) => {
   const { company_code } = req.query;
 
   if (!company_code) {
@@ -321,7 +308,7 @@ app.get('/api/viewAdmins', (req, res) => {
 
 
 // Get admin by ID
-app.get('/api/admin/:user_id', async (req, res) => {
+app.get('/api/get-admin/:user_id', async (req, res) => {
   const { user_id } = req.params;
   try {
     const [result] = await dbPromise.query('SELECT * FROM admin_users WHERE user_id = ?', [user_id]);
@@ -335,7 +322,7 @@ app.get('/api/admin/:user_id', async (req, res) => {
 });
 
 // Edit admin details with optional password change
-app.put('/api/editAdmin/:user_id', async (req, res) => {
+app.put('/api/edit-admin/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { name, email, phone_number, role, currentPassword, newPassword } = req.body;
 
