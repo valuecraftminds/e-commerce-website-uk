@@ -278,11 +278,6 @@ export default function EditAdmin() {
                       required
                     >
                       <option value="">Select Role</option>
-                      <option value="company_admin">Company Admin</option>
-                      <option value="pdc">PDC</option>
-                      <option value="warehouse_grn">Warehouse GRN</option>
-                      <option value="warehouse_issuing">Warehouse Issuing</option>
-                      <option value="order">Ordering</option>
                       <option value="PDC">PDC</option>
                       <option value="Warehouse GRN">Warehouse GRN</option>
                       <option value="Warehouse Issuing">Warehouse Issuing</option>

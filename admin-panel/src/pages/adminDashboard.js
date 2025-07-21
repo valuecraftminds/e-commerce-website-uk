@@ -18,7 +18,7 @@ export default function AdminDashboard() {
           <Route path="users" element={<ViewAdmins />} />
           <Route path="category" element={<Category />} />
           <Route path="style" element={<Style />} />
-
+          
         </Routes>
       </main>
     </div>
