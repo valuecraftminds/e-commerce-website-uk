@@ -26,54 +26,35 @@ FOREIGN KEY (parent_id) REFERENCES categories(category_id) ON DELETE CASCADE
 
 );
 
-CREATE TABLE styles (
+CREATE TABLE style (
 style_id INT AUTO_INCREMENT PRIMARY KEY,
-style_code VARCHAR(50) UNIQUE NOT NULL,
-name VARCHAR(100) NOT NULL,
+company_code VARCHAR(50) NOT NULL,
+style_code VARCHAR(50) NOT NULL UNIQUE,
+name VARCHAR(255) NOT NULL,
 description TEXT,
-category_id INT NOT NULL,
-base_price DECIMAL(10,2) NOT NULL,
-is_active BOOLEAN DEFAULT TRUE,
-created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
+category_id INT,
+image VARCHAR(500),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL ON UPDATE CASCADE,
+INDEX idx_style_code (style_code),
+INDEX idx_category_id (category_id)
 );
 
--- Product variants table (handles all combinations and prices)
-CREATE TABLE product_variants (
+CREATE TABLE style_variants (
 variant_id INT AUTO_INCREMENT PRIMARY KEY,
-style_id INT NOT NULL,
-sku VARCHAR(100) UNIQUE NOT NULL,
-size VARCHAR(50),
-color VARCHAR(50),
-fit VARCHAR(50),
-material VARCHAR(100),
-price DECIMAL(10,2) NOT NULL,    -- ✅ Each variant has its own price
+company_code VARCHAR(10) NOT NULL,
+style_code VARCHAR(50) NOT NULL,
+color VARCHAR(100) NOT NULL,
+size VARCHAR(50) NOT NULL,
+fit VARCHAR(100),
+material VARCHAR(200),
+price DECIMAL(10, 2) NOT NULL,
 stock_quantity INT DEFAULT 0,
-image VARCHAR(255),
+sku VARCHAR(100) UNIQUE,
 is_active BOOLEAN DEFAULT TRUE,
-created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-FOREIGN KEY (style_id) REFERENCES styles(style_id) ON DELETE CASCADE
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+INDEX idx_style_code (style_code),
+INDEX idx_sku (sku)
 );
-
--- Updated GRN table
-CREATE TABLE grn (
-grn_id INT AUTO_INCREMENT PRIMARY KEY,
-variant_id INT NOT NULL,         -- ✅ Links to specific variant
-quantity_in INT NOT NULL,
-received_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-warehouse_user INT NOT NULL,
-FOREIGN KEY (variant_id) REFERENCES product_variants(variant_id) ON DELETE CASCADE,
-FOREIGN KEY (warehouse_user) REFERENCES admin_users(user_id) ON DELETE CASCADE
-);
-
--- Updated issuing table
-CREATE TABLE issuing (
-issue_id INT AUTO_INCREMENT PRIMARY KEY,
-variant_id INT NOT NULL,         -- ✅ Links to specific variant
-quantity_out INT NOT NULL,
-issued_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-warehouse_user INT NOT NULL,
-FOREIGN KEY (variant_id) REFERENCES product_variants(variant_id) ON DELETE CASCADE,
-FOREIGN KEY (warehouse_user) REFERENCES admin_users(user_id) ON DELETE CASCADE
-);
-
