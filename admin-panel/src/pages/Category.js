@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Accordion, Alert, Badge, Button, Card, Container, Form, Modal, Spinner } from 'react-bootstrap';
+import { AuthContext } from '../context/AuthContext';
 import '../styles/Category.css';
+
     
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -18,11 +20,16 @@ export default function Category() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [formErrors, setFormErrors] = useState({});
   const [activeAccordionKey, setActiveAccordionKey] = useState(null);
+  const { userData } = useContext(AuthContext);
+  
+
+  const company_code = userData?.company_code;
+
 
   const fetchCategories = useCallback(async () => {
     setFetchLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/get-categories`);
+      const response = await fetch(`${BASE_URL}/api/get-categories?company_code=${company_code}`);
       const data = await response.json();
       
       if (data.success) {
@@ -36,7 +43,7 @@ export default function Category() {
     } finally {
       setFetchLoading(false);
     }
-  }, []);
+  }, [company_code]);
 
   useEffect(() => {
     fetchCategories();
@@ -80,7 +87,8 @@ export default function Category() {
           },
           body: JSON.stringify({
             category_name: formData.main_category_name.trim(),
-            parent_id: formData.parent_id || null
+            parent_id: formData.parent_id || null,
+            company_code
           }),
         });
 
@@ -107,7 +115,8 @@ export default function Category() {
                 },
                 body: JSON.stringify({
                   category_name: subcategory.trim(),
-                  parent_id: formData.parent_id
+                  parent_id: formData.parent_id,
+                  company_code
                 }),
               })
             );
@@ -135,46 +144,31 @@ export default function Category() {
           // Creating new main category with optional subcategories
           const validSubcategories = formData.subcategories.filter(sub => sub.trim());
           
-          if (validSubcategories.length === 0) {
-            // Create main category only
-            const response = await fetch(`${BASE_URL}/api/add-categories`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                category_name: formData.main_category_name.trim(),
-                parent_id: null
-              }),
-            });
+          // Create main category first
+          const mainResponse = await fetch(`${BASE_URL}/api/add-categories`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              category_name: formData.main_category_name.trim(),
+              parent_id: null,
+              company_code
+            }),
+          });
 
-            const data = await response.json();
-            if (data.success) {
-              showMessage('success', 'Main category created successfully');
-              resetForm();
-              fetchCategories();
-            } else {
-              showMessage('error', data.message);
-            }
-          } else {
-            // Create main category first, then subcategories
-            const mainResponse = await fetch(`${BASE_URL}/api/add-categories`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                category_name: formData.main_category_name.trim(),
-                parent_id: null
-              }),
-            });
-
-            const mainData = await mainResponse.json();
+          const mainData = await mainResponse.json();
+          
+          if (mainData.success) {
+            // Get the newly created category ID - handle different response structures
+            const newMainCategoryId = mainData.category_id || mainData.category?.category_id || mainData.data?.category_id;
             
-            if (mainData.success) {
-              // Get the newly created main category ID
-              const newMainCategoryId = mainData.category.category_id;
-              
+            if (!newMainCategoryId) {
+              showMessage('error', 'Failed to get new category ID');
+              return;
+            }
+            
+            if (validSubcategories.length > 0) {
               // Create subcategories under the new main category
               const subPromises = validSubcategories.map(subcategory => 
                 fetch(`${BASE_URL}/api/add-categories`, {
@@ -184,7 +178,8 @@ export default function Category() {
                   },
                   body: JSON.stringify({
                     category_name: subcategory.trim(),
-                    parent_id: newMainCategoryId
+                    parent_id: newMainCategoryId,
+                    company_code
                   }),
                 })
               );
@@ -202,12 +197,14 @@ export default function Category() {
               } else {
                 showMessage('error', 'Main category created but failed to create subcategories');
               }
-              
-              resetForm();
-              fetchCategories();
             } else {
-              showMessage('error', mainData.message);
+              showMessage('success', 'Main category created successfully');
             }
+            
+            resetForm();
+            fetchCategories();
+          } else {
+            showMessage('error', mainData.message || 'Failed to create main category');
           }
         }
       }
@@ -243,7 +240,7 @@ export default function Category() {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/delete-categories/${categoryId}`, {
+      const response = await fetch(`${BASE_URL}/api/delete-categories/${categoryId}?company_code=${company_code}`, {
         method: 'DELETE',
       });
 
