@@ -36,23 +36,18 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
     { label: 'Merchandising', path: '/dashboard/merchandising', icon: 'bi-cart4' },
     { label: 'Orders', path: '/dashboard/orders', icon: 'bi-bag' },
     { label: 'Accounting', path: '/dashboard/accounting', icon: 'bi-calculator' },
-    // { label: 'Settings', path: '/dashboard/settings', icon: 'bi-gear' },
   ],
     PDC: [
       {label: 'Dashboard', path: '/pdcDashboard', icon: 'bi-speedometer2'},
-      // {label: 'Settings', path: '/pdcDashboard/settings', icon: 'bi-gear'},
     ],
     Warehouse_GRN: [
       {label: 'Dashboard', path: '/warehouseGRNDashboard', icon: 'bi-speedometer2'},
-      // {label: 'Settings', path: '/warehouseGRNDashboard/settings', icon: 'bi-gear'},
     ],
     Warehouse_Issuing: [
       {label: 'Dashboard', path: '/warehouseIssuingDashboard', icon: 'bi-speedometer2'},
-      // {label: 'Settings', path: '/warehouseIssuingDashboard/settings', icon: 'bi-gear'},
     ],
     order: [
       {label: 'Dashboard', path: '/orderingDashboard', icon: 'bi-speedometer2'},
-      // {label: 'Settings', path: '/orderingDashboard/settings', icon: 'bi-gear'},
     ]
   };
 
