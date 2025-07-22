@@ -10,7 +10,7 @@ import VcmAdminSidebar from './VcmAdminSidebar';
 import WarehouseGRNSidebar from './WarehouseGRNSidebar';
 import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
 
-export default function Header( {role} ) {   
+export default function Header( {} ) {   
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -58,29 +58,9 @@ export default function Header( {role} ) {
         </Container>
       </Navbar>
       
-      {isLoggedIn && (
-        <>
-          {role === 'VCM_Admin' && (
-            <VcmAdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          )}
-          {role === 'Company_Admin' && (
-            <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          )}
-          {role === 'order' && (
-            <OrderSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          )}
-          {role === 'PDC' && (
-            <PdcSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          )}
-          {role === 'Warehouse_GRN' && (
-            <WarehouseGRNSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          )}
-          {role === 'Warehouse_Issuing' && (
-            <WarehouseIssuingSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          )}
-
-        </>
+    {isLoggedIn && (
+      <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
     )}
-    </>
+  </>
   );
 }

@@ -1,167 +1,148 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Button, Collapse, Nav } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/AdminSidebar.css';
 
+
 export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
   const navigate = useNavigate();
-  const { logout } = useContext(AuthContext);
-  const [warehouseDropdownOpen, setWarehouseDropdownOpen] = useState(false);
+  const location = useLocation();
+  const { userData, logout } = useContext(AuthContext);
+  const role = userData?.role || '';
+
   const sidebarRef = useRef(null);
 
   const handleLogout = () => {
     logout();
     navigate('/');
-  };
-
-  const toggleWarehouseDropdown = () => {
-    setWarehouseDropdownOpen(!warehouseDropdownOpen);
-  };
-
-  // Close sidebar on outside click
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (sidebarOpen && sidebarRef.current) {
-        // Check if the click is outside the sidebar
-        if (!sidebarRef.current.contains(event.target)) {
-          // Also check if the click is not on the toggle button (hamburger menu)
-          const toggleButton = document.querySelector('[data-testid="header-toggle-button"]');
-          const hamburgerButton = document.querySelector('[data-sidebar-toggle]');
-          
-          if ((!toggleButton || !toggleButton.contains(event.target)) && 
-              (!hamburgerButton || !hamburgerButton.contains(event.target))) {
-            toggleSidebar();
-          }
-        }
-      }
-    };
-
-    // Add event listener when sidebar is open
-    if (sidebarOpen) {
-      // Use timeout to avoid immediate triggering
-      setTimeout(() => {
-        document.addEventListener('mousedown', handleOutsideClick);
-      }, 100);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [sidebarOpen, toggleSidebar]);
-
-  // Handle overlay click
-  const handleOverlayClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
     toggleSidebar();
   };
 
+//   Sidebar menu items for role
+  const roleBasedMenuItems = {
+    VCM_Admin: [
+      {label: 'Dashboard', path: '/vcm-admin-dashboard', icon: 'bi-speedometer2'},
+      {label: 'Manage Company Admins', path: '/vcm-admin-dashboard/view-company-admins', icon: 'bi-people'},
+      {label: 'Settings', path: '/dashboard/settings', icon: 'bi-tags'},
+    ],
+     Company_Admin: [
+    { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' },
+    { label: 'User Management', path: '/dashboard/users', icon: 'bi-people' },
+    { label: 'Categories', path: '/dashboard/category', icon: 'bi-tags' },
+    { label: 'Styles', path: '/dashboard/style', icon: 'bi-palette' },
+    { label: 'Warehouse GRN', path: '/dashboard/warehouse/grn', icon: 'bi-box-seam' },
+    { label: 'Warehouse Issuing', path: '/dashboard/warehouse/issuing', icon: 'bi-box-arrow-up' },
+    { label: 'Merchandising', path: '/dashboard/merchandising', icon: 'bi-cart4' },
+    { label: 'Orders', path: '/dashboard/orders', icon: 'bi-bag' },
+    { label: 'Accounting', path: '/dashboard/accounting', icon: 'bi-calculator' },
+    { label: 'Settings', path: '/dashboard/settings', icon: 'bi-gear' },
+  ],
+    PDC: [
+      {label: 'Dashboard', path: '/pdcDashboard', icon: 'bi-speedometer2'},
+      {label: 'Settings', path: '/pdcDashboard/settings', icon: 'bi-gear'},
+    ],
+    Warehouse_GRN: [
+      {label: 'Dashboard', path: '/warehouseGRNDashboard', icon: 'bi-speedometer2'},
+      {label: 'Settings', path: '/warehouseGRNDashboard/settings', icon: 'bi-gear'},
+    ],
+    Warehouse_Issuing: [
+      {label: 'Dashboard', path: '/warehouseIssuingDashboard', icon: 'bi-speedometer2'},
+      {label: 'Settings', path: '/warehouseIssuingDashboard/settings', icon: 'bi-gear'},
+    ],
+    order: [
+      {label: 'Dashboard', path: '/orderingDashboard', icon: 'bi-speedometer2'},
+      {label: 'Settings', path: '/orderingDashboard/settings', icon: 'bi-gear'},
+    ]
+  };
+
+   // Get the current user's role from context
+  const menus = roleBasedMenuItems[role] || [];
+  console.log('Menus for current role:', menus);
+
+//   // Close sidebar on outside click
+  // useEffect(() => {
+    // const handleOutsideClick = (event) => {
+    //   if (sidebarOpen && sidebarRef.current) {
+    //     // Check if the click is outside the sidebar
+    //     if (!sidebarRef.current.contains(event.target)) {
+    //       // Also check if the click is not on the toggle button (hamburger menu)
+    //       const toggleButton = document.querySelector('[data-testid="header-toggle-button"]');
+    //       const hamburgerButton = document.querySelector('[data-sidebar-toggle]');
+          
+    //       if ((!toggleButton || !toggleButton.contains(event.target)) && 
+    //           (!hamburgerButton || !hamburgerButton.contains(event.target))) {
+    //         toggleSidebar();
+    //       }
+    //     }
+    //   }
+    // };
+
+    // Add event listener when sidebar is open
+    // if (sidebarOpen) {
+    //   // Use timeout to avoid immediate triggering
+    //   setTimeout(() => {
+    //     document.addEventListener('mousedown', handleOutsideClick);
+    //   }, 100);
+    // }
+
+    // return () => {
+    //   document.removeEventListener('mousedown', handleOutsideClick);
+    // };
+  // }, [sidebarOpen, toggleSidebar]);
+
+  // Handle overlay click
+  // const handleOverlayClick = (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   toggleSidebar();
+  // };
+
   return (
     <>
-      {/* Overlay */}
-      <div 
+      <div
         className={`sidebar-overlay ${sidebarOpen ? 'show' : ''}`}
-        onClick={handleOverlayClick}
-      ></div>
+        onClick={toggleSidebar}
+      />
 
-      {/* Sidebar */}
-      <div 
+      <div
         ref={sidebarRef}
         className={`sidebar position-fixed top-0 start-0 ${sidebarOpen ? 'open' : ''}`}
       >
         <div className="sidebar-header d-flex justify-content-between align-items-center">
           <h5 className="sidebar-title">Admin Panel</h5>
-          <Button variant="none" className="sidebar-close" onClick={toggleSidebar}>
+          <Button variant="none" className='sidebar-close' onClick={toggleSidebar}>
             &times;
           </Button>
         </div>
 
-        <nav className="sidebar-nav">
-          <Nav className="flex-column">
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-speedometer2 me-2"></i>
-                Dashboard
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/users" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-people me-2"></i>
-                User Management
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/category" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-tags me-2"></i>
-                Categories
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/style" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-palette me-2"></i>
-                Styles
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <button
-                className="nav-link dropdown-toggle-custom d-flex align-items-center justify-content-between"
-                onClick={toggleWarehouseDropdown}
-                aria-expanded={warehouseDropdownOpen}
-              >
-                <span className="d-flex align-items-center">
-                  <i className="bi bi-building me-2"></i>
-                  Warehouse
-                </span>
-                <i className={`bi bi-chevron-right dropdown-icon ${warehouseDropdownOpen ? 'rotated' : ''}`}></i>
-              </button>
-              <Collapse in={warehouseDropdownOpen}>
-                <div className="dropdown-submenu ms-3">
-                  <Nav.Link as={Link} to="/dashboard/warehouse/grn" className="nav-link submenu-link" onClick={toggleSidebar}>
-                    <i className="bi bi-box-seam me-2"></i>
-                    GRN
-                  </Nav.Link>
-                  <Nav.Link as={Link} to="/dashboard/warehouse/issuing" className="nav-link submenu-link" onClick={toggleSidebar}>
-                    <i className="bi bi-box-arrow-up me-2"></i>
-                    Issuing
-                  </Nav.Link>
-                </div>
-              </Collapse>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/merchandising" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-cart4 me-2"></i>
-                Merchandising
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/orders" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-bag me-2"></i>
-                Orders
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/accounting" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-calculator me-2"></i>
-                Accounting
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="/dashboard/settings" className="nav-link" onClick={toggleSidebar}>
-                <i className="bi bi-gear me-2"></i>
-                Settings
-              </Nav.Link>
-            </Nav.Item>
-              <Button 
-                
-                className=" text-start mt-2 logout-btn"
-                onClick={handleLogout}
-              >
-                <i className="bi bi-box-arrow-right me-2"></i>
-                Logout
-              </Button>
-          </Nav>
-        </nav>
+        <Nav defaultActiveKey='/dashboard' className="flex-column sidebar-nav">
+          {menus.map((item, idx) => {
+            if (item.dropdown) {
+              return null;
+            } else {
+              return (
+                <Nav.Link
+                  as={Link}
+                  to={item.path}
+                  key={idx}
+                  className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                  onClick={toggleSidebar}
+                >
+                  <i className={`bi ${item.icon} me-2`}></i>
+                  {item.label}
+                </Nav.Link>
+              );
+            }
+          })}
+
+          <hr className='my-2'/>
+
+          <Button variant="link" className="text-start logout-btn" onClick={handleLogout}>
+            <i className="bi bi-box-arrow-right me-2"></i>
+            Logout
+          </Button>
+        </Nav>
       </div>
     </>
   );
