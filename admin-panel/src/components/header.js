@@ -6,9 +6,9 @@ import '../styles/Header.css';
 import AdminSidebar from './AdminSidebar';
 import OrderSidebar from './OrderSidebar';
 import PdcSidebar from './PdcSidebar';
+import VcmAdminSidebar from './VcmAdminSidebar';
 import WarehouseGRNSidebar from './WarehouseGRNSidebar';
 import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
-import VcmAdminSidebar from './VcmAdminSidebar';
 
 export default function Header( {role} ) {   
   const navigate = useNavigate();
