@@ -430,6 +430,70 @@ app.delete('/api/delete-admin/:user_id', async (req, res) => {
   }
 });
 
+// Update admin profile (setting)
+app.put('/api/update-admin-profile/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  const { name, email, phone_number, currentPassword, newPassword } = req.body;
+
+  if (!name || !email || !phone_number) {
+    return res.status(400).json({ success: false, message: 'All basic fields are required' });
+  }
+
+  try {
+    // If password change is requested
+    if (currentPassword && newPassword) {
+      // First verify the current password
+      const [userRows] = await dbPromise.query(
+        'SELECT password FROM admin_users WHERE user_id = ?',
+        [user_id]
+      );
+
+      if (userRows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, userRows[0].password);
+      
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+      }
+
+      // Hash the new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update admin with new password
+      const [result] = await dbPromise.query(
+        'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, password = ? WHERE user_id = ?',
+        [name, email, phone_number, hashedNewPassword, user_id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      res.json({ success: true, message: 'Admin updated successfully with new password' });
+    } else {
+      // Update admin without password change
+      const [result] = await dbPromise.query(
+        'UPDATE admin_users SET name = ?, email = ?, phone_number = ? WHERE user_id = ?',
+        [name, email, phone_number, user_id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      res.json({ success: true, message: 'Admin updated successfully' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Server error' });
+  }
+});
+
+
+
+
+
 // Category Management Endpoints
 
 // Get all categories with their subcategories
@@ -694,6 +758,7 @@ app.get('/api/get-styles', (req, res) => {
 app.get('/api/styles/:style_id', (req, res) => {
   const { style_id } = req.params;
 
+
   const sql = `
     SELECT s.*, c.category_name 
     FROM styles s
@@ -898,6 +963,212 @@ app.put('/api/update-styles/:style_id', upload.array('images', 5), (req, res) =>
 // Delete style
 app.delete('/api/delete-styles/:style_id', (req, res) => {
   const { style_id } = req.params;
+
+  const sql = `
+    SELECT s.*, c.category_name 
+    FROM styles s
+    LEFT JOIN categories c ON s.category_id = c.category_id
+    WHERE s.style_id = ?
+  `;
+
+  db.query(sql, [style_id], (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: 'Error fetching style' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Style not found' });
+    }
+
+    res.json({ success: true, style: results[0] });
+  });
+});
+
+// Add new style - updated for multiple images
+app.post('/api/add-styles', upload.array('images', 5), (req, res) => {
+  const { 
+    company_code, 
+    name, 
+    description, 
+    category_id
+  } = req.body;
+
+  // Validate required fields
+  if (!company_code || !name || !category_id) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Company code, name, and category are required' 
+    });
+  }
+
+  // Get image paths if files were uploaded
+  const imagePaths = req.files ? req.files.map(file => file.filename).join(',') : null;
+
+  // Generate style code from name and check for uniqueness
+  const generateStyleCode = (baseName, attempt = 0) => {
+    // Convert name to uppercase, remove special characters and spaces
+    let styleCode = baseName
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .substring(0, 6); // Take first 6 characters
+
+    // Add numeric suffix if this is a retry attempt
+    if (attempt > 0) {
+      styleCode = `${styleCode}${attempt}`;
+    }
+
+    return new Promise((resolve, reject) => {
+      // Check if generated code exists
+      const checkSql = 'SELECT style_id FROM styles WHERE company_code = ? AND style_code = ?';
+      db.query(checkSql, [company_code, styleCode], (err, results) => {
+        if (err) {
+          reject(err);
+        } else if (results.length > 0) {
+          // Code exists, try next attempt
+          resolve(generateStyleCode(baseName, attempt + 1));
+        } else {
+          // Code is unique
+          resolve(styleCode);
+        }
+      });
+    });
+  };
+
+  // Generate and insert style code
+  generateStyleCode(name)
+    .then(styleCode => {
+      // Insert new style with generated code
+      const insertSql = `
+        INSERT INTO styles (
+          company_code, 
+          style_code, 
+          name, 
+          description, 
+          category_id, 
+          image,
+          approved,
+          created_at,
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, false, NOW(), NOW())
+      `;
+
+      db.query(
+        insertSql, 
+        [company_code, styleCode, name, description, category_id, imagePaths],
+        (err, results) => {
+          if (err) {
+            console.error('Insert error:', err);
+            return res.status(500).json({ success: false, message: 'Error adding style' });
+          }
+
+          res.json({ 
+            success: true, 
+            message: 'Style added successfully',
+            style_id: results.insertId,
+            style_code: styleCode,
+            image: imagePaths
+          });
+        }
+      );
+    })
+    .catch(err => {
+      console.error('Style code generation error:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error generating style code' 
+      });
+    });
+});
+
+// Update style - also update for multiple images
+app.put('/api/update-styles/:style_id', upload.array('images', 5), (req, res) => {
+  const { style_id } = req.params;
+  const { 
+    name, 
+    description, 
+    category_id, 
+    approved 
+  } = req.body;
+
+  // Validate required fields
+  if (!name || !category_id) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Name and category are required' 
+    });
+  }
+
+  // Get image paths if files were uploaded
+  const imagePaths = req.files && req.files.length > 0 ? req.files.map(file => file.filename).join(',') : null;
+
+  // Check if style exists and get current details
+  const checkSql = 'SELECT * FROM styles WHERE style_id = ?';
+  db.query(checkSql, [style_id], (checkErr, checkResults) => {
+    if (checkErr) {
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+
+    if (checkResults.length === 0) {
+      return res.status(404).json({ success: false, message: 'Style not found' });
+    }
+
+    const existingStyle = checkResults[0];
+
+    // Update style
+    const updateSql = `
+      UPDATE styles 
+      SET name = ?, 
+          description = ?, 
+          category_id = ?, 
+          ${imagePaths ? 'image = ?,' : ''} 
+          approved = ?,
+          updated_at = NOW()
+      WHERE style_id = ?
+    `;
+
+    const updateParams = imagePaths 
+      ? [name, description, category_id, imagePaths, approved || false, style_id]
+      : [name, description, category_id, approved || false, style_id];
+
+    db.query(updateSql, updateParams, (err, results) => {
+      if (err) {
+        console.error('Update error:', err);
+        return res.status(500).json({ success: false, message: 'Error updating style' });
+      }
+
+      // If old images exist and new images are uploaded, delete old images
+      if (imagePaths && existingStyle.image) {
+        const oldImages = existingStyle.image.split(',');
+        oldImages.forEach(oldImage => {
+          const oldImagePath = path.join(__dirname, 'uploads/styles', oldImage);
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Style updated successfully',
+        style: {
+          style_id,
+          style_code: existingStyle.style_code,
+          name,
+          description,
+          category_id,
+          image: imagePaths || existingStyle.image,
+          approved: approved || false
+        }
+      });
+    });
+  });
+});
+
+// Delete style
+app.delete('/api/delete-styles/:style_id', (req, res) => {
+  const { style_id } = req.params;
+
 
   const sql = 'DELETE FROM styles WHERE style_id = ?';
   db.query(sql, [style_id], (err, results) => {

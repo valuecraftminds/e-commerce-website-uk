@@ -15,6 +15,7 @@ import RegisterPage from './pages/Company_Admin/RegisterPage';
 import ViewAdmins from './pages/Company_Admin/ViewAdmins';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
+import Settings from './components/Setting';
 
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
         <Route path='/PdcDashboard/*' element={<PdcDashboard />} />
         <Route path='/WarehouseGRNDashboard/*' element={<WarehouseGRNDashboard />} />
         <Route path='/WarehouseIssuingDashboard/*' element={<WarehouseIssuingDashboard />} />
+        <Route path='/dashboard/settings/*' element={<Settings />} />
 
       </Routes>  
     </>

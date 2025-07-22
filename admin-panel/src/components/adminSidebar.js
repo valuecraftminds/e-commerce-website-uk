@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from 'react';
-import { Button, Collapse, Nav } from 'react-bootstrap';
+import { Button, Nav } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/AdminSidebar.css';
@@ -24,7 +24,7 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
     VCM_Admin: [
       {label: 'Dashboard', path: '/vcm-admin-dashboard', icon: 'bi-speedometer2'},
       {label: 'Manage Company Admins', path: '/vcm-admin-dashboard/view-company-admins', icon: 'bi-people'},
-      {label: 'Settings', path: '/dashboard/settings', icon: 'bi-tags'},
+      // {label: 'Settings', path: '/dashboard/settings', icon: 'bi-tags'},
     ],
      Company_Admin: [
     { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' },
@@ -36,67 +36,29 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
     { label: 'Merchandising', path: '/dashboard/merchandising', icon: 'bi-cart4' },
     { label: 'Orders', path: '/dashboard/orders', icon: 'bi-bag' },
     { label: 'Accounting', path: '/dashboard/accounting', icon: 'bi-calculator' },
-    { label: 'Settings', path: '/dashboard/settings', icon: 'bi-gear' },
+    // { label: 'Settings', path: '/dashboard/settings', icon: 'bi-gear' },
   ],
     PDC: [
       {label: 'Dashboard', path: '/pdcDashboard', icon: 'bi-speedometer2'},
-      {label: 'Settings', path: '/pdcDashboard/settings', icon: 'bi-gear'},
+      // {label: 'Settings', path: '/pdcDashboard/settings', icon: 'bi-gear'},
     ],
     Warehouse_GRN: [
       {label: 'Dashboard', path: '/warehouseGRNDashboard', icon: 'bi-speedometer2'},
-      {label: 'Settings', path: '/warehouseGRNDashboard/settings', icon: 'bi-gear'},
+      // {label: 'Settings', path: '/warehouseGRNDashboard/settings', icon: 'bi-gear'},
     ],
     Warehouse_Issuing: [
       {label: 'Dashboard', path: '/warehouseIssuingDashboard', icon: 'bi-speedometer2'},
-      {label: 'Settings', path: '/warehouseIssuingDashboard/settings', icon: 'bi-gear'},
+      // {label: 'Settings', path: '/warehouseIssuingDashboard/settings', icon: 'bi-gear'},
     ],
     order: [
       {label: 'Dashboard', path: '/orderingDashboard', icon: 'bi-speedometer2'},
-      {label: 'Settings', path: '/orderingDashboard/settings', icon: 'bi-gear'},
+      // {label: 'Settings', path: '/orderingDashboard/settings', icon: 'bi-gear'},
     ]
   };
 
    // Get the current user's role from context
   const menus = roleBasedMenuItems[role] || [];
   console.log('Menus for current role:', menus);
-
-//   // Close sidebar on outside click
-  // useEffect(() => {
-    // const handleOutsideClick = (event) => {
-    //   if (sidebarOpen && sidebarRef.current) {
-    //     // Check if the click is outside the sidebar
-    //     if (!sidebarRef.current.contains(event.target)) {
-    //       // Also check if the click is not on the toggle button (hamburger menu)
-    //       const toggleButton = document.querySelector('[data-testid="header-toggle-button"]');
-    //       const hamburgerButton = document.querySelector('[data-sidebar-toggle]');
-          
-    //       if ((!toggleButton || !toggleButton.contains(event.target)) && 
-    //           (!hamburgerButton || !hamburgerButton.contains(event.target))) {
-    //         toggleSidebar();
-    //       }
-    //     }
-    //   }
-    // };
-
-    // Add event listener when sidebar is open
-    // if (sidebarOpen) {
-    //   // Use timeout to avoid immediate triggering
-    //   setTimeout(() => {
-    //     document.addEventListener('mousedown', handleOutsideClick);
-    //   }, 100);
-    // }
-
-    // return () => {
-    //   document.removeEventListener('mousedown', handleOutsideClick);
-    // };
-  // }, [sidebarOpen, toggleSidebar]);
-
-  // Handle overlay click
-  // const handleOverlayClick = (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   toggleSidebar();
-  // };
 
   return (
     <>
@@ -109,12 +71,12 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
         ref={sidebarRef}
         className={`sidebar position-fixed top-0 start-0 ${sidebarOpen ? 'open' : ''}`}
       >
-        <div className="sidebar-header d-flex justify-content-between align-items-center">
-          <h5 className="sidebar-title">Admin Panel</h5>
-          <Button variant="none" className='sidebar-close' onClick={toggleSidebar}>
-            &times;
-          </Button>
-        </div>
+      <div className="sidebar-header d-flex justify-content-between align-items-center">
+        <h5 className="sidebar-title">Admin Panel</h5>
+        <Button variant="none" className='sidebar-close' onClick={toggleSidebar}>
+          &times;
+        </Button>
+      </div>
 
         <Nav defaultActiveKey='/dashboard' className="flex-column sidebar-nav">
           {menus.map((item, idx) => {
@@ -135,6 +97,17 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
               );
             }
           })}
+
+          {/* settings */}
+          <Nav.Link
+            as={Link}
+            to="/dashboard/settings"
+            className={`nav-link ${location.pathname === '/dashboard/settings' ? 'active' : ''}`}
+            onClick={toggleSidebar}
+          >
+            <i className="bi bi-gear me-2"></i>
+            Settings
+          </Nav.Link>
 
           <hr className='my-2'/>
 
