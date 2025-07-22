@@ -1,24 +1,10 @@
 import React, { useState } from 'react';
-import Header from '../../components/Header';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Row, Col, Form, Alert, Spinner } from 'react-bootstrap';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function RegisterCompanyAdmins() {
-  return (
-    <div className="dashboard-container">
-      <Header role="VCM_Admin" data-testid="header-toggle-button" />
-      <main className="dashboard-content">
-        <Routes>
-          <Route path="/" element={<RegisterCompanyAdminsHome />} />
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-function RegisterCompanyAdminsHome() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',

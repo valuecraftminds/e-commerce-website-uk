@@ -1,23 +1,7 @@
 import React from 'react';
-import Header from '../components/Header';
-import { Routes, Route } from 'react-router-dom';
 import { Container, Card } from 'react-bootstrap';
 
 export default function WarehouseIssuingDashboard() {
-  return (
-    <div className="dashboard-container">
-      <Header role='Warehouse_Issuing' data-testid="header-toggle-button" />
-
-      <main className="dashboard-content">
-        <Routes>
-          <Route path="" element={<WarehouseIssuingHome />} />
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-function WarehouseIssuingHome() {
   return (
     <Container fluid>
       <Card className="dashboard-card">

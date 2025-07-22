@@ -5,10 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../styles/RegisterPage.css';
 import { AuthContext } from '../../context/AuthContext';
 
-
 const BASE_URL = process.env.REACT_APP_API_URL;
-
-
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({

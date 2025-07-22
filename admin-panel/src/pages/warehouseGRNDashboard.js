@@ -1,23 +1,7 @@
 import React from 'react';
-import Header from '../components/Header';
-import { Routes, Route } from 'react-router-dom';
 import { Container, Card } from 'react-bootstrap';
 
-export default function warehouseGRNDashboard() {
-  return (
-    <div className="dashboard-container">
-      <Header role='Warehouse_GRN' data-testid="header-toggle-button" />
-
-      <main className="dashboard-content">
-        <Routes>
-          <Route path="" element={<WarehouseGRNHome />} />
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-function WarehouseGRNHome() {
+export default function WarehouseGRNDashboard() {
   return (
     <Container fluid>
       <Card className="dashboard-card">
