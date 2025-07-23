@@ -1,11 +1,11 @@
-/* Navbar brand styling */
+/* brand styling */
 .navbar-brand {
   font-weight: 700;
   font-size: 1.5rem;
   letter-spacing: 0.5px;
 }
 
-/* Nav link hover effect */
+/* link hover effect */
 .nav-link {
   color: #333 !important;
   font-weight: 500;
@@ -37,7 +37,7 @@ form.d-flex button {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* Collapse menu animation (optional) */
+/* Collapse menu animation */
 .collapsing {
   transition: height 0.35s ease;
 }
