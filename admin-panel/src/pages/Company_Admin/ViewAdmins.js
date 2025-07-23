@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Alert, Table } from 'react-bootstrap';
+import { Alert, Table,Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -77,7 +77,8 @@ export default function ViewAdmins() {
                   <td>{admin_users.Phone}</td>
                   <td>{admin_users.Role}</td>
                   <td>
-                    <button className="btn-custom-primary" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}>Edit</button>
+                    <Button variant="warning" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}><i className="bi-pencil"></i>
+                    </Button>
                     <DeleteAdmin adminId={admin_users.user_id} onDeleteSuccess={() => setAdmins(admins.filter(admin => admin.user_id !== admin_users.user_id))} />
                   </td>
                 </tr>

@@ -4,11 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Header.css';
 import AdminSidebar from './AdminSidebar';
-import OrderSidebar from './OrderSidebar';
-import PdcSidebar from './PdcSidebar';
-import VcmAdminSidebar from './VcmAdminSidebar';
-import WarehouseGRNSidebar from './WarehouseGRNSidebar';
-import WarehouseIssuingSidebar from './WarehouseIssuingSidebar';
+
 
 export default function Header( {} ) {   
   const navigate = useNavigate();

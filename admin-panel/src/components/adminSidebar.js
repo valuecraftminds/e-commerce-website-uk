@@ -1,6 +1,6 @@
 import React, { useContext, useRef } from 'react';
-import { Button, Collapse, Nav } from 'react-bootstrap';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Button, Nav } from 'react-bootstrap';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/AdminSidebar.css';
 
@@ -59,44 +59,6 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
    // Get the current user's role from context
   const menus = roleBasedMenuItems[role] || [];
   console.log('Menus for current role:', menus);
-
-//   // Close sidebar on outside click
-  // useEffect(() => {
-    // const handleOutsideClick = (event) => {
-    //   if (sidebarOpen && sidebarRef.current) {
-    //     // Check if the click is outside the sidebar
-    //     if (!sidebarRef.current.contains(event.target)) {
-    //       // Also check if the click is not on the toggle button (hamburger menu)
-    //       const toggleButton = document.querySelector('[data-testid="header-toggle-button"]');
-    //       const hamburgerButton = document.querySelector('[data-sidebar-toggle]');
-          
-    //       if ((!toggleButton || !toggleButton.contains(event.target)) && 
-    //           (!hamburgerButton || !hamburgerButton.contains(event.target))) {
-    //         toggleSidebar();
-    //       }
-    //     }
-    //   }
-    // };
-
-    // Add event listener when sidebar is open
-    // if (sidebarOpen) {
-    //   // Use timeout to avoid immediate triggering
-    //   setTimeout(() => {
-    //     document.addEventListener('mousedown', handleOutsideClick);
-    //   }, 100);
-    // }
-
-    // return () => {
-    //   document.removeEventListener('mousedown', handleOutsideClick);
-    // };
-  // }, [sidebarOpen, toggleSidebar]);
-
-  // Handle overlay click
-  // const handleOverlayClick = (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   toggleSidebar();
-  // };
 
   return (
     <>
