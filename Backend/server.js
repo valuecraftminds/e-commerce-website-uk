@@ -74,6 +74,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'E-Commerce UK Backend API running successfully.' });
 });
 
+
 //----------Starting endpoints------------
 
 // Company Admin Registration Endpoint
@@ -489,7 +490,6 @@ app.put('/api/update-admin-profile/:user_id', async (req, res) => {
     res.status(500).json({ success: false, message: err.message || 'Server error' });
   }
 });
-
 
 
 
