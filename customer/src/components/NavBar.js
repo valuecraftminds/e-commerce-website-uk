@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav, Form, Button, Container } from "react-bootstrap";
+import { Navbar, Nav, Container } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 import '../styles/NavBar.css';
 import logo from '../assets/logo.png';
@@ -7,6 +8,8 @@ import Sidebar from './Sidebar';
 import SearchSidebar from "./SearchSidebar";
 
 export default function NavigationBar() {
+  const navigate = useNavigate();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isHoveringCategory, setIsHoveringCategory] = useState(false);
@@ -46,6 +49,13 @@ export default function NavigationBar() {
     setIsHoveringSidebar(false);
   };
 
+  // Render the navigation bar
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+    navigate(`/shop/${category.toLowerCase()}`);
+    setSidebarOpen(false);
+  };
+
   return (
     <>
       <Navbar bg="light" expand="lg" className="shadow-sm sticky-top">
@@ -68,6 +78,7 @@ export default function NavigationBar() {
                   role="button"
                   onMouseEnter={() => handleCategoryMouseEnter(category)}
                   onMouseLeave={handleCategoryMouseLeave}
+                  onClick={() => handleCategoryClick(category)}
                 >
                   {category}
                 </Nav.Link>
@@ -91,7 +102,6 @@ export default function NavigationBar() {
             />
           </div>
         </Container>
-
       </Navbar>
 
       {/* Sidebar */}
