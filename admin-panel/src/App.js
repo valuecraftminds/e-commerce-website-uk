@@ -2,22 +2,25 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
-import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
-import RegisterCompanyAdmins from './pages/VCM_Admin/RegisterCompanyAdmins';
-import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
-import AdminDashboard from './pages/AdminDashboard';
 import DeleteAdmin from './components/DeleteAdmin';
+import Header from './components/header';
+import Settings from './components/Setting';
+import AdminDashboard from './pages/AdminDashboard';
 import EditAdmin from './pages/Company_Admin/EditAdmins';
+import RegisterPage from './pages/Company_Admin/RegisterPage';
+import ViewAdmins from './pages/Company_Admin/ViewAdmins';
 import LoginPage from './pages/LoginPage';
 import OrderingDashboard from './pages/OrderingDashboard';
 import PdcDashboard from './pages/PdcDashboard';
-import RegisterPage from './pages/Company_Admin/RegisterPage';
-import ViewAdmins from './pages/Company_Admin/ViewAdmins';
+import ColorManagement from './pages/Style_Management/ColorManagement';
+import FitManagement from './pages/Style_Management/FitManagement';
+import MaterialManagement from './pages/Style_Management/MaterialManagement';
+import SizeManagement from './pages/Style_Management/SizeManagement';
+import RegisterCompanyAdmins from './pages/VCM_Admin/RegisterCompanyAdmins';
+import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
+import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
-import Settings from './components/Setting';
-import Header from './components/Header';
-
 
 function App() {
   const location = useLocation();
@@ -45,7 +48,10 @@ function App() {
         <Route path='/WarehouseGRNDashboard/*' element={<WarehouseGRNDashboard />} />
         <Route path='/WarehouseIssuingDashboard/*' element={<WarehouseIssuingDashboard />} />
         <Route path='/dashboard/settings/*' element={<Settings />} />
-
+        <Route path="/colors" element={<ColorManagement />} />
+        <Route path="/sizes" element={<SizeManagement />} />
+        <Route path="/materials" element={<MaterialManagement />} />
+        <Route path="/fits" element={<FitManagement />} />
       </Routes>  
     </>
   );

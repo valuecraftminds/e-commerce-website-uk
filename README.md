@@ -58,3 +58,58 @@ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 INDEX idx_style_code (style_code),
 INDEX idx_sku (sku)
 );
+
+
+# Add these table definitions after existing tables
+
+CREATE TABLE colors (
+    color_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_code VARCHAR(10) NOT NULL,
+    color_name VARCHAR(100) NOT NULL,
+    color_code VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_color (company_code, color_name)
+);
+
+CREATE TABLE sizes (
+    size_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_code VARCHAR(10) NOT NULL,
+    size_name VARCHAR(50) NOT NULL,
+    size_order INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_size (company_code, size_name)
+);
+
+CREATE TABLE materials (
+    material_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_code VARCHAR(10) NOT NULL,
+    material_name VARCHAR(200) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_material (company_code, material_name)
+);
+
+CREATE TABLE fits (
+    fit_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_code VARCHAR(10) NOT NULL,
+    fit_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_fit (company_code, fit_name)
+);
+
+# Then modify the style_variants table to include foreign keys
+
+ALTER TABLE style_variants
+ADD COLUMN color_id INT,
+ADD COLUMN size_id INT,
+ADD COLUMN material_id INT,
+ADD COLUMN fit_id INT,
+ADD FOREIGN KEY (color_id) REFERENCES colors(color_id) ON DELETE RESTRICT,
+ADD FOREIGN KEY (size_id) REFERENCES sizes(size_id) ON DELETE RESTRICT,
+ADD FOREIGN KEY (material_id) REFERENCES materials(material_id) ON DELETE RESTRICT,
+ADD FOREIGN KEY (fit_id) REFERENCES fits(fit_id) ON DELETE RESTRICT;

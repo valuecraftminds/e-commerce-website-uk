@@ -490,10 +490,6 @@ app.put('/api/update-admin-profile/:user_id', async (req, res) => {
   }
 });
 
-
-
-
-
 // Category Management Endpoints
 
 // Get all categories with their subcategories
@@ -786,7 +782,8 @@ app.post('/api/add-styles', upload.array('images', 5), (req, res) => {
     company_code, 
     name, 
     description, 
-    category_id
+    category_id,
+    approved
   } = req.body;
 
   // Validate required fields
@@ -845,12 +842,12 @@ app.post('/api/add-styles', upload.array('images', 5), (req, res) => {
           approved,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, false, NOW(), NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 
       db.query(
         insertSql, 
-        [company_code, styleCode, name, description, category_id, imagePaths],
+        [company_code, styleCode, name, description, category_id, imagePaths, approved || 'no'],
         (err, results) => {
           if (err) {
             console.error('Insert error:', err);
@@ -960,230 +957,454 @@ app.put('/api/update-styles/:style_id', upload.array('images', 5), (req, res) =>
   });
 });
 
-// Delete style
+// Delete style and its variants
 app.delete('/api/delete-styles/:style_id', (req, res) => {
   const { style_id } = req.params;
 
-  const sql = `
-    SELECT s.*, c.category_name 
-    FROM styles s
-    LEFT JOIN categories c ON s.category_id = c.category_id
-    WHERE s.style_id = ?
-  `;
-
-  db.query(sql, [style_id], (err, results) => {
+  // First get the style_code
+  const getStyleSql = 'SELECT style_code FROM styles WHERE style_id = ?';
+  
+  db.query(getStyleSql, [style_id], (err, styleResults) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error('Error fetching style:', err);
       return res.status(500).json({ success: false, message: 'Error fetching style' });
     }
 
-    if (results.length === 0) {
+    if (styleResults.length === 0) {
       return res.status(404).json({ success: false, message: 'Style not found' });
     }
 
-    res.json({ success: true, style: results[0] });
+    const style_code = styleResults[0].style_code;
+
+    // Delete variants first
+    const deleteVariantsSql = 'DELETE FROM style_variants WHERE style_code = ?';
+    
+    db.query(deleteVariantsSql, [style_code], (variantErr) => {
+      if (variantErr) {
+        console.error('Error deleting variants:', variantErr);
+        return res.status(500).json({ success: false, message: 'Error deleting style variants' });
+      }
+
+      // Then delete the style
+      const deleteStyleSql = 'DELETE FROM styles WHERE style_id = ?';
+      
+      db.query(deleteStyleSql, [style_id], (styleErr, styleResult) => {
+        if (styleErr) {
+          console.error('Error deleting style:', styleErr);
+          return res.status(500).json({ success: false, message: 'Error deleting style' });
+        }
+
+        if (styleResult.affectedRows === 0) {
+          return res.status(404).json({ success: false, message: 'Style not found' });
+        }
+
+        res.json({ 
+          success: true, 
+          message: 'Style and its variants deleted successfully' 
+        });
+      });
+    });
   });
 });
 
-// Add new style - updated for multiple images
-app.post('/api/add-styles', upload.array('images', 5), (req, res) => {
+// Get variants by style code with related data
+app.get('/api/get-style-variants/:style_code', (req, res) => {
+  const sql = `
+    SELECT sv.*, 
+           c.color_name, 
+           s.size_name, 
+           f.fit_name, 
+           m.material_name
+    FROM style_variants sv
+    LEFT JOIN colors c ON sv.color_id = c.color_id
+    LEFT JOIN sizes s ON sv.size_id = s.size_id
+    LEFT JOIN fits f ON sv.fit_id = f.fit_id
+    LEFT JOIN materials m ON sv.material_id = m.material_id
+    WHERE sv.style_code = ?
+    ORDER BY sv.created_at DESC`;
+  
+  db.query(sql, [req.params.style_code], (err, results) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error fetching variants' });
+    }
+    res.json({ success: true, variants: results });
+  });
+});
+
+// Add new variant - updated version with checks
+app.post('/api/add-style-variants', (req, res) => {
   const { 
     company_code, 
-    name, 
-    description, 
-    category_id
+    style_code, 
+    color_id, 
+    size_id, 
+    fit_id, 
+    material_id, 
+    price 
   } = req.body;
 
   // Validate required fields
-  if (!company_code || !name || !category_id) {
+  if (!company_code || !style_code || !color_id || !size_id || !fit_id || !material_id || !price) {
     return res.status(400).json({ 
       success: false, 
-      message: 'Company code, name, and category are required' 
+      message: 'All fields are required' 
     });
   }
 
-  // Get image paths if files were uploaded
-  const imagePaths = req.files ? req.files.map(file => file.filename).join(',') : null;
+  // Check for duplicate variant
+  const checkDuplicateSql = `
+    SELECT variant_id FROM style_variants 
+    WHERE style_code = ? AND color_id = ? AND size_id = ? AND fit_id = ?`;
 
-  // Generate style code from name and check for uniqueness
-  const generateStyleCode = (baseName, attempt = 0) => {
-    // Convert name to uppercase, remove special characters and spaces
-    let styleCode = baseName
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .substring(0, 6); // Take first 6 characters
-
-    // Add numeric suffix if this is a retry attempt
-    if (attempt > 0) {
-      styleCode = `${styleCode}${attempt}`;
+  db.query(checkDuplicateSql, [style_code, color_id, size_id, fit_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error checking duplicate variant' });
     }
 
-    return new Promise((resolve, reject) => {
-      // Check if generated code exists
-      const checkSql = 'SELECT style_id FROM styles WHERE company_code = ? AND style_code = ?';
-      db.query(checkSql, [company_code, styleCode], (err, results) => {
-        if (err) {
-          reject(err);
-        } else if (results.length > 0) {
-          // Code exists, try next attempt
-          resolve(generateStyleCode(baseName, attempt + 1));
-        } else {
-          // Code is unique
-          resolve(styleCode);
-        }
-      });
-    });
-  };
+    if (results.length > 0) {
+      return res.status(409).json({ success: false, message: 'This variant combination already exists' });
+    }
 
-  // Generate and insert style code
-  generateStyleCode(name)
-    .then(styleCode => {
-      // Insert new style with generated code
+    // Get the details for SKU generation
+    const getDetailsSql = `
+      SELECT c.color_name, s.size_name, f.fit_name 
+      FROM colors c, sizes s, fits f 
+      WHERE c.color_id = ? AND s.size_id = ? AND f.fit_id = ?`;
+
+    db.query(getDetailsSql, [color_id, size_id, fit_id], (err, results) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error fetching details' });
+      
+      const details = results[0];
+      const sku = `${style_code}-${details.color_name.substring(0,3).toUpperCase()}-${details.size_name}-${details.fit_name.substring(0,3).toUpperCase()}`;
+
       const insertSql = `
-        INSERT INTO styles (
-          company_code, 
-          style_code, 
-          name, 
-          description, 
-          category_id, 
-          image,
-          approved,
-          created_at,
-          updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, false, NOW(), NOW())
+        INSERT INTO style_variants (
+          company_code, style_code, color_id, size_id, fit_id, 
+          material_id, price, sku, is_active,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
       `;
 
-      db.query(
-        insertSql, 
-        [company_code, styleCode, name, description, category_id, imagePaths],
-        (err, results) => {
-          if (err) {
-            console.error('Insert error:', err);
-            return res.status(500).json({ success: false, message: 'Error adding style' });
-          }
-
-          res.json({ 
-            success: true, 
-            message: 'Style added successfully',
-            style_id: results.insertId,
-            style_code: styleCode,
-            image: imagePaths
-          });
-        }
-      );
-    })
-    .catch(err => {
-      console.error('Style code generation error:', err);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Error generating style code' 
-      });
-    });
-});
-
-// Update style - also update for multiple images
-app.put('/api/update-styles/:style_id', upload.array('images', 5), (req, res) => {
-  const { style_id } = req.params;
-  const { 
-    name, 
-    description, 
-    category_id, 
-    approved 
-  } = req.body;
-
-  // Validate required fields
-  if (!name || !category_id) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Name and category are required' 
-    });
-  }
-
-  // Get image paths if files were uploaded
-  const imagePaths = req.files && req.files.length > 0 ? req.files.map(file => file.filename).join(',') : null;
-
-  // Check if style exists and get current details
-  const checkSql = 'SELECT * FROM styles WHERE style_id = ?';
-  db.query(checkSql, [style_id], (checkErr, checkResults) => {
-    if (checkErr) {
-      return res.status(500).json({ success: false, message: 'Database error' });
-    }
-
-    if (checkResults.length === 0) {
-      return res.status(404).json({ success: false, message: 'Style not found' });
-    }
-
-    const existingStyle = checkResults[0];
-
-    // Update style
-    const updateSql = `
-      UPDATE styles 
-      SET name = ?, 
-          description = ?, 
-          category_id = ?, 
-          ${imagePaths ? 'image = ?,' : ''} 
-          approved = ?,
-          updated_at = NOW()
-      WHERE style_id = ?
-    `;
-
-    const updateParams = imagePaths 
-      ? [name, description, category_id, imagePaths, approved || false, style_id]
-      : [name, description, category_id, approved || false, style_id];
-
-    db.query(updateSql, updateParams, (err, results) => {
-      if (err) {
-        console.error('Update error:', err);
-        return res.status(500).json({ success: false, message: 'Error updating style' });
-      }
-
-      // If old images exist and new images are uploaded, delete old images
-      if (imagePaths && existingStyle.image) {
-        const oldImages = existingStyle.image.split(',');
-        oldImages.forEach(oldImage => {
-          const oldImagePath = path.join(__dirname, 'uploads/styles', oldImage);
-          if (fs.existsSync(oldImagePath)) {
-            fs.unlinkSync(oldImagePath);
-          }
+      db.query(insertSql, [
+        company_code, style_code, color_id, size_id, fit_id,
+        material_id, price, sku
+      ], (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: 'Error adding variant' });
+        res.json({ 
+          success: true, 
+          message: 'Variant added successfully',
+          variant_id: result.insertId,
+          sku: sku
         });
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Style updated successfully',
-        style: {
-          style_id,
-          style_code: existingStyle.style_code,
-          name,
-          description,
-          category_id,
-          image: imagePaths || existingStyle.image,
-          approved: approved || false
-        }
       });
     });
   });
 });
 
-// Delete style
-app.delete('/api/delete-styles/:style_id', (req, res) => {
-  const { style_id } = req.params;
+// Update variant
+app.put('/api/update-style-variants/:variant_id', (req, res) => {
+  const { variant_id } = req.params;
+  const { color_id, size_id, fit_id, material_id, price } = req.body;
 
+  // Check for duplicate variant
+  const checkDuplicateSql = `
+    SELECT variant_id FROM style_variants 
+    WHERE color_id = ? AND size_id = ? AND fit_id = ? AND variant_id != ?`;
 
-  const sql = 'DELETE FROM styles WHERE style_id = ?';
-  db.query(sql, [style_id], (err, results) => {
+  db.query(checkDuplicateSql, [color_id, size_id, fit_id, variant_id], (err, results) => {
     if (err) {
-      console.error('Delete error:', err);
-      return res.status(500).json({ success: false, message: 'Error deleting style' });
+      return res.status(500).json({ success: false, message: 'Error checking duplicate variant' });
     }
 
-    if (results.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Style not found' });
+    if (results.length > 0) {
+      return res.status(409).json({ success: false, message: 'This variant combination already exists' });
     }
 
-    res.json({ success: true, message: 'Style deleted successfully' });
+    // Get the details for SKU generation
+    const getDetailsSql = `
+      SELECT s.style_code, c.color_name, s2.size_name, f.fit_name 
+      FROM style_variants sv
+      JOIN styles s ON sv.style_code = s.style_code
+      JOIN colors c ON c.color_id = ?
+      JOIN sizes s2 ON s2.size_id = ?
+      JOIN fits f ON f.fit_id = ?
+      WHERE sv.variant_id = ?`;
+
+    db.query(getDetailsSql, [color_id, size_id, fit_id, variant_id], (err, results) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error fetching details' });
+      
+      const details = results[0];
+      const sku = `${details.style_code}-${details.color_name.substring(0,3).toUpperCase()}-${details.size_name}-${details.fit_name.substring(0,3).toUpperCase()}`;
+
+      const updateSql = `
+        UPDATE style_variants 
+        SET color_id = ?, size_id = ?, fit_id = ?, material_id = ?, 
+            price = ?, sku = ?, updated_at = NOW()
+        WHERE variant_id = ?`;
+
+      db.query(updateSql, [
+        color_id, size_id, fit_id, material_id, price, sku, variant_id
+      ], (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: 'Error updating variant' });
+        res.json({ success: true, message: 'Variant updated successfully' });
+      });
+    });
   });
 });
+
+// Delete variant
+app.delete('/api/delete-style-variants/:variant_id', (req, res) => {
+  const { variant_id } = req.params;
+  
+  const sql = 'DELETE FROM style_variants WHERE variant_id = ?';
+  db.query(sql, [variant_id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error deleting variant' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Variant not found' });
+    }
+    res.json({ success: true, message: 'Variant deleted successfully' });
+  });
+});
+
+// Color Management
+app.get('/api/get-colors', (req, res) => {
+  const { company_code } = req.query;
+  const sql = 'SELECT * FROM colors WHERE company_code = ? ORDER BY color_name';
+  db.query(sql, [company_code], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching colors' });
+    res.json({ success: true, colors: results });
+  });
+});
+
+app.post('/api/add-colors', (req, res) => {
+  const { company_code, color_name, color_code } = req.body;
+  const sql = 'INSERT INTO colors (company_code, color_name, color_code) VALUES (?, ?, ?)';
+  db.query(sql, [company_code, color_name, color_code], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error adding color' });
+    res.json({ success: true, color_id: result.insertId });
+  });
+});
+
+app.put('/api/update-colors/:color_id', (req, res) => {
+  const { color_id } = req.params;
+  const { color_name, color_code } = req.body;
+  
+  const sql = 'UPDATE colors SET color_name = ?, color_code = ?, updated_at = NOW() WHERE color_id = ?';
+  db.query(sql, [color_name, color_code, color_id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error updating color' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Color not found' });
+    }
+    res.json({ success: true, message: 'Color updated successfully' });
+  });
+});
+
+app.delete('/api/delete-colors/:color_id', (req, res) => {
+  const { color_id } = req.params;
+  
+  // Check if color is being used in any variants
+  const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE color_id = ?';
+  db.query(checkSql, [color_id], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error checking color usage' });
+    
+    if (results[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete color as it is being used in style variants' 
+      });
+    }
+    
+    const deleteSql = 'DELETE FROM colors WHERE color_id = ?';
+    db.query(deleteSql, [color_id], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error deleting color' });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Color not found' });
+      }
+      res.json({ success: true, message: 'Color deleted successfully' });
+    });
+  });
+});
+
+// Size Management
+app.get('/api/get-sizes', (req, res) => {
+  const { company_code } = req.query;
+  const sql = 'SELECT * FROM sizes WHERE company_code = ? ORDER BY size_order';
+  db.query(sql, [company_code], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching sizes' });
+    res.json({ success: true, sizes: results });
+  });
+});
+
+app.post('/api/add-sizes', (req, res) => {
+  const { company_code, size_name, size_order } = req.body;
+  const sql = 'INSERT INTO sizes (company_code, size_name, size_order) VALUES (?, ?, ?)';
+  db.query(sql, [company_code, size_name, size_order], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error adding size' });
+    res.json({ success: true, size_id: result.insertId });
+  });
+});
+
+app.put('/api/update-sizes/:size_id', (req, res) => {
+  const { size_id } = req.params;
+  const { size_name, size_order } = req.body;
+  
+  const sql = 'UPDATE sizes SET size_name = ?, size_order = ?, updated_at = NOW() WHERE size_id = ?';
+  db.query(sql, [size_name, size_order, size_id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error updating size' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Size not found' });
+    }
+    res.json({ success: true, message: 'Size updated successfully' });
+  });
+});
+
+app.delete('/api/delete-sizes/:size_id', (req, res) => {
+  const { size_id } = req.params;
+  
+  // Check if size is being used in any variants
+  const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE size_id = ?';
+  db.query(checkSql, [size_id], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error checking size usage' });
+    
+    if (results[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete size as it is being used in style variants' 
+      });
+    }
+    
+    const deleteSql = 'DELETE FROM sizes WHERE size_id = ?';
+    db.query(deleteSql, [size_id], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error deleting size' });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Size not found' });
+      }
+      res.json({ success: true, message: 'Size deleted successfully' });
+    });
+  });
+});
+
+// Material Management
+app.get('/api/get-materials', (req, res) => {
+  const { company_code } = req.query;
+  const sql = 'SELECT * FROM materials WHERE company_code = ? ORDER BY material_name';
+  db.query(sql, [company_code], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching materials' });
+    res.json({ success: true, materials: results });
+  });
+});
+
+app.post('/api/add-materials', (req, res) => {
+  const { company_code, material_name, description } = req.body;
+  const sql = 'INSERT INTO materials (company_code, material_name, description) VALUES (?, ?, ?)';
+  db.query(sql, [company_code, material_name, description], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error adding material' });
+    res.json({ success: true, material_id: result.insertId });
+  });
+});
+
+app.put('/api/update-materials/:material_id', (req, res) => {
+  const { material_id } = req.params;
+  const { material_name, description } = req.body;
+  
+  const sql = 'UPDATE materials SET material_name = ?, description = ?, updated_at = NOW() WHERE material_id = ?';
+  db.query(sql, [material_name, description, material_id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error updating material' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Material not found' });
+    }
+    res.json({ success: true, message: 'Material updated successfully' });
+  });
+});
+
+app.delete('/api/delete-materials/:material_id', (req, res) => {
+  const { material_id } = req.params;
+  
+  // Check if material is being used in any variants
+  const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE material_id = ?';
+  db.query(checkSql, [material_id], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error checking material usage' });
+    
+    if (results[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete material as it is being used in style variants' 
+      });
+    }
+    
+    const deleteSql = 'DELETE FROM materials WHERE material_id = ?';
+    db.query(deleteSql, [material_id], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error deleting material' });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Material not found' });
+      }
+      res.json({ success: true, message: 'Material deleted successfully' });
+    });
+  });
+});
+
+
+
+// Fit Management
+app.get('/api/get-fits', (req, res) => {
+  const { company_code } = req.query;
+  const sql = 'SELECT * FROM fits WHERE company_code = ? ORDER BY fit_name';
+  db.query(sql, [company_code], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching fits' });
+    res.json({ success: true, fits: results });
+  });
+});
+
+app.post('/api/add-fits', (req, res) => {
+  const { company_code, fit_name, description } = req.body;
+  const sql = 'INSERT INTO fits (company_code, fit_name, description) VALUES (?, ?, ?)';
+  db.query(sql, [company_code, fit_name, description], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error adding fit' });
+    res.json({ success: true, fit_id: result.insertId });
+  });
+});
+
+
+app.put('/api/update-fits/:fit_id', (req, res) => {
+  const { fit_id } = req.params;
+  const { fit_name, description } = req.body;
+  
+  const sql = 'UPDATE fits SET fit_name = ?, description = ?, updated_at = NOW() WHERE fit_id = ?';
+  db.query(sql, [fit_name, description, fit_id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error updating fit' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Fit not found' });
+    }
+    res.json({ success: true, message: 'Fit updated successfully' });
+  });
+});
+
+app.delete('/api/delete-fits/:fit_id', (req, res) => {
+  const { fit_id } = req.params;
+  
+  // Check if fit is being used in any variants
+  const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE fit_id = ?';
+  db.query(checkSql, [fit_id], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error checking fit usage' });
+    
+    if (results[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete fit as it is being used in style variants' 
+      });
+    }
+    
+    const deleteSql = 'DELETE FROM fits WHERE fit_id = ?';
+    db.query(deleteSql, [fit_id], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error deleting fit' });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Fit not found' });
+      }
+      res.json({ success: true, message: 'Fit deleted successfully' });
+    });
+  });
+});
+
 
 // Start the server
 app.listen(port, () => {
