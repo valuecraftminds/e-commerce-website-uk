@@ -1,23 +1,7 @@
 import React from 'react';
-import Header from '../components/Header';
-import { Routes, Route } from 'react-router-dom';
 import { Container, Card} from 'react-bootstrap';
 
 export default function OrderingDashboard() {
-  return (
-    <div className="dashboard-container">
-      <Header role='order' data-testid="header-toggle-button" />
-
-      <main className="dashboard-content">
-        <Routes>
-          <Route path="" element={<OrderHome />} />
-        </Routes>     
-      </main>
-    </div>
-  );
-}
-
-function OrderHome() {
   return (
     <Container fluid>
       <Card className="dashboard-card">

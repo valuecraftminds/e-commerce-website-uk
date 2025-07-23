@@ -5,8 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import '../styles/Header.css';
 import AdminSidebar from './AdminSidebar';
 
-
-export default function Header( {} ) {   
+export default function Header() {   
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);

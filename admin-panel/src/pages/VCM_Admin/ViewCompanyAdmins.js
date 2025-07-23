@@ -1,27 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Routes, Route } from 'react-router-dom';
 
-import Header from '../../components/Header';
 import DeleteAdmin from '../../components/DeleteAdmin';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function ViewCompanyAdmins() {
-  return (
-    <div className="dashboard-container">
-      <Header role="VCM_Admin" data-testid="header-toggle-button" />
-      <main className="dashboard-content">
-        <Routes>
-          <Route path="/" element={<ViewCompanyAdminsHome />} />
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-function ViewCompanyAdminsHome() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
