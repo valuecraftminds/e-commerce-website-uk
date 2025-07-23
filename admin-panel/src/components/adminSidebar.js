@@ -24,7 +24,6 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
     VCM_Admin: [
       {label: 'Dashboard', path: '/vcm-admin-dashboard', icon: 'bi-speedometer2'},
       {label: 'Manage Company Admins', path: '/vcm-admin-dashboard/view-company-admins', icon: 'bi-people'},
-      // {label: 'Settings', path: '/dashboard/settings', icon: 'bi-tags'},
     ],
      Company_Admin: [
     { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' },

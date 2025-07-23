@@ -1,0 +1,61 @@
+/* brand styling */
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+/* link hover effect */
+.nav-link {
+  color: #333 !important;
+  font-weight: 500;
+  margin-right: 1rem;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #5312a7 !important;
+    transform: scale(1.5);
+    transition: transform 0.3s ease;
+}
+
+/* Search input */
+form.d-flex input[type="search"] {
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  /* border: 1px solid #ccc; */
+  max-width: 200px;
+}
+
+form.d-flex button {
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+}
+
+/* Make navbar sticky with shadow */
+.navbar {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Collapse menu animation */
+.collapsing {
+  transition: height 0.35s ease;
+}
+
+/* Mobile spacing */
+@media (max-width: 576px) {
+  .navbar-nav {
+    text-align: center;
+    margin-top: 1rem;
+  }
+  form.d-flex {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+form.d-flex input[type="search"] {
+  min-width: 180px;
+  max-width: 250px;
+}
