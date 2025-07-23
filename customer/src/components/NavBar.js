@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav, Form, FormControl, Button, Container } from "react-bootstrap";
-import { FaSearch, FaUser, FaShoppingCart, FaBars } from "react-icons/fa";
+import { Navbar, Nav, Form, Button, Container } from "react-bootstrap";
 
 import '../styles/NavBar.css';
 import logo from '../assets/logo.png';
 import Sidebar from './Sidebar';
+import SearchSidebar from "./SearchSidebar";
 
 export default function NavigationBar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isHoveringCategory, setIsHoveringCategory] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
+  const [showsearchSidebar, setShowsearchSidebar] = useState(false);
 
   useEffect(() => {
     let timeOutId; // Timeout to close sidebar after mouse leaves
@@ -74,34 +75,23 @@ export default function NavigationBar() {
             </Nav>
           </div>
 
-          {/* Desktop Right Nav */}
-          <div className="d-none d-lg-flex align-items-center">
-            <Form className="d-flex me-3" style={{ maxWidth: 280 }}>
-              <FormControl
-                type="search"
-                placeholder="Search"
-                className="me-2"
-                aria-label="Search"
-              />
-              <Button variant="outline-success" type="submit">
-                Search
-              </Button>
-            </Form>
-
-            <Nav className="align-items-center">
-              <Nav.Link href="/cart">🛒 Cart</Nav.Link>
-              <Nav.Link href="/signup">Signup</Nav.Link>
-            </Nav>
-          </div>
-
-          {/* Mobile Icons and Hamburger menu */}
-          <div className="d-flex d-lg-none align-items-center gap-3">
-            <FaSearch size={20} role="button" />
-            <FaUser size={20} role="button" />
-            <FaShoppingCart size={20} role="button" />
-            <FaBars size={25} role="button" onClick={() => setSidebarOpen(true)} />
+          {/* Right Side  */}
+          <div className="d-flex align-items-center gap-3">
+            <i
+              className="bi bi-search"
+              style={{ fontSize: "1.4rem", cursor: "pointer" }}
+              onClick={() => setShowsearchSidebar(true)}
+            />
+            <i className="bi bi-person-plus" style={{ fontSize: "1.4rem" }} />
+            <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }} />
+            <i
+              className="bi bi-list d-lg-none"
+              style={{ fontSize: "1.6rem", cursor: "pointer" }}
+              onClick={() => setSidebarOpen(true)}
+            />
           </div>
         </Container>
+
       </Navbar>
 
       {/* Sidebar */}
@@ -115,7 +105,12 @@ export default function NavigationBar() {
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       />
+
+      {/* Search Sidebar */}
+      <SearchSidebar
+        show={showsearchSidebar}
+        onClose={() => setShowsearchSidebar(false)}
+      />
     </>
   );
-
 }

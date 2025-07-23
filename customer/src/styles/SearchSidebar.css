@@ -1,0 +1,16 @@
+.search-sidebar {
+  width: 300px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1050;
+}
+
+.search-sidebar.show {
+  transform: translateX(0);
+}
+
+.search-input {
+  border-radius: 20px !important;
+  padding: 10px 20px !important;
+
+}

@@ -23,7 +23,7 @@
 form.d-flex input[type="search"] {
   border-radius: 20px;
   padding: 0.4rem 1rem;
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   max-width: 200px;
 }
 
