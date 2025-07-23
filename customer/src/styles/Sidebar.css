@@ -1,0 +1,114 @@
+.sidebar {
+  position: fixed;
+  top: 10%;
+  left: 0;
+  width: 500px;
+  background: rgb(255, 255, 255);
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding: 2rem 1.5rem;
+}
+
+.sidebar-title {
+  color: #2d3748;
+  font-weight: 700;
+  margin: 0;
+  font-size: 1.3rem;
+  letter-spacing: -0.025em;
+}
+
+.sidebar-nav .nav-link {
+  color: #4a5568 !important;
+  padding: 1rem 1.5rem;
+  border-radius: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+  font-weight: 500;
+  text-decoration: none !important;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  margin: 0.25rem 0;
+}
+
+.sidebar-nav .nav-link:hover {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  color: #667eea !important;
+  border-left-color: #667eea;
+  transform: translateX(8px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1044;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+  }
+  
+  .sidebar-nav .nav-link {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .dropdown-toggle {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .sidebar-header {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    width: 260px;
+  }
+  
+  .sidebar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .dropdown-toggle {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .sidebar-header {
+    padding: 1.25rem 1rem;
+  }
+  
+  .sidebar-title {
+    font-size: 1.1rem;
+  }
+}
