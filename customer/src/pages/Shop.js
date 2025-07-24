@@ -6,7 +6,7 @@ import "../styles/Shop.css";
 import DataFile from "../assets/DataFile";
 
 export default function Shop() {
-  const { category } = useParams(); // Get category from URL
+  const { category: currentCategory } = useParams(); // Get category from URL
   const [activePopup, setActivePopup] = useState(null);
   const navigate = useNavigate();
 
@@ -18,13 +18,22 @@ export default function Shop() {
     navigate(`/product/${id}`);
   };
 
-  
-  const validCategories = ['women', 'men', 'kids'];
-  const currentCategory = validCategories.includes(category) ? category : null;
+  // keep track of unique category+name combos
+  const uniqueProductTypesMap = new Map();
 
-  if (!currentCategory) {
-    return <h2 className="text-center my-5">Invalid category: {category}</h2>;
-  }
+  DataFile.productTypeDetails
+    .filter(item => item.category.includes(currentCategory))
+    .forEach(item => {
+      const key = item.name.toLowerCase();
+      if (!uniqueProductTypesMap.has(key)) {
+        uniqueProductTypesMap.set(key, item);
+      }
+    });
+
+  // Convert Map values to array for rendering
+  const uniqueProductTypes = Array.from(uniqueProductTypesMap.values());
+  console.log(uniqueProductTypes);
+  
 
   return (
     <>
@@ -87,40 +96,38 @@ export default function Shop() {
         {/* Categories */}
         <h2 className="mb-4 text-capitalize"> Categories</h2>
         <Row>
-          {DataFile.categories
-            .filter((item) => item.category === currentCategory)
-            .map((item) => (
-              <Col
-                key={item.id}
-                xs={12}
-                sm={6}
-                md={4}
-                className="mb-4 position-relative"
-                style={{ cursor: "pointer" }}
-                onClick={() => togglePopup(`cat-${item.id}`)}
+          {uniqueProductTypes.map((item) => (
+            <Col
+              key={item.id}
+              xs={12}
+              sm={6}
+              md={4}
+              className="mb-4 position-relative"
+              style={{ cursor: "pointer" }}
+              onClick={() => togglePopup(`cat-${item.id}`)}
+            >
+            <Card className="h-100 card-hover-popup">
+              <Card.Img
+                variant="top"
+                src={item.image}
+                alt={item.name}
+                className="cat-crd"
+              />
+              <Card.Body>
+                <Card.Title>{item.name}</Card.Title>
+              </Card.Body>
+              <div
+                className={`popup-details ${
+                  activePopup === `cat-${item.id}` ? "show" : ""
+                }`}
               >
-                <Card className="h-100 card-hover-popup">
-                  <Card.Img
-                    variant="top"
-                    src={item.image}
-                    alt={item.name}
-                    className="cat-crd"
-                  />
-                  <Card.Body>
-                    <Card.Title>{item.name}</Card.Title>
-                  </Card.Body>
-                  <div
-                    className={`popup-details ${
-                      activePopup === `cat-${item.id}` ? "show" : ""
-                    }`}
-                  >
-                    <p>{item.description}</p>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-        </Row>
-      </Container>
-    </>
+                <p>{item.description}</p>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </Container>
+  </>
   );
 }
