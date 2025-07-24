@@ -17,6 +17,20 @@ export default function Home() {
     navigate(`/product/${id}`);
   };
 
+  // keep track of unique category+name combos
+  const uniqueProductTypesMap = new Map();
+
+  DataFile.productTypeDetails.forEach(item => {
+    const key = item.category + '-' + item.name.toLowerCase();
+    if (!uniqueProductTypesMap.has(key)) {
+      uniqueProductTypesMap.set(key, item);
+    }
+  });
+
+  // Convert Map values to array for rendering
+  const uniqueProductTypes = Array.from(uniqueProductTypesMap.values());
+
+
   return (
     <>
         {/* Banner Section */}
@@ -67,7 +81,7 @@ export default function Home() {
         {/* Categories */}
         <h2 className="mb-4">Categories</h2>
         <Row>
-          {DataFile.categories.map((item) => (
+          {uniqueProductTypes.map((item) => (
             <Col
               key={item.id}
               xs={12}

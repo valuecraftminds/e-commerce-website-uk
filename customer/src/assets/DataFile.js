@@ -50,15 +50,15 @@ const DataFile = {
 
   newReleases: [
     {
-    id: 1,
-    name: 'Couple Shirt',
-    image: couple,
-    category: ['men', 'women'],
-    description: 'Matching couple wear',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Red', 'Blue', 'Black'],
-    price: 35.99
-  },
+      id: 1,
+      name: 'Couple Shirt',
+      image: couple,
+      category: ['men', 'women'],
+      description: 'Matching couple wear',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 35.99
+    },
     {
       id: 2,
       name: 'Yellow Tshirt',
@@ -162,78 +162,346 @@ const DataFile = {
   ],
 
   categories: [
-    {
+    {catId: 1, name: 'Women'},
+    {catId: 2, name: 'Men'},
+    {catId: 3, name: 'Kids'},
+  ],
+
+  productTypes: [
+    { prId: 1, name: 'tshirts' },
+    { prId: 2, name: 'trousers' },
+    { prId: 3, name: 'shoes' },
+    { prId: 4, name: 'accessories' },
+    { prId: 5, name: 'hoodies' }
+  ],
+
+  productTypeDetails: [
+     {
       id: 1,
-      name: 'T shirts',
-      image: YellowLady,
-      category: 'women',
-      description: 'Bright and bold summer wear'
-    },
-    {
+      name: 'Couple T-shirts',
+      image: couple,
+      category: ['women', 'men'],
+      description: 'Couple t-shirts',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 45.99
+  },
+  {
       id: 2,
-      name: 'Crop Tops',
-      image: WhiteLady,
-      category: 'women',
-      description: 'Sleek and elegant fashion'
-    },
-    {
+      name: 'Women T-shirts',
+      image: YellowLady,
+      category: ['women'],
+      description: 'Stylish yellow t-shirt for ladies',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Yellow', 'White', 'Black'],
+      price: 39.99
+  },
+  {
       id: 3,
-      name: 'Trousers (Women)',
-      image: women_trouser,
-      category: 'women',
-      description: 'Stylish and comfy trousers'
-    },
-    {
+      name: 'Women T-shirts',
+      image: WhiteLady,
+      category: ['women'],
+      description: 'Elegant white t-shirt for ladies',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['White', 'Black'],
+      price: 42.99
+  },
+  {
       id: 4,
-      name: 'Shoes',
-      image: girl_t_rose,
-      category: 'women',
-      description: 'Floral themed fashion'
-    },
-    {
+      name: 'Couple T-shirts',
+      image: couple_blue,
+      category: ['women', 'men'],
+      description: 'Couple blue t-shirts',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Blue', 'Black'],
+      price: 45.99
+  },
+  {
       id: 5,
-      name: 'Accessories',
-      image: rainbow_men,
-      category: 'men',
-      description: 'Bold and colorful statement piece'
-    },
-    {
+      name: 'Couple T-shirts',
+      image: couple_green,
+      category: ['women', 'men'],
+      description: 'Couple green t-shirts',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Green', 'Black'],
+      price: 45.99
+  },
+  {
       id: 6,
-      name: 'Red T-shirt',
-      image: red_t,
-      category: 'men',
-      description: 'Simple and sleek casual wear'
-    },
-    {
-      id: 7,
-      name: 'Trousers (Men)',
-      image: men_trouser,
-      category: 'men',
-      description: 'Everyday essentials'
-    },
-    {
+      name: 'Women T-shirts',
+      image: girl_t_rose,
+      category: ['women'],
+      description: 'Stylish t-shirt for girls',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Pink', 'White', 'Black'],
+      price: 35.99
+  },
+  // {
+  //     id: 7,
+  //     name: 'Kid T-Shirts',
+  //     image: kid_girl,
+  //     category: ['kids'],
+  //     description: 'Cute t-shirt for young girls',
+  //     sizes: ['S', 'M', 'L'],
+  //     colors: ['Pink', 'Purple', 'White'],
+  //     price: 29.99
+  // }, 
+  {
       id: 8,
-      name: 'Hoodie',
-      image: kid_yellow,
-      category: 'kids',
-      description: 'Bright and comfy hoodie'
-    },
-    {
-      id: 9,
-      name: 'Girls',
+      name: 'Kids Full Kit',
       image: kid_girl,
-      category: 'kids',
-      description: 'Cute and playful sets'
-    },
-    {
-      id: 10,
-      name: 'Boys',
-      image: kid_kit,
-      category: 'kids',
-      description: 'Fun prints for active kids'
-    }
+      category: ['kids'],
+      description: 'Stylish outfit for girls',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 30.99
+},
+{
+    id: 9,
+    name: 'Kids Full Kit',
+    image: kid_kit,
+    category: ['kids'],
+    description: 'Fun and playful kids kit',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: ['Red', 'Blue', 'Black'],
+    price: 25.99
+},
+{
+  id: 10,
+  name: 'Kids T-Shirts',
+  image: kid_yellow,
+  category: ['kids'],
+  description: 'Bright and comfy t-shirt for kids',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Yellow', 'Blue', 'Black'],
+  price: 20.99
+},
+{
+  id: 11,
+  name: 'Women T-shirts',
+  image: lily_hoodie,
+  category: ['women'],
+  description: 'Cozy winter hoodie for women',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Blue', 'Black'],
+  price: 39.99
+},
+{
+  id: 12,
+  name: 'Men Trousers',
+  image: men_trouser,
+  category: ['men'],
+  description: 'Stylish and comfy trousers for men',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Blue', 'Black'],
+  price: 35.99
+},
+{
+  id: 13,
+  name: 'Men T-shirts',
+  image: rainbow_men,
+  category: ['men'],
+  description: 'Colorful t-shirt for any occasion',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Blue', 'Black'],
+  price: 15.99
+},
+{
+  id: 14,
+  name: 'Men T-shirts',
+  image: red_t,
+  category: ['men'],
+  description: 'Bold red casual t-shirt',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Blue', 'Black'],
+  price: 50.00
+},
+{
+  id: 15,
+  name: 'Women T-shirts',
+  image: white_t_girl,
+  category: ['women'],
+  description: 'Chic white t-shirt for girls',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Blue', 'Black'],
+  price: 45.99
+},
+{
+  id: 16,
+  name: 'Women Trousers',
+  image: women_trouser,
+  category: ['women'],
+  description: 'Stylish and comfy trousers for women',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Red', 'Blue', 'Black'],
+  price: 34.99
+}
   ]
 };
 
 export default DataFile;
 
+// const DataFile = [
+//   {
+//       id: 1,
+//       name: 'couple t-shirts',
+//       image: couple,
+//       category: ['women', 'men'],
+//       description: 'Couple t-shirts',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['Red', 'Blue', 'Black'],
+//       price: 45.99
+//   },
+//   {
+//       id: 2,
+//       name: 'Lady T-Shirt',
+//       image: YellowLady,
+//       category: ['women'],
+//       description: 'Stylish yellow t-shirt for ladies',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['Yellow', 'White', 'Black'],
+//       price: 39.99
+//   },
+//   {
+//       id: 3,
+//       name: 'Lady T-Shirt',
+//       image: WhiteLady,
+//       category: ['women'],
+//       description: 'Elegant white t-shirt for ladies',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['White', 'Black'],
+//       price: 42.99
+//   },
+//   {
+//       id: 4,
+//       name: 'Couple T-Shirt',
+//       image: couple_blue,
+//       category: ['women', 'men'],
+//       description: 'Couple blue t-shirts',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['Blue', 'Black'],
+//       price: 45.99
+//   },
+//   {
+//       id: 5,
+//       name: 'Couple T-Shirt',
+//       image: couple_green,
+//       category: ['women', 'men'],
+//       description: 'Couple green t-shirts',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['Green', 'Black'],
+//       price: 45.99
+//   },
+//   {
+//       id: 6,
+//       name: 'Girl T-Shirt',
+//       image: girl_t_rose,
+//       category: ['women'],
+//       description: 'Stylish t-shirt for girls',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['Pink', 'White', 'Black'],
+//       price: 35.99
+//   },
+//   {
+//       id: 7,
+//       name: 'Kid Girl T-Shirt',
+//       image: kid_girl,
+//       category: ['kids'],
+//       description: 'Cute t-shirt for young girls',
+//       sizes: ['S', 'M', 'L'],
+//       colors: ['Pink', 'Purple', 'White'],
+//       price: 29.99
+//   }, 
+//   {
+//       id: 8,
+//       name: 'Kid Girl Set',
+//       image: kid_girl,
+//       category: ['kids'],
+//       description: 'Stylish outfit for girls',
+//       sizes: ['S', 'M', 'L', 'XL'],
+//       colors: ['Red', 'Blue', 'Black'],
+//       price: 30.99
+// },
+// {
+//     id: 9,
+//     name: 'Kid Kit Set',
+//     image: kid_kit,
+//     category: ['kids'],
+//     description: 'Fun and playful kids kit',
+//     sizes: ['S', 'M', 'L', 'XL'],
+//     colors: ['Red', 'Blue', 'Black'],
+//     price: 25.99
+// },
+// {
+//   id: 10,
+//   name: 'Kid Hoodie',
+//   image: kid_yellow,
+//   category: ['kids'],
+//   description: 'Bright and comfy hoodie for kids',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Yellow', 'Blue', 'Black'],
+//   price: 20.99
+// },
+// {
+//   id: 11,
+//   name: 'Lily Hoodie',
+//   image: lily_hoodie,
+//   category: ['women'],
+//   description: 'Cozy winter hoodie for women',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Red', 'Blue', 'Black'],
+//   price: 39.99
+// },
+// {
+//   id: 12,
+//   name: 'Men Trouser',
+//   image: men_trouser,
+//   category: ['men'],
+//   description: 'Stylish and comfy trousers for men',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Red', 'Blue', 'Black'],
+//   price: 35.99
+// },
+// {
+//   id: 13,
+//   name: 'Rainbow Men T-Shirt',
+//   image: rainbow_men,
+//   category: ['men'],
+//   description: 'Colorful t-shirt for any occasion',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Red', 'Blue', 'Black'],
+//   price: 15.99
+// },
+// {
+//   id: 14,
+//   name: 'T-Shirt',
+//   image: red_t,
+//   category: ['men'],
+//   description: 'Bold red casual t-shirt',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Red', 'Blue', 'Black'],
+//   price: 50.00
+// },
+// {
+//   id: 15,
+//   name: 'T-Shirt',
+//   image: white_t_girl,
+//   category: ['women'],
+//   description: 'Chic white t-shirt for girls',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Red', 'Blue', 'Black'],
+//   price: 45.99
+// },
+// {
+//   id: 16,
+//   name: 'Women Trouser',
+//   image: women_trouser,
+//   category: ['women'],
+//   description: 'Stylish and comfy trousers for women',
+//   sizes: ['S', 'M', 'L', 'XL'],
+//   colors: ['Red', 'Blue', 'Black'],
+//   price: 34.99
+// }
+// ]
+
+// export default DataFile;
