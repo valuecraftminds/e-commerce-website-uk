@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import DataFile from "../assets/DataFile";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
+
+import DataFile from "../assets/DataFile";
+import SuccessMsg from "../components/SuccessMsg";
+import "../styles/ProductPage.css"; 
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -13,14 +16,16 @@ export default function ProductPage() {
   const [selectedColor, setSelectedColor] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [showModal, setShowModal] = useState(false);
 
   if (!product) {
     return <h2>Product not found</h2>;
   }
 
   const handleAddToCart = () => {
-    // Logic to add the product to the cart
-   setSuccessMessage(`Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColor}`);
+    const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColor}`;
+    setSuccessMessage(message);
+    setShowModal(true);
   };
 
   const handleBuyNow = (product) => {
@@ -29,15 +34,16 @@ export default function ProductPage() {
   };
 
   return (
-    <Container className="my-5">
+    <div className="product-page">
+    <Container className="my-5 container">
       <Row>
-        <Col md={6}>
-          <Image src={product.image} alt={product.name} fluid />
+        <Col className="img-col" md={6}>
+          <Image className="product-image" src={product.image} alt={product.name} fluid />
         </Col>
         <Col md={6}>
           <h1>{product.name}</h1>
           <p>{product.description}</p>
-          <h4>Price: ${product.price?.toFixed(2) ?? "N/A"}</h4>
+          <h5 className="price"> ${product.price?.toFixed(2) ?? "N/A"}</h5>
 
           <div className="mb-3">
             <h5>Available Sizes:</h5>
@@ -45,8 +51,7 @@ export default function ProductPage() {
               product.sizes.map((size) => (
                 <Button
                   key={size}
-                  variant={selectedSize === size ? "primary" : "outline-primary"}
-                  className="me-2 mb-2"
+                  className={`me-2 mb-2 btn-size ${selectedSize === size ? 'selected' : ''}`}
                   onClick={() => setSelectedSize(size)}
                 >
                   {size}
@@ -63,8 +68,7 @@ export default function ProductPage() {
               product.colors.map((color) => (
                 <Button
                   key={color}
-                  variant={selectedColor === color ? "primary" : "outline-primary"}
-                  className="me-2 mb-2"
+                  className={`me-2 mb-2 btn-color ${selectedColor === color ? 'selected' : ''}`} 
                   onClick={() => setSelectedColor(color)}
                 >
                   {color}
@@ -80,26 +84,28 @@ export default function ProductPage() {
               type="number"
               min="1"
               defaultValue="1"
-              className="form-control w-25"
+              className="form-control w-25 quantity-input"
               onChange={(e) => setQuantity(e.target.value)}
               value={quantity}
             />
           </div>
-          <div className="mb-3">
-            <Button variant="success" disabled={!selectedSize || !selectedColor || quantity < 1} onClick={handleAddToCart}>
+          <div className="btns">
+            <Button className="btn-custom-primary" disabled={!selectedSize || !selectedColor || quantity < 1} onClick={handleAddToCart}>
               Add to Cart
             </Button>
-            <Button variant="info" className="ms-2" disabled={!selectedSize || !selectedColor || quantity < 1} onClick={() => {handleBuyNow(product)}}>
+            <Button className="btn-custom-primary" disabled={!selectedSize || !selectedColor || quantity < 1} onClick={() => {handleBuyNow(product)}}>
               Buy Now
             </Button>
           </div>
-          {successMessage && (
-            <div className="alert alert-success mt-3">
-              {successMessage}
-            </div>
-          )}
+
+          <SuccessMsg
+            show={showModal}
+            onClose={() => setShowModal(false)}
+            message={successMessage}
+          />
         </Col>
       </Row>
     </Container>
+    </div>
   );
 }
