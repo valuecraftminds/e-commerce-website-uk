@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card } from "react-bootstrap";
 
 import "../styles/Shop.css";
@@ -8,11 +8,17 @@ import DataFile from "../assets/DataFile";
 export default function Shop() {
   const { category } = useParams(); // Get category from URL
   const [activePopup, setActivePopup] = useState(null);
+  const navigate = useNavigate();
 
   const togglePopup = (id) => {
     setActivePopup(activePopup === id ? null : id);
   };
 
+  const getProductDetails = (id) => {
+    navigate(`/product/${id}`);
+  };
+
+  
   const validCategories = ['women', 'men', 'kids'];
   const currentCategory = validCategories.includes(category) ? category : null;
 
@@ -38,7 +44,7 @@ export default function Shop() {
 
       <Container className="my-5">
         {/* New Releases */}
-        <h2 className="mb-4 text-capitalize">{currentCategory} - New Releases</h2>
+        <h2 className="mb-4 text-capitalize"> New Releases</h2>
         <Row className="flex-nowrap overflow-auto mb-5">
           {DataFile.newReleases
             .filter((item) => item.category === currentCategory)
@@ -50,7 +56,11 @@ export default function Shop() {
                 md={4}
                 lg={3}
                 className="position-relative"
-                onClick={() => togglePopup(`new-${item.id}`)}
+                // toggle popup when hover
+                onMouseEnter={() => togglePopup(`new-${item.id}`)}
+                onMouseLeave={() => togglePopup(null)}
+                // navigate to product details page
+                onClick={() => getProductDetails(item.id)}
               >
                 <Card className="h-100 card-hover-popup">
                   <Card.Img
@@ -75,7 +85,7 @@ export default function Shop() {
         </Row>
 
         {/* Categories */}
-        <h2 className="mb-4 text-capitalize">{currentCategory} - Categories</h2>
+        <h2 className="mb-4 text-capitalize"> Categories</h2>
         <Row>
           {DataFile.categories
             .filter((item) => item.category === currentCategory)

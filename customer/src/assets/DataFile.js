@@ -50,53 +50,114 @@ const DataFile = {
 
   newReleases: [
     {
-      id: 1,
-      name: 'Couple Shirt',
-      image: couple,
-      category: 'men',
-      description: 'Matching couple wear'
-    },
+    id: 1,
+    name: 'Couple Shirt',
+    image: couple,
+    category: ['men', 'women'],
+    description: 'Matching couple wear',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: ['Red', 'Blue', 'Black'],
+    price: 35.99
+  },
     {
       id: 2,
-      name: 'Yellow Dress',
+      name: 'Yellow Tshirt',
       image: YellowLady,
       category: 'women',
-      description: 'Stylish yellow summer dress'
+      description: 'Stylish yellow summer tshirt',
+      sizes: ['S', 'M', 'L', 'XL'],
+    colors: ['Red', 'Blue', 'Black'],
+    price: 29.99
     },
     {
       id: 3,
-      name: 'White Dress',
+      name: 'White Tshirt',
       image: WhiteLady,
       category: 'women',
-      description: 'Elegant white evening dress'
+      description: 'Elegant white evening tshirt',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 50.99
     },
     {
       id: 4,
-      name: 'Rainbow Tee',
+      name: 'Rainbow T',
       image: rainbow_men,
       category: 'men',
-      description: 'Colorful men’s t-shirt for any occasion'
+      description: 'Colorful men’s t-shirt for any occasion',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 15.99
     },
     {
       id: 5,
-      name: 'Red T-shirt',
+      name: 'Red T',
       image: red_t,
       category: 'men',
-      description: 'Bold red casual t-shirt'
+      description: 'Bold red casual t-shirt',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 50.00
     },
     {
       id: 6,
-      name: 'White Tee Girl',
+      name: 'White T',
       image: white_t_girl,
-      category: 'kids',
-      description: 'Chic white t-shirt for girls'
+      category: 'women',
+      description: 'Chic white t-shirt for girls',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 45.99
     },
     {
       id: 7,
       name: 'Couple Green',
       image: couple_green,
       category: 'women',
-      description: 'Stylish couple hoodie'
+      description: 'Stylish couple hoodie',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 30.99
+    },
+    {
+      id: 8,
+      name: 'Kid-girl',
+      image: kid_girl,
+      category: 'kids',
+      description: 'Stylish kid-girl outfit',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 30.99
+    },
+    {
+      id: 9,
+      name: 'Kid-kit',
+      image: kid_kit,
+      category: 'kids',
+      description: 'Fun and playful kids kit',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 25.99
+    },
+    {
+      id: 10,
+      name: 'Kid-yellow',
+      image: kid_yellow,
+      category: 'kids',
+      description: 'Bright and comfy hoodie for kids',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 20.99
+    },
+    {
+      id: 11,
+      name: 'trouser',
+      image: men_trouser,
+      category: 'men',
+      description: 'Stylish and comfy trousers for men',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Red', 'Blue', 'Black'],
+      price: 35.99 
     }
   ],
 
@@ -124,14 +185,14 @@ const DataFile = {
     },
     {
       id: 4,
-      name: 'Rose T-Shirt',
+      name: 'Shoes',
       image: girl_t_rose,
       category: 'women',
       description: 'Floral themed fashion'
     },
     {
       id: 5,
-      name: 'Rainbow Tee',
+      name: 'Accessories',
       image: rainbow_men,
       category: 'men',
       description: 'Bold and colorful statement piece'
@@ -152,21 +213,21 @@ const DataFile = {
     },
     {
       id: 8,
-      name: 'Yellow Hoodie',
+      name: 'Hoodie',
       image: kid_yellow,
       category: 'kids',
       description: 'Bright and comfy hoodie'
     },
     {
       id: 9,
-      name: 'Girls Outfit',
+      name: 'Girls',
       image: kid_girl,
       category: 'kids',
       description: 'Cute and playful sets'
     },
     {
       id: 10,
-      name: 'Kids Kit',
+      name: 'Boys',
       image: kid_kit,
       category: 'kids',
       description: 'Fun prints for active kids'

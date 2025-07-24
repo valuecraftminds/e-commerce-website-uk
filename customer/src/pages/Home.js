@@ -1,14 +1,20 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
+import { useNavigate } from "react-router-dom"; 
 
 import "../styles/Shop.css";
 import DataFile from "../assets/DataFile";
 
 export default function Home() {
   const [activePopup, setActivePopup] = useState(null);
+  const navigate = useNavigate();
 
   const togglePopup = (id) => {
     setActivePopup(activePopup === id ? null : id);
+  };
+
+   const getProductDetails = (id) => {
+    navigate(`/product/${id}`);
   };
 
   return (
@@ -34,7 +40,7 @@ export default function Home() {
               md={4}
               lg={3}
               className="position-relative"
-              onClick={() => togglePopup(`new-${item.id}`)}
+              onClick={() => getProductDetails(item.id)}
             >
               <Card className="h-100 card-hover-popup">
                 <Card.Img
