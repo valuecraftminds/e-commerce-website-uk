@@ -103,12 +103,12 @@
     cursor: pointer;
     border-radius: 6px;
     transition: background 0.3s ease;
+    text-decoration: none;
+    color: black;
+    display: flex;
+    flex-direction: column; 
   }
 
-  .sidebar-category-item:hover {
-    background: #f7fafc;
-    color: #667eea;
-  }
 
   .sidebar-category-item.text-primary {
     color: #667eea;

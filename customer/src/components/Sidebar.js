@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
+import axios from "axios";
 
 import "../styles/Sidebar.css";
-import DataFile from "../assets/DataFile";
+
+const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Sidebar({
   category,
@@ -10,17 +12,59 @@ export default function Sidebar({
   onClose,
   onMouseEnter,
   onMouseLeave,
-  categories = [],
   onCategoryClick,
 }) {
   const sidebarRef = useRef(null);
   const currentCategory = category?.toLowerCase();
 
-  const filteredTypes = DataFile.productTypeDetails.filter((item) =>
-    item.category.includes(currentCategory)
-  );
+  // State to hold product types and categories
+  const [categories, setCategories] = useState([]);
+  const [productTypes, setProductTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-   useEffect(() => {
+  // Fetch categories on mount
+  useEffect(() => {
+    axios.get(`${BASEURL}/customer/main-categories`)
+      .then(res => {
+        console.log("Categories fetched:", res.data);
+        setCategories(res.data);
+      })
+      .catch(err => console.error("Failed to fetch categories:", err));
+  }, []);
+
+  // Fetch product types when category changes
+  useEffect(() => {
+    if (!category || categories.length === 0) {
+      setProductTypes([]);
+      return;
+    }
+
+    // Find the category ID based on the current category name
+    const matchedCategory = categories.find(
+      cat => cat.category_name.toLowerCase() === currentCategory
+    );
+
+    if (matchedCategory) {
+      setLoading(true);
+      // Fix the API endpoint to match your backend route
+      axios.get(`${BASEURL}/customer/product-types/${matchedCategory.category_id}`)
+        .then(res => {
+          console.log("Product types fetched:", res.data);
+          setProductTypes(res.data);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Failed to fetch product types:", err);
+          setProductTypes([]);
+          setLoading(false);
+        });
+    } else {
+      setProductTypes([]);
+    }
+  }, [category, categories, currentCategory]);
+
+  // Click outside handler for mobile
+  useEffect(() => {
     if (!isOpen || !window.matchMedia("(max-width: 768px)").matches) return;
 
     const handleClickOutside = (event) => {
@@ -33,14 +77,11 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  // Desktop view 
+  // Desktop view
   if (category && !window.matchMedia("(max-width: 768px)").matches) {
-    const currentCategory = category.toLowerCase();
-    const filteredTypes = DataFile.productTypeDetails.filter((item) =>
-      item.category.includes(currentCategory)
-    );
-    const uniqueNames = Array.from(
-      new Set(filteredTypes.map((item) => item.name))
+    // Get unique product type names
+    const uniqueProductTypes = Array.from(
+      new Set(productTypes.map((item) => item.category_name))
     );
 
     return (
@@ -55,10 +96,17 @@ export default function Sidebar({
         </header>
 
         <nav className="sidebar-nav d-flex flex-column">
-          {uniqueNames.length > 0 ? (
-            uniqueNames.map((type, idx) => (
-              <Link key={idx} className="nav-link">
-                {type}
+          {loading ? (
+            <span className="text-muted px-3">Loading...</span>
+          ) : uniqueProductTypes.length > 0 ? (
+            uniqueProductTypes.map((typeName, idx) => (
+              <Link 
+                key={idx}
+                to={`/shop/${currentCategory}/${typeName.toLowerCase().replace(/\s+/g, '-')}`} 
+                className="nav-link"
+                onClick={() => onClose && onClose()}
+              >
+                {typeName}
               </Link>
             ))
           ) : (
@@ -69,7 +117,7 @@ export default function Sidebar({
     );
   }
 
-  // Mobile view: show selected category options + other categories
+  // Mobile view
   if (isOpen) {
     return (
       <aside
@@ -77,15 +125,22 @@ export default function Sidebar({
         className="sidebar open"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* If category is selected*/}
+        {/* If category is selected */}
         {category && (
           <>
             <h5 className="mb-3 px-3">{category} Collection</h5>
-            {filteredTypes.length > 0 ? (
-                 Array.from(new Set(filteredTypes.map((item) => item.name))).map((name, idx) => (
-                <div key={idx} className="sidebar-category-item px-3">
+            {loading ? (
+              <span className="text-muted px-3">Loading...</span>
+            ) : productTypes.length > 0 ? (
+              Array.from(new Set(productTypes.map((item) => item.category_name))).map((name, idx) => (
+                <Link
+                  key={idx}
+                  to={`/shop/${currentCategory}/${name.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="sidebar-category-item px-3"
+                  onClick={() => onClose && onClose()}
+                >
                   {name}
-                </div>
+                </Link>
               ))
             ) : (
               <span className="text-muted px-3">No items found</span>
@@ -93,25 +148,25 @@ export default function Sidebar({
           </>
         )}
 
-        {/* show other categories */}
+        {/* Show other categories */}
         <div className="sidebar-other-categories mt-4">
           <h6 className="mb-2 px-3">
             {category ? "Browse Other Categories" : "Browse Categories"}
           </h6>
           {categories.map((cat) => (
             <div
-              key={cat.catId}
+              key={cat.category_id}
               className={`sidebar-category-item px-3 py-2 ${
-                cat.name.toLowerCase() === currentCategory ? "text-primary" : ""
+                cat.category_name.toLowerCase() === currentCategory ? "text-primary" : ""
               }`}
-              onClick={() => onCategoryClick(cat.name)}
+              onClick={() => onCategoryClick && onCategoryClick(cat.category_name)}
               role="button"
               tabIndex={0}
               onKeyPress={(e) => {
-                if (e.key === "Enter") onCategoryClick(cat.name);
+                if (e.key === "Enter") onCategoryClick && onCategoryClick(cat.category_name);
               }}
             >
-              {cat.name}
+              {cat.category_name}
             </div>
           ))}
         </div>

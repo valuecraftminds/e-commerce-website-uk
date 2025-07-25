@@ -1,17 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom"; 
+import axios from "axios";
 
 import "../styles/Shop.css";
 import DataFile from "../assets/DataFile";
 
-export default function Home() {
-  const [activePopup, setActivePopup] = useState(null);
-  const navigate = useNavigate();
+const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-  const togglePopup = (id) => {
-    setActivePopup(activePopup === id ? null : id);
-  };
+export default function Home() {
+  const [activePopup] = useState(null);
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
 
    const getProductDetails = (id) => {
     navigate(`/product/${id}`);
@@ -27,9 +27,16 @@ export default function Home() {
     }
   });
 
-  // Convert Map values to array for rendering
-  const uniqueProductTypes = Array.from(uniqueProductTypesMap.values());
-
+  // Fetch product listings from the backend
+  useEffect (() => {
+    axios.get(`${BASEURL}/customer/product-listings`)
+      .then(response => {
+        setProducts(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching product listings:', error);
+      });
+  }, []);
 
   return (
     <>
@@ -43,18 +50,18 @@ export default function Home() {
         </div>
 
       <Container className="my-5">
-        {/* New Releases */}
-        <h2 className="mb-4">New Releases</h2>
+        {/*Display products*/}
+        <h2 className="mb-4">Explore Your Fashion</h2>
         <Row className="flex-nowrap overflow-auto mb-5">
-          {DataFile.newReleases.map((item) => (
+          {products.map((item) => (
             <Col
-              key={item.id}
+              key={item.style_id}
               xs={8}
               sm={6}
               md={4}
               lg={3}
               className="position-relative"
-              onClick={() => getProductDetails(item.id)}
+              onClick={() => getProductDetails(item.style_id)}
             >
               <Card className="h-100 card-hover-popup">
                 <Card.Img
@@ -68,42 +75,7 @@ export default function Home() {
                 </Card.Body>
                 <div
                   className={`popup-details ${
-                    activePopup === `new-${item.id}` ? "show" : ""
-                  }`}
-                >
-                  <p>{item.description}</p>
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-
-        {/* Categories */}
-        <h2 className="mb-4">Categories</h2>
-        <Row>
-          {uniqueProductTypes.map((item) => (
-            <Col
-              key={item.id}
-              xs={12}
-              sm={6}
-              md={4}
-              className="mb-4 position-relative"
-              style={{ cursor: "pointer" }}
-              onClick={() => togglePopup(`cat-${item.id}`)}
-            >
-              <Card className="h-100 card-hover-popup">
-                <Card.Img
-                  variant="top"
-                  src={item.image}
-                  alt={item.name}
-                  className="cat-crd"
-                />
-                <Card.Body>
-                  <Card.Title>{item.name}</Card.Title>
-                </Card.Body>
-                <div
-                  className={`popup-details ${
-                    activePopup === `cat-${item.id}` ? "show" : ""
+                    activePopup === `new-${item.style_id}` ? "show" : ""
                   }`}
                 >
                   <p>{item.description}</p>
@@ -116,3 +88,4 @@ export default function Home() {
     </>
   );
 }
+
