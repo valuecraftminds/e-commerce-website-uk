@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -6,16 +7,36 @@ import '../styles/NavBar.css';
 import logo from '../assets/logo.png';
 import Sidebar from './Sidebar';
 import SearchSidebar from "./SearchSidebar";
-import DataFile from "../assets/DataFile";
+
+const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function NavigationBar() {
   const navigate = useNavigate();
+
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isHoveringCategory, setIsHoveringCategory] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const [showsearchSidebar, setShowsearchSidebar] = useState(false);
+
+  // Fetch categories from the backend
+  useEffect(() => {
+    axios.get(`${BASEURL}/customer/main-categories`)
+      .then((response) => {
+        setCategories(response.data);
+        setLoading(false);
+        console.log('Categories fetched:', response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching categories:', error);
+        setError('Failed to fetch categories');
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     let timeOutId;
@@ -66,6 +87,14 @@ export default function NavigationBar() {
     setSidebarOpen(false);
   };
   
+  // if loading or error state
+  if (loading) {
+    return <div>Loading categories...</div>;
+  }
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+  
   return (
     <>
       <Navbar bg="light" expand="lg" className="shadow-sm sticky-top">
@@ -82,15 +111,15 @@ export default function NavigationBar() {
           {/* Categories  */}
           <div className="d-none d-md-flex me-auto">
             <Nav className="align-items-center flex-row">
-              {DataFile.categories.map((category) => (
+              {categories.map((category) => (
                 <Nav.Link
-                  key={category.catId}
+                  key={category.category_id}
                   role="button"
-                  onMouseEnter={() => handleCategoryMouseEnter(category.name)}
+                  onMouseEnter={() => handleCategoryMouseEnter(category.category_name)}
                   onMouseLeave={handleCategoryMouseLeave}
-                  onClick={() => handleCategoryClick(category.name)}
+                  onClick={() => handleCategoryClick(category.category_name)}
                 >
-                  {category.name}
+                  {category.category_name}
                 </Nav.Link>
               ))}
             </Nav>
@@ -124,7 +153,7 @@ export default function NavigationBar() {
         }}
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
-        categories={DataFile.categories}
+        categories={categories}
         onCategoryClick={handleCategoryClickFromSidebar}
       />
 
