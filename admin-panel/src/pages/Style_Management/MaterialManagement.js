@@ -30,7 +30,7 @@ const MaterialManagement = () => {
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/get-materials?company_code=${userData.company_code}`);
+      const response = await fetch(`${BASE_URL}/admin/api/get-materials?company_code=${userData.company_code}`);
       const data = await response.json();
       if (data.success) {
         setMaterials(data.materials);
@@ -48,8 +48,8 @@ const MaterialManagement = () => {
     setLoading(true);
     try {
       const url = isEditing 
-        ? `${BASE_URL}/api/update-materials/${editingId}`
-        : `${BASE_URL}/api/add-materials`;
+        ? `${BASE_URL}/admin/api/update-materials/${editingId}`
+        : `${BASE_URL}/admin/api/add-materials`;
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -89,7 +89,7 @@ const MaterialManagement = () => {
   const handleDelete = async (materialId) => {
     if (window.confirm('Are you sure you want to delete this material?')) {
       try {
-        const response = await fetch(`${BASE_URL}/api/delete-materials/${materialId}`, {
+        const response = await fetch(`${BASE_URL}/admin/api/delete-materials/${materialId}`, {
           method: 'DELETE'
         });
         const data = await response.json();

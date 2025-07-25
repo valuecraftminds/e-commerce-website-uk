@@ -30,7 +30,7 @@ const ColorManagement = () => {
   const fetchColors = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/get-colors?company_code=${userData.company_code}`);
+      const response = await fetch(`${BASE_URL}/admin/api/get-colors?company_code=${userData.company_code}`);
       const data = await response.json();
       if (data.success) {
         setColors(data.colors);
@@ -48,8 +48,8 @@ const ColorManagement = () => {
     setLoading(true);
     try {
       const url = isEditing 
-        ? `${BASE_URL}/api/update-colors/${editingId}`
-        : `${BASE_URL}/api/add-colors`;
+        ? `${BASE_URL}/admin/api/update-colors/${editingId}`
+        : `${BASE_URL}/admin/api/add-colors`;
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -94,7 +94,7 @@ const ColorManagement = () => {
 
     if (window.confirm('Are you sure you want to delete this color?')) {
       try {
-        const response = await fetch(`${BASE_URL}/api/delete-colors/${colorId}`, {
+        const response = await fetch(`${BASE_URL}/admin/api/delete-colors/${colorId}`, {
           method: 'DELETE'
         });
         const data = await response.json();

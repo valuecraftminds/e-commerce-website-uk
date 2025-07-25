@@ -27,7 +27,7 @@ export default function ViewAdmins() {
       }
 
       try {
-        const response = await fetch(`${BASE_URL}/api/view-admins?company_code=${company_code}`);
+        const response = await fetch(`${BASE_URL}/admin/api/view-admins?company_code=${company_code}`);
         const data = await response.json();
 
         if (response.ok && data.success) {

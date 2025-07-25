@@ -16,7 +16,7 @@ export default function ViewCompanyAdmins() {
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/api/company-admins`);
+                const response = await fetch(`${BASE_URL}/admin/api/company-admins`);
                 const data = await response.json();
 
                 if (response.ok && data.success) {

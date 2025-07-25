@@ -29,7 +29,7 @@ export default function Category() {
   const fetchCategories = useCallback(async () => {
     setFetchLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/get-categories?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/admin/api/get-categories?company_code=${company_code}`);
       const data = await response.json();
       
       if (data.success) {
@@ -79,7 +79,7 @@ export default function Category() {
     try {
       if (editingCategory) {
         // Handle editing existing category
-        const url = `${BASE_URL}/api/update-categories/${editingCategory.category_id}`;
+        const url = `${BASE_URL}/admin/api/update-categories/${editingCategory.category_id}`;
         const response = await fetch(url, {
           method: 'PUT',
           headers: {
@@ -108,7 +108,7 @@ export default function Category() {
           
           if (validSubcategories.length > 0) {
             const subPromises = validSubcategories.map(subcategory => 
-              fetch(`${BASE_URL}/api/add-categories`, {
+              fetch(`${BASE_URL}/admin/api/add-categories`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export default function Category() {
           const validSubcategories = formData.subcategories.filter(sub => sub.trim());
           
           // Create main category first
-          const mainResponse = await fetch(`${BASE_URL}/api/add-categories`, {
+          const mainResponse = await fetch(`${BASE_URL}/admin/api/add-categories`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ export default function Category() {
             if (validSubcategories.length > 0) {
               // Create subcategories under the new main category
               const subPromises = validSubcategories.map(subcategory => 
-                fetch(`${BASE_URL}/api/add-categories`, {
+                fetch(`${BASE_URL}/admin/api/add-categories`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ export default function Category() {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/delete-categories/${categoryId}?company_code=${company_code}`, {
+      const response = await fetch(`${BASE_URL}/admin/api/delete-categories/${categoryId}?company_code=${company_code}`, {
         method: 'DELETE',
       });
 

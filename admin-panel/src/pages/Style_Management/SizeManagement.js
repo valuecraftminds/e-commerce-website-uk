@@ -30,7 +30,7 @@ const SizeManagement = () => {
   const fetchSizes = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/get-sizes?company_code=${userData.company_code}`);
+      const response = await fetch(`${BASE_URL}/admin/api/get-sizes?company_code=${userData.company_code}`);
       const data = await response.json();
       if (data.success) {
         setSizes(data.sizes);
@@ -48,8 +48,8 @@ const SizeManagement = () => {
     setLoading(true);
     try {
       const url = isEditing 
-        ? `${BASE_URL}/api/update-sizes/${editingId}`
-        : `${BASE_URL}/api/add-sizes`;
+        ? `${BASE_URL}/admin/api/update-sizes/${editingId}`
+        : `${BASE_URL}/admin/api/add-sizes`;
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -89,7 +89,7 @@ const SizeManagement = () => {
   const handleDelete = async (sizeId) => {
     if (window.confirm('Are you sure you want to delete this size?')) {
       try {
-        const response = await fetch(`${BASE_URL}/api/delete-sizes/${sizeId}`, {
+        const response = await fetch(`${BASE_URL}/admin/api/delete-sizes/${sizeId}`, {
           method: 'DELETE'
         });
         const data = await response.json();

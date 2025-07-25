@@ -39,7 +39,7 @@ export default function EditAdmin() {
   const [changePassword, setChangePassword] = useState(false);
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/get-admin/${id}`)
+    fetch(`${BASE_URL}/admin/api/get-admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -154,7 +154,7 @@ export default function EditAdmin() {
         requestBody.newPassword = formData.newPassword;
       }
 
-      const res = await fetch(`${BASE_URL}/api/edit-admin/${id}`, {
+      const res = await fetch(`${BASE_URL}/admin/api/edit-admin/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)

@@ -42,7 +42,7 @@ export default function Settings() {
   useEffect(() => {
     if(!id) return;
 
-    fetch(`${BASE_URL}/api/get-admin/${id}`)
+    fetch(`${BASE_URL}/admin/api/get-admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
