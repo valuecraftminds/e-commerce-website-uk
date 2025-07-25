@@ -1,12 +1,12 @@
 import {
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable
 } from '@tanstack/react-table';
-import React, { useContext, useEffect, useMemo, useState,useCallback } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/WarehouseGRN.css';
@@ -31,12 +31,7 @@ export default function WarehouseGRN() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    fetchStyles();
-    fetchGRNList();
-  }, []);
-
-  const fetchStyles = async () => {
+  const fetchStyles = useCallback(async () => {
     try {
       const response = await fetch(`${BASE_URL}/admin/api/get-styles?company_code=${company_code}`);
       const data = await response.json();
@@ -48,7 +43,7 @@ export default function WarehouseGRN() {
     } catch (error) {
       setError('Error fetching styles');
     }
-  };
+  }, [company_code]);
 
   const fetchVariants = async (styleCode) => {
     try {
@@ -76,16 +71,12 @@ export default function WarehouseGRN() {
       } catch (error) {
         setError('Error fetching GRN list');
       }
-    
-  
-   
     }, [company_code]);
 
-    
-
-
-
-
+  useEffect(() => {
+    fetchStyles();
+    fetchGRNList();
+  }, [fetchStyles, fetchGRNList]);
 
   const handleStyleChange = (e) => {
     const styleCode = e.target.value;
@@ -173,14 +164,12 @@ export default function WarehouseGRN() {
   });
 
   return (
-    <Container fluid className="py-4">
+    <Container fluid >
       {success && <div className="success">{success}</div>}
       {error && <div className="error">{error}</div>}
 
       <Card className="mb-4">
-        <Card.Header>
-          <h5>Add New GRN</h5>
-        </Card.Header>
+     
         <Card.Body>
           <Form onSubmit={handleSubmit}>
             <Row className="g-3">
@@ -257,9 +246,7 @@ export default function WarehouseGRN() {
       </Card>
 
       <Card>
-        <Card.Header>
-          <h5>Recent GRN List</h5>
-        </Card.Header>
+       
         <Card.Body>
           <div className="table-controls">
             <input
