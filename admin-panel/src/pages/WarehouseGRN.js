@@ -171,10 +171,10 @@ export default function WarehouseGRN() {
       <Card className="mb-4">
      
         <Card.Body>
-          <Form onSubmit={handleSubmit}>
-            <Row className="g-3">
+          <Form onSubmit={handleSubmit} className="grn-form">
+            <Row className="g-3 align-items-end">
               <Col lg={3} md={6}>
-                <Form.Group>
+                <Form.Group className="mb-0">
                   <Form.Label>Style Code</Form.Label>
                   <Form.Select
                     value={grnData.style_code}
@@ -192,7 +192,7 @@ export default function WarehouseGRN() {
               </Col>
 
               <Col lg={3} md={6}>
-                <Form.Group>
+                <Form.Group className="mb-0">
                   <Form.Label>SKU</Form.Label>
                   <Form.Select
                     value={grnData.sku}
@@ -210,7 +210,7 @@ export default function WarehouseGRN() {
               </Col>
 
               <Col lg={2} md={6}>
-                <Form.Group>
+                <Form.Group className="mb-0">
                   <Form.Label>Quantity</Form.Label>
                   <Form.Control
                     type="number"
@@ -223,7 +223,7 @@ export default function WarehouseGRN() {
               </Col>
 
               <Col lg={2} md={6}>
-                <Form.Group>
+                <Form.Group className="mb-0">
                   <Form.Label>Location</Form.Label>
                   <Form.Control
                     type="text"
@@ -235,7 +235,7 @@ export default function WarehouseGRN() {
                 </Form.Group>
               </Col>
 
-              <Col lg={2} md={12} className="d-flex align-items-end">
+              <Col lg={2} md={12}>
                 <button type="submit" className="btn btn-primary w-100">
                   Add GRN
                 </button>

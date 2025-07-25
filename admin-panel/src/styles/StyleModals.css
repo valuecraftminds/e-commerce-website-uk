@@ -1,5 +1,5 @@
-.wide-modal .modal-dialog {
-    max-width: 95%;
+.modal-dialog {
+    max-width: 65%;
     width: 1400px;
   }
 
@@ -19,6 +19,38 @@
     padding: 1.5rem;
     border-radius: 8px;
     margin-bottom: 2rem;
+  }
+
+  .variant-form .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .variant-form .variant-field {
+    height: 45px !important;
+    line-height: 45px;
+    padding: 0 1rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .variant-form .btn.variant-field {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .variant-form .align-items-end {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 768px) {
+    .variant-form .btn.variant-field {
+      margin-top: 1rem;
+    }
   }
 
   .status-badge {
@@ -120,4 +152,31 @@
 
   .variants-table-container td {
     vertical-align: middle;
+  }
+
+  .variant-form .d-flex.gap-2 {
+    display: flex;
+    gap: 0.5rem !important;
+  }
+
+  .variant-form .btn {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .variant-form .btn.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+  }
+
+  .variant-form .btn.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+  }
+
+  .variant-form .btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
