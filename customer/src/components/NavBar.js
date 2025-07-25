@@ -6,6 +6,7 @@ import '../styles/NavBar.css';
 import logo from '../assets/logo.png';
 import Sidebar from './Sidebar';
 import SearchSidebar from "./SearchSidebar";
+import DataFile from "../assets/DataFile";
 
 export default function NavigationBar() {
   const navigate = useNavigate();
@@ -17,8 +18,7 @@ export default function NavigationBar() {
   const [showsearchSidebar, setShowsearchSidebar] = useState(false);
 
   useEffect(() => {
-    let timeOutId; // Timeout to close sidebar after mouse leaves
-    
+    let timeOutId;
     if (isHoveringCategory || isHoveringSidebar) {
       setSidebarOpen(true);
     } else {
@@ -56,6 +56,16 @@ export default function NavigationBar() {
     setSidebarOpen(false);
   };
 
+  const handleHamburgerClicked = () => {
+    setSidebarOpen(true);
+  }
+
+  const handleCategoryClickFromSidebar = (category) => {
+    setSelectedCategory(category);
+    navigate(`/shop/${category.toLowerCase()}`);
+    setSidebarOpen(false);
+  };
+  
   return (
     <>
       <Navbar bg="light" expand="lg" className="shadow-sm sticky-top">
@@ -72,21 +82,21 @@ export default function NavigationBar() {
           {/* Categories  */}
           <div className="d-none d-md-flex me-auto">
             <Nav className="align-items-center flex-row">
-              {["Women", "Men", "Kids"].map((category) => (
+              {DataFile.categories.map((category) => (
                 <Nav.Link
-                  key={category}
+                  key={category.catId}
                   role="button"
-                  onMouseEnter={() => handleCategoryMouseEnter(category)}
+                  onMouseEnter={() => handleCategoryMouseEnter(category.name)}
                   onMouseLeave={handleCategoryMouseLeave}
-                  onClick={() => handleCategoryClick(category)}
+                  onClick={() => handleCategoryClick(category.name)}
                 >
-                  {category}
+                  {category.name}
                 </Nav.Link>
               ))}
             </Nav>
           </div>
 
-          {/* Right Side  */}
+          {/* Right side */}
           <div className="d-flex align-items-center gap-3">
             <i
               className="bi bi-search"
@@ -98,7 +108,7 @@ export default function NavigationBar() {
             <i
               className="bi bi-list d-lg-none"
               style={{ fontSize: "1.6rem", cursor: "pointer" }}
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => handleHamburgerClicked(true)}
             />
           </div>
         </Container>
@@ -114,6 +124,8 @@ export default function NavigationBar() {
         }}
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
+        categories={DataFile.categories}
+        onCategoryClick={handleCategoryClickFromSidebar}
       />
 
       {/* Search Sidebar */}
