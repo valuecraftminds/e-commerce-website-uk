@@ -1391,5 +1391,251 @@ router.delete('/api/delete-fits/:fit_id', (req, res) => {
   });
 });
 
+
+
+//Good received note endpoints
+
+// Generate GRN ID function
+function generateGRNID() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `GRN${timestamp}${random}`;
+}
+
+// Add GRN endpoint
+router.post('/api/add-grn', async (req, res) => {
+  const {
+    company_code,
+    style_code,
+    sku,
+    quantity_in,
+    warehouse_user_id,
+    location
+  } = req.body;
+
+  // Validate required fields
+  if (!company_code || !style_code || !sku || !quantity_in || !warehouse_user_id || !location) {
+    return res.status(400).json({
+      success: false,
+      message: 'All fields are required'
+    });
+  }
+
+  // Validate quantity is positive
+  if (quantity_in <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Quantity must be greater than 0'
+    });
+  }
+
+  try {
+    // Verify that the SKU exists and belongs to the style
+    const skuCheckSql = `
+      SELECT sv.sku 
+      FROM style_variants sv
+      WHERE sv.company_code = ? 
+      AND sv.style_code = ? 
+      AND sv.sku = ?
+    `;
+
+    db.query(skuCheckSql, [company_code, style_code, sku], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error verifying SKU'
+        });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Invalid SKU or SKU does not match style code'
+        });
+      }
+
+      // Generate GRN ID
+      const grn_id = generateGRNID();
+
+      // Insert GRN record
+      const insertSql = `
+        INSERT INTO grn (
+          grn_id,
+          company_code,
+          style_code,
+          sku,
+          quantity_in,
+          warehouse_user_id,
+          location
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      db.query(insertSql, [
+        grn_id,
+        company_code,
+        style_code,
+        sku,
+        quantity_in,
+        warehouse_user_id,
+        location
+      ], (insertErr, result) => {
+        if (insertErr) {
+          console.error('Insert error:', insertErr);
+          return res.status(500).json({
+            success: false,
+            message: 'Error creating GRN record'
+          });
+        }
+
+        res.json({
+          success: true,
+          message: 'GRN record created successfully',
+          data: {
+            grn_id,
+            company_code,
+            style_code,
+            sku,
+            quantity_in,
+            warehouse_user_id,
+            location,
+            received_date: new Date()
+          }
+        });
+      });
+    });
+
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Add this after the add-grn endpoint and before module.exports
+
+// Get GRN records endpoint
+router.get('/api/get-grn', async (req, res) => {
+  const { company_code } = req.query;
+
+  if (!company_code) {
+    return res.status(400).json({
+      success: false,
+      message: 'Company code is required'
+    });
+  }
+
+  const sql = `
+    SELECT 
+      g.grn_id,
+      g.company_code,
+      g.style_code,
+      g.sku,
+      g.quantity_in,
+      g.location,
+      g.received_date,
+      s.name as style_name,
+      au.name as warehouse_user_name
+    FROM grn g
+    LEFT JOIN styles s ON g.style_code = s.style_code
+    LEFT JOIN admin_users au ON g.warehouse_user_id = au.user_id
+    WHERE g.company_code = ?
+    ORDER BY g.received_date DESC
+  `;
+
+  try {
+    db.query(sql, [company_code], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error fetching GRN records'
+        });
+      }
+
+      res.json({
+        success: true,
+        grn: results.map(record => ({
+          ...record,
+          received_date: new Date(record.received_date).toISOString()
+        }))
+      });
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Get single GRN record by ID
+router.get('/api/get-grn/:grn_id', async (req, res) => {
+  const { grn_id } = req.params;
+  const { company_code } = req.query;
+
+  if (!company_code) {
+    return res.status(400).json({
+      success: false,
+      message: 'Company code is required'
+    });
+  }
+
+  const sql = `
+    SELECT 
+      g.grn_id,
+      g.company_code,
+      g.style_code,
+      g.sku,
+      g.quantity_in,
+      g.location,
+      g.received_date,
+      s.name as style_name,
+      au.name as warehouse_user_name
+    FROM grn g
+    LEFT JOIN styles s ON g.style_code = s.style_code
+    LEFT JOIN admin_users au ON g.warehouse_user_id = au.user_id
+    WHERE g.grn_id = ? AND g.company_code = ?
+  `;
+
+  try {
+    db.query(sql, [grn_id, company_code], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error fetching GRN record'
+        });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'GRN record not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        grn: {
+          ...results[0],
+          received_date: new Date(results[0].received_date).toISOString()
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({
+      success: false, 
+      message: 'Internal server error'
+    });
+  }
+});
+
+
+
 module.exports = router;
 

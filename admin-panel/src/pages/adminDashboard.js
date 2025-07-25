@@ -5,6 +5,7 @@ import '../styles/AdminDashboard.css';
 import Category from './Category';
 import Style from './Style';
 import ViewAdmins from './Company_Admin/ViewAdmins';
+import WarehouseGRN from './WarehouseGRN';
 
 export default function AdminDashboard() {
   return (
@@ -16,6 +17,8 @@ export default function AdminDashboard() {
           <Route path="users" element={<ViewAdmins />} />
           <Route path="category" element={<Category />} />
           <Route path="style" element={<Style />} />
+          <Route path="warehouse/grn" element={<WarehouseGRN />} />
+          
           
         </Routes>
       </main>

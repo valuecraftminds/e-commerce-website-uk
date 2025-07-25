@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import ManagementTable from '../../components/ManagementTable';
 import { AuthContext } from '../../context/AuthContext';
@@ -23,11 +23,7 @@ const MaterialManagement = () => {
     { key: 'description', label: 'Description' }
   ];
 
-  useEffect(() => {
-    fetchMaterials();
-  }, []);
-
-  const fetchMaterials = async () => {
+  const fetchMaterials = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/admin/api/get-materials?company_code=${userData.company_code}`);
@@ -41,7 +37,11 @@ const MaterialManagement = () => {
       setError('Error fetching materials');
     }
     setLoading(false);
-  };
+  }, [userData.company_code]);
+
+  useEffect(() => {
+    fetchMaterials();
+  }, [fetchMaterials]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

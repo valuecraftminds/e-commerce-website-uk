@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import ManagementTable from '../../components/ManagementTable';
 import { AuthContext } from '../../context/AuthContext';
@@ -23,11 +23,7 @@ const FitManagement = () => {
     { key: 'description', label: 'Description' }
   ];
 
-  useEffect(() => {
-    fetchFits();
-  }, []);
-
-  const fetchFits = async () => {
+  const fetchFits = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/admin/api/get-fits?company_code=${userData.company_code}`);
@@ -41,7 +37,11 @@ const FitManagement = () => {
       setError('Error fetching fits');
     }
     setLoading(false);
-  };
+  }, [userData.company_code]);
+
+  useEffect(() => {
+    fetchFits();
+  }, [fetchFits]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

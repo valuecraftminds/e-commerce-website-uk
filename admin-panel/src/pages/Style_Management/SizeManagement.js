@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import ManagementTable from '../../components/ManagementTable';
 import { AuthContext } from '../../context/AuthContext';
@@ -23,11 +23,7 @@ const SizeManagement = () => {
     { key: 'size_order', label: 'Display Order' }
   ];
 
-  useEffect(() => {
-    fetchSizes();
-  }, []);
-
-  const fetchSizes = async () => {
+  const fetchSizes = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/admin/api/get-sizes?company_code=${userData.company_code}`);
@@ -41,7 +37,11 @@ const SizeManagement = () => {
       setError('Error fetching sizes');
     }
     setLoading(false);
-  };
+  }, [userData.company_code]);
+
+  useEffect(() => {
+    fetchSizes();
+  }, [fetchSizes]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

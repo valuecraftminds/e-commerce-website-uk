@@ -213,7 +213,7 @@ export const VariantFormModal = ({
       {
         header: 'Price',
         accessorKey: 'price',
-        cell: ({ getValue }) => `£${getValue()}`
+        cell: ({ getValue }) => `$${getValue()}`
       },
       {
         header: 'Status',
@@ -254,7 +254,7 @@ export const VariantFormModal = ({
         )
       }
     ],
-    [colors, sizes, fits, materials]
+    [colors, sizes, fits, materials, handleDeleteVariant, setEditingId, setIsEditing, setVariantForm]
   );
 
   const table = useReactTable({
@@ -494,22 +494,4 @@ const getContrastColor = (hexcolor) => {
   return luminance > 0.5 ? '#000000' : '#ffffff';
 };
 
-<style>
-{`
-  .color-swatch {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    display: inline-block;
-  }
-
-  select option {
-    padding: 5px;
-  }
-
-  .variants-table-container td {
-    vertical-align: middle;
-  }
-`}
-</style>
 

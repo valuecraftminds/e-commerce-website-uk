@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import ManagementTable from '../../components/ManagementTable';
 import { AuthContext } from '../../context/AuthContext';
@@ -23,11 +23,7 @@ const ColorManagement = () => {
     { key: 'color_code', label: 'Color Code' }
   ];
 
-  useEffect(() => {
-    fetchColors();
-  }, []);
-
-  const fetchColors = async () => {
+  const fetchColors = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/admin/api/get-colors?company_code=${userData.company_code}`);
@@ -41,7 +37,11 @@ const ColorManagement = () => {
       setError('Error fetching colors');
     }
     setLoading(false);
-  };
+  }, [userData.company_code]);
+
+  useEffect(() => {
+    fetchColors();
+  }, [fetchColors]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

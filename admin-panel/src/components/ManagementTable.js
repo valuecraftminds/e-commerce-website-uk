@@ -24,6 +24,9 @@ const ManagementTable = ({
 
   return (
     <div className="management-container">
+      <Button variant="secondary" className='mb-4' onClick={() => window.history.back()}>
+            Back
+          </Button>
       <Card className="mb-4">
         <Card.Header>
           <h3>{isEditing ? `Edit ${title}` : `Add New ${title}`}</h3>
@@ -66,8 +69,9 @@ const ManagementTable = ({
       {success && <div className="alert alert-success">{success}</div>}
 
       <Card>
-        <Card.Header>
+        <Card.Header className="d-flex justify-content-between align-items-center">
           <h3>{title} List</h3>
+          
         </Card.Header>
         <Card.Body>
           <Table responsive striped bordered hover>
