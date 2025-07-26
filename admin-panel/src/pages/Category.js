@@ -21,6 +21,8 @@ export default function Category() {
   const [formErrors, setFormErrors] = useState({});
   const [activeAccordionKey, setActiveAccordionKey] = useState(null);
   const { userData } = useContext(AuthContext);
+  const [license, setLicense] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
   
 
   const company_code = userData?.company_code;
@@ -48,6 +50,24 @@ export default function Category() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    const fetchLicense = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/admin/api/get-license/${company_code}`);
+        const data = await response.json();
+        if (data.success) {
+          setLicense(data.license);
+        }
+      } catch (error) {
+        console.error('Error fetching license:', error);
+      }
+    };
+
+    if (company_code) {
+      fetchLicense();
+    }
+  }, [company_code]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -321,6 +341,22 @@ export default function Category() {
     });
   };
 
+  const handleAddCategoryClick = () => {
+    if (!license) {
+      setErrorMsg('Unable to verify category limit. Please try again.');
+      return;
+    }
+
+    const mainCategoriesCount = getMainCategories().length;
+    if (mainCategoriesCount >= license.category_count) {
+      setErrorMsg(`Category limit (${license.category_count}) reached. Please upgrade your license to add more categories.`);
+      return;
+    }
+
+    setShowModal(true);
+    setErrorMsg('');
+  };
+
   if (fetchLoading) {
     return (
       <Container fluid className="category-container d-flex justify-content-center align-items-center" style={{minHeight: '60vh'}}>
@@ -342,7 +378,7 @@ export default function Category() {
           </div>
           <Button 
             variant="primary"
-            onClick={() => setShowModal(true)}
+            onClick={handleAddCategoryClick}
             className="btn-custom-primary"
             size="lg"
           >
@@ -371,6 +407,13 @@ export default function Category() {
         </div>
       </div>
 
+      {errorMsg && (
+        <Alert variant="danger" dismissible onClose={() => setErrorMsg('')} className="custom-alert">
+          <i className="bi bi-exclamation-triangle me-2"></i>
+          {errorMsg}
+        </Alert>
+      )}
+
       {message.text && (
         <Alert variant={message.type === 'success' ? 'success' : 'danger'} dismissible onClose={() => setMessage({ type: '', text: '' })} className="custom-alert">
           <i className={`bi ${message.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
@@ -388,7 +431,7 @@ export default function Category() {
             <p>Start organizing your products by creating your first category</p>
             <Button 
               variant="primary" 
-              onClick={() => setShowModal(true)} 
+              onClick={handleAddCategoryClick} 
               className="btn-custom-primary"
               size="lg"
             >

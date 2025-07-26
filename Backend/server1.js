@@ -472,9 +472,60 @@ router.put('/api/update-admin-profile/:user_id', async (req, res) => {
   }
 });
 
+// Add admin license endpoint
+router.post('/api/add-license', async (req, res) => {
+  const { company_code, category_count } = req.body;
 
+  if (!company_code || !category_count) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
 
+  try {
+    // Check if license already exists
+    const [existingLicense] = await dbPromise.query(
+      'SELECT * FROM admin_license WHERE company_code = ?',
+      [company_code]
+    );
 
+    if (existingLicense.length > 0) {
+      // Update existing license
+      await dbPromise.query(
+        'UPDATE admin_license SET category_count = ? WHERE company_code = ?',
+        [category_count, company_code]
+      );
+    } else {
+      // Create new license
+      await dbPromise.query(
+        'INSERT INTO admin_license (company_code, category_count) VALUES (?, ?)',
+        [company_code, category_count]
+      );
+    }
+
+    res.json({ success: true, message: 'License updated successfully' });
+  } catch (error) {
+    console.error('License error:', error);
+    res.status(500).json({ success: false, message: 'Error updating license' });
+  }
+});
+
+// Get admin license endpoint
+router.get('/api/get-license/:company_code', async (req, res) => {
+  const { company_code } = req.params;
+
+  try {
+    const [license] = await dbPromise.query(
+      'SELECT * FROM admin_license WHERE company_code = ?',
+      [company_code]
+    );
+
+    res.json({ 
+      success: true, 
+      license: license[0] || { company_code, category_count: 0 } 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching license' });
+  }
+});
 
 // Category Management Endpoints
 
@@ -557,43 +608,64 @@ router.get('/api/subcategories/:parent_id', (req, res) => {
 });
 
 // Add new category
-router.post('/api/add-categories', (req, res) => {
-  const { category_name, parent_id,company_code } = req.body;
+router.post('/api/add-categories', async (req, res) => {
+  const { category_name, parent_id, company_code } = req.body;
 
-  if (!category_name) {
-    return res.status(400).json({ success: false, message: 'Category name is required' });
+  if (!category_name || !company_code) {
+    return res.status(400).json({ success: false, message: 'Required fields missing' });
   }
 
-  if (!company_code) {
-    return res.status(400).json({ success: false, message: 'Company code is required' });
-  }
+  try {
+    // Check category count against license limit
+    const [[{ total_categories }]] = await dbPromise.query(
+      'SELECT COUNT(*) as total_categories FROM categories WHERE company_code = ? AND parent_id IS NULL',
+      [company_code]
+    );
 
-  // Check if category already exists
-  const checkSql = 'SELECT * FROM categories WHERE category_name = ? AND company_code = ?';
-  db.query(checkSql, [category_name,company_code || null], (checkErr, checkResults) => {
-    if (checkErr) {
-      return res.status(500).json({ success: false, message: 'Database error' });
+    const [license] = await dbPromise.query(
+      'SELECT category_count FROM admin_license WHERE company_code = ?',
+      [company_code]
+    );
+
+    const categoryLimit = license[0]?.category_count || 0;
+
+    if (total_categories >= categoryLimit) {
+      return res.status(403).json({
+        success: false,
+        message: 'Category limit reached. Please upgrade your license.'
+      });
     }
 
-    if (checkResults.length > 0) {
-      return res.status(409).json({ success: false, message: 'Category already exists' });
-    }
-
-    // Insert new category
-    const insertSql = 'INSERT INTO categories (company_code,category_name, parent_id) VALUES (?, ?,?)';
-    db.query(insertSql, [company_code,category_name, parent_id || null], (insertErr, results) => {
-      if (insertErr) {
-        console.error('Insert error:', insertErr);
-        return res.status(500).json({ success: false, message: 'Error adding category' });
+    // Check if category already exists
+    const checkSql = 'SELECT * FROM categories WHERE category_name = ? AND company_code = ?';
+    db.query(checkSql, [category_name,company_code || null], (checkErr, checkResults) => {
+      if (checkErr) {
+        return res.status(500).json({ success: false, message: 'Database error' });
       }
-
-      res.json({ 
-        success: true, 
-        message: 'Category added successfully',
-        category_id: results.insertId
+  
+      if (checkResults.length > 0) {
+        return res.status(409).json({ success: false, message: 'Category already exists' });
+      }
+  
+      // Insert new category
+      const insertSql = 'INSERT INTO categories (company_code,category_name, parent_id) VALUES (?, ?,?)';
+      db.query(insertSql, [company_code,category_name, parent_id || null], (insertErr, results) => {
+        if (insertErr) {
+          console.error('Insert error:', insertErr);
+          return res.status(500).json({ success: false, message: 'Error adding category' });
+        }
+  
+        res.json({ 
+          success: true, 
+          message: 'Category added successfully',
+          category_id: results.insertId
+        });
       });
     });
-  });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // Update category

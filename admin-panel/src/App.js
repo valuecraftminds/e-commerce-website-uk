@@ -21,6 +21,7 @@ import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
 import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
+import EditCompanyAdmin from './pages/VCM_Admin/EditCompanyAdmin';
 
 function App() {
   const location = useLocation();
@@ -42,6 +43,7 @@ function App() {
         <Route path='register' element={<RegisterPage />} />
         <Route path='EditAdmins/:id' element={<EditAdmin />} />
         <Route path='DleteAdmin/:id' element={<DeleteAdmin />} />
+        <Route path="edit-company-admin/:id" element={<EditCompanyAdmin />} />
         <Route path='dashboard/*' element={<AdminDashboard />} />
         <Route path='/OrderingDashboard/*' element={<OrderingDashboard />} />
         <Route path='/PdcDashboard/*' element={<PdcDashboard />} />
