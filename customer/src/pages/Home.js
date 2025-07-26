@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
-import { useNavigate } from "react-router-dom"; 
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Card, Col, Container, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
-import "../styles/Shop.css";
 import DataFile from "../assets/DataFile";
+import "../styles/Shop.css";
 
-const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Home() {
   const [activePopup] = useState(null);
@@ -29,7 +29,7 @@ export default function Home() {
 
   // Fetch product listings from the backend
   useEffect (() => {
-    axios.get(`${BASEURL}/customer/product-listings`)
+    axios.get(`${BASE_URL}/customer/product-listings`)
       .then(response => {
         setProducts(response.data);
       })
@@ -66,7 +66,7 @@ export default function Home() {
               <Card className="h-100 card-hover-popup">
                 <Card.Img
                   variant="top"
-                  src={item.image}
+                  src={`${BASE_URL}/admin/uploads/styles/${item.image}`}
                   alt={item.name}
                   className="new-crd"
                 />
