@@ -44,9 +44,70 @@ router.get('/product-types/:parentId', (req, res) => {
   });
 });
 
+  // get styles by parent category ID
+router.get('/styles-by-parent-category/:parentId', (req, res) => {
+  const { parentId } = req.params;
+
+  const sql = `
+    SELECT 
+      s.*,
+      c.category_name,
+      c.category_id,
+      parent_cat.category_name as parent_category_name,
+      MIN(sv.price) as min_price,
+      MAX(sv.price) as max_price,
+      COUNT(DISTINCT sv.variant_id) as variant_count
+    FROM styles s
+    LEFT JOIN categories c ON s.category_id = c.category_id
+    LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+    LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+    WHERE (c.parent_id = ? OR c.category_id = ?) AND s.approved = 'yes'
+    GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+    ORDER BY s.created_at DESC
+  `;
+
+  db.query(sql, [parentId, parentId], (err, results) => {
+    if (err) {
+      console.error('Error retrieving styles by parent category:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
+// get all styles
+router.get('/all-styles', (req, res) => {
+  const sql = `
+    SELECT 
+      s.*,
+      c.category_name,
+      c.category_id,
+      parent_cat.category_name as parent_category_name,
+      MIN(sv.price) as min_price,
+      MAX(sv.price) as max_price,
+      COUNT(DISTINCT sv.variant_id) as variant_count
+    FROM styles s
+    LEFT JOIN categories c ON s.category_id = c.category_id
+    LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+    LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+    WHERE s.approved = 'yes'
+    GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+    ORDER BY s.created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error retrieving all styles:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    res.status(200).json(results);
+  });
+});
 
 
-// retrieve product details
+// retrieve product details for product page
 router.get('/product/:style_id', (req, res) => {
   const { style_id } = req.params;
 
@@ -94,7 +155,7 @@ db.query(sql, [style_id], (err, results) => {
 });
 });
 
-// get product listing images
+// get product listing images to display on homepage
 router.get('/product-listings', (req, res) => {
   const sql = `
     SELECT style_id, style_code, name, description, image 
