@@ -65,13 +65,18 @@ export default function Home() {
             >
               <Card className="h-100 card-hover-popup">
                 <Card.Img
-                  variant="top"
-                  src={`${BASE_URL}/admin/uploads/styles/${item.image}`}
-                  alt={item.name}
-                  className="new-crd"
-                />
+                    variant="top"
+                    src={item.image || '/placeholder-image.jpg'}
+                    alt={item.name}
+                    className="new-crd"
+                  />
                 <Card.Body>
                   <Card.Title>{item.name}</Card.Title>
+                    {item.category_name && (
+                      <Card.Text className="text-muted small">
+                        {item.category_name}
+                      </Card.Text>
+                    )}
                 </Card.Body>
                 <div
                   className={`popup-details ${

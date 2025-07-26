@@ -11,7 +11,7 @@ const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 export default function Shop() {
   const { category: currentCategory } = useParams(); // Get category from URL
   const [activePopup, setActivePopup] = useState(null);
-  const [products, setProducts] = useState([]);
+  const [styles, setStyles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function Shop() {
     fetchCategories();
   }, []);
 
-  // Fetch products and product types when category changes
+  // Fetch styles and product types when category changes
   useEffect(() => {
     const fetchData = async () => {
       if (!currentCategory) {
@@ -68,11 +68,11 @@ export default function Shop() {
           return;
         }
 
-        // Fetch products filtered by category
-        const productsResponse = await axios.get(
-          `${BASEURL}/customer/product-listings?category=${matchedCategory.category_id}`
+        // get all styles that belong to this main category and its subcategories
+        const stylesResponse = await axios.get(
+          `${BASEURL}/customer/styles-by-parent-category/${matchedCategory.category_id}`
         );
-        setProducts(productsResponse.data);
+        setStyles(stylesResponse.data);
 
         // Fetch product types for this category
         const typesResponse = await axios.get(
@@ -82,7 +82,7 @@ export default function Shop() {
 
       } catch (err) {
         console.error('Error fetching shop data:', err);
-        setError('Failed to load products');
+        setError('Failed to load styles');
       } finally {
         setLoading(false);
       }
@@ -93,35 +93,42 @@ export default function Shop() {
 
   // Handle case where no category is specified
   useEffect(() => {
-    const fetchAllProducts = async () => {
+    const fetchAllStyles = async () => {
       if (currentCategory || categories.length === 0) return;
 
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch all products if no category is specified
-        const productsResponse = await axios.get(`${BASEURL}/customer/product-listings`);
-        setProducts(productsResponse.data);
+        // Fetch all styles if no category is specified
+        const stylesResponse = await axios.get(`${BASEURL}/customer/all-styles`);
+        setStyles(stylesResponse.data);
 
-        // Clear product types since we're showing all products
+        // Clear product types
         setProductTypes([]);
 
       } catch (err) {
-        console.error('Error fetching all products:', err);
-        setError('Failed to load products');
+        console.error('Error fetching all styles:', err);
+        setError('Failed to load styles');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllProducts();
+    fetchAllStyles();
   }, [currentCategory, categories]);
 
-  // Get unique product types for display
+  // Get unique product types for display 
   const uniqueProductTypes = Array.from(
     new Set(productTypes.map(item => item.category_name))
   ).map(name => productTypes.find(item => item.category_name === name));
+
+  // format price display
+  const formatPrice = (minPrice, maxPrice) => {
+    if (!minPrice && !maxPrice) return null;
+    if (minPrice === maxPrice) return `${minPrice}`;
+    return `${minPrice} - ${maxPrice}`;
+  };
 
   // Loading state
   if (loading) {
@@ -144,7 +151,7 @@ export default function Shop() {
 
   return (
     <>
-      {/* Banner Section - only show if category is specified */}
+      {/* Banner Section */}
       {currentCategory && (
         <div className="banner mb-4">
           {DataFile.banner
@@ -166,23 +173,34 @@ export default function Shop() {
           {currentCategory ? `${currentCategory} Collection` : 'All Products'}
         </h2>
         
-        {/* Show product types if available */}
+        {/* Show subcategories */}
         {uniqueProductTypes.length > 0 && (
           <div className="mb-4">
-            <h5>More to Explore</h5>
-            <div className="d-flex flex-wrap gap-2">
+            <h5>Explore More in {currentCategory}</h5>
+            <Row className="mb-4">
               {uniqueProductTypes.map((type) => (
-                <span key={type.category_id} className="badge bg-secondary">
-                  {type.category_name}
-                </span>
+                <Col key={type.category_id} xs={6} sm={4} md={3} className="mb-3">
+                  <Card 
+                    className="h-100 text-center subcategory-card" 
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/subcategory/${type.category_name.toLowerCase()}`)}
+                  >
+                    <Card.Body className="d-flex align-items-center justify-content-center">
+                      <Card.Title className="mb-0 small">
+                        {type.category_name}
+                      </Card.Title>
+                    </Card.Body>
+                  </Card>
+                </Col>
               ))}
-            </div>
+            </Row>
           </div>
         )}
 
-        {products.length > 0 ? (
+        {/* Display styles from the main category */}
+        {styles.length > 0 ? (
           <Row className="flex-nowrap overflow-auto mb-5">
-            {products.map((item) => (
+            {styles.map((item) => (
               <Col
                 key={item.style_id}
                 xs={8}
@@ -191,7 +209,7 @@ export default function Shop() {
                 lg={3}
                 className="position-relative"
                 // toggle popup when hover
-                onMouseEnter={() => togglePopup(`product-${item.style_id}`)}
+                onMouseEnter={() => togglePopup(`style-${item.style_id}`)}
                 onMouseLeave={() => togglePopup(null)}
                 // navigate to product details page
                 onClick={() => getProductDetails(item.style_id)}
@@ -205,18 +223,17 @@ export default function Shop() {
                   />
                   <Card.Body>
                     <Card.Title>{item.name}</Card.Title>
-                    {item.category_name && (
-                      <Card.Text className="text-muted small">
-                        {item.category_name}
+                    {formatPrice(item.min_price, item.max_price) && (
+                      <Card.Text className="fw-bold text-primary">
+                        {formatPrice(item.min_price, item.max_price)}
                       </Card.Text>
                     )}
                   </Card.Body>
                   <div
                     className={`popup-details ${
-                      activePopup === `product-${item.style_id}` ? "show" : ""
+                      activePopup === `style-${item.style_id}` ? "show" : ""
                     }`}
                   >
-                    <p>{item.description}</p>
                   </div>
                 </Card>
               </Col>
