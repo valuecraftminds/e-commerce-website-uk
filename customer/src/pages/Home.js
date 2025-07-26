@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
@@ -9,7 +9,6 @@ import "../styles/Shop.css";
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Home() {
-  const [activePopup, setActivePopup] = useState(null);
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,10 +16,6 @@ export default function Home() {
 
   const getProductDetails = (id) => {
     navigate(`/product/${id}`);
-  };
-
-  const togglePopup = (id) => {
-    setActivePopup(activePopup === id ? null : id);
   };
 
   // Fetch product listings from the backend
@@ -43,9 +38,15 @@ export default function Home() {
 
   // Helper function to format price display
   const formatPrice = (minPrice, maxPrice) => {
-    if (!minPrice && !maxPrice) return null;
+    if (!minPrice && !maxPrice) return "Price on request";
     if (minPrice === maxPrice) return `$${minPrice}`;
     return `$${minPrice} - $${maxPrice}`;
+  };
+
+  const handleQuickView = (e, product) => {
+    e.stopPropagation(); // Prevent navigation when clicking quick view
+    // Add your quick view logic here
+    console.log('Quick view:', product);
   };
 
   return (
@@ -65,63 +66,83 @@ export default function Home() {
         
         {loading ? (
           <div className="text-center my-5">
-            <h5>Loading products...</h5>
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading products...</p>
+            </div>
           </div>
         ) : error ? (
           <div className="text-center my-5">
             <h5 className="text-danger">{error}</h5>
           </div>
         ) : (
-          <Row className="mb-5">
-            {products.map((item) => (
-              <Col
-                key={item.style_id}
-                xs={12}
-                sm={6}
-                md={4}
-                lg={3}
-                className="mb-4 position-relative"
-                onMouseEnter={() => togglePopup(`product-${item.style_id}`)}
-                onMouseLeave={() => togglePopup(null)}
-                onClick={() => getProductDetails(item.style_id)}
+          <div className="products-grid">
+            {products.map((product) => (
+              <div 
+                key={product.style_id} 
+                className="product-card"
+                onClick={() => getProductDetails(product.style_id)}
               >
-                <Card className="h-100 card-hover-popup" style={{ cursor: 'pointer' }}>
-                  <Card.Img
-                    variant="top"
-                    src={item.image || '/placeholder-image.jpg'}
-                    alt={item.name}
-                    className="new-crd"
+                <div className="product-image-container">
+                  <img 
+                    src={product.image || '/placeholder-image.jpg'} 
+                    alt={product.name}
+                    className="product-image"
                   />
-                  <Card.Body>
-                    <Card.Title>{item.name}</Card.Title>
-                    {item.category_name && (
-                      <Card.Text className="text-muted small">
-                        {item.category_name}
-                      </Card.Text>
-                    )}
-                    {formatPrice(item.min_price, item.max_price) && (
-                      <Card.Text className="fw-bold text-primary">
-                        {formatPrice(item.min_price, item.max_price)}
-                      </Card.Text>
-                    )}
-                  </Card.Body>
-                  <div
-                    className={`popup-details ${
-                      activePopup === `product-${item.style_id}` ? "show" : ""
-                    }`}
-                  >
-                    <p>{item.description}</p>
+                  
+                  <div className="product-overlay">
+                    <button 
+                      className="quick-view-btn"
+                      onClick={(e) => handleQuickView(e, product)}
+                    >
+                      Quick View
+                    </button>
                   </div>
-                </Card>
-              </Col>
+                </div>
+                
+                <div className="product-info">
+                  <h3 className="product-name">{product.name}</h3>
+                  <p className="product-description">
+                    {product.description && product.description.length > 100 
+                      ? `${product.description.substring(0, 100)}...` 
+                      : product.description
+                    }
+                  </p>
+                  <div className="product-price">
+                    <span className={product.min_price && product.max_price ? "price-range" : "current-price"}>
+                      {formatPrice(product.min_price, product.max_price)}
+                    </span>
+                  </div>
+                  
+                  {product.variant_count && (
+                    <div className="product-variants">
+                      <span className="variants-label">
+                        {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
+                      </span>
+                    </div>
+                  )}
+                  
+                  {product.category_name && (
+                    <div className="product-category">
+                      <span className="category-badge">
+                        {product.category_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
-          </Row>
+          </div>
         )}
 
         {/* no products */}
         {!loading && !error && products.length === 0 && (
-          <div className="text-center my-5">
-            <p>No products available at the moment.</p>
+          <div className="no-products">
+            <div className="no-products-content">
+              <i className="fas fa-search fa-3x"></i>
+              <h3>No products found</h3>
+              <p>No products available at the moment.</p>
+            </div>
           </div>
         )}
       </Container>
