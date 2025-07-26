@@ -68,13 +68,14 @@ export default function Shop() {
           return;
         }
 
-        // get all styles that belong to this main category and its subcategories
+        // Fetch styles filtered by parent category
+        // This will get all styles that belong to this main category and its subcategories
         const stylesResponse = await axios.get(
           `${BASEURL}/customer/styles-by-parent-category/${matchedCategory.category_id}`
         );
         setStyles(stylesResponse.data);
 
-        // Fetch product types for this category
+        // Fetch product types (subcategories) for this category
         const typesResponse = await axios.get(
           `${BASEURL}/customer/product-types/${matchedCategory.category_id}`
         );
@@ -104,7 +105,7 @@ export default function Shop() {
         const stylesResponse = await axios.get(`${BASEURL}/customer/all-styles`);
         setStyles(stylesResponse.data);
 
-        // Clear product types
+        // Clear product types since we're showing all styles
         setProductTypes([]);
 
       } catch (err) {
@@ -118,12 +119,12 @@ export default function Shop() {
     fetchAllStyles();
   }, [currentCategory, categories]);
 
-  // Get unique product types for display 
-  const uniqueProductTypes = Array.from(
-    new Set(productTypes.map(item => item.category_name))
-  ).map(name => productTypes.find(item => item.category_name === name));
+  // Get unique product types for display
+  // const uniqueProductTypes = Array.from(
+  //   new Set(productTypes.map(item => item.category_name))
+  // ).map(name => productTypes.find(item => item.category_name === name));
 
-  // format price display
+  // Helper function to format price display
   const formatPrice = (minPrice, maxPrice) => {
     if (!minPrice && !maxPrice) return null;
     if (minPrice === maxPrice) return `${minPrice}`;
@@ -174,7 +175,7 @@ export default function Shop() {
         </h2>
         
         {/* Show subcategories */}
-        {uniqueProductTypes.length > 0 && (
+        {/* {uniqueProductTypes.length > 0 && (
           <div className="mb-4">
             <h5>Explore More in {currentCategory}</h5>
             <Row className="mb-4">
@@ -195,26 +196,26 @@ export default function Shop() {
               ))}
             </Row>
           </div>
-        )}
+        )} */}
 
-        {/* Display styles from the main category */}
+        {/* Display styles */}
         {styles.length > 0 ? (
-          <Row className="flex-nowrap overflow-auto mb-5">
+          <Row className="mb-5">
             {styles.map((item) => (
               <Col
                 key={item.style_id}
-                xs={8}
+                xs={12}
                 sm={6}
                 md={4}
                 lg={3}
-                className="position-relative"
+                className="mb-4 position-relative"
                 // toggle popup when hover
                 onMouseEnter={() => togglePopup(`style-${item.style_id}`)}
                 onMouseLeave={() => togglePopup(null)}
                 // navigate to product details page
                 onClick={() => getProductDetails(item.style_id)}
               >
-                <Card className="h-100 card-hover-popup">
+                <Card className="h-100 card-hover-popup" style={{ cursor: 'pointer' }}>
                   <Card.Img
                     variant="top"
                     src={item.image || '/placeholder-image.jpg'}
@@ -223,6 +224,11 @@ export default function Shop() {
                   />
                   <Card.Body>
                     <Card.Title>{item.name}</Card.Title>
+                    {item.category_name && (
+                      <Card.Text className="text-muted small">
+                        {item.category_name}
+                      </Card.Text>
+                    )}
                     {formatPrice(item.min_price, item.max_price) && (
                       <Card.Text className="fw-bold text-primary">
                         {formatPrice(item.min_price, item.max_price)}
@@ -234,6 +240,7 @@ export default function Shop() {
                       activePopup === `style-${item.style_id}` ? "show" : ""
                     }`}
                   >
+                    <p>{item.description}</p>
                   </div>
                 </Card>
               </Col>
