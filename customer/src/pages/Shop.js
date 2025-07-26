@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import axios from "axios";
 
 import "../styles/Shop.css";
@@ -10,17 +10,12 @@ const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Shop() {
   const { category: currentCategory } = useParams(); // Get category from URL
-  const [activePopup, setActivePopup] = useState(null);
   const [styles, setStyles] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [productTypes, setProductTypes] = useState([]);
+  const [, setProductTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  const togglePopup = (id) => {
-    setActivePopup(activePopup === id ? null : id);
-  };
 
   const getProductDetails = (id) => {
     navigate(`/product/${id}`);
@@ -68,13 +63,13 @@ export default function Shop() {
           return;
         }
 
-        // get all styles that belong to this main category and its subcategories
+        // Fetch styles filtered by parent category
         const stylesResponse = await axios.get(
           `${BASEURL}/customer/styles-by-parent-category/${matchedCategory.category_id}`
         );
         setStyles(stylesResponse.data);
 
-        // Fetch product types for this category
+        // Fetch product types (subcategories) for this category
         const typesResponse = await axios.get(
           `${BASEURL}/customer/product-types/${matchedCategory.category_id}`
         );
@@ -104,7 +99,7 @@ export default function Shop() {
         const stylesResponse = await axios.get(`${BASEURL}/customer/all-styles`);
         setStyles(stylesResponse.data);
 
-        // Clear product types
+        // Clear product types since we're showing all styles
         setProductTypes([]);
 
       } catch (err) {
@@ -118,23 +113,26 @@ export default function Shop() {
     fetchAllStyles();
   }, [currentCategory, categories]);
 
-  // Get unique product types for display 
-  const uniqueProductTypes = Array.from(
-    new Set(productTypes.map(item => item.category_name))
-  ).map(name => productTypes.find(item => item.category_name === name));
-
-  // format price display
+  // Helper function to format price display
   const formatPrice = (minPrice, maxPrice) => {
-    if (!minPrice && !maxPrice) return null;
-    if (minPrice === maxPrice) return `${minPrice}`;
-    return `${minPrice} - ${maxPrice}`;
+    if (!minPrice && !maxPrice) return "Price on request";
+    if (minPrice === maxPrice) return `$${minPrice}`;
+    return `$${minPrice} - $${maxPrice}`;
+  };
+
+  const handleQuickView = (e, product) => {
+    e.stopPropagation(); 
+    console.log('Quick view:', product);
   };
 
   // Loading state
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <h3>Loading {currentCategory ? `${currentCategory} products` : 'products'}...</h3>
+      <Container className="my-5">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading {currentCategory ? `${currentCategory} products` : 'products'}...</p>
+        </div>
       </Container>
     );
   }
@@ -142,9 +140,17 @@ export default function Shop() {
   // Error state
   if (error) {
     return (
-      <Container className="my-5 text-center">
-        <h2>Error</h2>
-        <p>{error}</p>
+      <Container className="my-5">
+        <div className="error-message">
+          <h2>Oops! Something went wrong</h2>
+          <p>{error}</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => navigate('/shop')}
+          >
+            Back to Shop
+          </button>
+        </div>
       </Container>
     );
   }
@@ -173,78 +179,75 @@ export default function Shop() {
           {currentCategory ? `${currentCategory} Collection` : 'All Products'}
         </h2>
         
-        {/* Show subcategories */}
-        {uniqueProductTypes.length > 0 && (
-          <div className="mb-4">
-            <h5>Explore More in {currentCategory}</h5>
-            <Row className="mb-4">
-              {uniqueProductTypes.map((type) => (
-                <Col key={type.category_id} xs={6} sm={4} md={3} className="mb-3">
-                  <Card 
-                    className="h-100 text-center subcategory-card" 
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/subcategory/${type.category_name.toLowerCase()}`)}
-                  >
-                    <Card.Body className="d-flex align-items-center justify-content-center">
-                      <Card.Title className="mb-0 small">
-                        {type.category_name}
-                      </Card.Title>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        )}
-
-        {/* Display styles from the main category */}
+        {/* Display styles */}
         {styles.length > 0 ? (
-          <Row className="flex-nowrap overflow-auto mb-5">
-            {styles.map((item) => (
-              <Col
-                key={item.style_id}
-                xs={8}
-                sm={6}
-                md={4}
-                lg={3}
-                className="position-relative"
-                // toggle popup when hover
-                onMouseEnter={() => togglePopup(`style-${item.style_id}`)}
-                onMouseLeave={() => togglePopup(null)}
-                // navigate to product details page
-                onClick={() => getProductDetails(item.style_id)}
+          <div className="products-grid">
+            {styles.map((product) => (
+              <div 
+                key={product.style_id} 
+                className="product-card"
+                onClick={() => getProductDetails(product.style_id)}
               >
-                <Card className="h-100 card-hover-popup">
-                  <Card.Img
-                    variant="top"
-                    src={item.image || '/placeholder-image.jpg'}
-                    alt={item.name}
-                    className="new-crd"
+                <div className="product-image-container">
+                  <img 
+                    src={product.image || '/placeholder-image.jpg'} 
+                    alt={product.name}
+                    className="product-image"
                   />
-                  <Card.Body>
-                    <Card.Title>{item.name}</Card.Title>
-                    {formatPrice(item.min_price, item.max_price) && (
-                      <Card.Text className="fw-bold text-primary">
-                        {formatPrice(item.min_price, item.max_price)}
-                      </Card.Text>
-                    )}
-                  </Card.Body>
-                  <div
-                    className={`popup-details ${
-                      activePopup === `style-${item.style_id}` ? "show" : ""
-                    }`}
-                  >
+                  
+                  <div className="product-overlay">
+                    <button 
+                      className="quick-view-btn"
+                      onClick={(e) => handleQuickView(e, product)}
+                    >
+                      Quick View
+                    </button>
                   </div>
-                </Card>
-              </Col>
+                </div>
+                
+                <div className="product-info">
+                  <h3 className="product-name">{product.name}</h3>
+                  <p className="product-description">
+                    {product.description && product.description.length > 100 
+                      ? `${product.description.substring(0, 100)}...` 
+                      : product.description
+                    }
+                  </p>
+                  <div className="product-price">
+                    <span className={product.min_price && product.max_price && product.min_price !== product.max_price ? "price-range" : "current-price"}>
+                      {formatPrice(product.min_price, product.max_price)}
+                    </span>
+                  </div>
+                  
+                  {product.variant_count && (
+                    <div className="product-variants">
+                      <span className="variants-label">
+                        {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
+                      </span>
+                    </div>
+                  )}
+                  
+                  {product.category_name && (
+                    <div className="product-category">
+                      <span className="category-badge">
+                        {product.category_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
-          </Row>
+          </div>
         ) : (
-          <div className="text-center my-5">
-            <p>
-              No products found
-              {currentCategory ? ` in ${currentCategory} category` : ''}.
-            </p>
+          <div className="no-products">
+            <div className="no-products-content">
+              <i className="fas fa-search fa-3x"></i>
+              <h3>No products found</h3>
+              <p>
+                No products found
+                {currentCategory ? ` in ${currentCategory} category` : ''}.
+              </p>
+            </div>
           </div>
         )}
       </Container>
