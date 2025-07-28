@@ -127,18 +127,17 @@ export default function ProductPage() {
             </div>
 
             <div className="mb-3">
-              <h5>Available Colors:</h5>
+              {/* <h5>Available Colors:</h5> */}
               {product.available_colors && product.available_colors.length > 0 ? (
                 product.available_colors
                   .filter(color => color) // Remove null/undefined colors
                   .map((color) => (
-                    <Button
+                    <div
                       key={color}
-                      className={`me-2 mb-2 btn-color ${selectedColor === color ? 'selected' : ''}`} 
+                      className={`color-circle ${selectedColor === color ? 'selected' : ''}`}
+                      style={{ backgroundColor: color }}
                       onClick={() => setSelectedColor(color)}
-                    >
-                      {color}
-                    </Button>
+                    />
                   ))
               ) : (
                 <p>Colors not available</p>

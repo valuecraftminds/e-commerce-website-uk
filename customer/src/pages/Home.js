@@ -41,7 +41,7 @@ export default function Home() {
 
   // Helper function to format price display
   const formatPrice = (minPrice, maxPrice) => {
-    if (!minPrice && !maxPrice) return "Price on request";
+    if (!minPrice && !maxPrice) return "Price not defined";
     if (minPrice === maxPrice) return `$${minPrice}`;
     return `$${minPrice} - $${maxPrice}`;
   };
@@ -106,13 +106,13 @@ export default function Home() {
                     </span>
                   </div>
                   
-                  {product.variant_count && (
+                  {/* {product.variant_count && (
                     <div className="home-product-variants">
                       <span className="home-variants-label">
                         {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
                       </span>
                     </div>
-                  )}
+                  )} */}
                   
                   {product.category_name && (
                     <div className="home-product-category">
