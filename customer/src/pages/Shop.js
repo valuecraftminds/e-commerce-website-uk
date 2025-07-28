@@ -3,10 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import axios from "axios";
 
-import "../styles/Shop.css";
 import DataFile from "../assets/DataFile";
 
-const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Shop() {
   const { category: currentCategory } = useParams(); // Get category from URL
@@ -25,7 +24,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${BASEURL}/customer/main-categories`);
+        const response = await axios.get(`${BASE_URL}/customer/main-categories`);
         setCategories(response.data);
       } catch (err) {
         console.error("Failed to fetch categories:", err);
@@ -65,13 +64,13 @@ export default function Shop() {
 
         // Fetch styles filtered by parent category
         const stylesResponse = await axios.get(
-          `${BASEURL}/customer/styles-by-parent-category/${matchedCategory.category_id}`
+          `${BASE_URL}/customer/styles-by-parent-category/${matchedCategory.category_id}`
         );
         setStyles(stylesResponse.data);
 
         // Fetch product types (subcategories) for this category
         const typesResponse = await axios.get(
-          `${BASEURL}/customer/product-types/${matchedCategory.category_id}`
+          `${BASE_URL}/customer/product-types/${matchedCategory.category_id}`
         );
         setProductTypes(typesResponse.data);
 
@@ -96,7 +95,7 @@ export default function Shop() {
         setError(null);
 
         // Fetch all styles if no category is specified
-        const stylesResponse = await axios.get(`${BASEURL}/customer/all-styles`);
+        const stylesResponse = await axios.get(`${BASE_URL}/customer/all-styles`);
         setStyles(stylesResponse.data);
 
         // Clear product types since we're showing all styles
@@ -119,12 +118,7 @@ export default function Shop() {
     if (minPrice === maxPrice) return `$${minPrice}`;
     return `$${minPrice} - $${maxPrice}`;
   };
-
-  const handleQuickView = (e, product) => {
-    e.stopPropagation(); 
-    console.log('Quick view:', product);
-  };
-
+  
   // Loading state
   if (loading) {
     return (
@@ -196,12 +190,7 @@ export default function Shop() {
                   />
                   
                   <div className="product-overlay">
-                    <button 
-                      className="quick-view-btn"
-                      onClick={(e) => handleQuickView(e, product)}
-                    >
-                      Quick View
-                    </button>
+                    <h5> Quick View </h5>
                   </div>
                 </div>
                 

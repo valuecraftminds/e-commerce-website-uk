@@ -8,7 +8,7 @@ import logo from '../assets/logo.png';
 import Sidebar from './Sidebar';
 import SearchSidebar from "./SearchSidebar";
 
-const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function NavigationBar() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function NavigationBar() {
 
   // Fetch categories from the backend
   useEffect(() => {
-    axios.get(`${BASEURL}/customer/main-categories`)
+    axios.get(`${BASE_URL}/customer/main-categories`)
       .then((response) => {
         setCategories(response.data);
         setLoading(false);
