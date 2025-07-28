@@ -4,7 +4,7 @@ import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
-import "../styles/Shop.css";
+import "../styles/Home.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -41,12 +41,6 @@ export default function Home() {
     if (!minPrice && !maxPrice) return "Price on request";
     if (minPrice === maxPrice) return `$${minPrice}`;
     return `$${minPrice} - $${maxPrice}`;
-  };
-
-  const handleQuickView = (e, product) => {
-    e.stopPropagation(); // Prevent navigation when clicking quick view
-    // Add your quick view logic here
-    console.log('Quick view:', product);
   };
 
   return (
@@ -91,12 +85,7 @@ export default function Home() {
                   />
                   
                   <div className="product-overlay">
-                    <button 
-                      className="quick-view-btn"
-                      onClick={(e) => handleQuickView(e, product)}
-                    >
-                      Quick View
-                    </button>
+                    <h5> Quick View </h5>
                   </div>
                 </div>
                 
