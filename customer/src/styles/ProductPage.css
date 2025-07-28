@@ -57,3 +57,16 @@
     background-color: #140d77 !important;
     color: white !important;
 }
+.color-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: border 0.2s ease;
+}
+
+.color-circle.selected {
+  border: 3px solid #8e8ace;
+}

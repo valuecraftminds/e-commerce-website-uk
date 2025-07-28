@@ -153,7 +153,7 @@ export default function Shop() {
 
   // Helper function to format price display
   const formatPrice = (minPrice, maxPrice) => {
-    if (!minPrice && !maxPrice) return "Price on request";
+    if (!minPrice && !maxPrice) return "Price not defined";
     if (minPrice === maxPrice) return `$${minPrice}`;
     return `$${minPrice} - $${maxPrice}`;
   };
@@ -247,13 +247,13 @@ export default function Shop() {
                     </span>
                   </div>
                   
-                  {product.variant_count && (
+                  {/* {product.variant_count && (
                     <div className="shop-product-variants">
                       <span className="variants-label">
                         {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
                       </span>
                     </div>
-                  )}
+                  )} */}
                   
                   {product.category_name && (
                     <div className="shop-product-category">
