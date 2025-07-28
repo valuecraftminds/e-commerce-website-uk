@@ -4,7 +4,7 @@ import axios from "axios";
 
 import "../styles/Sidebar.css";
 
-const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Sidebar({
   category,
@@ -24,7 +24,7 @@ export default function Sidebar({
 
   // Fetch categories on mount
   useEffect(() => {
-    axios.get(`${BASEURL}/customer/main-categories`)
+    axios.get(`${BASE_URL}/customer/main-categories`)
       .then(res => {
         console.log("Categories fetched:", res.data);
         setCategories(res.data);
@@ -47,7 +47,7 @@ export default function Sidebar({
     if (matchedCategory) {
       setLoading(true);
       // Fix the API endpoint to match your backend route
-      axios.get(`${BASEURL}/customer/product-types/${matchedCategory.category_id}`)
+      axios.get(`${BASE_URL}/customer/product-types/${matchedCategory.category_id}`)
         .then(res => {
           console.log("Product types fetched:", res.data);
           setProductTypes(res.data);

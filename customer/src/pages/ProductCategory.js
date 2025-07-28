@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import '../styles/ProductCategory.css';
 
-const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 const ProductCategory = () => {
   const { category, productType } = useParams();
@@ -32,7 +32,7 @@ const ProductCategory = () => {
         setError(null);
 
         // First, get all categories to find the main category ID
-        const categoriesResponse = await axios.get(`${BASEURL}/customer/main-categories`);
+        const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`);
         const mainCategories = categoriesResponse.data;
         
         // Find the matching main category
@@ -50,7 +50,7 @@ const ProductCategory = () => {
 
         // Get product types (subcategories) for this main category
         const productTypesResponse = await axios.get(
-          `${BASEURL}/customer/product-types/${matchedMainCategory.category_id}`
+          `${BASE_URL}/customer/product-types/${matchedMainCategory.category_id}`
         );
         const productTypes = productTypesResponse.data;
 
@@ -67,7 +67,7 @@ const ProductCategory = () => {
 
         // fetch styles from the specific subcategory
         const stylesResponse = await axios.get(
-          `${BASEURL}/customer/styles-by-parent-category/${matchedMainCategory.category_id}`
+          `${BASE_URL}/customer/styles-by-parent-category/${matchedMainCategory.category_id}`
         );
 
         // Filter styles to only include those from the specific product type
