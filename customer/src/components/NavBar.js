@@ -9,6 +9,7 @@ import Sidebar from './Sidebar';
 import SearchSidebar from "./SearchSidebar";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function NavigationBar() {
   const navigate = useNavigate();
@@ -23,9 +24,13 @@ export default function NavigationBar() {
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const [showsearchSidebar, setShowsearchSidebar] = useState(false);
 
-  // Fetch categories from the backend
+  // Fetch categories
   useEffect(() => {
-    axios.get(`${BASE_URL}/customer/main-categories`)
+    axios.get(`${BASE_URL}/customer/main-categories`, {
+      params: {
+        company_code: COMPANY_CODE
+      }
+    })
       .then((response) => {
         setCategories(response.data);
         setLoading(false);

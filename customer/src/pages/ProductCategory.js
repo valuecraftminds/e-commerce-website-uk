@@ -5,20 +5,20 @@ import axios from 'axios';
 import '../styles/ProductCategory.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 const ProductCategory = () => {
   const { category, productType } = useParams();
   const navigate = useNavigate();
   
-  const [allProducts, setAllProducts] = useState([]); // Store original data
+  const [allProducts, setAllProducts] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [, setCategoryInfo] = useState(null);
   
   // Filter states
   const [filters, setFilters] = useState({
-    priceSort: '', 
-    sizeFilter: '',
+    priceSort: ''
   });
 
   // Format display names
@@ -27,9 +27,6 @@ const ProductCategory = () => {
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
-
-  // Available sizes
-  const availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
   const categoryDisplay = formatDisplayName(category);
   const productTypeDisplay = formatDisplayName(productType);
 
@@ -41,7 +38,9 @@ const ProductCategory = () => {
         setError(null);
 
         // get all categories to find the main category ID
-        const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`);
+        const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`, {
+          params: { company_code: COMPANY_CODE }
+        });
         const mainCategories = categoriesResponse.data;
         
         // Find the matching main category
@@ -59,9 +58,12 @@ const ProductCategory = () => {
 
         // Get product types (subcategories) for this main category
         const productTypesResponse = await axios.get(
-          `${BASE_URL}/customer/product-types/${matchedMainCategory.category_id}`
+          `${BASE_URL}/customer/product-types/${matchedMainCategory.category_id}`,
+          {
+            params: { company_code: COMPANY_CODE }
+          }
         );
-        const productTypes = productTypesResponse.data;
+        const productTypes = productTypesResponse.data.categories || [];
 
         // Find the matching product type
         const matchedProductType = productTypes.find(
@@ -76,7 +78,12 @@ const ProductCategory = () => {
 
         // fetch styles from the specific subcategory
         const stylesResponse = await axios.get(
-          `${BASE_URL}/customer/styles-by-parent-category/${matchedMainCategory.category_id}`
+          `${BASE_URL}/customer/styles-by-parent-category/${matchedMainCategory.category_id}`,
+          {
+            params: {
+              company_code: COMPANY_CODE
+            }
+          }
         );
 
         // Filter styles to only include those from the specific product type
@@ -102,13 +109,6 @@ const ProductCategory = () => {
   // Apply filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...allProducts];
-
-    // Apply size filter (this would need size data from your API)
-    if (filters.sizeFilter) {
-      result = result.filter(product => 
-        product.sizes && product.sizes.includes(filters.sizeFilter)
-      );
-    }
 
     // Apply sorting
     switch (filters.priceSort) {
@@ -143,8 +143,7 @@ const ProductCategory = () => {
 
   const clearAllFilters = () => {
     setFilters({
-      priceSort: '',
-      sizeFilter: '',
+      priceSort: ''
     });
   };
 
@@ -239,20 +238,8 @@ const ProductCategory = () => {
               <option value="high-low">Price: High to Low</option>
             </select>
 
-            {/* Size Filter */}
-            <select 
-              className="form-select filter-select"
-              value={filters.sizeFilter}
-              onChange={(e) => handleFilterChange('sizeFilter', e.target.value)}
-            >
-              <option value="">All Sizes</option>
-              {availableSizes.map(size => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
-
             {/* Clear Filters Button */}
-            {(filters.priceSort || filters.sizeFilter) && (
+            {(filters.priceSort) && (
               <button 
                 className="clear-filters-btn"
                 onClick={clearAllFilters}
@@ -330,7 +317,7 @@ const ProductCategory = () => {
               <i className="fas fa-search fa-3x"></i>
               <h3>No products found</h3>
               <p>
-                {filters.searchTerm || filters.sizeFilter
+                {filters.searchTerm
                   ? "Try adjusting your filters to see more results."
                   : `We couldn't find any ${productTypeDisplay.toLowerCase()} in the ${categoryDisplay.toLowerCase()} category.`
                 }

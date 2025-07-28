@@ -7,6 +7,7 @@ import DataFile from "../assets/DataFile";
 import "../styles/Home.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -23,7 +24,9 @@ export default function Home() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/all-styles`);
+        const response = await axios.get(`${BASE_URL}/customer/all-styles`,{
+          params: { company_code: COMPANY_CODE }
+        });
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching product listings:', error);

@@ -5,6 +5,7 @@ import axios from "axios";
 import "../styles/Sidebar.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function Sidebar({
   category,
@@ -24,7 +25,16 @@ export default function Sidebar({
 
   // Fetch categories on mount
   useEffect(() => {
-    axios.get(`${BASE_URL}/customer/main-categories`)
+    if (!COMPANY_CODE) {
+      console.error('Company code not configured');
+      return;
+    }
+
+    axios.get(`${BASE_URL}/customer/main-categories`, {
+      params: {
+        company_code: COMPANY_CODE
+      }
+    })
       .then(res => {
         console.log("Categories fetched:", res.data);
         setCategories(res.data);
@@ -34,7 +44,7 @@ export default function Sidebar({
 
   // Fetch product types when category changes
   useEffect(() => {
-    if (!category || categories.length === 0) {
+    if (!category || categories.length === 0 || !COMPANY_CODE) {
       setProductTypes([]);
       return;
     }
@@ -47,10 +57,14 @@ export default function Sidebar({
     if (matchedCategory) {
       setLoading(true);
       // Fix the API endpoint to match your backend route
-      axios.get(`${BASE_URL}/customer/product-types/${matchedCategory.category_id}`)
+      axios.get(`${BASE_URL}/customer/product-types/${matchedCategory.category_id}`, {
+        params: {
+          company_code: COMPANY_CODE
+        }
+      })
         .then(res => {
           console.log("Product types fetched:", res.data);
-          setProductTypes(res.data);
+          setProductTypes(res.data.categories || []);
           setLoading(false);
         })
         .catch(err => {
