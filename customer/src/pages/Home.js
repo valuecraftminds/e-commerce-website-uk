@@ -82,7 +82,7 @@ export default function Home() {
               >
                 <div className="product-image-container">
                   <img 
-                    src={product.image || '/placeholder-image.jpg'} 
+                    src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
                     alt={product.name}
                     className="product-image"
                   />

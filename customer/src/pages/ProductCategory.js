@@ -41,6 +41,7 @@ const ProductCategory = () => {
         const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`, {
           params: { company_code: COMPANY_CODE }
         });
+
         const mainCategories = categoriesResponse.data;
         
         // Find the matching main category
@@ -266,8 +267,8 @@ const ProductCategory = () => {
               >
                 <div className="product-image-container">
                   <img 
-                    src={product.image || '/api/placeholder/300/400'} 
-                    alt={product.name}
+              src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
+              alt={product.name}
                     className="product-image"
                   />
                   

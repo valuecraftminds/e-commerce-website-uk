@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Container } from "react-bootstrap";
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Container } from "react-bootstrap";
+import { useNavigate, useParams } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
+import "../styles/Shop.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -134,6 +135,7 @@ export default function Shop() {
           }
         });
         setStyles(stylesResponse.data);
+        console.log('Fetched all styles:', stylesResponse.data);
 
         // Clear product types since we're showing all styles
         setProductTypes([]);
@@ -199,7 +201,7 @@ export default function Shop() {
                 src={item.image}
                 className="banner-img"
                 alt={`${currentCategory} banner`}
-              />
+              />  
             ))}
         </div>
       )}
@@ -221,7 +223,7 @@ export default function Shop() {
               >
                 <div className="product-image-container">
                   <img 
-                    src={product.image || '/placeholder-image.jpg'} 
+                src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
                     alt={product.name}
                     className="product-image"
                   />

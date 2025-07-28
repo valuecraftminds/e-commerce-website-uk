@@ -115,8 +115,8 @@ const generateCompanyCode = (callback) => {
         if (phoneErr) {
           return res.status(500).json({ success: false, message: 'Database error' });
         }
-        if (!/^07\d{8}$/.test(phone)) {
-          return res.status(400).json({ success: false, message: 'Phone number must start with 07 and be exactly 10 digits' });
+        if (!/^\+?\d{10,15}$/.test(phone.replace(/[\s-]/g, ''))) {
+          return res.status(400).json({ success: false, message: 'Invalid phone number format. Please enter a valid international phone number' });
         } else if (phoneRows.length > 0) {
           return res.status(409).json({ success: false, message: 'Phone number already exists' });
         }
@@ -196,8 +196,8 @@ router.post('/api/register', async (req, res) => {
     if (phoneErr) {
       return res.status(500).json({ success: false, message: 'Database error' });
     }
-    if (!/^07\d{8}$/.test(phone)) {
-      return res.status(400).json({ success: false, message: 'Phone number must start with 07 and be exactly 10 digits' });
+    if (!/^\+?\d{10,15}$/.test(phone.replace(/[\s-]/g, ''))) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number format. Please enter a valid international phone number' });
     } else if (phoneRows.length > 0) {
       return res.status(409).json({ success: false, message: 'Phone number already exists' });
     }

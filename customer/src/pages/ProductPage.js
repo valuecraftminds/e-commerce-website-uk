@@ -95,7 +95,7 @@ export default function ProductPage() {
           <Col className="img-col" md={6}>
             <Image 
               className="product-image" 
-              src={product.image || '/placeholder-image.jpg'} 
+              src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
               alt={product.name} 
               fluid 
             />

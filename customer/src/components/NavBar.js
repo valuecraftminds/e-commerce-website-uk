@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Navbar, Nav, Container } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import '../styles/NavBar.css';
 import logo from '../assets/logo.png';
-import Sidebar from './Sidebar';
+import '../styles/NavBar.css';
 import SearchSidebar from "./SearchSidebar";
+import Sidebar from './Sidebar';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -137,7 +137,11 @@ export default function NavigationBar() {
               style={{ fontSize: "1.4rem", cursor: "pointer" }}
               onClick={() => setShowsearchSidebar(true)}
             />
-            <i className="bi bi-person-plus" style={{ fontSize: "1.4rem" }} />
+            <i 
+              className="bi bi-person-plus" 
+              style={{ fontSize: "1.4rem", cursor: "pointer" }} 
+              onClick={() => navigate('/login')}
+            />
             <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }} />
             <i
               className="bi bi-list d-lg-none"
