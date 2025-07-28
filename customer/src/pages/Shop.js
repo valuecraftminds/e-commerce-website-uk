@@ -162,8 +162,8 @@ export default function Shop() {
   if (loading) {
     return (
       <Container className="my-5">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="shop-loading-spinner">
+          <div className="shop-spinner"></div>
           <p>Loading {currentCategory ? `${currentCategory} products` : 'products'}...</p>
         </div>
       </Container>
@@ -174,11 +174,11 @@ export default function Shop() {
   if (error) {
     return (
       <Container className="my-5">
-        <div className="error-message">
+        <div className="shop-error-message">
           <h2>Oops! Something went wrong</h2>
           <p>{error}</p>
           <button 
-            className="btn btn-primary"
+            className="shop-btn btn-primary"
             onClick={() => navigate('/shop')}
           >
             Back to Shop
@@ -192,21 +192,21 @@ export default function Shop() {
     <>
       {/* Banner Section */}
       {currentCategory && (
-        <div className="banner mb-4">
+        <div className="shop-banner mb-4">
           {DataFile.banner
             .filter((item) => item.category === currentCategory)
             .map((item) => (
               <img
                 key={item.id}
                 src={item.image}
-                className="banner-img"
+                className="shop-banner-img"
                 alt={`${currentCategory} banner`}
               />  
             ))}
         </div>
       )}
 
-      <Container className="my-5">
+      <Container fluid className="my-5 shop-product-container">
         {/* Products Section */}
         <h2 className="mb-4 text-capitalize">
           {currentCategory ? `${currentCategory} Collection` : 'All Products'}
@@ -214,41 +214,41 @@ export default function Shop() {
         
         {/* Display styles */}
         {styles.length > 0 ? (
-          <div className="products-grid">
+          <div className="shop-products-grid">
             {styles.map((product) => (
               <div 
                 key={product.style_id} 
-                className="product-card"
+                className="shop-product-card"
                 onClick={() => getProductDetails(product.style_id)}
               >
-                <div className="product-image-container">
+                <div className="shop-product-image-container">
                   <img 
                 src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
                     alt={product.name}
-                    className="product-image"
+                    className="shop-product-image"
                   />
                   
-                  <div className="product-overlay">
+                  <div className="shop-product-overlay">
                     <h5> Quick View </h5>
                   </div>
                 </div>
                 
-                <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
-                  <p className="product-description">
+                <div className="shop-product-info">
+                  <h3 className="shop-product-name">{product.name}</h3>
+                  <p className="shop-product-description">
                     {product.description && product.description.length > 100 
                       ? `${product.description.substring(0, 100)}...` 
                       : product.description
                     }
                   </p>
-                  <div className="product-price">
+                  <div className="shop-product-price">
                     <span className={product.min_price && product.max_price && product.min_price !== product.max_price ? "price-range" : "current-price"}>
                       {formatPrice(product.min_price, product.max_price)}
                     </span>
                   </div>
                   
                   {product.variant_count && (
-                    <div className="product-variants">
+                    <div className="shop-product-variants">
                       <span className="variants-label">
                         {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
                       </span>
@@ -256,8 +256,8 @@ export default function Shop() {
                   )}
                   
                   {product.category_name && (
-                    <div className="product-category">
-                      <span className="category-badge">
+                    <div className="shop-product-category">
+                      <span className="shop-category-badge">
                         {product.category_name}
                       </span>
                     </div>
@@ -267,8 +267,8 @@ export default function Shop() {
             ))}
           </div>
         ) : (
-          <div className="no-products">
-            <div className="no-products-content">
+          <div className="shop-no-products">
+            <div className="shop-no-products-content">
               <i className="fas fa-search fa-3x"></i>
               <h3>No products found</h3>
               <p>
