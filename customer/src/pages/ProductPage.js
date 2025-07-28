@@ -108,7 +108,7 @@ export default function ProductPage() {
             </h5>
 
             <div className="mb-3">
-              <h5>Available Sizes:</h5>
+              {/* <h5>Available Sizes:</h5> */}
               {product.available_sizes && product.available_sizes.length > 0 ? (
                 product.available_sizes
                   .filter(size => size) // Remove null/undefined sizes
@@ -125,25 +125,24 @@ export default function ProductPage() {
                 <p>Sizes not available</p>
               )}
             </div>
-
             <div className="mb-3">
               {/* <h5>Available Colors:</h5> */}
               {product.available_colors && product.available_colors.length > 0 ? (
                 product.available_colors
                   .filter(color => color) // Remove null/undefined colors
                   .map((color) => (
-                    <div
+                    <Button
                       key={color}
-                      className={`color-circle ${selectedColor === color ? 'selected' : ''}`}
-                      style={{ backgroundColor: color }}
+                      className={`me-2 mb-2 btn-color ${selectedColor === color ? 'selected' : ''}`}
                       onClick={() => setSelectedColor(color)}
-                    />
+                    >
+                      {color}
+                    </Button>
                   ))
               ) : (
-                <p>Colors not available</p>
+              <p>Colors not available</p>
               )}
             </div>
-
             <div className="mb-3">
               <h5>Quantity:</h5>
               <input
