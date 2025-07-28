@@ -120,12 +120,7 @@ export default function Shop() {
     if (minPrice === maxPrice) return `$${minPrice}`;
     return `$${minPrice} - $${maxPrice}`;
   };
-
-  const handleQuickView = (e, product) => {
-    e.stopPropagation(); 
-    console.log('Quick view:', product);
-  };
-
+  
   // Loading state
   if (loading) {
     return (
@@ -197,12 +192,7 @@ export default function Shop() {
                   />
                   
                   <div className="product-overlay">
-                    <button 
-                      className="quick-view-btn"
-                      onClick={(e) => handleQuickView(e, product)}
-                    >
-                      Quick View
-                    </button>
+                    <h5> Quick View </h5>
                   </div>
                 </div>
                 

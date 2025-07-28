@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -10,10 +10,16 @@ const ProductCategory = () => {
   const { category, productType } = useParams();
   const navigate = useNavigate();
   
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // Store original data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [, setCategoryInfo] = useState(null);
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    priceSort: '', 
+    sizeFilter: '',
+  });
 
   // Format display names
   const formatDisplayName = (name) => {
@@ -22,16 +28,18 @@ const ProductCategory = () => {
     ).join(' ');
   };
 
+  // Available sizes
+  const availableSizes = ['XS', 'S', 'M', 'L', 'XL'];
   const categoryDisplay = formatDisplayName(category);
   const productTypeDisplay = formatDisplayName(productType);
 
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // First, get all categories to find the main category ID
         const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`);
         const mainCategories = categoriesResponse.data;
         
@@ -75,7 +83,7 @@ const ProductCategory = () => {
           style => style.category_id === matchedProductType.category_id
         );
 
-        setProducts(filteredStyles);
+        setAllProducts(filteredStyles);
         
       } catch (err) {
         console.error('Error fetching products:', err);
@@ -90,8 +98,56 @@ const ProductCategory = () => {
     }
   }, [category, productType]);
 
+  // Apply filters and sorting
+  const filteredAndSortedProducts = useMemo(() => {
+    let result = [...allProducts];
+
+    // Apply size filter (this would need size data from your API)
+    if (filters.sizeFilter) {
+      result = result.filter(product => 
+        product.sizes && product.sizes.includes(filters.sizeFilter)
+      );
+    }
+
+    // Apply sorting
+    switch (filters.priceSort) {
+      case 'low-high':
+        result.sort((a, b) => {
+          const priceA = a.min_price || 0;
+          const priceB = b.min_price || 0;
+          return priceA - priceB;
+        });
+        break;
+      case 'high-low':
+        result.sort((a, b) => {
+          const priceA = a.max_price || a.min_price || 0;
+          const priceB = b.max_price || b.min_price || 0;
+          return priceB - priceA;
+        });
+        break;
+      default:
+        break;
+    }
+
+    return result;
+  }, [allProducts, filters]);
+
+  // Handle filter changes
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      priceSort: '',
+      sizeFilter: '',
+    });
+  };
+
   const handleProductClick = (product) => {
-    // Navigate to individual product
     navigate(`/product/${product.style_id}`);
   };
 
@@ -161,41 +217,60 @@ const ProductCategory = () => {
             {categoryDisplay} - {productTypeDisplay}
           </h1>
           <p className="page-subtitle">
-            {products.length} {products.length === 1 ? 'item' : 'items'} found
+            {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'item' : 'items'} found
+            {allProducts.length !== filteredAndSortedProducts.length && (
+              <span className="filtered-text"> (filtered from {allProducts.length})</span>
+            )}
           </p>
         </div>
 
         {/* Filter and Sort Options */}
         <div className="filter-sort-bar">
           <div className="filter-options">
-            <select className="form-select filter-select">
-              <option value="">Filter by Price</option>
+            {/* Sort Dropdown */}
+            <select 
+              className="form-select filter-select"
+              value={filters.priceSort}
+              onChange={(e) => handleFilterChange('priceSort', e.target.value)}
+            >
+              <option value="">Sort By</option>
               <option value="low-high">Price: Low to High</option>
               <option value="high-low">Price: High to Low</option>
             </select>
-            <select className="form-select filter-select">
-              <option value="">Filter by Size</option>
-              <option value="xs">XS</option>
-              <option value="s">S</option>
-              <option value="m">M</option>
-              <option value="l">L</option>
-              <option value="xl">XL</option>
+
+            {/* Size Filter */}
+            <select 
+              className="form-select filter-select"
+              value={filters.sizeFilter}
+              onChange={(e) => handleFilterChange('sizeFilter', e.target.value)}
+            >
+              <option value="">All Sizes</option>
+              {availableSizes.map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
             </select>
+
+            {/* Clear Filters Button */}
+            {(filters.priceSort || filters.sizeFilter) && (
+              <button 
+                className="clear-filters-btn"
+                onClick={clearAllFilters}
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
-          {/* <div className="view-options">
-            <button className="view-btn active" data-view="grid">
-              <i className="fas fa-th"></i>
-            </button>
-            <button className="view-btn" data-view="list">
-              <i className="fas fa-list"></i>
-            </button>
-          </div> */}
+
+          {/* Results count for mobile */}
+          <div className="results-count-mobile">
+            {filteredAndSortedProducts.length} results
+          </div>
         </div>
 
         {/* Products Grid */}
-        {products.length > 0 ? (
+        {filteredAndSortedProducts.length > 0 ? (
           <div className="products-grid">
-            {products.map((product) => (
+            {filteredAndSortedProducts.map((product) => (
               <div 
                 key={product.style_id} 
                 className="product-card"
@@ -209,9 +284,7 @@ const ProductCategory = () => {
                   />
                   
                   <div className="product-overlay">
-                    <button className="quick-view-btn">
-                      Quick View
-                    </button>
+                    <h5> Quick View </h5>
                   </div>
                 </div>
                 
@@ -256,14 +329,17 @@ const ProductCategory = () => {
               <i className="fas fa-search fa-3x"></i>
               <h3>No products found</h3>
               <p>
-                We couldn't find any {productTypeDisplay.toLowerCase()} in the {categoryDisplay.toLowerCase()} category.
+                {filters.searchTerm || filters.sizeFilter
+                  ? "Try adjusting your filters to see more results."
+                  : `We couldn't find any ${productTypeDisplay.toLowerCase()} in the ${categoryDisplay.toLowerCase()} category.`
+                }
               </p>
             </div>
           </div>
         )}
 
         {/* Load More Button  */}
-        {products.length > 0 && products.length % 12 === 0 && (
+        {filteredAndSortedProducts.length > 0 && filteredAndSortedProducts.length % 12 === 0 && (
           <div className="load-more-container">
             <button className="btn btn-outline-primary load-more-btn">
               Load More Products
