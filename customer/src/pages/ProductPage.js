@@ -7,6 +7,7 @@ import SuccessMsg from "../components/SuccessMsg";
 import "../styles/ProductPage.css"; 
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -29,7 +30,11 @@ export default function ProductPage() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/product/${styleId}`);
+        const response = await axios.get(`${BASE_URL}/customer/product/${styleId}`,
+          {
+            params: { company_code: COMPANY_CODE }
+          }
+        );
         setProduct(response.data);
         setError(null);
       } catch (err) {

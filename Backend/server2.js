@@ -1,3 +1,273 @@
+// const express = require('express');
+// const cors = require('cors');
+// require('dotenv').config();
+// const db = require('./config/database');
+
+// const router = express.Router();
+// const port = process.env.PORT || 3000;
+
+// // Middleware
+// router.use(cors());
+// router.use(express.json());
+// router.use(express.urlencoded({ extended: true }));
+
+
+// // -------ENDPOINTS FOR CUSTOMER ROUTES------- //
+
+// // GET main categories (parent_id is NULL)
+// router.get('/main-categories', (req, res) => {
+//   const { company_code } = req.query;
+
+//   if (company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+
+//   const sql = `SELECT * FROM categories WHERE parent_id IS NULL AND company_code = ?`;
+
+//   db.query(sql, [company_code], (err, results) => {
+//     if (err) {
+//       console.error('Error retrieving main categories:', err);
+//       return res.status(500).json({ error: 'Server error' });
+//     }
+
+//     res.status(200).json(results);
+//   });
+// });
+
+// // GET product types by main category ID
+// router.get('/product-types/:parentId', (req, res) => {
+//   const { parentId } = req.params;
+//   const { company_code } = req.query;
+
+//   if (!company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+
+//   const sql = `SELECT * FROM categories WHERE parent_id = ? AND company_code = ?`;
+
+//   db.query(sql, [parentId, company_code], (err, results) => {
+//     if (err) {
+//       console.error('Error retrieving subcategories:', err);
+//       return res.status(500).json({ error: 'Server error' });
+//     }
+
+//     res.status(200).json(results);
+//   });
+// });
+
+//   // get styles by parent category ID
+// router.get('/styles-by-parent-category/:parentId', (req, res) => {
+//   const { company_code } = req.query;
+//   const { parentId } = req.params;
+
+//   if (!company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+
+//   const sql = `
+//     SELECT 
+//       s.*,
+//       c.category_name,
+//       c.category_id,
+//       parent_cat.category_name as parent_category_name,
+//       MIN(sv.price) as min_price,
+//       MAX(sv.price) as max_price,
+//       COUNT(DISTINCT sv.variant_id) as variant_count
+//     FROM styles s
+//     LEFT JOIN categories c ON s.category_id = c.category_id
+//     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+//     LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+//     WHERE (c.parent_id = ? OR c.category_id = ?) AND s.approved = 'yes'
+//     GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+//     ORDER BY s.created_at DESC
+//   `;
+
+//   db.query(sql, [parentId, parentId, company_code], (err, results) => {
+//     if (err) {
+//       console.error('Error retrieving styles by parent category:', err);
+//       return res.status(500).json({ error: 'Server error' });
+//     }
+
+//     res.status(200).json(results);
+//   });
+// });
+
+// // get all styles
+// router.get('/all-styles', (req, res) => {
+//   const { company_code } = req.query;
+
+//   if (!company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+
+//   const sql = `
+//     SELECT 
+//       s.*,
+//       c.category_name,
+//       c.category_id,
+//       parent_cat.category_name as parent_category_name,
+//       MIN(sv.price) as min_price,
+//       MAX(sv.price) as max_price,
+//       COUNT(DISTINCT sv.variant_id) as variant_count
+//     FROM styles s
+//     LEFT JOIN categories c ON s.category_id = c.category_id
+//     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+//     LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+//     WHERE s.approved = 'yes'
+//     GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+//     ORDER BY s.created_at DESC
+//   `;
+
+//   db.query(sql, [company_code], (err, results) => {
+//     if (err) {
+//       console.error('Error retrieving all styles:', err);
+//       return res.status(500).json({ error: 'Server error' });
+//     }
+
+//     res.status(200).json(results);
+//   });
+// });
+
+
+// // retrieve product details for product page
+// router.get('/product/:style_id', (req, res) => {
+//   const { company_code } = req.query;
+//   const { style_id } = req.params;
+
+//   if (!company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+
+//   // Query product info from styles table
+//   const sql = `
+//     SELECT
+//       s.style_id,
+//       s.style_code,
+//       s.name,
+//       s.description,
+//       s.image,
+//       sv.price,
+//       sz.size_name,
+//       c.color_name
+//   FROM styles s
+//   LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+//   LEFT JOIN sizes sz ON sv.size_id = sz.size_id
+//   LEFT JOIN colors c ON sv.color_id = c.color_id
+//   WHERE s.style_id = ?
+//   `;
+
+// db.query(sql, [style_id, company_code], (err, results) => {
+//   if (err) {
+//     console.error('Error fetching product details:', err);
+//     return res.status(500).json({ error: 'Server error' });
+//   }
+
+//   // Group sizes and colors uniquely
+//   const sizes = [...new Set(results.map(r => r.size_name))];
+//   const colors = [...new Set(results.map(r => r.color_name))];
+
+//   const product = results[0];
+//   const price = results.length > 0 ? results[0].price : null;
+
+//   res.json({
+//     style_id: product.style_id,
+//     style_code: product.style_code,
+//     name: product.name,
+//     description: product.description,
+//     price,
+//     available_sizes: sizes,
+//     available_colors: colors,
+//     image: product.image
+//   });
+// });
+// });
+
+// // get product listing images to display on homepage
+// router.get('/product-listings', (req, res) => {
+//   const { company_code } = req.query;
+
+//   if (!company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+
+//   const sql = `
+//     SELECT style_id, style_code, name, description, image 
+//     FROM styles 
+//     WHERE approved = 'yes'
+//   `;
+
+//   db.query(sql, [company_code], (err, results) => {
+//     if (err) {
+//       console.error('Error retrieving product listings:', err);
+//       return res.status(500).json({ error: 'Server error' });
+//     }
+
+//     res.status(200).json(results);
+//   });
+// });
+
+
+// // Search endpoint
+// router.get('/search', (req, res) => {
+//   const { company_code } = req.query;
+//   const query = req.query.q?.toLowerCase() || '';
+
+//   if (!company_code) {
+//     return res.status(400).json({ success: false, error: 'company_code is required' });
+//   }
+  
+//   const sql = `
+//     SELECT
+//       s.style_id,
+//       s.style_code,
+//       s.name,
+//       s.description,
+//       s.image
+//     FROM styles s
+//     WHERE (s.name LIKE ? OR s.description LIKE ? OR s.style_code LIKE ?)
+//     AND s.approved = 'yes'
+//     ORDER BY 
+//       CASE 
+//         WHEN s.name LIKE ? THEN 1
+//         WHEN s.style_code LIKE ? THEN 2
+//         WHEN s.description LIKE ? THEN 3
+//         ELSE 4
+//       END,
+//       s.name ASC
+//     LIMIT 10
+//   `;
+
+//   const searchPattern = `%${query}%`;
+//   const exactPattern = `${query}%`;
+
+//   db.query(sql, [
+//     searchPattern,
+//     searchPattern,      
+//     searchPattern,    
+//     exactPattern,     
+//     exactPattern,     
+//     exactPattern
+//   ], (err, results) => {
+//     if (err) {
+//       console.error('Error searching styles:', err);
+//       return res.status(500).json({ error: 'Server error' });
+//     }
+
+//     // Transform results to ensure consistent data structure
+//     const transformedResults = results.map(item => ({
+//       style_id: item.style_id,
+//       style_code: item.style_code,
+//       name: item.name,
+//       description: item.description || '',
+//       image: item.image || null
+//     }));
+
+//     res.status(200).json(transformedResults);
+//   });
+// });
+
+// module.exports = router;
+
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -14,14 +284,24 @@ router.use(cors());
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
+function checkCompanyCode(req, res, next) {
+  const { company_code } = req.query;
+  if (!company_code) {
+    return res.status(400).json({ success: false, error: 'company_code is required' });
+  }
+  next();
+}
+
 
 // -------ENDPOINTS FOR CUSTOMER ROUTES------- //
 
-// GET main categories (parent_id is NULL)
-router.get('/main-categories', (req, res) => {
-  const sql = `SELECT * FROM categories WHERE parent_id IS NULL`;
+// GET main categories (parent_id is NULL) filtered by company_code
+router.get('/main-categories', checkCompanyCode, (req, res) => {
+  const { company_code } = req.query;
 
-  db.query(sql, (err, results) => {
+    const sql = `SELECT * FROM categories WHERE parent_id IS NULL AND company_code = ?`;
+
+  db.query(sql, [company_code], (err, results) => {
     if (err) {
       console.error('Error retrieving main categories:', err);
       return res.status(500).json({ error: 'Server error' });
@@ -31,25 +311,31 @@ router.get('/main-categories', (req, res) => {
   });
 });
 
-// GET product types by main category ID
-router.get('/product-types/:parentId', (req, res) => {
+// GET product types by main category ID filtered by company_code
+router.get('/product-types/:parentId', checkCompanyCode, (req, res) => {
   const { parentId } = req.params;
+  const { company_code } = req.query;
 
-  const sql = `SELECT * FROM categories WHERE parent_id = ?`;
+  const sql = `SELECT * FROM categories WHERE parent_id = ? AND company_code = ?`;
 
-  db.query(sql, [parentId], (err, results) => {
+  db.query(sql, [parentId, company_code], (err, results) => {
     if (err) {
       console.error('Error retrieving subcategories:', err);
-      return res.status(500).json({ error: 'Server error' });
+      return res.status(500).json({ success: false, message: 'Server error' });
     }
 
-    res.status(200).json(results);
+    res.status(200).json({ success: true, categories: results });
   });
 });
 
-  // get styles by parent category ID
-router.get('/styles-by-parent-category/:parentId', (req, res) => {
+// get styles by parent category ID filtered by company_code
+router.get('/styles-by-parent-category/:parentId', checkCompanyCode, (req, res) => {
   const { parentId } = req.params;
+  const { company_code } = req.query;
+
+  // if (!company_code) {
+  //   return res.status(400).json({ success: false, error: 'company_code is required' });
+  // }
 
   const sql = `
     SELECT 
@@ -64,12 +350,14 @@ router.get('/styles-by-parent-category/:parentId', (req, res) => {
     LEFT JOIN categories c ON s.category_id = c.category_id
     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
     LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-    WHERE (c.parent_id = ? OR c.category_id = ?) AND s.approved = 'yes'
+    WHERE (c.parent_id = ? OR c.category_id = ?) 
+    AND s.approved = 'yes' 
+    AND s.company_code = ?
     GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
     ORDER BY s.created_at DESC
   `;
 
-  db.query(sql, [parentId, parentId], (err, results) => {
+  db.query(sql, [parentId, parentId, company_code], (err, results) => {
     if (err) {
       console.error('Error retrieving styles by parent category:', err);
       return res.status(500).json({ error: 'Server error' });
@@ -79,8 +367,14 @@ router.get('/styles-by-parent-category/:parentId', (req, res) => {
   });
 });
 
-// get all styles
-router.get('/all-styles', (req, res) => {
+// get all styles filtered by company_code
+router.get('/all-styles', checkCompanyCode, (req, res) => {
+  const { company_code } = req.query;
+
+  // if (!company_code) {
+  //   return res.status(400).json({ success: false, error: 'company_code is required' });
+  // }
+
   const sql = `
     SELECT 
       s.*,
@@ -94,12 +388,13 @@ router.get('/all-styles', (req, res) => {
     LEFT JOIN categories c ON s.category_id = c.category_id
     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
     LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-    WHERE s.approved = 'yes'
+    WHERE s.approved = 'yes' 
+    AND s.company_code = ?
     GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
     ORDER BY s.created_at DESC
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(sql, [company_code], (err, results) => {
     if (err) {
       console.error('Error retrieving all styles:', err);
       return res.status(500).json({ error: 'Server error' });
@@ -109,10 +404,14 @@ router.get('/all-styles', (req, res) => {
   });
 });
 
-
-// retrieve product details for product page
-router.get('/product/:style_id', (req, res) => {
+// retrieve product details for product page filtered by company_code
+router.get('/product/:style_id', checkCompanyCode, (req, res) => {
   const { style_id } = req.params;
+  const { company_code } = req.query;
+
+  // if (!company_code) {
+  //   return res.status(400).json({ success: false, error: 'company_code is required' });
+  // }
 
   // Query product info from styles table
   const sql = `
@@ -125,48 +424,62 @@ router.get('/product/:style_id', (req, res) => {
       sv.price,
       sz.size_name,
       c.color_name
-  FROM styles s
-  LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-  LEFT JOIN sizes sz ON sv.size_id = sz.size_id
-  LEFT JOIN colors c ON sv.color_id = c.color_id
-  WHERE s.style_id = ?
+    FROM styles s
+    LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+    LEFT JOIN sizes sz ON sv.size_id = sz.size_id
+    LEFT JOIN colors c ON sv.color_id = c.color_id
+    WHERE s.style_id = ? 
+    AND s.company_code = ?
+    AND s.approved = 'yes'
   `;
 
-db.query(sql, [style_id], (err, results) => {
-  if (err) {
-    console.error('Error fetching product details:', err);
-    return res.status(500).json({ error: 'Server error' });
-  }
+  db.query(sql, [style_id, company_code], (err, results) => {
+    if (err) {
+      console.error('Error fetching product details:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
 
-  // Group sizes and colors uniquely
-  const sizes = [...new Set(results.map(r => r.size_name))];
-  const colors = [...new Set(results.map(r => r.color_name))];
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
 
-  const product = results[0];
-  const price = results.length > 0 ? results[0].price : null;
+    // Group sizes and colors uniquely
+    const sizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
+    const colors = [...new Set(results.map(r => r.color_name).filter(Boolean))];
 
-  res.json({
-    style_id: product.style_id,
-    style_code: product.style_code,
-    name: product.name,
-    description: product.description,
-    price,
-    available_sizes: sizes,
-    available_colors: colors,
-    image: product.image
+    const product = results[0];
+    const price = results.length > 0 ? results[0].price : null;
+
+    res.json({
+      style_id: product.style_id,
+      style_code: product.style_code,
+      name: product.name,
+      description: product.description,
+      price,
+      available_sizes: sizes,
+      available_colors: colors,
+      image: product.image
+    });
   });
 });
-});
 
-// get product listing images to display on homepage
-router.get('/product-listings', (req, res) => {
+// get product listing images to display on homepage filtered by company_code
+router.get('/product-listings', checkCompanyCode, (req, res) => {
+  const { company_code } = req.query;
+
+  // if (!company_code) {
+  //   return res.status(400).json({ success: false, error: 'company_code is required' });
+  // }
+
   const sql = `
     SELECT style_id, style_code, name, description, image 
     FROM styles 
-    WHERE approved = 'yes'
+    WHERE approved = 'yes' 
+    AND company_code = ?
+    ORDER BY created_at DESC
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(sql, [company_code], (err, results) => {
     if (err) {
       console.error('Error retrieving product listings:', err);
       return res.status(500).json({ error: 'Server error' });
@@ -176,6 +489,70 @@ router.get('/product-listings', (req, res) => {
   });
 });
 
+// Search endpoint filtered by company_code
+router.get('/search', checkCompanyCode, (req, res) => {
+  const query = req.query.q?.toLowerCase() || '';
+  const { company_code } = req.query;
+  
+  // if (!company_code) {
+  //   return res.status(400).json({ success: false, error: 'company_code is required' });
+  // }
+
+  if (!query.trim()) {
+    return res.status(400).json({ success: false, error: 'Search query is required' });
+  }
+
+  const sql = `
+    SELECT
+      s.style_id,
+      s.style_code,
+      s.name,
+      s.description,
+      s.image
+    FROM styles s
+    WHERE (s.name LIKE ? OR s.description LIKE ? OR s.style_code LIKE ?)
+    AND s.approved = 'yes'
+    AND s.company_code = ?
+    ORDER BY 
+      CASE 
+        WHEN s.name LIKE ? THEN 1
+        WHEN s.style_code LIKE ? THEN 2
+        WHEN s.description LIKE ? THEN 3
+        ELSE 4
+      END,
+      s.name ASC
+    LIMIT 10
+  `;
+
+  const searchPattern = `%${query}%`;
+  const exactPattern = `${query}%`;
+
+  db.query(sql, [
+    searchPattern,
+    searchPattern,      
+    searchPattern,
+    company_code,    
+    exactPattern,     
+    exactPattern,     
+    exactPattern
+  ], (err, results) => {
+    if (err) {
+      console.error('Error searching styles:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    // Transform results to ensure consistent data structure
+    const transformedResults = results.map(item => ({
+      style_id: item.style_id,
+      style_code: item.style_code,
+      name: item.name,
+      description: item.description || '',
+      image: item.image || null
+    }));
+
+    res.status(200).json(transformedResults);
+  });
+});
 
 // Admin Registration Endpoint
 router.post('/api/register', async (req, res) => {

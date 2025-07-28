@@ -7,6 +7,7 @@ import DataFile from "../assets/DataFile";
 import "../styles/Shop.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function Shop() {
   const { category: currentCategory } = useParams(); // Get category from URL
@@ -24,8 +25,18 @@ export default function Shop() {
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!COMPANY_CODE) {
+        setError('Company code not configured');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(`${BASE_URL}/customer/main-categories`);
+        const response = await axios.get(`${BASE_URL}/customer/main-categories`, {
+          params: {
+            company_code: COMPANY_CODE
+          }
+        });
         setCategories(response.data);
       } catch (err) {
         console.error("Failed to fetch categories:", err);
@@ -39,6 +50,12 @@ export default function Shop() {
   useEffect(() => {
     const fetchData = async () => {
       if (!currentCategory) {
+        setLoading(false);
+        return;
+      }
+
+      if (!COMPANY_CODE) {
+        setError('Company code not configured');
         setLoading(false);
         return;
       }
@@ -65,13 +82,23 @@ export default function Shop() {
 
         // Fetch styles filtered by parent category
         const stylesResponse = await axios.get(
-          `${BASE_URL}/customer/styles-by-parent-category/${matchedCategory.category_id}`
+          `${BASE_URL}/customer/styles-by-parent-category/${matchedCategory.category_id}`,
+          {
+            params: {
+              company_code: COMPANY_CODE
+            }
+          }
         );
         setStyles(stylesResponse.data);
 
         // Fetch product types (subcategories) for this category
         const typesResponse = await axios.get(
-          `${BASE_URL}/customer/product-types/${matchedCategory.category_id}`
+          `${BASE_URL}/customer/product-types/${matchedCategory.category_id}`,
+          {
+            params: {
+              company_code: COMPANY_CODE
+            }
+          }
         );
         setProductTypes(typesResponse.data);
 
@@ -91,12 +118,22 @@ export default function Shop() {
     const fetchAllStyles = async () => {
       if (currentCategory || categories.length === 0) return;
 
+      if (!COMPANY_CODE) {
+        setError('Company code not configured');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
         // Fetch all styles if no category is specified
-        const stylesResponse = await axios.get(`${BASE_URL}/customer/all-styles`);
+        const stylesResponse = await axios.get(`${BASE_URL}/customer/all-styles`, {
+          params: {
+            company_code: COMPANY_CODE
+          }
+        });
         setStyles(stylesResponse.data);
         console.log('Fetched all styles:', stylesResponse.data);
 

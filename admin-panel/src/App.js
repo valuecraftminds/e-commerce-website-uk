@@ -3,7 +3,7 @@ import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import DeleteAdmin from './components/DeleteAdmin';
-import Header from './components/header';
+import Header from './components/Header';
 import Settings from './components/Setting';
 import AdminDashboard from './pages/AdminDashboard';
 import EditAdmin from './pages/Company_Admin/EditAdmins';
