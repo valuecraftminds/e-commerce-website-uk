@@ -49,22 +49,22 @@ export default function Home() {
   return (
     <>
       {/* Banner Section */}
-      <div className="banner mb-4">
+      <div className="home-banner mb-4">
         <img
           src={DataFile.banner[3].image}
-          className="banner-img"
+          className="home-banner-img"
           alt={`${DataFile.banner[3].category} banner`}
         />
       </div>
 
-      <Container className="my-5">
+      <Container fluid className="my-5 home-products-container">
         {/* Display products */}
         <h2 className="mb-4">Explore Your Fashion</h2>
         
         {loading ? (
           <div className="text-center my-5">
-            <div className="loading-spinner">
-              <div className="spinner"></div>
+            <div className="home-loading-spinner">
+              <div className="home-spinner"></div>
               <p>Loading products...</p>
             </div>
           </div>
@@ -73,50 +73,50 @@ export default function Home() {
             <h5 className="text-danger">{error}</h5>
           </div>
         ) : (
-          <div className="products-grid">
+          <div className="home-products-grid">
             {products.map((product) => (
               <div 
                 key={product.style_id} 
-                className="product-card"
+                className="home-product-card"
                 onClick={() => getProductDetails(product.style_id)}
               >
-                <div className="product-image-container">
+                <div className="home-product-image-container">
                   <img 
                     src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
                     alt={product.name}
-                    className="product-image"
+                    className="home-product-image"
                   />
                   
-                  <div className="product-overlay">
+                  <div className="home-product-overlay">
                     <h5> Quick View </h5>
                   </div>
                 </div>
                 
-                <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
-                  <p className="product-description">
+                <div className="home-product-info">
+                  <h3 className="home-product-name">{product.name}</h3>
+                  <p className="home-product-description">
                     {product.description && product.description.length > 100 
                       ? `${product.description.substring(0, 100)}...` 
                       : product.description
                     }
                   </p>
-                  <div className="product-price">
+                  <div className="home-product-price">
                     <span className={product.min_price && product.max_price ? "price-range" : "current-price"}>
                       {formatPrice(product.min_price, product.max_price)}
                     </span>
                   </div>
                   
                   {product.variant_count && (
-                    <div className="product-variants">
-                      <span className="variants-label">
+                    <div className="home-product-variants">
+                      <span className="home-variants-label">
                         {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
                       </span>
                     </div>
                   )}
                   
                   {product.category_name && (
-                    <div className="product-category">
-                      <span className="category-badge">
+                    <div className="home-product-category">
+                      <span className="home-category-badge">
                         {product.category_name}
                       </span>
                     </div>
@@ -129,8 +129,8 @@ export default function Home() {
 
         {/* no products */}
         {!loading && !error && products.length === 0 && (
-          <div className="no-products">
-            <div className="no-products-content">
+          <div className="home-no-products">
+            <div className="home-no-products-content">
               <i className="fas fa-search fa-3x"></i>
               <h3>No products found</h3>
               <p>No products available at the moment.</p>

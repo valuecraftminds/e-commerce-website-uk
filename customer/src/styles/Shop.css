@@ -1,4 +1,4 @@
-.home-banner img {
+.shop-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -9,10 +9,10 @@
 }
 
 @media (max-width: 576px) {
-  .home-banner {
+  .shop-banner {
     height: 200px;
   }
-  .home-banner img {
+  .shop-banner img {
   width: 100%;
   height: 100%;
   object-fit:fill;
@@ -22,14 +22,13 @@
   z-index: -1;
   } 
 }
-
-.home-product-container {
+.shop-product-container {
   width: 100%;
   margin: 0 auto;
 }
 
 /* Loading Spinner */
-.home-loading-spinner {
+.shop-loading-spinner {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -37,7 +36,7 @@
   padding: 60px 20px;
 }
 
-.home-spinner {
+.shop-spinner {
   width: 50px;
   height: 50px;
   border: 4px solid #f3f3f3;
@@ -52,7 +51,20 @@
   100% { transform: rotate(360deg); }
 }
 
-.home-products-grid {
+/* Error Message */
+.shop-error-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.shop-error-message h2 {
+  color: #dc3545;
+  margin-bottom: 10px;
+}
+
+/* Products Grid */
+.shop-products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
@@ -60,7 +72,7 @@
   height: fit-content;
 }
 
-.home-product-card {
+.shop-product-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -70,29 +82,29 @@
   position: relative;
 }
 
-.home-product-card:hover {
+.shop-product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-.home-product-image-container {
+.shop-product-image-container {
   position: relative;
   overflow: hidden;
   aspect-ratio: 3/4;
 }
 
-.home-product-image {
+.shop-product-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
 
-.home-product-card:hover .home-product-image {
+.shop-product-card:hover .product-image {
   transform: scale(1.05);
 }
 
-.home-product-overlay {
+.shop-product-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -109,17 +121,17 @@
   z-index: 1;
 }
 
-.home-product-card:hover .product-overlay {
+.shop-product-card:hover .product-overlay {
   color: white;
   opacity: 0.5;
 }
 
 /* Product Info */
-.home-product-info {
+.shop-product-info {
   padding: 20px;
 }
 
-.home-product-name {
+.shop-product-name {
   font-size: 1.2rem;
   font-weight: 600;
   color: #212529;
@@ -127,25 +139,25 @@
   line-height: 1.3;
 }
 
-.home-product-description {
+.shop-product-description {
   font-size: 14px;
   color: #6c757d;
   margin-bottom: 12px;
   line-height: 1.4;
 }
 
-.home-product-price {
+.shop-product-price {
   margin-bottom: 12px;
   font-size: 1.1rem;
   font-weight: 600;
   color: #105eac;
 }
 
-.home-product-category {
+.shop-product-category {
   margin-bottom: 8px;
 }
 
-.home-category-badge {
+.shop-category-badge {
   display: inline-block;
   padding: 4px 8px;
   background: #e9ecef;
@@ -156,27 +168,27 @@
 }
 
 /* No Products */
-.home-no-products {
+.shop-no-products {
   text-align: center;
   padding: 80px 20px;
 }
 
-.home-no-products-content {
+.shop-no-products-content {
   max-width: 400px;
   margin: 0 auto;
 }
 
-.home-no-products-content i {
+.shop-no-products-content i {
   color: #dee2e6;
   margin-bottom: 20px;
 }
 
-.home-no-products-content h3 {
+.shop-no-products-content h3 {
   color: #495057;
   margin-bottom: 15px;
 }
 
-.home-no-products-content p {
+.shop-no-products-content p {
   color: #6c757d;
   margin-bottom: 25px;
   line-height: 1.5;
@@ -238,4 +250,38 @@
   .filter-sort-bar {
     padding: 15px;
   }
+}
+
+/* Button Styles */
+.shop-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shop-btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.shop-btn-primary:hover {
+  background: #0056b3;
+  color: white;
+}
+
+.shop-btn-outline-primary {
+  background: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
+
+.shop-btn-outline-primary:hover {
+  background: #007bff;
+  color: white;
 }
