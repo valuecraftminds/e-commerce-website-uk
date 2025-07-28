@@ -6,7 +6,7 @@ import axios from "axios";
 import SuccessMsg from "../components/SuccessMsg";
 import "../styles/ProductPage.css"; 
 
-const BASEURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -29,7 +29,7 @@ export default function ProductPage() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASEURL}/customer/product/${styleId}`);
+        const response = await axios.get(`${BASE_URL}/customer/product/${styleId}`);
         setProduct(response.data);
         setError(null);
       } catch (err) {
@@ -90,7 +90,7 @@ export default function ProductPage() {
           <Col className="img-col" md={6}>
             <Image 
               className="product-image" 
-              src={product.image || '/placeholder-image.jpg'} 
+              src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
               alt={product.name} 
               fluid 
             />

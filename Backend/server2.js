@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const db = require('./config/database');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 
 const router = express.Router();
 const port = process.env.PORT || 3000;
@@ -173,5 +176,128 @@ router.get('/product-listings', (req, res) => {
   });
 });
 
+
+// Admin Registration Endpoint
+router.post('/api/register', async (req, res) => {
+  const { company_code, name, email, phone, password,country } = req.body;
+
+  if (!company_code || !name || !email || !phone || !password || !country ) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  // Name validation - no numbers or special chars
+  if (!/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
+  }
+
+  // Check for duplicate email
+  db.query('SELECT * FROM customers WHERE email = ?', [email], (emailErr, emailRows) => {
+    if (emailErr) {
+      return res.status(500).json({ success: false, message: 'Error checking email (DB error)' });
+    }
+
+    if (emailRows.length > 0) {
+      return res.status(409).json({ success: false, message: 'Email already exists' });
+    }
+
+  // Check for duplicate phone number and validate phone number
+  db.query('SELECT * FROM customers WHERE phone = ?', [phone], (phoneErr, phoneRows) => {
+    if (phoneErr) {
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+    if (!/^\+?\d{10,15}$/.test(phone.replace(/[\s-]/g, ''))) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number format. Please enter a valid international phone number' });
+    }
+    else if (phoneRows.length > 0) {
+      return res.status(409).json({ success: false, message: 'Phone number already exists' });
+    }
+
+     // Local password validation function
+    function isValidPassword(password) {
+      const lengthValid = password.length >= 8 && password.length <= 12;
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /\d/.test(password);
+      const hasSpecialChar = /[\W_]/.test(password);
+    
+      return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+   }
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid password'
+      });
+    }
+
+  // Hash the password
+  bcrypt.hash(password, 10, (hashErr, hashedPassword) => {
+    if (hashErr) {
+      return res.status(500).json({ success: false, message: 'Error hashing password' });
+    }
+
+    // Insert new user
+    db.query(
+      'INSERT INTO customers (company_code,name, email, phone, password,country) VALUES (?, ?, ?, ?, ?,?)',
+      [company_code,name, email, phone, hashedPassword, country],
+      (insertErr, results) => {
+        if (insertErr) {
+          console.log("Insert error: ", insertErr);
+          return res.status(500).json({ success: false, message: 'Database error inserting user' });
+        }
+
+        res.json({ success: true, message: 'User registered successfully' });
+      }
+    );
+  });
+});
+});
+});
+
+
+
+router.post('/api/login', async (req, res) => {
+  const { company_code,email, password } = req.body;
+
+  const sql = 'SELECT * FROM customers WHERE email = ? AND company_code = ?';
+
+  db.query(sql, [email,company_code], async (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+
+    // Check if user exists
+    if (results.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid email' });
+    }
+
+    const user = results[0];
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid password' });
+    }
+
+    // Generate token 
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.customer_id,  
+        company_code: user.company_code,
+        name: user.name,
+        phone_number: user.phone_number,
+        email: user.email,
+        role: user.country
+      },
+    });
+  });
+});
 
 module.exports = router;
