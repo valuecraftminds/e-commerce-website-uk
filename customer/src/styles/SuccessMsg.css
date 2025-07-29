@@ -1,60 +1,70 @@
-.modal-content {
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+.success-msg-modal-wrapper {
+  z-index: 1055;
 }
 
-.modal-header {
-  border-bottom: 3px solid #140d77 !important;
+.success-msg-modal-dialog .modal-content {
+  border-radius: 15px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+  border: none !important;
 }
 
-.modal-title {
-  color: #140d77 !important;
+/* Modal header styling */
+.success-msg-modal .modal-header,
+.success-msg-modal-header {
+  border-bottom: 2px solid #000000 !important;
+  padding: 1.5rem !important;
 }
 
-.modal-body {
-  color: #140d77;
+/* Modal title styling */
+.success-msg-modal-title {
+  font-weight: 600 !important;
+  color: #000000 !important;
 }
 
-.modal-footer {
-  border-top: none;
+/* Modal body styling */
+.success-msg-modal-body {
+  padding: 1.5rem !important;
+  font-size: 1rem !important;
+  color: #333333 !important;
 }
 
-.btn-success {
-  background-color: #140d77 !important;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 8px;
+/* Modal footer styling */
+.success-msg-modal-footer {
+  border-top: none !important;
+  padding: 1.5rem !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
 }
 
-.btn-success:hover {
-  background-color: #09035a !important;
+/* Button styling using both ID and class selectors for maximum specificity */
+.success-msg-modal #go-to-cart-btn,
+.success-msg-modal .go-to-cart-btn,
+.success-msg-modal .success-msg-btn {
+  background-color: #000000 !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  color: white !important;
+  transition: background-color 0.3s ease !important;
+  min-width: 100px !important;
 }
 
-/* .modal-header-success {
-  background-color: #d1e7dd;
+/* Button hover states */
+.success-msg-modal #go-to-cart-btn:hover,
+.success-msg-modal .go-to-cart-btn:hover,
+.success-msg-modal .success-msg-btn:hover {
+  background-color: #000000 !important;
+  border: none !important;
 }
 
-.modal-header-error {
-  background-color: #f8d7da;
+/* Override Bootstrap's default button outline */
+.success-msg-modal .btn:focus {
+  outline: none !important;
 }
 
-.modal-body-success {
-  color: #0f5132;
-  font-weight: 500;
+/* Ensure modal backdrop doesn't interfere */
+.success-msg-modal .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
-
-.modal-body-error {
-  color: #842029;
-  font-weight: 500;
-}
-
-.btn-success {
-  background-color: #198754;
-  border: none;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border: none;
-} */
-

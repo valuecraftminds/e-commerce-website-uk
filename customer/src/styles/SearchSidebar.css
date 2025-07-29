@@ -57,7 +57,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .search-sidebar {
-    width: 100%;
+    width: 70%;
   }
 }
 

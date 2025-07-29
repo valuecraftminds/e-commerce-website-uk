@@ -177,7 +177,7 @@ const ProductCategory = () => {
             <h2>Oops! Something went wrong</h2>
             <p>{error}</p>
             <button 
-              className="btn btn-primary"
+              className="btn btn-primary pcbtn"
               onClick={() => navigate('/shop')}
             >
               Back to Shop
