@@ -118,7 +118,7 @@ export const CartProvider = ({ children }) => {
   
   // Get auth token
   const getAuthToken = () => {
-    return user?.token || localStorage.getItem('token');
+    return user?.token || localStorage.getItem('auth_token');
   };
 
   // Get axios config with optional auth
@@ -139,6 +139,7 @@ export const CartProvider = ({ children }) => {
   const getGuestCart = () => {
     try {
       const guestCart = localStorage.getItem(`guest_cart_${COMPANY_CODE}`);
+      console.log('Guest cart loaded:', guestCart);
       return guestCart ? JSON.parse(guestCart) : [];
     } catch (error) {
       console.error('Error parsing guest cart:', error);
@@ -232,12 +233,14 @@ export const CartProvider = ({ children }) => {
 
       if (token) {
         // User is logged in, add to backend
-        const response = await axios.post(`${BASE_URL}/customer/cart/add`, {
+        const response = await axios.post(`${BASE_URL}/cart/add`, {
           style_code: item.style_code,
           variant_id: item.variant_id,
           quantity: item.quantity || 1,
           price: item.price
         }, getAxiosConfig());
+
+        console.log('style', item);
 
         if (response.data.success) {
           // Refresh cart items after successful addition
@@ -424,7 +427,7 @@ export const CartProvider = ({ children }) => {
       }));
 
       const response = await axios.post(
-        `${BASE_URL}/customer/cart/merge`,
+        `${BASE_URL}/cart/merge`,
         { guest_cart: guestCartData },
         getAxiosConfig()
       );

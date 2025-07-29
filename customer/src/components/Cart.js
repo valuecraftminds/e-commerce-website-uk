@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { useCart } from '../context/CartContext';
+import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import '../styles/Cart.css';
 
@@ -17,6 +18,8 @@ const Cart = () => {
     clearCart,
     clearError 
   } = useCart();
+  
+  const { userData, isLoggedIn } = useContext(AuthContext);
   
   const [updatingItems, setUpdatingItems] = useState(new Set());
   const [removingItems, setRemovingItems] = useState(new Set());
@@ -94,6 +97,11 @@ const Cart = () => {
           <Col>
             <div className="cart-header">
               <h2>🛒 Shopping Cart</h2>
+              {isLoggedIn && userData?.name && (
+                <div className="customer-welcome">
+                  <p className="mb-2">Welcome back, <strong>{userData.name}</strong>! 👋</p>
+                </div>
+              )}
             </div>
             
             {error && (
@@ -133,6 +141,16 @@ const Cart = () => {
                                 className="cart-item-image"
                               />
                             </Col>
+
+                            {/* Customer name display for logged in users */}
+                            {isLoggedIn && userData?.name && (
+                              <Col md={12} className="mb-2">
+                                <small className="text-muted">
+                                  <i className="me-1">👤</i>
+                                  Shopping for: <span className="fw-bold text-primary">{item.name}</span>
+                                </small>
+                              </Col>
+                            )}
                             
                             <Col md={4}>
                               <h6 className="mb-2">
