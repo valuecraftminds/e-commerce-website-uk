@@ -85,7 +85,7 @@
 
 /* Total price styling */
 .total-price {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #3c3c41;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 10px;
@@ -136,8 +136,8 @@
 
 /* Checkout button */
 .btn-primary {
-   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+   background: #56568b !important;
+   border: none;
   border-radius: 15px;
   padding: 1rem 2rem;
   font-weight: 600;
@@ -148,7 +148,7 @@
 
 .btn-primary:hover {
   transform: translateY(-3px);
-   background: linear-gradient(135deg, #45559e 0%, #7b4faa 100%);
+   background: #56568b !important;
 }
 
 .btn-primary:disabled {
@@ -269,7 +269,7 @@
   }
   
   .cart-summary {
-    /* margin-top: 2rem; */
+    margin-top: 2rem;
   }
   
   .price-display,
@@ -293,38 +293,3 @@
     padding: 1.5rem;
   }
 }
-
-/* Animation for item removal */
-.cart-item.removing {
-  animation: slideOut 0.3s ease-out forwards;
-}
-
-@keyframes slideOut {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-}
-
-/* Animation for quantity update */
-.quantity-updating {
-  animation: pulse 1s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-

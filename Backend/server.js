@@ -63,7 +63,7 @@ app.use((err, req, res, next) => {
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/styles/') // Make sure this directory exists
+    cb(null, 'uploads/styles/') 
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname)
