@@ -4,6 +4,7 @@ import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import axios from "axios";
 
 import SuccessMsg from "../components/SuccessMsg";
+import { useCart } from "../context/CartContext";
 import "../styles/ProductPage.css"; 
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -11,7 +12,8 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function ProductPage() {
   const { id } = useParams();
-  const styleId = parseInt(id, 10);
+  const variantId = parseInt(id, 10); // Use id as variant_id
+  const { addToCart } = useCart();
 
   // State for product data and loading
   const [product, setProduct] = useState(null);
@@ -30,7 +32,8 @@ export default function ProductPage() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/product/${styleId}`,
+        // If your backend expects variant_id instead of style_id, update this endpoint
+        const response = await axios.get(`${BASE_URL}/customer/product/${variantId}`,
           {
             params: { company_code: COMPANY_CODE }
           }
@@ -45,15 +48,30 @@ export default function ProductPage() {
       }
     };
 
-    if (styleId) {
+    if (variantId) {
       fetchProductDetails();
     }
-  }, [styleId]);
+  }, [variantId]);
 
-  const handleAddToCart = () => {
-    const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColor}`;
-    setSuccessMessage(message);
-    setShowModal(true);
+  const handleAddToCart = async () => {
+    try {
+      const result = await addToCart({
+        style_code: product.style_code,
+        size: selectedSize,
+        color: selectedColor,
+        quantity: quantity,
+        price: product.price,
+        variant_id: variantId  // Use the variant_id from URL
+      });
+
+      const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColor}`;
+      setSuccessMessage(message);
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setSuccessMessage("Error adding item to cart. Please try again.");
+      setShowModal(true);
+    }
   };
 
   const handleBuyNow = (product) => {
@@ -104,11 +122,28 @@ export default function ProductPage() {
             <h1>{product.name}</h1>
             <p>{product.description}</p>
             <h5 className="price"> 
-              ${product.price }
+              ${product.price}
             </h5>
 
             <div className="mb-3">
-              {/* <h5>Available Sizes:</h5> */}
+              {product.available_colors && product.available_colors.length > 0 ? (
+                product.available_colors
+                  .filter(color => color) // Remove null/undefined colors
+                  .map((color) => (
+                    <Button
+                      key={color}
+                      className={`me-2 mb-2 product-btn-color ${selectedColor === color ? 'selected' : ''}`}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {color}
+                    </Button>
+                  ))
+              ) : (
+              <p>Colors not available</p>
+              )}
+            </div>
+
+            <div className="mb-3">
               {product.available_sizes && product.available_sizes.length > 0 ? (
                 product.available_sizes
                   .filter(size => size) // Remove null/undefined sizes
@@ -125,30 +160,13 @@ export default function ProductPage() {
                 <p>Sizes not available</p>
               )}
             </div>
-            <div className="mb-3">
-              {/* <h5>Available Colors:</h5> */}
-              {product.available_colors && product.available_colors.length > 0 ? (
-                product.available_colors
-                  .filter(color => color) // Remove null/undefined colors
-                  .map((color) => (
-                    <Button
-                      key={color}
-                      className={`me-2 mb-2 btn-color ${selectedColor === color ? 'selected' : ''}`}
-                      onClick={() => setSelectedColor(color)}
-                    >
-                      {color}
-                    </Button>
-                  ))
-              ) : (
-              <p>Colors not available</p>
-              )}
-            </div>
+            
             <div className="mb-3">
               <h5>Quantity:</h5>
               <input
                 type="number"
                 min="1"
-                className="form-control w-25 quantity-input"
+                className="form-control w-25 input-product-quantity"
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                 value={quantity}
               />

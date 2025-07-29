@@ -132,17 +132,22 @@ export default function NavigationBar() {
 
           {/* Right side */}
           <div className="d-flex align-items-center gap-3">
+            {/* Search icon */}
             <i
               className="bi bi-search"
               style={{ fontSize: "1.4rem", cursor: "pointer" }}
               onClick={() => setShowsearchSidebar(true)}
             />
-            <i 
-              className="bi bi-person-plus" 
-              style={{ fontSize: "1.4rem", cursor: "pointer" }} 
+            {/* User icons */}
+            <i
+              className="bi bi-person-plus"
+              style={{ fontSize: "1.4rem", cursor: "pointer" }}
               onClick={() => navigate('/login')}
             />
-            <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }} />
+            {/* Cart icon */}
+            <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
+              onClick={() => navigate('/cart')}
+            />
             <i
               className="bi bi-list d-lg-none"
               style={{ fontSize: "1.6rem", cursor: "pointer" }}

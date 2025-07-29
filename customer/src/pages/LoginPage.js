@@ -44,6 +44,7 @@ export default function LoginPage() {
       if (response.ok && data.success) {
         // Handle successful login
         navigate('/');
+        console.log('token', data.token);
       } else {
         setErrorMsg(data.message || 'Login failed');
       }
