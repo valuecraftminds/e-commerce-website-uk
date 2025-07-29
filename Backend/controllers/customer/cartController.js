@@ -354,11 +354,11 @@ mergeGuestCart: (req, res) => {
         } else {
           // Add new cart item
           const insertSql = `
-            INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity, name)
+            VALUES (?, ?, ?, ?, ?, ?)
           `;
 
-          db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity], (insertErr) => {
+          db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity, name], (insertErr) => {
             if (insertErr) {
               errors.push(`Error adding variant ${variant_id} to cart: ${insertErr.message}`);
             } else {

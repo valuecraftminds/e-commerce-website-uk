@@ -56,6 +56,7 @@ export default function ProductPage() {
   const handleAddToCart = async () => {
     try {
       const result = await addToCart({
+        name: product.name,
         style_code: product.style_code,
         size: selectedSize,
         color: selectedColor,
