@@ -124,7 +124,7 @@ export default function RegisterPage() {
     console.log("Form Data:", formData);
 
     try {
-      const response = await fetch(`${BASE_URL}/customer/api/register`, {
+      const response = await fetch(`${BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
