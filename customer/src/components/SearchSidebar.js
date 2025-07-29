@@ -132,7 +132,7 @@ export default function SearchSidebar({ show, onClose }) {
                   {item.image && (
                     <div className="flex-shrink-0 me-3">
                       <img 
-                        src={item.image} 
+                        src={`${BASE_URL}/admin/uploads/styles/${item.image}`}
                         alt={item.name}
                         className="search-result-image"
                         style={{
