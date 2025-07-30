@@ -48,7 +48,9 @@ export default function Style() {
     size_id: '',
     fit_id: '',
     material_id: '',
+    unit_price: '',
     price: '',
+
   });
 
   // Add these new states
@@ -278,6 +280,7 @@ export default function Style() {
           size_id: '',
           fit_id: '',
           material_id: '',
+          unit_price: '',
           price: '',
         });
       } else {
@@ -310,6 +313,7 @@ export default function Style() {
           size_id: '',
           fit_id: '',
           material_id: '',
+          unit_price: '',
           price: '',
         });
         setIsEditingVariant(false);

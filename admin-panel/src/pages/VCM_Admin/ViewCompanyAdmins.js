@@ -73,7 +73,7 @@ export default function ViewCompanyAdmins() {
     <div className="admin-container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3 className="admin-title m-0">Company Admins</h3>
-        <button className="btn-custom-primary" onClick={() => navigate('/vcm-admin-dashboard/register-company-admins')}>Add Company Admin</button>
+        <button className="btn-custom-primary" onClick={() => navigate('/vcm-admin/register-company-admins')}>Add Company Admin</button>
       </div>
 
       {errorMsg && <Alert variant="danger" className="mt-3">{errorMsg}</Alert>}

@@ -66,14 +66,20 @@ export default function EditAdmin() {
   };
 
   const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 10) value = value.slice(0, 10);
-    setFormData(prev => ({ ...prev, phone_number: value }));
-
-    if (value && !value.startsWith('07')) {
-      setPhoneError('Phone number must start with 07');
-    } else if (value.length > 0 && value.length < 10) {
-      setPhoneError('Phone number must be exactly 10 digits');
+    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+    value = value.slice(0, 15); // Limit to 15 digits
+    
+    setFormData((prev) => ({ ...prev, phone: value }));
+  
+    // Validation rules
+    if (!value) {
+      setPhoneError('Phone number is required');
+    } else if (value.length < 8) {
+      setPhoneError('Phone number must be at least 8 digits');
+    } else if (value.length > 15) {
+      setPhoneError('Phone number must be 15 digits or less');
+    } else if (/^0/.test(value)) {
+      setPhoneError('Please use country code without 0 (e.g., 254 instead of 07)');
     } else {
       setPhoneError('');
     }
@@ -257,7 +263,7 @@ export default function EditAdmin() {
                       isInvalid={!!phoneError}
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      maxLength="10"
+                      maxLength="15"
                       placeholder="07xxxxxxxx"
                       required
                     />

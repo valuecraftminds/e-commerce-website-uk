@@ -1,178 +1,143 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../../config/database');
-const { validateName, validatePhone, validatePassword, validateEmail } = require('../../utils/AdminValidation');
+const db = require('../../config/database'); // Adjust the path as needed
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 class AdminAuthController {
+  // Register admin
   static async register(req, res) {
     try {
-      const { company_code, name, email, phone, password, country } = req.body;
+      const { name, email, password } = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Input validation
-      const missingFields = [];
-      if (!company_code) missingFields.push('company_code');
-      if (!name) missingFields.push('name');
-      if (!email) missingFields.push('email');
-      if (!phone) missingFields.push('phone');
-      if (!password) missingFields.push('password');
-      if (!country) missingFields.push('country');
-
-      if (missingFields.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Missing required fields: ${missingFields.join(', ')}`
-        });
+      const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+      if (existing.length > 0) {
+        return res.status(400).json({ message: 'Email already exists' });
       }
 
-      // Validate name
-      if (!validateName(name)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Name can only contain letters and spaces'
-        });
-      }
+      await db.query('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', [
+        name,
+        email,
+        hashedPassword,
+        'admin'
+      ]);
 
-      // Validate email
-      if (!validateEmail(email)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid email format'
-        });
-      }
-
-      // Validate phone
-      if (!validatePhone(phone)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid phone number format'
-        });
-      }
-
-      // Validate password
-      if (!validatePassword(password)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Password must be 8-12 characters with uppercase, lowercase, number and special character'
-        });
-      }
-
-      // Check for existing email
-      const [emailCheck] = await db.execute(
-        'SELECT customer_id FROM customers WHERE email = ?',
-        [email]
-      );
-
-      if (emailCheck.length > 0) {
-        return res.status(409).json({
-          success: false,
-          message: 'Email already exists'
-        });
-      }
-
-      // Check for existing phone
-      const [phoneCheck] = await db.execute(
-        'SELECT customer_id FROM customers WHERE phone = ?',
-        [phone]
-      );
-
-      if (phoneCheck.length > 0) {
-        return res.status(409).json({
-          success: false,
-          message: 'Phone number already exists'
-        });
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 12);
-
-      // Insert new user
-      await db.execute(
-        'INSERT INTO customers (company_code, name, email, phone, password, country) VALUES (?, ?, ?, ?, ?, ?)',
-        [company_code, name, email, phone, hashedPassword, country]
-      );
-
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully'
-      });
-
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Server error during registration'
-      });
+      res.status(201).json({ message: 'Admin registered successfully' });
+    } catch (err) {
+      console.error('Register error:', err);
+      res.status(500).json({ message: 'Server error' });
     }
   }
 
+  // Admin login
   static async login(req, res) {
     try {
-      const { company_code, email, password } = req.body;
+      const { email, password } = req.body;
 
-      // Input validation
-      if (!company_code || !email || !password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Company code, email and password are required'
-        });
+      const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
       }
 
-      // Find user
-      const [results] = await db.execute(
-        'SELECT * FROM customers WHERE email = ? AND company_code = ?',
-        [email, company_code]
-      );
-
-      if (results.length === 0) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid credentials'
-        });
+      const user = rows[0];
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: 'Invalid password' });
       }
 
-      const user = results[0];
+      const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+      res.json({ token, user });
+    } catch (err) {
+      console.error('Login error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
 
-      // Verify password
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid credentials'
-        });
+  // Register company admin (with auto company_code)
+  static async registerCompanyAdmin(req, res) {
+    try {
+      const { name, email, password, company_name } = req.body;
+
+      const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+      if (existing.length > 0) {
+        return res.status(400).json({ message: 'Email already registered' });
       }
 
-      // Generate JWT token
-      const token = jwt.sign(
-        { 
-          id: user.customer_id, 
-          email: user.email,
-          company_code: user.company_code 
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const company_code = 'CMP' + Math.floor(1000 + Math.random() * 9000);
 
-      res.json({
-        success: true,
-        message: 'Login successful',
-        token,
-        user: {
-          id: user.customer_id,
-          company_code: user.company_code,
-          name: user.name,
-          phone: user.phone,
-          email: user.email,
-          country: user.country
-        }
-      });
+      await db.query('INSERT INTO users (name, email, password, role, company_name, company_code) VALUES (?, ?, ?, ?, ?, ?)', [
+        name, email, hashedPassword, 'company_admin', company_name, company_code
+      ]);
 
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Server error during login'
-      });
+      res.status(201).json({ message: 'Company admin registered', company_code });
+    } catch (err) {
+      console.error('Company admin register error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+
+  // Get admin by ID
+  static async getAdminById(req, res) {
+    try {
+      const { user_id } = req.params;
+      const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [user_id]);
+
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'Admin not found' });
+      }
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Get admin error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+
+  // Edit admin
+  static async editAdmin(req, res) {
+    try {
+      const { user_id } = req.params;
+      const { name, email } = req.body;
+
+      await db.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, user_id]);
+      res.json({ message: 'Admin updated successfully' });
+    } catch (err) {
+      console.error('Edit admin error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+
+  // Delete admin
+  static async deleteAdmin(req, res) {
+    try {
+      const { user_id } = req.params;
+      await db.query('DELETE FROM users WHERE id = ?', [user_id]);
+      res.json({ message: 'Admin deleted successfully' });
+    } catch (err) {
+      console.error('Delete admin error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+
+  // Update admin profile
+  static async updateAdminProfile(req, res) {
+    try {
+      const { user_id } = req.params;
+      const { name, email, password } = req.body;
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await db.query('UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?', [
+        name, email, hashedPassword, user_id
+      ]);
+
+      res.json({ message: 'Admin profile updated successfully' });
+    } catch (err) {
+      console.error('Update profile error:', err);
+      res.status(500).json({ message: 'Server error' });
     }
   }
 }
+
 module.exports = AdminAuthController;

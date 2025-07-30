@@ -22,6 +22,9 @@ import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
 import EditCompanyAdmin from './pages/VCM_Admin/EditCompanyAdmin';
+import Category from './pages/Category';
+import Style from './pages/Style';
+import WarehouseGRN from './pages/WarehouseGRN';
 
 function App() {
   const location = useLocation();
@@ -36,20 +39,25 @@ function App() {
       {!hideHeader && <Header />}
       <Routes>
         <Route path='/' element={<LoginPage />} />
-        <Route path='/vcm-admin-dashboard/*' element={<VcmAdminDashboard />} />
-        <Route path='/vcm-admin-dashboard/register-company-admins/*' element={<RegisterCompanyAdmins />} />
-        <Route path='/vcm-admin-dashboard/view-company-admins/*' element={<ViewCompanyAdmins />} />
+        <Route path='/vcm-admin-dashboard' element={<VcmAdminDashboard />} />
+        <Route path='/vcm-admin/register-company-admins/*' element={<RegisterCompanyAdmins />} />
+        <Route path='/vcm-admin/view-company-admins/*' element={<ViewCompanyAdmins />} />
         <Route path='ViewAdmins' element={<ViewAdmins />} />
         <Route path='register' element={<RegisterPage />} />
         <Route path='EditAdmins/:id' element={<EditAdmin />} />
         <Route path='DleteAdmin/:id' element={<DeleteAdmin />} />
         <Route path="edit-company-admin/:id" element={<EditCompanyAdmin />} />
-        <Route path='dashboard/*' element={<AdminDashboard />} />
+        <Route path='dashboard' element={<AdminDashboard />} />
         <Route path='/OrderingDashboard/*' element={<OrderingDashboard />} />
         <Route path='/PdcDashboard/*' element={<PdcDashboard />} />
         <Route path='/WarehouseGRNDashboard/*' element={<WarehouseGRNDashboard />} />
         <Route path='/WarehouseIssuingDashboard/*' element={<WarehouseIssuingDashboard />} />
-        <Route path='/dashboard/settings/*' element={<Settings />} />
+        <Route path="users" element={<ViewAdmins />} />
+        <Route path="category" element={<Category />} />
+        <Route path="style" element={<Style />} />
+        <Route path="warehouse/grn" element={<WarehouseGRN />} />
+                  
+        <Route path='/settings/*' element={<Settings />} />
         <Route path="/colors" element={<ColorManagement />} />
         <Route path="/sizes" element={<SizeManagement />} />
         <Route path="/materials" element={<MaterialManagement />} />

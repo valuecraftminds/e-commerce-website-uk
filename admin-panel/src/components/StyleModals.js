@@ -211,7 +211,12 @@ const columns = useMemo(
       accessorFn: row => materials.find(m => m.material_id === row.material_id)?.material_name || '',
     },
     {
-      header: 'Price',
+      header: 'Unit price',
+      accessorKey: 'unit_price',
+      cell: ({ getValue }) => `$${getValue()}`
+    },
+    {
+      header: 'Sale price',
       accessorKey: 'price',
       cell: ({ getValue }) => `$${getValue()}`
     },
@@ -238,6 +243,7 @@ const columns = useMemo(
                 size_id: row.original.size_id,
                 fit_id: row.original.fit_id,
                 material_id: row.original.material_id,
+                unit_price: row.original.unit_price,
                 price: row.original.price
               });
             }}
@@ -353,11 +359,35 @@ return (
 
           <Col md={2}>
             <Form.Group className="mb-0">
-              <Form.Label className="form-label">Price *</Form.Label>
+              <Form.Label className="form-label">Unit price *</Form.Label>
               <Form.Control
                 type="number"
+                min="0"
+                value={variantForm.unit_price}
+                onChange={(e) => setVariantForm({...variantForm, unit_price: Math.max(0, Number(e.target.value))})}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e') {
+                    e.preventDefault();
+                  }
+                }}
+                className="variant-field"
+              />
+            </Form.Group>
+          </Col>
+
+          <Col md={2}>
+            <Form.Group className="mb-0">
+              <Form.Label className="form-label">Sale price *</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
                 value={variantForm.price}
-                onChange={(e) => setVariantForm({...variantForm, price: e.target.value})}
+                onChange={(e) => setVariantForm({...variantForm, price: Math.max(0, Number(e.target.value))})}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e') {
+                    e.preventDefault();
+                  }
+                }}
                 className="variant-field"
               />
             </Form.Group>
@@ -369,7 +399,7 @@ return (
                 className="btn btn-primary variant-field"
                 onClick={isEditing ? () => handleEditVariant(editingId) : handleSaveVariant}
                 disabled={!variantForm.color_id || !variantForm.size_id || 
-                         !variantForm.fit_id || !variantForm.material_id || 
+                         !variantForm.fit_id || !variantForm.material_id || !variantForm.unit_price || 
                          !variantForm.price}
               >
                 {isEditing ? 'Update' : 'Add'}
@@ -385,6 +415,7 @@ return (
                       size_id: '',
                       fit_id: '',
                       material_id: '',
+                      unit_price: '',
                       price: '',
                     });
                   }}

@@ -1,139 +1,256 @@
-const db = require('../../config/database');
+const db = require('../../config/database'); // adjust path as needed
+const path = require('path');
+const fs = require('fs');
 
-class StyleController {
-  static async getStylesByParentCategory(req, res) {
-    try {
-      const { parentId } = req.params;
-      
-      if (!parentId || isNaN(parentId)) {
-        return res.status(400).json({ success: false, message: 'Valid parent ID required' });
-      }
-
-      const sql = `
-        SELECT 
-          s.*,
-          c.category_name,
-          c.category_id,
-          parent_cat.category_name as parent_category_name,
-          MIN(sv.price) as min_price,
-          MAX(sv.price) as max_price,
-          COUNT(DISTINCT sv.variant_id) as variant_count
-        FROM styles s
-        LEFT JOIN categories c ON s.category_id = c.category_id
-        LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-        LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-        WHERE (c.parent_id = ? OR c.category_id = ?) AND s.approved = 'yes'
-        GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
-        ORDER BY s.created_at DESC
-      `;
-
-      const [results] = await db.execute(sql, [parentId, parentId]);
-      res.status(200).json({ success: true, data: results });
-    } catch (error) {
-      console.error('Error retrieving styles by parent category:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
+const StyleController = {
+  // Get all styles for a company
+  getAllStyles(req, res) {
+    const { company_code } = req.query;
+    if (!company_code) {
+      return res.status(400).json({ success: false, message: 'Company code is required' });
     }
-  }
 
-  static async getAllStyles(req, res) {
-    try {
-      const sql = `
-        SELECT 
-          s.*,
-          c.category_name,
-          c.category_id,
-          parent_cat.category_name as parent_category_name,
-          MIN(sv.price) as min_price,
-          MAX(sv.price) as max_price,
-          COUNT(DISTINCT sv.variant_id) as variant_count
-        FROM styles s
-        LEFT JOIN categories c ON s.category_id = c.category_id
-        LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-        LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-        WHERE s.approved = 'yes'
-        GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
-        ORDER BY s.created_at DESC
-      `;
+    const sql = `
+      SELECT 
+        s.*, c.category_name as subcategory_name, 
+        p.category_name as main_category_name,
+        p.category_id as main_category_id
+      FROM styles s
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      LEFT JOIN categories p ON c.parent_id = p.category_id
+      WHERE s.company_code = ?
+      ORDER BY s.created_at DESC
+    `;
 
-      const [results] = await db.execute(sql);
-      res.status(200).json({ success: true, data: results });
-    } catch (error) {
-      console.error('Error retrieving all styles:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
+    db.query(sql, [company_code], (err, results) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error fetching styles' });
+      res.json({ success: true, styles: results });
+    });
+  },
+
+  // Get single style by ID
+  getStyleById(req, res) {
+    const { style_id } = req.params;
+    const sql = `
+      SELECT s.*, c.category_name 
+      FROM styles s
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      WHERE s.style_id = ?
+    `;
+
+    db.query(sql, [style_id], (err, results) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error fetching style' });
+      if (results.length === 0) return res.status(404).json({ success: false, message: 'Style not found' });
+      res.json({ success: true, style: results[0] });
+    });
+  },
+
+  // Add new style
+  addStyle(req, res) {
+    const { company_code, name, description, category_id, approved } = req.body;
+    const imagePaths = req.files ? req.files.map(file => file.filename).join(',') : null;
+
+    if (!company_code || !name || !category_id) {
+      return res.status(400).json({ success: false, message: 'Company code, name, and category are required' });
     }
-  }
 
-  static async getProductDetails(req, res) {
-    try {
-      const { style_id } = req.params;
-      
-      if (!style_id || isNaN(style_id)) {
-        return res.status(400).json({ success: false, message: 'Valid style ID required' });
-      }
+    const generateStyleCode = (baseName, attempt = 0) => {
+      let code = baseName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
+      if (attempt > 0) code += attempt;
 
-      const sql = `
-        SELECT
-          s.style_id,
-          s.style_code,
-          s.name,
-          s.description,
-          s.image,
-          sv.price,
-          sz.size_name,
-          c.color_name
-        FROM styles s
-        LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-        LEFT JOIN sizes sz ON sv.size_id = sz.size_id
-        LEFT JOIN colors c ON sv.color_id = c.color_id
-        WHERE s.style_id = ? AND s.approved = 'yes'
-      `;
-
-      const [results] = await db.execute(sql, [style_id]);
-      
-      if (results.length === 0) {
-        return res.status(404).json({ success: false, message: 'Product not found' });
-      }
-
-      // Group sizes and colors uniquely
-      const sizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
-      const colors = [...new Set(results.map(r => r.color_name).filter(Boolean))];
-      const product = results[0];
-
-      res.json({
-        success: true,
-        data: {
-          style_id: product.style_id,
-          style_code: product.style_code,
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          available_sizes: sizes,
-          available_colors: colors,
-          image: product.image
-        }
+      return new Promise((resolve, reject) => {
+        const sql = 'SELECT style_id FROM styles WHERE company_code = ? AND style_code = ?';
+        db.query(sql, [company_code, code], (err, results) => {
+          if (err) return reject(err);
+          return results.length > 0
+            ? resolve(generateStyleCode(baseName, attempt + 1))
+            : resolve(code);
+        });
       });
-    } catch (error) {
-      console.error('Error fetching product details:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
-  }
+    };
 
-  static async getProductListings(req, res) {
-    try {
-      const sql = `
-        SELECT style_id, style_code, name, description, image 
-        FROM styles 
-        WHERE approved = 'yes'
-        ORDER BY created_at DESC
+    generateStyleCode(name)
+      .then(styleCode => {
+        const sql = `
+          INSERT INTO styles (
+            company_code, style_code, name, description, category_id, 
+            image, approved, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        `;
+        db.query(sql, [company_code, styleCode, name, description, category_id, imagePaths, approved || 'no'], (err, results) => {
+          if (err) return res.status(500).json({ success: false, message: 'Error adding style' });
+          res.json({ success: true, style_id: results.insertId, style_code: styleCode, image: imagePaths });
+        });
+      })
+      .catch(err => res.status(500).json({ success: false, message: 'Error generating style code' }));
+  },
+
+  // Update style
+  updateStyle(req, res) {
+    const { style_id } = req.params;
+    const { name, description, category_id, approved } = req.body;
+    const imagePaths = req.files && req.files.length > 0 ? req.files.map(file => file.filename).join(',') : null;
+
+    if (!name || !category_id) {
+      return res.status(400).json({ success: false, message: 'Name and category are required' });
+    }
+
+    const checkSql = 'SELECT * FROM styles WHERE style_id = ?';
+    db.query(checkSql, [style_id], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: 'Database error' });
+      if (result.length === 0) return res.status(404).json({ success: false, message: 'Style not found' });
+
+      const existing = result[0];
+      const updateSql = `
+        UPDATE styles 
+        SET name = ?, description = ?, category_id = ?, 
+            ${imagePaths ? 'image = ?,' : ''} approved = ?, updated_at = NOW()
+        WHERE style_id = ?
       `;
+      const params = imagePaths
+        ? [name, description, category_id, imagePaths, approved || 'no', style_id]
+        : [name, description, category_id, approved || 'no', style_id];
 
-      const [results] = await db.execute(sql);
-      res.status(200).json({ success: true, data: results });
-    } catch (error) {
-      console.error('Error retrieving product listings:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
+      db.query(updateSql, params, (err) => {
+        if (err) return res.status(500).json({ success: false, message: 'Error updating style' });
+
+        if (imagePaths && existing.image) {
+          existing.image.split(',').forEach(img => {
+            const filePath = path.join(__dirname, '../../uploads/styles', img);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+          });
+        }
+
+        res.json({ success: true, message: 'Style updated', style: { ...existing, name, description, category_id, approved } });
+      });
+    });
+  },
+
+  // Delete style and its variants
+  deleteStyle(req, res) {
+    const { style_id } = req.params;
+
+    const getSql = 'SELECT style_code FROM styles WHERE style_id = ?';
+    db.query(getSql, [style_id], (err, result) => {
+      if (err || result.length === 0) return res.status(500).json({ success: false, message: 'Error fetching style' });
+
+      const styleCode = result[0].style_code;
+
+      db.query('DELETE FROM style_variants WHERE style_code = ?', [styleCode], (err) => {
+        if (err) return res.status(500).json({ success: false, message: 'Error deleting variants' });
+
+        db.query('DELETE FROM styles WHERE style_id = ?', [style_id], (err, result) => {
+          if (err) return res.status(500).json({ success: false, message: 'Error deleting style' });
+          res.json({ success: true, message: 'Style and variants deleted' });
+        });
+      });
+    });
+  },
+
+  // Get variants for a style
+  getStyleVariants(req, res) {
+    const sql = `
+      SELECT sv.*, c.color_name, s.size_name, f.fit_name, m.material_name
+      FROM style_variants sv
+      LEFT JOIN colors c ON sv.color_id = c.color_id
+      LEFT JOIN sizes s ON sv.size_id = s.size_id
+      LEFT JOIN fits f ON sv.fit_id = f.fit_id
+      LEFT JOIN materials m ON sv.material_id = m.material_id
+      WHERE sv.style_code = ?
+      ORDER BY sv.created_at DESC
+    `;
+    db.query(sql, [req.params.style_code], (err, results) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error fetching variants' });
+      res.json({ success: true, variants: results });
+    });
+  },
+
+  // Add variant
+  addVariant(req, res) {
+    const { company_code, style_code, color_id, size_id, fit_id, material_id, price } = req.body;
+    if (!company_code || !style_code || !color_id || !size_id || !fit_id || !material_id || !price) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
     }
+
+    const checkSql = `
+      SELECT variant_id FROM style_variants 
+      WHERE style_code = ? AND color_id = ? AND size_id = ? AND fit_id = ?
+    `;
+    db.query(checkSql, [style_code, color_id, size_id, fit_id], (err, results) => {
+      if (results.length > 0) {
+        return res.status(409).json({ success: false, message: 'Variant already exists' });
+      }
+
+      const detailsSql = `
+        SELECT c.color_name, s.size_name, f.fit_name 
+        FROM colors c, sizes s, fits f 
+        WHERE c.color_id = ? AND s.size_id = ? AND f.fit_id = ?
+      `;
+      db.query(detailsSql, [color_id, size_id, fit_id], (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: 'Error fetching details' });
+
+        const d = result[0];
+        const sku = `${style_code}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
+        const insertSql = `
+          INSERT INTO style_variants (company_code, style_code, color_id, size_id, fit_id, material_id, price, sku, is_active, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
+        `;
+        db.query(insertSql, [company_code, style_code, color_id, size_id, fit_id, material_id, price, sku], (err, result) => {
+          if (err) return res.status(500).json({ success: false, message: 'Error adding variant' });
+          res.json({ success: true, message: 'Variant added', sku });
+        });
+      });
+    });
+  },
+
+  // Update variant
+  updateVariant(req, res) {
+    const { variant_id } = req.params;
+    const { color_id, size_id, fit_id, material_id, price } = req.body;
+
+    const checkSql = `
+      SELECT variant_id FROM style_variants 
+      WHERE color_id = ? AND size_id = ? AND fit_id = ? AND variant_id != ?
+    `;
+    db.query(checkSql, [color_id, size_id, fit_id, variant_id], (err, results) => {
+      if (results.length > 0) {
+        return res.status(409).json({ success: false, message: 'Variant already exists' });
+      }
+
+      const detailsSql = `
+        SELECT s.style_code, c.color_name, s2.size_name, f.fit_name 
+        FROM style_variants sv
+        JOIN styles s ON sv.style_code = s.style_code
+        JOIN colors c ON c.color_id = ?
+        JOIN sizes s2 ON s2.size_id = ?
+        JOIN fits f ON f.fit_id = ?
+        WHERE sv.variant_id = ?
+      `;
+      db.query(detailsSql, [color_id, size_id, fit_id, variant_id], (err, result) => {
+        const d = result[0];
+        const sku = `${d.style_code}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
+        const updateSql = `
+          UPDATE style_variants 
+          SET color_id = ?, size_id = ?, fit_id = ?, material_id = ?, price = ?, sku = ?, updated_at = NOW()
+          WHERE variant_id = ?
+        `;
+        db.query(updateSql, [color_id, size_id, fit_id, material_id, price, sku, variant_id], (err) => {
+          if (err) return res.status(500).json({ success: false, message: 'Error updating variant' });
+          res.json({ success: true, message: 'Variant updated', sku });
+        });
+      });
+    });
+  },
+
+  // Delete variant
+  deleteVariant(req, res) {
+    const { variant_id } = req.params;
+    db.query('DELETE FROM style_variants WHERE variant_id = ?', [variant_id], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error deleting variant' });
+      if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Variant not found' });
+      res.json({ success: true, message: 'Variant deleted' });
+    });
   }
-}
+};
 
 module.exports = StyleController;

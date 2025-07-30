@@ -70,14 +70,20 @@ export default function EditCompanyAdmin() {
   };
 
   const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 10) value = value.slice(0, 10);
+    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+    value = value.slice(0, 15); // Limit to 15 digits
+    
     setFormData((prev) => ({ ...prev, phone: value }));
-
-    if (value && !value.startsWith('07')) {
-      setPhoneError('Phone number must start with 07');
-    } else if (value.length > 0 && value.length < 10) {
-      setPhoneError('Phone number must be exactly 10 digits');
+  
+    // Validation rules
+    if (!value) {
+      setPhoneError('Phone number is required');
+    } else if (value.length < 8) {
+      setPhoneError('Phone number must be at least 8 digits');
+    } else if (value.length > 15) {
+      setPhoneError('Phone number must be 15 digits or less');
+    } else if (/^0/.test(value)) {
+      setPhoneError('Please use country code without 0 (e.g., 254 instead of 07)');
     } else {
       setPhoneError('');
     }
@@ -170,7 +176,7 @@ export default function EditCompanyAdmin() {
           setPasswordError('');
           setChangePassword(false);
         }
-        setTimeout(() => navigate('/vcm-admin-dashboard/view-company-admins'), 1500);
+        setTimeout(() => navigate('/vcm-admin/view-company-admins'), 1500);
       } else {
         setErrorMsg(data.message || 'Update failed');
       }
@@ -192,7 +198,7 @@ export default function EditCompanyAdmin() {
           <Button 
             variant="primary" 
             className="btn-custom-primary mb-3" 
-            onClick={() => navigate('/vcm-admin-dashboard/view-company-admins')}
+            onClick={() => navigate('/vcm-admin/view-company-admins')}
           >
             ← Back
           </Button>
@@ -254,8 +260,8 @@ export default function EditCompanyAdmin() {
                       isInvalid={!!phoneError}
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      maxLength="10"
-                      placeholder="07xxxxxxxx"
+                      maxLength="15"  // Changed from 10 to 15
+                      placeholder="Enter phone number with country code"
                       required
                     />
                     <Form.Control.Feedback type="invalid">

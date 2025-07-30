@@ -1,32 +1,9 @@
 import React from 'react';
 import { Card, Container } from 'react-bootstrap';
-import { Route, Routes } from 'react-router-dom';
 import '../styles/AdminDashboard.css';
-import Category from './Category';
-import Style from './Style';
-import ViewAdmins from './Company_Admin/ViewAdmins';
-import WarehouseGRN from './WarehouseGRN';
+
 
 export default function AdminDashboard() {
-  return (
-    <div className="dashboard-container">
-      
-      <main className="dashboard-content">
-        <Routes>
-          <Route path="" element={<DashboardHome />} />
-          <Route path="users" element={<ViewAdmins />} />
-          <Route path="category" element={<Category />} />
-          <Route path="style" element={<Style />} />
-          <Route path="warehouse/grn" element={<WarehouseGRN />} />
-          
-          
-        </Routes>
-      </main>
-    </div>
-  );
-}
-
-function DashboardHome() {
   return (
     <Container fluid>
       <Card className="dashboard-card">
@@ -77,4 +54,5 @@ function DashboardHome() {
     </Container>
   );
 }
+
 

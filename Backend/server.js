@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -30,6 +29,11 @@ const cartRoutes = require('./routes/customer/CartRoutes');
 const adminAuth = require('./routes/admin/AdminAuth');
 const categoryRoutes = require('./routes/admin/Categories');
 const stylesRoutes = require('./routes/admin/Styles');
+const sizeRoutes = require('./routes/admin/Size');
+const ColorRoutes = require('./routes/admin/Color');
+const FitRoutes = require('./routes/admin/Fit');
+const MaterialRoutes = require('./routes/admin/Material');
+
 
 // Global middleware
 app.use(cors());
@@ -44,9 +48,17 @@ app.use('/cart', cartRoutes);
 
 
 // admin routes
-app.use('/admin', adminAuth);
-app.use('/category', categoryRoutes);
-app.use('/styles', stylesRoutes);
+
+app.use('api/admin/auth', adminAuth);
+app.use('api/admin/categories', categoryRoutes);
+app.use('api/admin/styles', stylesRoutes);
+app.use('api/admin/sizes', sizeRoutes);
+app.use('api/admin/colors', ColorRoutes);
+app.use('api/admin/fits', FitRoutes);
+app.use('api/admin/materials', MaterialRoutes);
+
+// Serve static files
+router.use('/uploads', express.static('uploads'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -60,40 +72,8 @@ app.use((err, req, res, next) => {
 
 
 
-// Configure multer for file upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/styles/') 
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname)
-  }
-});
 
-const upload = multer({ 
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|gif/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
 
-    if (extname && mimetype) {
-      return cb(null, true);
-    } else {
-      cb('Error: Images only!');
-    }
-  }
-});
-
-// Create uploads directory if it doesn't exist
-const fs = require('fs');
-const uploadDir = 'uploads/styles';
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Serve static files
-router.use('/uploads', express.static('uploads'));
 
 // Basic route
 app.get('/', (req, res) => {

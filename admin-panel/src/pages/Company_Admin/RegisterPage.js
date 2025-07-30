@@ -1,9 +1,9 @@
-import React, { useState,useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/RegisterPage.css';
 import { AuthContext } from '../../context/AuthContext';
+import '../../styles/RegisterPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -49,19 +49,20 @@ export default function RegisterPage() {
 
   // prevent entering letters and symbols and limit to 10 digits starting with 07
   const handlePhoneChange = (e) => {
-    let value = e.target.value;
-    value = value.replace(/\D/g, '');
-
-    if (value.length > 10) {
-      value = value.slice(0, 10);
-    }
-
+    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+    value = value.slice(0, 15); // Limit to 15 digits
+    
     setFormData((prev) => ({ ...prev, phone: value }));
-
-    if (value && !value.startsWith('07')) {
-      setPhoneError('Phone number must start with 07');
-    } else if (value.length > 0 && value.length < 10) {
-      setPhoneError('Phone number must be exactly 10 digits');
+  
+    // Validation rules
+    if (!value) {
+      setPhoneError('Phone number is required');
+    } else if (value.length < 8) {
+      setPhoneError('Phone number must be at least 8 digits');
+    } else if (value.length > 15) {
+      setPhoneError('Phone number must be 15 digits or less');
+    } else if (/^0/.test(value)) {
+      setPhoneError('Please use country code without 0 (e.g., 254 instead of 07)');
     } else {
       setPhoneError('');
     }
@@ -216,16 +217,15 @@ export default function RegisterPage() {
                   <Form.Group className="mb-3">
                     <Form.Label htmlFor="phone">Phone Number</Form.Label>
                     <Form.Control
-                      id="phone"
                       type="text"
                       name="phone"
-                      value={formData.phone} 
+                      value={formData.phone}
                       onChange={handlePhoneChange}
                       isInvalid={!!phoneError}
-                      inputMode='numeric'
+                      inputMode="numeric"
                       pattern="[0-9]*"
-                      maxLength="10"
-                      placeholder="07xxxxxxxx"
+                      maxLength="15"  // Changed from 10 to 15
+                      placeholder="Enter phone number with country code"
                       required
                     />
                     <Form.Control.Feedback type="invalid">
