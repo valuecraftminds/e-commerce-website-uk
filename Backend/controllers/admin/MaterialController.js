@@ -1,45 +1,51 @@
 const db = require('../../config/database'); // adjust the path as necessary
 
 const MaterialController = {
-  getMaterials: (req, res) => {
-    const { company_code } = req.query;
-    const sql = 'SELECT * FROM materials WHERE company_code = ? ORDER BY material_name';
-    db.query(sql, [company_code], (err, results) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error fetching materials' });
+  async getMaterials(req, res) {
+    try {
+      const { company_code } = req.query;
+      const sql = 'SELECT * FROM materials WHERE company_code = ? ORDER BY material_name';
+      const [results] = await db.query(sql, [company_code]);
       res.json({ success: true, materials: results });
-    });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error fetching materials' });
+    }
   },
 
-  addMaterial: (req, res) => {
-    const { company_code, material_name, description } = req.body;
-    const sql = 'INSERT INTO materials (company_code, material_name, description) VALUES (?, ?, ?)';
-    db.query(sql, [company_code, material_name, description], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error adding material' });
+  async addMaterial(req, res) {
+    try {
+      const { company_code, material_name, description } = req.body;
+      const sql = 'INSERT INTO materials (company_code, material_name, description) VALUES (?, ?, ?)';
+      const [result] = await db.query(sql, [company_code, material_name, description]);
       res.json({ success: true, material_id: result.insertId });
-    });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error adding material' });
+    }
   },
 
-  updateMaterial: (req, res) => {
-    const { material_id } = req.params;
-    const { material_name, description } = req.body;
+  async updateMaterial(req, res) {
+    try {
+      const { material_id } = req.params;
+      const { material_name, description } = req.body;
 
-    const sql = 'UPDATE materials SET material_name = ?, description = ?, updated_at = NOW() WHERE material_id = ?';
-    db.query(sql, [material_name, description, material_id], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error updating material' });
+      const sql = 'UPDATE materials SET material_name = ?, description = ?, updated_at = NOW() WHERE material_id = ?';
+      const [result] = await db.query(sql, [material_name, description, material_id]);
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Material not found' });
       }
       res.json({ success: true, message: 'Material updated successfully' });
-    });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error updating material' });
+    }
   },
 
-  deleteMaterial: (req, res) => {
-    const { material_id } = req.params;
+  async deleteMaterial(req, res) {
+    try {
+      const { material_id } = req.params;
 
-    // Check if material is used in any style variants
-    const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE material_id = ?';
-    db.query(checkSql, [material_id], (err, results) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error checking material usage' });
+      // Check if material is used in any style variants
+      const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE material_id = ?';
+      const [results] = await db.query(checkSql, [material_id]);
 
       if (results[0].count > 0) {
         return res.status(400).json({
@@ -49,14 +55,14 @@ const MaterialController = {
       }
 
       const deleteSql = 'DELETE FROM materials WHERE material_id = ?';
-      db.query(deleteSql, [material_id], (err, result) => {
-        if (err) return res.status(500).json({ success: false, message: 'Error deleting material' });
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ success: false, message: 'Material not found' });
-        }
-        res.json({ success: true, message: 'Material deleted successfully' });
-      });
-    });
+      const [result] = await db.query(deleteSql, [material_id]);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Material not found' });
+      }
+      res.json({ success: true, message: 'Material deleted successfully' });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error deleting material' });
+    }
   }
 };
 

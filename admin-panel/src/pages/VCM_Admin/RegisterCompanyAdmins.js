@@ -243,7 +243,7 @@ export default function RegisterCompanyAdmins() {
         formDataToSend.append('company_logo', formData.company_logo);
       }
   
-      const response = await fetch(`${BASE_URL}/admin/api/company-admin-register`, {
+      const response = await fetch(`${BASE_URL}/api/admin/auth/company-admin-register`, {
         method: 'POST',
         body: formDataToSend,
       });

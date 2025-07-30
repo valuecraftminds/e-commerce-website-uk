@@ -63,22 +63,38 @@ export default function Style() {
   const fetchStyles = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-styles?company_code=${company_code}`);
+      console.log('Fetching styles for company:', company_code); // Debug log
+      
+      const response = await fetch(`${BASE_URL}/api/admin/styles/get-styles?company_code=${company_code}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log('Received data:', data); // Debug log
+
       if (data.success) {
         setStyles(data.styles);
       } else {
         setError(data.message || 'Failed to fetch styles');
       }
     } catch (err) {
-      setError('Error fetching styles');
+      console.error('Error fetching styles:', err); // Debug log
+      setError(`Error fetching styles: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [company_code]);
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-categories?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/categories/get-categories?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         const mainCats = data.categories.filter(cat => !cat.parent_id);
@@ -91,7 +107,7 @@ export default function Style() {
 
   const fetchVariants = useCallback(async (styleCode) => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-style-variants/${styleCode}`);
+      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleCode}`);
       const data = await response.json();
       if (data.success) {
         setVariants(data.variants);
@@ -103,7 +119,7 @@ export default function Style() {
 
   const fetchColors = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-colors?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/colors/get-colors?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setColors(data.colors);
@@ -115,7 +131,7 @@ export default function Style() {
 
   const fetchSizes = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-sizes?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/sizes/get-sizes?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setSizes(data.sizes);
@@ -127,7 +143,7 @@ export default function Style() {
 
   const fetchMaterials = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-materials?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/materials/get-materials?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setMaterials(data.materials);
@@ -139,7 +155,7 @@ export default function Style() {
 
   const fetchFits = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-fits?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/fits/get-fits?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setFits(data.fits);
@@ -194,7 +210,7 @@ export default function Style() {
     handleDeleteStyle: async (styleId) => {
       if (window.confirm('Are you sure you want to delete this style?')) {
         try {
-          const response = await fetch(`${BASE_URL}/admin/api/delete-styles/${styleId}`, {
+          const response = await fetch(`${BASE_URL}/api/admin/styles/delete-styles/${styleId}`, {
             method: 'DELETE'
           });
 
@@ -231,8 +247,8 @@ export default function Style() {
       });
 
       const url = editingStyle 
-        ? `${BASE_URL}/admin/api/update-styles/${editingStyle.style_id}`
-        : `${BASE_URL}/admin/api/add-styles`;
+        ? `${BASE_URL}/api/admin/styles/update-styles/${editingStyle.style_id}`
+        : `${BASE_URL}/api/admin/styles/add-styles`;
       
       const method = editingStyle ? 'PUT' : 'POST';
       
@@ -259,7 +275,7 @@ export default function Style() {
 
   const handleSaveVariant = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/add-style-variants`, {
+      const response = await fetch(`${BASE_URL}/api/admin/styles/add-style-variants`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -293,7 +309,7 @@ export default function Style() {
 
   const handleEditVariant = async (variantId) => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/update-style-variants/${variantId}`, {
+      const response = await fetch(`${BASE_URL}/api/admin/styles/update-style-variants/${variantId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -329,7 +345,7 @@ export default function Style() {
   const handleDeleteVariant = async (variantId) => {
     if (window.confirm('Are you sure you want to delete this variant?')) {
       try {
-        const response = await fetch(`${BASE_URL}/admin/api/delete-style-variants/${variantId}`, {
+        const response = await fetch(`${BASE_URL}/api/admin/styles/delete-style-variants/${variantId}`, {
           method: 'DELETE'
         });
 
@@ -356,7 +372,7 @@ export default function Style() {
 
     if (categoryId) {
       try {
-        const response = await fetch(`${BASE_URL}/admin/api/subcategories/${categoryId}?company_code=${company_code}`);
+        const response = await fetch(`${BASE_URL}/api/admin/categories/subcategories/${categoryId}?company_code=${company_code}`);
         const data = await response.json();
         if (data.success) {
           setSubCategories(data.subcategories);

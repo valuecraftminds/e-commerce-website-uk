@@ -26,7 +26,7 @@ const FitManagement = () => {
   const fetchFits = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-fits?company_code=${userData.company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/fits/get-fits?company_code=${userData.company_code}`);
       const data = await response.json();
       if (data.success) {
         setFits(data.fits);
@@ -48,8 +48,8 @@ const FitManagement = () => {
     setLoading(true);
     try {
       const url = isEditing 
-        ? `${BASE_URL}/admin/api/update-fits/${editingId}`
-        : `${BASE_URL}/admin/api/add-fits`;
+        ? `${BASE_URL}/api/admin/fits/update-fits/${editingId}`
+        : `${BASE_URL}/api/admin/fits/add-fits`;
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -89,7 +89,7 @@ const FitManagement = () => {
   const handleDelete = async (fitId) => {
     if (window.confirm('Are you sure you want to delete this fit?')) {
       try {
-        const response = await fetch(`${BASE_URL}/admin/api/delete-fits/${fitId}`, {
+        const response = await fetch(`${BASE_URL}/api/admin/fits/delete-fits/${fitId}`, {
           method: 'DELETE'
         });
         const data = await response.json();

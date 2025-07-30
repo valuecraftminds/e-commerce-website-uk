@@ -41,7 +41,7 @@ export default function EditCompanyAdmin() {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/admin/api/get-admin/${id}`);
+        const response = await fetch(`${BASE_URL}/api/admin/auth/get-admin/${id}`);
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -156,7 +156,7 @@ export default function EditCompanyAdmin() {
         requestBody.newPassword = formData.newPassword;
       }
 
-      const response = await fetch(`${BASE_URL}/admin/api/edit-admin/${id}`, {
+      const response = await fetch(`${BASE_URL}/api/admin/auth/update-admin/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)

@@ -19,7 +19,7 @@ export default function ViewCompanyAdmins() {
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/admin/api/company-admins`);
+        const response = await fetch(`${BASE_URL}/api/admin/auth/get-company-admins`);
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -42,7 +42,7 @@ export default function ViewCompanyAdmins() {
     const fetchLicenses = async () => {
       try {
         const licensePromises = admins.map(admin => 
-          fetch(`${BASE_URL}/admin/api/get-license/${admin.Company_Code}`)
+          fetch(`${BASE_URL}/api/admin/license/get-license/${admin.Company_Code}`)
             .then(res => res.json())
         );
         
@@ -137,7 +137,7 @@ export default function ViewCompanyAdmins() {
         company_code={selectedCompanyCode}
         onSuccess={() => {
           const fetchLicenses = async () => {
-            const response = await fetch(`${BASE_URL}/admin/api/get-license/${selectedCompanyCode}`);
+            const response = await fetch(`${BASE_URL}/api/admin/license/get-license/${selectedCompanyCode}`);
             const data = await response.json();
             if (data.success) {
               setLicenses(prev => ({

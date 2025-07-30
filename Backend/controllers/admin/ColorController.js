@@ -1,45 +1,48 @@
-const db = require('../../config/database'); // or wherever your db connection is
+const db = require('../../config/database');
 
 const ColorController = {
-  getColors: (req, res) => {
-    const { company_code } = req.query;
-    const sql = 'SELECT * FROM colors WHERE company_code = ? ORDER BY color_name';
-    db.query(sql, [company_code], (err, results) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error fetching colors' });
+  async getColors(req, res) {
+    try {
+      const { company_code } = req.query;
+      const sql = 'SELECT * FROM colors WHERE company_code = ? ORDER BY color_name';
+      const [results] = await db.query(sql, [company_code]);
       res.json({ success: true, colors: results });
-    });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error fetching colors' });
+    }
   },
 
-  addColor: (req, res) => {
-    const { company_code, color_name, color_code } = req.body;
-    const sql = 'INSERT INTO colors (company_code, color_name, color_code) VALUES (?, ?, ?)';
-    db.query(sql, [company_code, color_name, color_code], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error adding color' });
+  async addColor(req, res) {
+    try {
+      const { company_code, color_name, color_code } = req.body;
+      const sql = 'INSERT INTO colors (company_code, color_name, color_code) VALUES (?, ?, ?)';
+      const [result] = await db.query(sql, [company_code, color_name, color_code]);
       res.json({ success: true, color_id: result.insertId });
-    });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error adding color' });
+    }
   },
 
-  updateColor: (req, res) => {
-    const { color_id } = req.params;
-    const { color_name, color_code } = req.body;
-
-    const sql = 'UPDATE colors SET color_name = ?, color_code = ?, updated_at = NOW() WHERE color_id = ?';
-    db.query(sql, [color_name, color_code, color_id], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error updating color' });
+  async updateColor(req, res) {
+    try {
+      const { color_id } = req.params;
+      const { color_name, color_code } = req.body;
+      const sql = 'UPDATE colors SET color_name = ?, color_code = ?, updated_at = NOW() WHERE color_id = ?';
+      const [result] = await db.query(sql, [color_name, color_code, color_id]);
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Color not found' });
       }
       res.json({ success: true, message: 'Color updated successfully' });
-    });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error updating color' });
+    }
   },
 
-  deleteColor: (req, res) => {
-    const { color_id } = req.params;
-
-    // Check if color is used in any variants
-    const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE color_id = ?';
-    db.query(checkSql, [color_id], (err, results) => {
-      if (err) return res.status(500).json({ success: false, message: 'Error checking color usage' });
+  async deleteColor(req, res) {
+    try {
+      const { color_id } = req.params;
+      const checkSql = 'SELECT COUNT(*) as count FROM style_variants WHERE color_id = ?';
+      const [results] = await db.query(checkSql, [color_id]);
 
       if (results[0].count > 0) {
         return res.status(400).json({
@@ -48,15 +51,14 @@ const ColorController = {
         });
       }
 
-      const deleteSql = 'DELETE FROM colors WHERE color_id = ?';
-      db.query(deleteSql, [color_id], (err, result) => {
-        if (err) return res.status(500).json({ success: false, message: 'Error deleting color' });
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ success: false, message: 'Color not found' });
-        }
-        res.json({ success: true, message: 'Color deleted successfully' });
-      });
-    });
+      const [result] = await db.query('DELETE FROM colors WHERE color_id = ?', [color_id]);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Color not found' });
+      }
+      res.json({ success: true, message: 'Color deleted successfully' });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Error deleting color' });
+    }
   }
 };
 

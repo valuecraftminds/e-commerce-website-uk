@@ -115,7 +115,7 @@ export default function RegisterPage() {
     console.log("Form Data:", formData.role);
 
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/register`, {
+      const response = await fetch(`${BASE_URL}/api/admin/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -160,7 +160,7 @@ export default function RegisterPage() {
           <Button 
             variant="primary" 
             className=" btn-custom-primary" 
-            onClick={() => navigate('/dashboard/users')}
+            onClick={() => navigate('/users')}
           >
             ← Back
           </Button>

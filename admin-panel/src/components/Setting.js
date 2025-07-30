@@ -42,7 +42,7 @@ export default function Settings() {
   useEffect(() => {
     if(!id) return;
 
-    fetch(`${BASE_URL}/admin/api/get-admin/${id}`)
+    fetch(`${BASE_URL}/api/admin/auth/get-admin/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -66,19 +66,25 @@ export default function Settings() {
   };
 
   const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 10) value = value.slice(0, 10);
-    setFormData(prev => ({ ...prev, phone_number: value }));
-
-    if (value && !value.startsWith('07')) {
-      setPhoneError('Phone number must start with 07');
-    } else if (value.length > 0 && value.length < 10) {
-      setPhoneError('Phone number must be exactly 10 digits');
+    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+    value = value.slice(0, 15); // Limit to 15 digits
+    
+    setFormData((prev) => ({ ...prev, phone_number: value })); // Changed from 'phone' to 'phone_number'
+  
+    // Validation rules
+    if (!value) {
+      setPhoneError('Phone number is required');
+    } else if (value.length < 8) {
+      setPhoneError('Phone number must be at least 8 digits');
+    } else if (value.length > 15) {
+      setPhoneError('Phone number must be 15 digits or less');
+    } else if (/^0/.test(value)) {
+      setPhoneError('Please use country code without 0 (e.g., 254 instead of 07)');
     } else {
       setPhoneError('');
     }
   };
-
+  
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -180,7 +186,7 @@ export default function Settings() {
             requestBody.newPassword = formData.newPassword;
         }
 
-        const res = await fetch(`${BASE_URL}/api/update-admin-profile/${id}`, {
+        const res = await fetch(`${BASE_URL}/api/admin/auth/update-admin-profile/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
@@ -275,18 +281,18 @@ export default function Settings() {
                     <Form.Group className="mb-3">
                         <Form.Label htmlFor="phone_number">Phone Number</Form.Label>
                         <Form.Control
-                        id="phone_number"
-                        type="text"
-                        name="phone_number"
-                        value={formData.phone_number}
-                        onChange={handlePhoneChange}
-                        isInvalid={!!phoneError}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength="10"
-                        placeholder="07xxxxxxxx"
-                        required
-                        />
+  id="phone_number"
+  type="text"
+  name="phone_number"  // This should match your state property
+  value={formData.phone_number}
+  onChange={handlePhoneChange}
+  isInvalid={!!phoneError}
+  inputMode="numeric"
+  pattern="[0-9]*"
+  maxLength="15"
+  placeholder="07xxxxxxxx"
+  required
+/>
                         <Form.Control.Feedback type="invalid">
                         {phoneError}
                         </Form.Control.Feedback>

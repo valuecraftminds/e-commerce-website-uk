@@ -14,7 +14,7 @@ export default function LicenseModal({ show, onHide, company_code, onSuccess }) 
     setError('');
 
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/add-license`, {
+      const response = await fetch(`${BASE_URL}/api/admin/license/add-license`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

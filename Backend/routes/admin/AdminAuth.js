@@ -14,9 +14,13 @@ router.post('/login', AuthController.login);
 // Admin Management
 // ======================
 router.post('/register-company-admin', uploadLogo.single('company_logo'), AuthController.registerCompanyAdmin);
-router.get('/get-admins/:user_id', AuthController.getAdminById);              // Get admin by ID
-router.put('/update-admins/:user_id', AuthController.editAdmin);                 // Update admin
-router.delete('/delete-admins/:user_id', AuthController.deleteAdmin);           // Delete admin
-router.put('/update-admins-profile/:user_id', AuthController.updateAdminProfile); // Update admin profile
+router.get('/get-admin/:user_id', AuthController.getAdminById);              // Get admin by ID
+router.put('/update-admin/:user_id', AuthController.editAdmin);                 // Update admin
+router.delete('/delete-admin/:user_id', AuthController.deleteAdmin);           // Delete admin
+router.put('/update-admin-profile/:user_id', AuthController.updateAdminProfile); // Update admin profile
+router.get('/get-company-admins', AuthController.getCompanyAdmins);              // Get admin by ID
+router.get('/get-all-admins', AuthController.getAdminsByCompany);              // Get admin by ID
+
+
 
 module.exports = router;

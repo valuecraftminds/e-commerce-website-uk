@@ -13,7 +13,7 @@ function DeleteAdmin({ adminId, onDeleteSuccess }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${BASE_URL}/admin/api/delete-admin/${adminId}`, {
+      const res = await fetch(`${BASE_URL}/api/admin/auth/delete-admin/${adminId}`, {
         method: 'DELETE',
       });
       const data = await res.json();

@@ -41,7 +41,7 @@ const uploadStyles = multer({
 });
 
 // Multer instance for company logos
-const logoDir = 'uploads/company_logo';
+const logoDir = 'uploads/company_logos';
 ensureDirExists(logoDir);
 
 const logoStorage = multer.diskStorage({

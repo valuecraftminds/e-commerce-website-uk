@@ -33,7 +33,7 @@ export default function WarehouseGRN() {
 
   const fetchStyles = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-styles?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/get-styles?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setStyles(data.styles);
@@ -47,7 +47,7 @@ export default function WarehouseGRN() {
 
   const fetchVariants = async (styleCode) => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/get-style-variants/${styleCode}`);
+      const response = await fetch(`${BASE_URL}/api/admin/get-style-variants/${styleCode}`);
       const data = await response.json();
       if (data.success) {
         setVariants(data.variants);
@@ -61,7 +61,7 @@ export default function WarehouseGRN() {
 
   const fetchGRNList = useCallback(async () => {
     try {
-        const response = await fetch(`${BASE_URL}/admin/api/get-grn?company_code=${company_code}`);
+        const response = await fetch(`${BASE_URL}/api/admin/get-grn?company_code=${company_code}`);
         const data = await response.json();
         if (data.success) {
           setGrnList(data.grn);
@@ -90,7 +90,7 @@ export default function WarehouseGRN() {
     e.preventDefault();
     setError('');
     try {
-      const response = await fetch(`${BASE_URL}/admin/api/add-grn`, {
+      const response = await fetch(`${BASE_URL}/api/admin/add-grn`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

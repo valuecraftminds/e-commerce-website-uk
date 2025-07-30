@@ -3,7 +3,7 @@ import { Button, Container, Navbar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Header.css';
-import AdminSidebar from './AdminSidebar';
+import AdminSidebar from './adminSidebar';
 
 export default function Header() {   
   const navigate = useNavigate();
