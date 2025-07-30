@@ -137,7 +137,7 @@ export default function Shop() {
         setStyles(stylesResponse.data);
         console.log('Fetched all styles:', stylesResponse.data);
 
-        // Clear product types since we're showing all styles
+        // Clear product types
         setProductTypes([]);
 
       } catch (err) {
@@ -221,14 +221,14 @@ export default function Shop() {
                 className="shop-product-card"
                 onClick={() => getProductDetails(product.style_id)}
               >
-                <div className="shop-product-image-container">
+                <div className="home-product-image-container">
                   <img 
-                src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
+                    src={`${BASE_URL}/customer/styles/${product.image}`}
                     alt={product.name}
-                    className="shop-product-image"
+                    className="home-product-image"
                   />
                   
-                  <div className="shop-product-overlay">
+                  <div className="home-product-overlay">
                     <h5> Quick View </h5>
                   </div>
                 </div>
@@ -246,14 +246,6 @@ export default function Shop() {
                       {formatPrice(product.min_price, product.max_price)}
                     </span>
                   </div>
-                  
-                  {/* {product.variant_count && (
-                    <div className="shop-product-variants">
-                      <span className="variants-label">
-                        {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
-                      </span>
-                    </div>
-                  )} */}
                   
                   {product.category_name && (
                     <div className="shop-product-category">
