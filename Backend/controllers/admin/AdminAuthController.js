@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../../config/database'); // Adjust the path as needed
+const path = require('path');
+const fs = require('fs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -57,20 +59,27 @@ class AdminAuthController {
   // Register company admin (with auto company_code)
   static async registerCompanyAdmin(req, res) {
     try {
-      const { name, email, password, company_name } = req.body;
-
+      const { name, email, password, company_name, company_address, currency } = req.body;
+      const logoFile = req.file;
+  
+      if (!logoFile) {
+        return res.status(400).json({ message: 'Company logo is required' });
+      }
+  
       const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
       if (existing.length > 0) {
         return res.status(400).json({ message: 'Email already registered' });
       }
-
+  
       const hashedPassword = await bcrypt.hash(password, 10);
       const company_code = 'CMP' + Math.floor(1000 + Math.random() * 9000);
-
-      await db.query('INSERT INTO users (name, email, password, role, company_name, company_code) VALUES (?, ?, ?, ?, ?, ?)', [
-        name, email, hashedPassword, 'company_admin', company_name, company_code
-      ]);
-
+      const company_logo = logoFile.filename;
+  
+      await db.query(
+        'INSERT INTO users (name, email, password, role, company_name, company_address, company_logo, currency, company_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [name, email, hashedPassword, 'company_admin', company_name, company_address, company_logo, currency, company_code]
+      );
+  
       res.status(201).json({ message: 'Company admin registered', company_code });
     } catch (err) {
       console.error('Company admin register error:', err);

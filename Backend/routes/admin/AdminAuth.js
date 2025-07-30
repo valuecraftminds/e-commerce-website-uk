@@ -1,6 +1,8 @@
 const express = require('express');
 const AuthController = require('../../controllers/admin/AdminAuthController');
 const router = express.Router();
+const { uploadLogo } = require('../../middleware/upload');
+
 
 // ======================
 // Admin Authentication
@@ -11,7 +13,7 @@ router.post('/login', AuthController.login);
 // ======================
 // Admin Management
 // ======================
-router.post('/register-company-admins', AuthController.registerCompanyAdmin);               // Create new admin
+router.post('/register-company-admin', uploadLogo.single('company_logo'), AuthController.registerCompanyAdmin);
 router.get('/get-admins/:user_id', AuthController.getAdminById);              // Get admin by ID
 router.put('/update-admins/:user_id', AuthController.editAdmin);                 // Update admin
 router.delete('/delete-admins/:user_id', AuthController.deleteAdmin);           // Delete admin

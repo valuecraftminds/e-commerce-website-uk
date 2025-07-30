@@ -1,13 +1,13 @@
 const express = require('express');
 const StyleController = require('../../controllers/admin/StyleController');
 const router = express.Router();
-const upload = require('../../middleware/upload'); // This path should now be correct
+const { uploadStyles } = require('../../middleware/upload');
 
 // Styles
 router.get('/get-styles', StyleController.getAllStyles);
 router.get('/styles/:style_id', StyleController.getStyleById);
-router.post('/add-styles', upload.array('images', 5), StyleController.addStyle);
-router.put('/update-styles/:style_id', upload.array('images', 5), StyleController.updateStyle);
+router.post('/add-styles', uploadStyles.array('images', 5), StyleController.addStyle);
+router.put('/update-styles/:style_id', uploadStyles.array('images', 5), StyleController.updateStyle);
 router.delete('/delete-styles/:style_id', StyleController.deleteStyle);
 
 // Style Variants
