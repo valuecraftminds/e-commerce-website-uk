@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
+
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -19,7 +20,7 @@ const calculateSummary = (items) => {
   };
 };
 
-// Cart reducer 
+// Cart reducer - moved hooks outside of reducer
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'SET_LOADING':
@@ -111,15 +112,16 @@ const initialState = {
 
 // Cart Provider
 export const CartProvider = ({ children }) => {
-  const { isLoggedIn, userData } = useContext(AuthContext); 
+  // const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(cartReducer, initialState);
   
-  // Get auth token 
+  // Get auth token
   const getAuthToken = () => {
-    return localStorage.getItem('authToken'); 
+    return user?.token || localStorage.getItem('auth_token');
   };
 
-  // Get axios config with proper headers
+  // Get axios config with optional auth
   const getAxiosConfig = () => {
     const token = getAuthToken();
     const config = {
@@ -127,10 +129,7 @@ export const CartProvider = ({ children }) => {
     };
     
     if (token) {
-      config.headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
+      config.headers = { Authorization: `Bearer ${token}` };
     }
     
     return config;
@@ -163,20 +162,8 @@ export const CartProvider = ({ children }) => {
   // Fetch cart items from backend
   const fetchCartItems = async () => {
     try {
-      console.log('Fetching cart items from backend...');
-      
-      // Backend expects company_code in query params
-      const config = {
-        params: { company_code: COMPANY_CODE },
-        headers: { 
-          'Authorization': `Bearer ${getAuthToken()}`,
-          'Content-Type': 'application/json'
-        }
-      };
-      
-      const response = await axios.get(`${BASE_URL}/cart/get-cart`, config); 
+      const response = await axios.get(`${BASE_URL}/customer/cart`, getAxiosConfig());
 
-      console.log('Cart response:', response.data);
       if (response.data.success) {
         dispatch({ type: 'SET_CART', payload: response.data });
         return response.data;
@@ -186,73 +173,24 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
     }
   };
-  
 
-  // Load cart based on user authentication
- const hasLoaded = useRef(false);
 
   useEffect(() => {
-    if (isLoggedIn && !hasLoaded.current) {
-      loadCart();
-      hasLoaded.current = true;
-    }
-  }, [isLoggedIn]);
+    loadCart();
+  }, [user]); // Watch for user changes
 
-    useEffect(() => {
-      loadMemo();
-  },[]); 
-  
-
+  // Load cart based on user authentication
   const loadCart = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
       const token = getAuthToken();
       
-      if (token && isLoggedIn) {
-        // logged in user - fetch from backend
-        console.log('Loading cart for logged in user...');
-        if(isLoggedIn && !hasLoaded.current) {
-          await mergeCartOnLogin();
-        
-          hasLoaded.current = true;
-        }
-        
-        //  mergeCartOnLogin();
-        //  fetchCartItems();
-
+      if (token) {
+        // User is logged in, fetch from backend
+        await fetchCartItems();
       } else {
-        // // Guest user, load from localStorage
-        // console.log('Loading guest cart...');
-        // const guestCart = getGuestCart();
-        
-        // if (guestCart.length > 0) {
-        //   // Convert guest cart format to match backend format
-        //   const formattedCart = guestCart.map(item => ({
-        //     ...item,
-        //     total_price: item.price * item.quantity
-        //   }));
-          
-        //   dispatch({ 
-        //     type: 'SET_CART', 
-        //     payload: { 
-        //       cart: formattedCart,
-        //       summary: calculateSummary(formattedCart)
-        //     }
-        //   });
-        // } else {
-        //   dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
-        // }
-      }
-    } catch (error) {
-      console.error('Error loading cart:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
-    }
-  };
-
-  const loadMemo = async () => {
-    // Guest user, load from localStorage
-        console.log('Loading guest cart...');
+        // Guest user, load from localStorage
         const guestCart = getGuestCart();
         
         if (guestCart.length > 0) {
@@ -272,11 +210,17 @@ export const CartProvider = ({ children }) => {
         } else {
           dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
         }
-      };
-  // Add item to cart 
+      }
+    } catch (error) {
+      console.error('Error loading cart:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
+    }
+  };
+
+  // Add item to cart
   const addToCart = async (item) => {
     try {
-      // Validate required fields 
+      // Validate required fields including variant_id
       if (!item || !item.style_code || !item.variant_id) {
         throw new Error('Missing required product information');
       }
@@ -287,31 +231,16 @@ export const CartProvider = ({ children }) => {
 
       const token = getAuthToken();
 
-      if (token && isLoggedIn) {
+      if (token) {
         // User is logged in, add to backend
-        console.log('Adding item to cart for logged in user:', item);
-        
-        // Match backend expectations 
-        const payload = {
+        const response = await axios.post(`${BASE_URL}/cart/add`, {
           style_code: item.style_code,
           variant_id: item.variant_id,
           quantity: item.quantity || 1,
-          customer_id: userData?.customer_id
-        };
+          price: item.price
+        }, getAxiosConfig());
 
-        console.log('Cart payload:', payload);
-
-        const config = {
-          params: { company_code: COMPANY_CODE },
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        };
-
-        const response = await axios.post(`${BASE_URL}/cart/add`, payload, config);
-
-        console.log('Add to cart response:', response.data);
+        console.log('style', item);
 
         if (response.data.success) {
           // Refresh cart items after successful addition
@@ -322,7 +251,6 @@ export const CartProvider = ({ children }) => {
         }
       } else {
         // Guest user, add to localStorage
-        console.log('Adding item to guest cart:', item);
         const guestCart = getGuestCart();
         const existingItemIndex = guestCart.findIndex(
           cartItem => cartItem.variant_id === item.variant_id
@@ -347,7 +275,7 @@ export const CartProvider = ({ children }) => {
           total_price: item.price * (item.quantity || 1)
         };
 
-        console.log('Guest cart item:', cartItem);
+        console.log('item name', item.name);
         
         if (existingItemIndex >= 0) {
           guestCart[existingItemIndex].quantity += (item.quantity || 1);
@@ -375,22 +303,12 @@ export const CartProvider = ({ children }) => {
     try {
       const token = getAuthToken();
       
-      if (token && isLoggedIn) {
+      if (token) {
         // User is logged in, update in backend
-        console.log('Updating quantity in backend for cart_id:', cart_id, 'quantity:', quantity);
-        
-        const config = {
-          params: { company_code: COMPANY_CODE },
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        };
-        
         const response = await axios.put(
-          `${BASE_URL}/cart/${cart_id}`, 
+          `${BASE_URL}/customer/cart/${cart_id}`,
           { quantity },
-          config
+          getAxiosConfig()
         );
         
         if (response.data.success) {
@@ -428,21 +346,11 @@ export const CartProvider = ({ children }) => {
     try {
       const token = getAuthToken();
       
-      if (token && isLoggedIn) {
+      if (token) {
         // User is logged in, remove from backend
-        console.log('Removing item from backend cart:', cart_id);
-        
-        const config = {
-          params: { company_code: COMPANY_CODE },
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        };
-        
         const response = await axios.delete(
-          `${BASE_URL}/cart/${cart_id}`, 
-          config
+          `${BASE_URL}/customer/cart/${cart_id}`,
+          getAxiosConfig()
         );
         
         if (response.data.success) {
@@ -473,21 +381,11 @@ export const CartProvider = ({ children }) => {
     try {
       const token = getAuthToken();
       
-      if (token && isLoggedIn) {
+      if (token) {
         // User is logged in, clear backend cart
-        console.log('Clearing backend cart...');
-        
-        const config = {
-          params: { company_code: COMPANY_CODE },
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        };
-        
         const response = await axios.delete(
-          `${BASE_URL}/cart/clear`,
-          config
+          `${BASE_URL}/customer/cart/clear`,
+          getAxiosConfig()
         );
         
         if (response.data.success) {
@@ -521,28 +419,17 @@ export const CartProvider = ({ children }) => {
         return { success: true, message: 'No guest cart to merge' };
       }
 
-      console.log('Merging guest cart with user cart:', guestCart);
-
       // Prepare guest cart data for backend
       const guestCartData = guestCart.map(item => ({
         style_code: item.style_code,
         variant_id: item.variant_id,
-        quantity: item.quantity,
-        customer_id: userData?.customer_id
+        quantity: item.quantity
       }));
-
-      const config = {
-        params: { company_code: COMPANY_CODE },
-        headers: { 
-          'Authorization': `Bearer ${getAuthToken()}`,
-          'Content-Type': 'application/json'
-        }
-      };
 
       const response = await axios.post(
         `${BASE_URL}/cart/merge`,
         { guest_cart: guestCartData },
-        config
+        getAxiosConfig()
       );
 
       if (response.data.success) {
