@@ -1,10 +1,11 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
 import "../styles/Home.css";
+import { CountryContext } from "../components/CountryContext";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -14,7 +15,11 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exchangeRates, setExchangeRates] = useState({});
 
+  const currencySymbols = { US: '$', UK: '£',SL: 'LKR' };
+  const { country } = useContext(CountryContext);
+  
   const getProductDetails = (id) => {
     navigate(`/product/${id}`);
   };
@@ -39,12 +44,43 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  // Helper function to format price display
-  const formatPrice = (minPrice, maxPrice) => {
-    if (!minPrice && !maxPrice) return "Price not defined";
-    if (minPrice === maxPrice) return `$${minPrice}`;
-    return `$${minPrice} - $${maxPrice}`;
+useEffect(() => {
+  const fetchExchangeRates = async () => {
+    try {
+      const response = await axios.get('https://api.exchangerate.host/latest?base=USD&symbols=GBP,LKR');
+      console.log(response.data);
+      setExchangeRates(response.data.rates);
+    } catch (error) {
+      console.error('Failed to fetch exchange rates:', error);
+    }
   };
+  fetchExchangeRates();
+}, [country]);
+
+const getRate = () => {
+  switch (country) {
+    case 'US':
+      return 1;
+    case 'UK':
+      return exchangeRates['GBP'] || 0.75; // Default to 0.75 if rate not available
+    case 'SL':
+      return exchangeRates['LKR'] || 320; // Default to 320 if rate not available
+    default:
+      return 1;
+  }
+};
+
+const symbol = currencySymbols[country] || '$';
+const rate = getRate();
+
+const formatPrice = (minPrice, maxPrice) => {
+  if (!minPrice && !maxPrice) return "Price not defined";
+  const convert = (price) => (price * rate).toFixed(2);
+  if (minPrice === maxPrice) return `${symbol}${convert(minPrice)}`;
+  return `${symbol}${convert(minPrice)} - ${symbol}${convert(maxPrice)}`;
+};
+
+
 
   return (
     <>
@@ -104,17 +140,8 @@ export default function Home() {
                     <span className={product.min_price && product.max_price ? "price-range" : "current-price"}>
                       {formatPrice(product.min_price, product.max_price)}
                     </span>
-                  </div>
-                  
-                  {/* {product.variant_count && (
-                    <div className="home-product-variants">
-                      <span className="home-variants-label">
-                        {product.variant_count} variant{product.variant_count !== 1 ? 's' : ''} available
-                      </span>
-                    </div>
-                  )} */}
-                  
-                  {product.category_name && (
+                  </div> 
+                 {product.category_name && (
                     <div className="home-product-category">
                       <span className="home-category-badge">
                         {product.category_name}

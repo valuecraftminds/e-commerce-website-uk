@@ -26,6 +26,9 @@ export default function NavigationBar() {
   const [isHoveringCategory, setIsHoveringCategory] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const [showsearchSidebar, setShowsearchSidebar] = useState(false);
+  const [country, setCountry] = useState(() => {
+    return localStorage.getItem("selectedCountry") || "US";
+  });
 
   // Fetch categories
   useEffect(() => {
@@ -58,6 +61,10 @@ export default function NavigationBar() {
     }
     return () => clearTimeout(timeOutId);
   }, [isHoveringCategory, isHoveringSidebar]);
+
+  useEffect(() => {
+    localStorage.setItem("selectedCountry", country);
+  }, [country]);
 
   // Handlers for mouse enter and leave events
   const handleCategoryMouseEnter = (category) => {
@@ -94,6 +101,12 @@ export default function NavigationBar() {
     navigate(`/shop/${category.toLowerCase()}`);
     setSidebarOpen(false);
   };
+
+  // handle country change
+  const handleCountryChange = (e) => {
+    setCountry(e.target.value);
+  };
+
   
   // if loading or error state
   if (loading) {
@@ -135,6 +148,17 @@ export default function NavigationBar() {
 
           {/* Right side */}
           <div className="d-flex align-items-center gap-3">
+            {/* select country */}
+            <select className="form-select"
+              aria-label="Select country"
+              value={country}
+              onChange={handleCountryChange}
+            > 
+              <option value="UK">United Kingdom</option>
+              <option value="US">United States</option>
+              <option value="SL">Sri Lanka</option>
+            </select>
+
             {/* Search icon */}
             <i
               className="bi bi-search"
