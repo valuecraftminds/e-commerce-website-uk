@@ -140,17 +140,7 @@ const Cart = () => {
                                 alt={item.style_name}
                                 className="cart-item-image"
                               />
-                            </Col>
-
-                            {/* Customer name display for logged in users */}
-                            {isLoggedIn && userData?.name && (
-                              <Col md={12} className="mb-2">
-                                <small className="text-muted">
-                                  <i className="me-1">👤</i>
-                                  Shopping for: <span className="fw-bold text-primary">{item.name}</span>
-                                </small>
-                              </Col>
-                            )}
+                            </Col> 
                             
                             <Col md={4}>
                               <h6 className="mb-2">

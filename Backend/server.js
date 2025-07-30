@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-
 const app = express();
 const port = process.env.PORT || 3000;
 const multer = require('multer');
@@ -69,11 +68,6 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
-
-
-
-
-
 
 // Basic route
 app.get('/', (req, res) => {

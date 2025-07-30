@@ -4,6 +4,7 @@ import { Container } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
+import '../styles/Shop.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
