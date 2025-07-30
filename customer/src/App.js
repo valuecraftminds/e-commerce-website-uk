@@ -36,7 +36,6 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('userData');
-      // Let ProtectedRoute handle the redirect
     }
     return Promise.reject(error);
   }
