@@ -1,9 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
+require('dotenv').config();
 
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -75,7 +73,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+
+
+
+
+
+// Basic route
+app.get('/', (req, res) => {
+  res.json({ message: 'E-Commerce UK Backend API running successfully.' });
+});
+
+// Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });

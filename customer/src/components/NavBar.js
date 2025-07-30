@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -7,12 +7,15 @@ import logo from '../assets/logo.png';
 import '../styles/NavBar.css';
 import SearchSidebar from "./SearchSidebar";
 import Sidebar from './Sidebar';
+import UserMenu from "../pages/UserMenu";
+import { AuthContext } from '../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function NavigationBar() {
   const navigate = useNavigate();
+  const { isLoggedIn } = useContext(AuthContext);
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +26,9 @@ export default function NavigationBar() {
   const [isHoveringCategory, setIsHoveringCategory] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const [showsearchSidebar, setShowsearchSidebar] = useState(false);
+  const [country, setCountry] = useState(() => {
+    return localStorage.getItem("selectedCountry") || "US";
+  });
 
   // Fetch categories
   useEffect(() => {
@@ -55,6 +61,10 @@ export default function NavigationBar() {
     }
     return () => clearTimeout(timeOutId);
   }, [isHoveringCategory, isHoveringSidebar]);
+
+  useEffect(() => {
+    localStorage.setItem("selectedCountry", country);
+  }, [country]);
 
   // Handlers for mouse enter and leave events
   const handleCategoryMouseEnter = (category) => {
@@ -91,6 +101,12 @@ export default function NavigationBar() {
     navigate(`/shop/${category.toLowerCase()}`);
     setSidebarOpen(false);
   };
+
+  // handle country change
+  const handleCountryChange = (e) => {
+    setCountry(e.target.value);
+  };
+
   
   // if loading or error state
   if (loading) {
@@ -132,6 +148,17 @@ export default function NavigationBar() {
 
           {/* Right side */}
           <div className="d-flex align-items-center gap-3">
+            {/* select country */}
+            <select className="form-select"
+              aria-label="Select country"
+              value={country}
+              onChange={handleCountryChange}
+            > 
+              <option value="UK">United Kingdom</option>
+              <option value="US">United States</option>
+              <option value="SL">Sri Lanka</option>
+            </select>
+
             {/* Search icon */}
             <i
               className="bi bi-search"
@@ -139,11 +166,8 @@ export default function NavigationBar() {
               onClick={() => setShowsearchSidebar(true)}
             />
             {/* User icons */}
-            <i
-              className="bi bi-person-plus"
-              style={{ fontSize: "1.4rem", cursor: "pointer" }}
-              onClick={() => navigate('/login')}
-            />
+            <UserMenu />
+
             {/* Cart icon */}
             <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
               onClick={() => navigate('/cart')}
