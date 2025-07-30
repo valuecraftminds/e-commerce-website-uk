@@ -11,5 +11,6 @@ router.get('/all-styles', checkCompanyCode, customerController.getAllStyles);
 router.get('/product/:style_id', checkCompanyCode, customerController.getProductDetails);
 router.get('/product-listings', checkCompanyCode, customerController.getProductListings);
 router.get('/search', checkCompanyCode, customerController.searchProducts);
+router.get('/styles/:filename', customerController.getStyleImage);
 
 module.exports = router;

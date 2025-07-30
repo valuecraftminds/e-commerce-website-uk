@@ -32,7 +32,6 @@ export default function ProductPage() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        // If your backend expects variant_id instead of style_id, update this endpoint
         const response = await axios.get(`${BASE_URL}/customer/product/${variantId}`,
           {
             params: { company_code: COMPANY_CODE }
@@ -62,7 +61,7 @@ export default function ProductPage() {
         color: selectedColor,
         quantity: quantity,
         price: product.price,
-        variant_id: variantId  // Use the variant_id from URL
+        variant_id: variantId  
       });
 
       const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColor}`;
@@ -109,12 +108,12 @@ export default function ProductPage() {
 
   return (
     <div className="product-page">
-      <Container className="my-5 container">
+      <Container className="my-5 container ">
         <Row>
           <Col className="img-col" md={6}>
             <Image 
               className="product-image" 
-              src={`${BASE_URL}/uploads/styles/${product.image}`}
+              src={`${BASE_URL}/customer/styles/${product.image}`} 
               alt={product.name} 
               fluid 
             />

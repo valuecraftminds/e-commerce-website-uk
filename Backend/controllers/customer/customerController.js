@@ -1,4 +1,6 @@
 const db = require('../../config/database');
+const path = require('path');
+const fs = require('fs');
 
 const customerController = {
   // GET main categories
@@ -235,7 +237,45 @@ const customerController = {
 
       res.status(200).json(transformedResults);
     });
+  },
+
+  // get style images
+  getStyleImage: (req, res) => {
+    const { filename } = req.params;
+    
+    const imagePath = path.join(__dirname, '../../uploads/styles', filename);
+    
+    // Check if file exists
+    if (!fs.existsSync(imagePath)) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    
+    // Set appropriate headers
+    const ext = path.extname(filename).toLowerCase();
+    let contentType = 'image/jpeg';
+    
+    switch (ext) {
+      case '.png':
+        contentType = 'image/png';
+        break;
+      case '.jpg':
+      case '.jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case '.gif':
+        contentType = 'image/gif';
+        break;
+      case '.webp':
+        contentType = 'image/webp';
+        break;
+    }
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    
+    // Send the file
+    res.sendFile(imagePath);
   }
 };
 
-module.exports =customerController;
+module.exports = customerController;

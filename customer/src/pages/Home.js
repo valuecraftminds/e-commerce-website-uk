@@ -45,16 +45,18 @@ export default function Home() {
   }, []);
 
 useEffect(() => {
-  const fetchExchangeRates = async () => {
-    try {
-      const response = await axios.get('https://api.exchangerate.host/latest?base=USD&symbols=GBP,LKR');
-      console.log(response.data);
-      setExchangeRates(response.data.rates);
-    } catch (error) {
-      console.error('Failed to fetch exchange rates:', error);
-    }
-  };
-  fetchExchangeRates();
+   getRate();
+  // const fetchExchangeRates = async () => {
+   
+    // try {
+    //   const response = await axios.get('https://api.exchangerate.host/latest?base=USD&symbols=GBP,LKR');
+    //   console.log(response.data);
+    //   setExchangeRates(response.data.rates);
+    // } catch (error) {
+    //   console.error('Failed to fetch exchange rates:', error);
+    // }
+  // };
+  // fetchExchangeRates();
 }, [country]);
 
 const getRate = () => {
@@ -118,7 +120,7 @@ const formatPrice = (minPrice, maxPrice) => {
               >
                 <div className="home-product-image-container">
                   <img 
-                    src={`${BASE_URL}/uploads/styles/${product.image}`}
+                    src={`${BASE_URL}/customer/styles/${product.image}`}
                     alt={product.name}
                     className="home-product-image"
                   />

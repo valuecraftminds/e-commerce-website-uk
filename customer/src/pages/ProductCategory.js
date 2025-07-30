@@ -258,21 +258,21 @@ const ProductCategory = () => {
 
         {/* Products Grid */}
         {filteredAndSortedProducts.length > 0 ? (
-          <div className="products-grid">
+          <div className="cat-products-grid">
             {filteredAndSortedProducts.map((product) => (
               <div 
                 key={product.style_id} 
-                className="product-card"
+                className="cat-product-card"
                 onClick={() => handleProductClick(product)}
               >
-                <div className="product-image-container">
+                <div className="cat-product-image-container">
                   <img 
-              src={`${BASE_URL}/admin/uploads/styles/${product.image}`}
-              alt={product.name}
-                    className="product-image"
+                    src={`${BASE_URL}/customer/styles/${product.image}`}
+                    alt={product.name}
+                    className="cat-product-image"
                   />
                   
-                  <div className="product-overlay">
+                  <div className="cat-product-overlay">
                     <h5> Quick View </h5>
                   </div>
                 </div>

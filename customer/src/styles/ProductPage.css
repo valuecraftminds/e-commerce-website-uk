@@ -5,6 +5,12 @@
     padding: 20px;
 }
 
+/* Product page container */
+.product-page .container {
+  max-width: 900px;
+  height:60vh;
+}
+
 /* Override global btn-primary styles for product page */
 .product-page .btn-primary {
     background: #ffffff !important;
@@ -24,14 +30,11 @@
     color: #000000 !important;
 }
 
-/* Product image styling */
 .product-image {
-    width: 100%;
-    height: auto;
-    min-height: 60vh;
-    max-height: 70vh;
-    border-radius: 10px;
-    object-fit: cover;
+  width: 400px !important;
+  height: 500px !important; 
+  border-radius: 10px;
+  object-fit: contain; 
 }
 
 /* Price styling */
