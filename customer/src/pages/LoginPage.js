@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+
+import { AuthContext } from '../context/AuthContext';
 import '../styles/LoginPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -9,6 +11,8 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -29,7 +33,7 @@ export default function LoginPage() {
     setErrorMsg('');
 
     try {
-      const response = await fetch(`${BASE_URL}/customer/api/login`, {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -42,9 +46,11 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Handle successful login
+        login(data.token, data.user);
         navigate('/');
-        console.log('token', data.token);
+        console.log('Login successful:', data);
+        console.log('token:', data.token);
+        
       } else {
         setErrorMsg(data.message || 'Login failed');
       }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -7,12 +7,15 @@ import logo from '../assets/logo.png';
 import '../styles/NavBar.css';
 import SearchSidebar from "./SearchSidebar";
 import Sidebar from './Sidebar';
+import UserMenu from "../pages/UserMenu";
+import { AuthContext } from '../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function NavigationBar() {
   const navigate = useNavigate();
+  const { isLoggedIn } = useContext(AuthContext);
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,11 +142,8 @@ export default function NavigationBar() {
               onClick={() => setShowsearchSidebar(true)}
             />
             {/* User icons */}
-            <i
-              className="bi bi-person-plus"
-              style={{ fontSize: "1.4rem", cursor: "pointer" }}
-              onClick={() => navigate('/login')}
-            />
+            <UserMenu />
+
             {/* Cart icon */}
             <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
               onClick={() => navigate('/cart')}
