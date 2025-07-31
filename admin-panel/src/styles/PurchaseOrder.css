@@ -1,0 +1,114 @@
+.purchase-order-container {
+    padding: 20px;
+}
+
+.filter-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-icon {
+    cursor: pointer;
+    margin: 0 5px;
+}
+
+.action-icon.edit:hover {
+    color: #007bff;
+}
+
+.action-icon.delete:hover {
+    color: #dc3545;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.existing-thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin: 5px;
+    border-radius: 4px;
+}
+
+.modal-dialog.modal-lg {
+    max-width: 90%;
+}
+
+/* Additional styles */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.filter-section .form-control,
+.filter-section .form-select {
+    height: 38px;
+}
+
+.filter-section .btn {
+    height: 38px;
+    padding: 0 20px;
+}
+
+.item-table {
+    margin-top: 15px;
+}
+
+.item-table th {
+    white-space: nowrap;
+}
+
+.total-row {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.status-badge.pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.approved {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+/* Modal styles */
+.modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.po-summary {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.po-summary .total-amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0d6efd;
+}

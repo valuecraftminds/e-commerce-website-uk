@@ -15,5 +15,8 @@ router.get('/get-style-variants/:style_code', StyleController.getStyleVariants);
 router.post('/add-style-variants', StyleController.addVariant);
 router.put('/update-style-variants/:variant_id', StyleController.updateVariant);
 router.delete('/delete-style-variants/:variant_id', StyleController.deleteVariant);
+router.get('/get-style-variants-by-sku/:sku', StyleController.getStyleVariantsBySKU);
+router.get('/search-variants', StyleController.searchVariants);
+
 
 module.exports = router;

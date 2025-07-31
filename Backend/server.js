@@ -40,7 +40,9 @@ const colorRoutes = require('./routes/admin/Color');
 const fitRoutes = require('./routes/admin/Fit');
 const materialRoutes = require('./routes/admin/Material');
 const licenseRoutes = require('./routes/admin/License');
-
+const currencyRoutes = require('./routes/admin/Currency');
+const supplierRoutes = require('./routes/admin/Supplier');
+const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
 
 // Route bindings
 // Customer routes
@@ -57,6 +59,9 @@ app.use('/api/admin/colors', colorRoutes);
 app.use('/api/admin/fits', fitRoutes);
 app.use('/api/admin/materials', materialRoutes);
 app.use('/api/admin/license', licenseRoutes);
+app.use('/api/admin/currencies', currencyRoutes);
+app.use('/api/admin/suppliers', supplierRoutes);
+app.use('/api/admin/po', purchaseOrderRoutes);
 
 
 // Default route

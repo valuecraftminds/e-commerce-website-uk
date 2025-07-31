@@ -212,6 +212,45 @@ const StyleController = {
     });
   },
 
+  
+  getStyleVariantsBySKU(req, res) {
+    const sql = `
+      SELECT 
+        sv.*,
+        c.color_name,
+        s.size_name,
+        f.fit_name,
+        m.material_name,
+        st.name as style_name,
+        st.style_code
+      FROM style_variants sv
+      LEFT JOIN colors c ON sv.color_id = c.color_id
+      LEFT JOIN sizes s ON sv.size_id = s.size_id
+      LEFT JOIN fits f ON sv.fit_id = f.fit_id
+      LEFT JOIN materials m ON sv.material_id = m.material_id
+      LEFT JOIN styles st ON sv.style_code = st.style_code
+      WHERE sv.sku = ?
+      LIMIT 1
+    `;
+    
+    db.query(sql, [req.params.sku], (err, results) => {
+      if (err) {
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Error fetching variant details',
+          error: err.message 
+        });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Variant not found'
+        });
+      }
+      res.json({ success: true, variant: results[0] });
+    });
+  },
+
   // Add variant
   addVariant(req, res) {
     const { company_code, style_code, color_id, size_id, fit_id, material_id, price } = req.body;
@@ -316,6 +355,44 @@ const StyleController = {
         return res.status(404).json({ success: false, message: 'Variant not found' });
       }
       res.json({ success: true, message: 'Variant deleted' });
+    });
+  },
+
+  // Search variants
+  searchVariants(req, res) {
+    const { search, company_code } = req.query;
+    
+    const sql = `
+        SELECT 
+            sv.*,
+            c.color_name,
+            s.size_name,
+            f.fit_name,
+            m.material_name,
+            st.name as style_name,
+            st.style_code
+        FROM style_variants sv
+        LEFT JOIN colors c ON sv.color_id = c.color_id
+        LEFT JOIN sizes s ON sv.size_id = s.size_id
+        LEFT JOIN fits f ON sv.fit_id = f.fit_id
+        LEFT JOIN materials m ON sv.material_id = m.material_id
+        LEFT JOIN styles st ON sv.style_code = st.style_code
+        WHERE sv.company_code = ?
+        AND (sv.sku LIKE ? OR st.name LIKE ?)
+        LIMIT 20
+    `;
+    
+    const searchTerm = `%${search}%`;
+    
+    db.query(sql, [company_code, searchTerm, searchTerm], (err, results) => {
+        if (err) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error searching variants',
+                error: err.message 
+            });
+        }
+        res.json({ success: true, variants: results });
     });
   }
 };
