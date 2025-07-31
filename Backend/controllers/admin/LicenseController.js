@@ -2,58 +2,72 @@ const db = require('../../config/database');
 
 class LicenseController {
   // Add or update license
-  static async addLicense(req, res) {
+  static addLicense(req, res) {
     const { company_code, category_count } = req.body;
 
     if (!company_code || !category_count) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    try {
-      const [existingLicense] = await db.query(
-        'SELECT * FROM admin_license WHERE company_code = ?',
-        [company_code]
-      );
+    db.query(
+      'SELECT * FROM admin_license WHERE company_code = ?',
+      [company_code],
+      (err, existingLicense) => {
+        if (err) {
+          console.error('License error:', err);
+          return res.status(500).json({ success: false, message: 'Error updating license' });
+        }
 
-      if (existingLicense.length > 0) {
-        // Update license
-        await db.query(
-          'UPDATE admin_license SET category_count = ? WHERE company_code = ?',
-          [category_count, company_code]
-        );
-      } else {
-        // Insert new license
-        await db.query(
-          'INSERT INTO admin_license (company_code, category_count) VALUES (?, ?)',
-          [company_code, category_count]
-        );
+        if (existingLicense.length > 0) {
+          // Update license
+          db.query(
+            'UPDATE admin_license SET category_count = ? WHERE company_code = ?',
+            [category_count, company_code],
+            (err) => {
+              if (err) {
+                console.error('License update error:', err);
+                return res.status(500).json({ success: false, message: 'Error updating license' });
+              }
+              res.json({ success: true, message: 'License updated successfully' });
+            }
+          );
+        } else {
+          // Insert new license
+          db.query(
+            'INSERT INTO admin_license (company_code, category_count) VALUES (?, ?)',
+            [company_code, category_count],
+            (err) => {
+              if (err) {
+                console.error('License insert error:', err);
+                return res.status(500).json({ success: false, message: 'Error updating license' });
+              }
+              res.json({ success: true, message: 'License updated successfully' });
+            }
+          );
+        }
       }
-
-      res.json({ success: true, message: 'License updated successfully' });
-    } catch (error) {
-      console.error('License error:', error);
-      res.status(500).json({ success: false, message: 'Error updating license' });
-    }
+    );
   }
 
   // Get license by company_code
-  static async getLicense(req, res) {
+  static getLicense(req, res) {
     const { company_code } = req.params;
 
-    try {
-      const [license] = await db.query(
-        'SELECT * FROM admin_license WHERE company_code = ?',
-        [company_code]
-      );
+    db.query(
+      'SELECT * FROM admin_license WHERE company_code = ?',
+      [company_code],
+      (err, license) => {
+        if (err) {
+          console.error('Get license error:', err);
+          return res.status(500).json({ success: false, message: 'Error fetching license' });
+        }
 
-      res.json({
-        success: true,
-        license: license[0] || { company_code, category_count: 0 }
-      });
-    } catch (error) {
-      console.error('Get license error:', error);
-      res.status(500).json({ success: false, message: 'Error fetching license' });
-    }
+        res.json({
+          success: true,
+          license: license[0] || { company_code, category_count: 0 }
+        });
+      }
+    );
   }
 }
 

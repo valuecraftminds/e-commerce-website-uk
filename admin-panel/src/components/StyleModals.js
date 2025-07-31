@@ -115,7 +115,7 @@ BASE_URL
               {editingStyle.image.split(',').map((img, idx) => (
                 <img
                   key={idx}
-                  src={`${BASE_URL}/admin/uploads/styles/${img}`}
+                  src={`${BASE_URL}/uploads/styles/${img.trim()}`}
                   alt={`Existing ${idx + 1}`}
                   className="existing-thumbnail"
                 />
