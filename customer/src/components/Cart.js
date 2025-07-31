@@ -2,12 +2,13 @@ import React, { useState, useContext } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { useCart } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../styles/Cart.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 const Cart = () => {
+  const navigate = useNavigate();
   const { 
     cart, 
     summary, 
@@ -75,6 +76,16 @@ const Cart = () => {
         console.error('Error clearing cart:', error);
       }
     }
+  };
+
+  const handleCheckOut = () => {
+    if (!isLoggedIn) {
+      alert('Please log in to proceed with checkout.');
+      navigate('/login');
+      return;
+    }
+    // Navigate to checkout page or handle checkout logic
+    console.log('Proceeding to checkout with cart:', cart);
   };
 
   if (loading) {
@@ -326,6 +337,7 @@ const Cart = () => {
                             variant="primary" 
                             size="lg"
                             disabled={cart.length === 0 || cart.some(item => item.stock_quantity === 0)}
+                            onClick={() => {handleCheckOut()}}
                           >
                             🚀 Proceed to Checkout
                           </Button>

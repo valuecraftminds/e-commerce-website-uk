@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import axios from "axios";
 
@@ -11,6 +11,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function ProductPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const variantId = parseInt(id, 10); // Use id as variant_id
   const { addToCart } = useCart();
@@ -26,6 +27,18 @@ export default function ProductPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
+
+  // Check if user is logged in
+  const isUserLoggedIn = () => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (token) return true;
+    
+    // Check if user context/state exists
+    // const { user } = useAuth(); 
+    // return !!user;
+    
+    return false;
+  };
 
   // Fetch product details from backend
   useEffect(() => {
@@ -75,7 +88,13 @@ export default function ProductPage() {
   };
 
   const handleBuyNow = (product) => {
-   // handle buynow logic
+    // Check if user is logged in
+    if (!isUserLoggedIn()) {
+      navigate('/login');
+      return;
+    }
+    console.log('Proceeding with buy now for product:', product);
+    // navigate to checkout page
   };
 
   // Loading state

@@ -112,7 +112,6 @@ const initialState = {
 
 // Cart Provider
 export const CartProvider = ({ children }) => {
-  // const { user } = useAuth();
   const { user } = useContext(AuthContext);
   const [state, dispatch] = useReducer(cartReducer, initialState);
   
@@ -177,18 +176,57 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     loadCart();
-  }, [user]); // Watch for user changes
+  }, [user]);
+
+  useEffect(() => {
+    loadMemo();
+  }, []);
 
   // Load cart based on user authentication
   const loadCart = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    try {
-      const token = getAuthToken();
+    // try {
+    //   const token = getAuthToken();
       
-      if (token) {
+      // if (token) {
+      //   // User is logged in, fetch from backend
+      //   await fetchCartItems();
+      // } else {
+      //   // Guest user, load from localStorage
+      //   const guestCart = getGuestCart();
+        
+      //   if (guestCart.length > 0) {
+      //     // Convert guest cart format to match backend format
+      //     const formattedCart = guestCart.map(item => ({
+      //       ...item,
+      //       total_price: item.price * item.quantity
+      //     }));
+          
+      //     dispatch({ 
+      //       type: 'SET_CART', 
+      //       payload: { 
+      //         cart: formattedCart,
+      //         summary: calculateSummary(formattedCart)
+      //       }
+      //     });
+      //   } else {
+      //     dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
+      //   }
+      // }
+    // } catch (error) {
+    //   console.error('Error loading cart:', error);
+    //   dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
+    // }
+  };
+
+
+  // Load memo from localStorage
+  const loadMemo = () => {
+    const token = getAuthToken();
+         if (token) {
         // User is logged in, fetch from backend
-        await fetchCartItems();
+         fetchCartItems();
       } else {
         // Guest user, load from localStorage
         const guestCart = getGuestCart();
@@ -211,11 +249,8 @@ export const CartProvider = ({ children }) => {
           dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
         }
       }
-    } catch (error) {
-      console.error('Error loading cart:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
-    }
   };
+
 
   // Add item to cart
   const addToCart = async (item) => {
