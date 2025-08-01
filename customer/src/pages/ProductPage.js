@@ -69,6 +69,7 @@ export default function ProductPage() {
     try {
       const result = await addToCart({
         name: product.name,
+        sku: product.sku,
         style_code: product.style_code,
         size: selectedSize,
         color: selectedColor,
@@ -94,7 +95,7 @@ export default function ProductPage() {
       return;
     }
     console.log('Proceeding with buy now for product:', product);
-    // navigate to checkout page
+    //check if customer has shipping details, if not navigate to BuyNowForm
   };
 
   // Loading state

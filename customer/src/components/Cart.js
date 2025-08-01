@@ -209,7 +209,6 @@ const Cart = () => {
                                   −
                                 </Button>
                                 <Form.Control 
-                                  // type="number"
                                   readOnly
                                   min="1"
                                   max={item.stock_quantity}
@@ -287,7 +286,7 @@ const Cart = () => {
                             <Row className="mt-3">
                               <Col>
                                 <Alert variant="danger" className="mb-0 py-2">
-                                  <small>❌ This item is currently out of stock</small>
+                                  <small>This item is currently out of stock</small>
                                 </Alert>
                               </Col>
                             </Row>

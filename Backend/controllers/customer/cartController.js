@@ -1,104 +1,77 @@
 const db = require('../../config/database');
 
 const cartController = {
-  // Add item to cart
   addToCart: (req, res) => {
-    const { style_code, variant_id, quantity = 1 } = req.body;
+    const { name, price, sku, style_code, variant_id, quantity = 1 } = req.body;
     const { company_code } = req.query;
     const customer_id = req.user?.id || null;
 
-    if (!style_code || !variant_id || quantity < 1) {
-      return res.status(400).json({
-        success: false,
-        message: 'style_code, variant_id, and valid quantity are required'
-      });
-    }
 
-    // Verify variant exists
-    const checkVariantSql = `
-      SELECT sv.*, s.name as style_name, s.image, c.color_name, sz.size_name
-      FROM style_variants sv
-      JOIN styles s ON sv.style_code = s.style_code
-      LEFT JOIN colors c ON sv.color_id = c.color_id
-      LEFT JOIN sizes sz ON sv.size_id = sz.size_id
-      WHERE sv.variant_id = ? 
-      AND sv.style_code = ? 
-      AND s.company_code = ?
-      AND sv.is_active = 1
+    // if (!style_code || !variant_id || quantity < 1) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'style_code, variant_id, and valid quantity are required'
+    //   });
+    // }
+
+    const cartSql = `
+      SELECT * FROM cart 
+      WHERE company_code = ? AND variant_id = ? AND (customer_id = ? OR customer_id IS NULL)
     `;
 
-    db.query(checkVariantSql, [variant_id, style_code, company_code], (err, variantResults) => {
-      if (err) {
-        console.error('Error checking variant:', err);
-        return res.status(500).json({ success: false, message: 'Server error' });
-      }
+    db.query(cartSql, [company_code, variant_id, customer_id], (cartErr, cartItems) => {
+      if (cartErr) return res.status(500).json({ success: false, message: 'Server error' });
 
-      if (variantResults.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Product variant not found or not available'
+      if (cartItems.length > 0) {
+        const cartItem = cartItems[0];
+        const newQty = cartItem.quantity + parseInt(quantity);
+        const updateSql = `
+          UPDATE cart SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE cart_id = ?
+        `;
+
+        db.query(updateSql, [newQty, cartItem.cart_id], (updateErr) => {
+          if (updateErr) return res.status(500).json({ success: false, message: 'Server error' });
+          return res.json({
+            success: true,
+            message: 'Cart updated successfully',
+            data: {
+              db_name: company_code,
+              company_code,
+              variant_id,
+              customer_id,
+              quantity: newQty,
+              price,
+              sku,
+              name
+              
+            }
+          });
         });
-      }
+      } else {
+        const insertSql = `
+          INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity, price, sku, name)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-      // Check if item exists in cart
-      const checkCartSql = `
-        SELECT * FROM cart 
-        WHERE company_code = ? 
-        AND variant_id = ? 
-        AND (customer_id = ? OR customer_id IS NULL)
-      `;
-
-      db.query(checkCartSql, [company_code, variant_id, customer_id], (cartErr, cartResults) => {
-        if (cartErr) {
-          console.error('Error checking cart:', cartErr);
-          return res.status(500).json({ success: false, message: 'Server error' });
-        }
-
-        if (cartResults.length > 0) {
-          // Update existing cart item
-          const newQuantity = cartResults[0].quantity + parseInt(quantity);
-          const updateSql = `
-            UPDATE cart 
-            SET quantity = ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE cart_id = ?
-          `;
-
-          db.query(updateSql, [newQuantity, cartResults[0].cart_id], (updateErr) => {
-            if (updateErr) {
-              console.error('Error updating cart:', updateErr);
-              return res.status(500).json({ success: false, message: 'Server error' });
+        db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity], (insertErr) => {
+          if (insertErr) return res.status(500).json({ success: false, message: 'Server error' });
+          return res.json({
+            success: true,
+            message: 'Item added to cart successfully',
+            data: {
+              db_name: company_code,
+              company_code,
+              variant_id,
+              customer_id,
+              quantity: parseInt(quantity),
+              price,
+              name,
+              sku
             }
-
-            res.json({
-              success: true,
-              message: 'Cart updated successfully',
-              cart_id: cartResults[0].cart_id,
-              quantity: newQuantity
-            });
           });
-        } else {
-          // Add new cart item
-          const insertSql = `
-            INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity)
-            VALUES (?, ?, ?, ?, ?)
-          `;
-
-          db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity], (insertErr, result) => {
-            if (insertErr) {
-              console.error('Error adding to cart:', insertErr);
-              return res.status(500).json({ success: false, message: 'Server error' });
-            }
-
-            res.json({
-              success: true,
-              message: 'Item added to cart successfully',
-              cart_id: result.insertId,
-              quantity: quantity
-            });
-          });
-        }
-      });
-    });
+        });
+      }
+    });
   },
 
   // Get cart items
@@ -265,69 +238,53 @@ const cartController = {
     });
   },
 
+//merge guest cart 
 mergeGuestCart: (req, res) => {
-  const { guest_cart } = req.body;
-  const { company_code } = req.query;
-  const customer_id = req.user?.id;
+    const { guest_cart } = req.body;
+    const { company_code } = req.query;
+    const customer_id = req.user?.id;
 
-  if (!customer_id) {
-    return res.status(401).json({
-      success: false,
-      message: 'User must be logged in to merge cart'
-    });
-  }
+    if (!customer_id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User must be logged in to merge cart'
+      });
+    }
 
-  if (!guest_cart || !Array.isArray(guest_cart)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid guest cart data'
-    });
-  }
+    if (!guest_cart || !Array.isArray(guest_cart)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid guest cart data'
+      });
+    }
 
-  if (guest_cart.length === 0) {
-    return res.json({
-      success: true,
-      message: 'No guest cart items to merge'
-    });
-  }
+    if (guest_cart.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No guest cart items to merge',
+        data: {
+          db_name: company_code,
+          company_code,
+          customer_id,
+          processed_items: 0
+        }
+      });
+    }
 
-  // Process each guest cart item
-  let processedItems = 0;
-  let errors = [];
+    let processedItems = 0;
+    let errors = [];
+    let mergedItems = [];
 
-  const processGuestItem = (guestItem, callback) => {
-    const { style_code, variant_id, quantity } = guestItem;
+    const processGuestItem = (guestItem, callback) => {
+      const { style_code, variant_id, quantity } = guestItem;
 
-    // Verify variant exists and is active
-    const checkVariantSql = `
-      SELECT sv.*, s.name as style_name
-      FROM style_variants sv
-      JOIN styles s ON sv.style_code = s.style_code
-      WHERE sv.variant_id = ? 
-      AND sv.style_code = ? 
-      AND s.company_code = ?
-      AND sv.is_active = 1
-    `;
-
-    db.query(checkVariantSql, [variant_id, style_code, company_code], (err, variantResults) => {
-      if (err) {
-        errors.push(`Error checking variant ${variant_id}: ${err.message}`);
-        return callback();
-      }
-
-      if (variantResults.length === 0) {
-        errors.push(`Variant ${variant_id} not found or inactive`);
-        return callback();
-      }
-
-      // Check if item already exists in user's cart
       const checkCartSql = `
         SELECT * FROM cart 
         WHERE company_code = ? 
         AND variant_id = ? 
         AND customer_id = ?
       `;
-
+      
       db.query(checkCartSql, [company_code, variant_id, customer_id], (cartErr, cartResults) => {
         if (cartErr) {
           errors.push(`Error checking cart for variant ${variant_id}: ${cartErr.message}`);
@@ -335,68 +292,84 @@ mergeGuestCart: (req, res) => {
         }
 
         if (cartResults.length > 0) {
-          // Update existing cart item
-          const newQuantity = cartResults[0].quantity + parseInt(quantity);
+          const cartItem = cartResults[0];
+          const newQuantity = cartItem.quantity + parseInt(quantity);
           const updateSql = `
             UPDATE cart 
             SET quantity = ?, updated_at = CURRENT_TIMESTAMP 
             WHERE cart_id = ?
           `;
 
-          db.query(updateSql, [newQuantity, cartResults[0].cart_id], (updateErr) => {
+          db.query(updateSql, [newQuantity, cartItem.cart_id], (updateErr) => {
             if (updateErr) {
               errors.push(`Error updating cart for variant ${variant_id}: ${updateErr.message}`);
             } else {
               processedItems++;
+              mergedItems.push({
+                db_name: company_code,
+                company_code,
+                variant_id,
+                customer_id,
+                quantity: newQuantity
+              });
             }
             callback();
           });
         } else {
-          // Add new cart item
           const insertSql = `
-            INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity, name)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity)
+            VALUES (?, ?, ?, ?, ?)
           `;
-
-          db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity, name], (insertErr) => {
+          db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity], (insertErr) => {
             if (insertErr) {
               errors.push(`Error adding variant ${variant_id} to cart: ${insertErr.message}`);
             } else {
               processedItems++;
+              mergedItems.push({
+                db_name: company_code,
+                company_code,
+                variant_id,
+                customer_id,
+                quantity: parseInt(quantity)
+              });
             }
             callback();
           });
         }
       });
-    });
-  };
+    };
 
-  // Process all guest cart items
-  let completed = 0;
-  guest_cart.forEach((guestItem) => {
-    processGuestItem(guestItem, () => {
-      completed++;
-      if (completed === guest_cart.length) {
-        // All items processed, send response
-        if (errors.length > 0) {
-          console.error('Cart merge errors:', errors);
-          res.json({
+    // Start processing all items
+    let completed = 0;
+    guest_cart.forEach((item) => {
+      processGuestItem(item, () => {
+        completed++;
+        if (completed === guest_cart.length) {
+          const response = {
             success: true,
-            message: `Cart merged with ${processedItems} items. ${errors.length} items had errors.`,
-            processed_items: processedItems,
-            errors: errors
-          });
-        } else {
-          res.json({
-            success: true,
-            message: `Successfully merged ${processedItems} items to your cart`,
-            processed_items: processedItems
-          });
+            message:
+              errors.length > 0
+                ? `Cart merged with ${processedItems} items. ${errors.length} items had errors.`
+                : `Successfully merged ${processedItems} items to your cart`,
+            data: {
+              db_name: company_code,
+              company_code,
+              customer_id,
+              processed_items: processedItems,
+              merged_items: mergedItems
+            }
+          };
+          
+          if (errors.length > 0) {
+            response.data.errors = errors;
+            console.error('Cart merge errors:', errors);
+          }
+
+          return res.json(response);
         }
-      }
+      });
     });
-  });
-}
-}
+  }
+};
 
 module.exports = cartController;
