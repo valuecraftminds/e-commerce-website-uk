@@ -161,7 +161,7 @@ export const CartProvider = ({ children }) => {
   // Fetch cart items from backend
   const fetchCartItems = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/customer/cart`, getAxiosConfig());
+      const response = await axios.get(`${BASE_URL}/customer/cart/get-cart`, getAxiosConfig());
 
       if (response.data.success) {
         dispatch({ type: 'SET_CART', payload: response.data });
@@ -184,51 +184,20 @@ export const CartProvider = ({ children }) => {
 
   // Load cart based on user authentication
   const loadCart = async () => {
+    const token = getAuthToken();
     dispatch({ type: 'SET_LOADING', payload: true });
-    
-    // try {
-    //   const token = getAuthToken();
-      
-      // if (token) {
-      //   // User is logged in, fetch from backend
-      //   await fetchCartItems();
-      // } else {
-      //   // Guest user, load from localStorage
-      //   const guestCart = getGuestCart();
-        
-      //   if (guestCart.length > 0) {
-      //     // Convert guest cart format to match backend format
-      //     const formattedCart = guestCart.map(item => ({
-      //       ...item,
-      //       total_price: item.price * item.quantity
-      //     }));
-          
-      //     dispatch({ 
-      //       type: 'SET_CART', 
-      //       payload: { 
-      //         cart: formattedCart,
-      //         summary: calculateSummary(formattedCart)
-      //       }
-      //     });
-      //   } else {
-      //     dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
-      //   }
-      // }
-    // } catch (error) {
-    //   console.error('Error loading cart:', error);
-    //   dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
-    // }
+     
+         if (token) {
+        // User is logged in, fetch from backend
+         fetchCartItems();
+         }
+
   };
 
 
   // Load memo from localStorage
   const loadMemo = () => {
-    const token = getAuthToken();
-         if (token) {
-        // User is logged in, fetch from backend
-         fetchCartItems();
-      } else {
-        // Guest user, load from localStorage
+       // Guest user, load from localStorage
         const guestCart = getGuestCart();
         
         if (guestCart.length > 0) {
@@ -248,17 +217,16 @@ export const CartProvider = ({ children }) => {
         } else {
           dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
         }
-      }
-  };
+      };
 
 
   // Add item to cart
   const addToCart = async (item) => {
     try {
-      // Validate required fields including variant_id
-      if (!item || !item.style_code || !item.variant_id) {
-        throw new Error('Missing required product information');
-      }
+      // Validate required fields
+      // if (!item || !item.style_code || !item.variant_id) {
+      //   throw new Error('Missing required product information');
+      // }
 
       if (!item.size || !item.color) {
         throw new Error('Please select size and color');
@@ -268,11 +236,13 @@ export const CartProvider = ({ children }) => {
 
       if (token) {
         // User is logged in, add to backend
-        const response = await axios.post(`${BASE_URL}/cart/add`, {
+        const response = await axios.post(`${BASE_URL}/customer/cart/add`, {
           style_code: item.style_code,
           variant_id: item.variant_id,
           quantity: item.quantity || 1,
-          price: item.price
+          price: item.price,
+          name: item.name,
+          sku: item.sku
         }, getAxiosConfig());
 
         console.log('style', item);
@@ -419,7 +389,7 @@ export const CartProvider = ({ children }) => {
       if (token) {
         // User is logged in, clear backend cart
         const response = await axios.delete(
-          `${BASE_URL}/customer/cart/clear`,
+          `${BASE_URL}/customer/cart/clear-all`,
           getAxiosConfig()
         );
         
@@ -462,7 +432,7 @@ export const CartProvider = ({ children }) => {
       }));
 
       const response = await axios.post(
-        `${BASE_URL}/cart/merge`,
+        `${BASE_URL}/customer/cart/merge`,
         { guest_cart: guestCartData },
         getAxiosConfig()
       );

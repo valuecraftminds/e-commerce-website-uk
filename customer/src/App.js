@@ -65,38 +65,6 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <UserMenu />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/orders" element={
-                <ProtectedRoute>
-                  <div className="container mt-4">
-                    <h2>My Orders</h2>
-                    <p>Orders page coming soon...</p>
-                  </div>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/wishlist" element={
-                <ProtectedRoute>
-                  <div className="container mt-4">
-                    <h2>My Wishlist</h2>
-                    <p>Wishlist page coming soon...</p>
-                  </div>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/account-settings" element={
-                <ProtectedRoute>
-                  <div className="container mt-4">
-                    <h2>Account Settings</h2>
-                    <p>Account settings page coming soon...</p>
-                  </div>
-                </ProtectedRoute>
-              } />
             </Routes>
           </main>
           <Footer />

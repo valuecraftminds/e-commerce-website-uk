@@ -45,18 +45,16 @@ export default function Home() {
   }, []);
 
 useEffect(() => {
-   getRate();
-  // const fetchExchangeRates = async () => {
-   
-    // try {
-    //   const response = await axios.get('https://api.exchangerate.host/latest?base=USD&symbols=GBP,LKR');
-    //   console.log(response.data);
-    //   setExchangeRates(response.data.rates);
-    // } catch (error) {
-    //   console.error('Failed to fetch exchange rates:', error);
-    // }
-  // };
-  // fetchExchangeRates();
+  const fetchExchangeRates = async () => {
+    try {
+      const response = await axios.get('https://currencyapi.com//latest?base=USD&symbols=GBP,LKR'); 
+      console.log(response.data);
+      setExchangeRates(response.data.rates);
+    } catch (error) {
+      console.error('Failed to fetch exchange rates:', error);
+    }
+  };
+  fetchExchangeRates();
 }, [country]);
 
 const getRate = () => {
@@ -64,9 +62,9 @@ const getRate = () => {
     case 'US':
       return 1;
     case 'UK':
-      return exchangeRates['GBP'] || 0.75; // Default to 0.75 if rate not available
+      return exchangeRates['GBP'] || 0.75; // Default rate uf rate not available
     case 'SL':
-      return exchangeRates['LKR'] || 320; // Default to 320 if rate not available
+      return exchangeRates['LKR'] || 320; // Default rate if rate not available
     default:
       return 1;
   }
@@ -75,14 +73,20 @@ const getRate = () => {
 const symbol = currencySymbols[country] || '$';
 const rate = getRate();
 
-const formatPrice = (minPrice, maxPrice) => {
-  if (!minPrice && !maxPrice) return "Price not defined";
+const formatPrice = (minPrice) => {
+  if (!minPrice) return "Price not defined";
   const convert = (price) => (price * rate).toFixed(2);
-  if (minPrice === maxPrice) return `${symbol}${convert(minPrice)}`;
-  return `${symbol}${convert(minPrice)} - ${symbol}${convert(maxPrice)}`;
+
+// const formatPrice = (minPrice, maxPrice) => {
+//   if (!minPrice && !maxPrice) return "Price not defined";
+//   const convert = (price) => (price * rate).toFixed(2);
+//   if (minPrice === maxPrice) return `${symbol}${convert(minPrice)}`;
+//   return `${symbol}${convert(minPrice)} - ${symbol}${convert(maxPrice)}`;
+// };
+
+
+  return `${symbol}${convert(minPrice)}`;
 };
-
-
 
   return (
     <>
@@ -139,8 +143,11 @@ const formatPrice = (minPrice, maxPrice) => {
                     }
                   </p>
                   <div className="home-product-price">
-                    <span className={product.min_price && product.max_price ? "price-range" : "current-price"}>
+                    {/* <span className={product.min_price && product.max_price ? "price-range" : "current-price"}>
                       {formatPrice(product.min_price, product.max_price)}
+                    </span> */}
+                    <span >
+                      {formatPrice(product.min_price)}
                     </span>
                   </div> 
                  {product.category_name && (
