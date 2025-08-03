@@ -105,6 +105,7 @@ export default function NavigationBar() {
   // handle country change
   const handleCountryChange = (e) => {
     setCountry(e.target.value);
+    window.location.reload();
   };
 
   
@@ -147,7 +148,7 @@ export default function NavigationBar() {
           </div>
 
           {/* Right side */}
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center right-navbar">
             {/* select country */}
             <select className="form-select"
               aria-label="Select country"

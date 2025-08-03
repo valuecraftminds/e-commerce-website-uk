@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import axios from "axios";
 
 import SuccessMsg from "../components/SuccessMsg";
 import { useCart } from "../context/CartContext";
+import { CountryContext } from "../context/CountryContext";
 import "../styles/ProductPage.css"; 
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -13,13 +14,14 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 export default function ProductPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const variantId = parseInt(id, 10); // Use id as variant_id
+  const variantId = parseInt(id, 10);
   const { addToCart } = useCart();
 
   // State for product data and loading
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exchangeRates, setExchangeRates] = useState({});
 
   // State for user selections
   const [selectedSize, setSelectedSize] = useState(null);
@@ -28,28 +30,42 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
 
+  const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+  const { country } = useContext(CountryContext);
+
   // Check if user is logged in
   const isUserLoggedIn = () => {
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    if (token) return true;
-    
-    // Check if user context/state exists
-    // const { user } = useAuth(); 
-    // return !!user;
-    
-    return false;
+    return !!token;
   };
+
+  // Fetch exchange rates
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        if (response.data.success) {
+          setExchangeRates(response.data.rates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+        setExchangeRates({
+          GBP: 0.75,
+          LKR: 320
+        });
+      }
+    };
+    fetchExchangeRates();
+  }, []);
 
   // Fetch product details from backend
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/product/${variantId}`,
-          {
-            params: { company_code: COMPANY_CODE }
-          }
-        );
+        const response = await axios.get(`${BASE_URL}/customer/product/${variantId}`, {
+          params: { company_code: COMPANY_CODE }
+        });
         setProduct(response.data);
         setError(null);
       } catch (err) {
@@ -64,6 +80,27 @@ export default function ProductPage() {
       fetchProductDetails();
     }
   }, [variantId]);
+
+  const getRate = () => {
+    switch (country) {
+      case 'US':
+        return 1;
+      case 'UK':
+        return exchangeRates['GBP'] || 0.75;
+      case 'SL':
+        return exchangeRates['LKR'] || 320;
+      default:
+        return 1;
+    }
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return "Price not available";
+    const symbol = currencySymbols[country] || '$';
+    const rate = getRate();
+    const convertedPrice = (price * rate).toFixed(2);
+    return `${symbol}${convertedPrice}`;
+  };
 
   const handleAddToCart = async () => {
     try {
@@ -89,13 +126,12 @@ export default function ProductPage() {
   };
 
   const handleBuyNow = (product) => {
-    // Check if user is logged in
     if (!isUserLoggedIn()) {
       navigate('/login');
       return;
     }
     console.log('Proceeding with buy now for product:', product);
-    //check if customer has shipping details, if not navigate to BuyNowForm
+    // Check if customer has shipping details, if not navigate to ShippingDetails page
   };
 
   // Loading state
@@ -128,7 +164,7 @@ export default function ProductPage() {
 
   return (
     <div className="product-page">
-      <Container className="my-5 container ">
+      <Container className="my-5 container">
         <Row>
           <Col className="img-col" md={6}>
             <Image 
@@ -142,13 +178,13 @@ export default function ProductPage() {
             <h1>{product.name}</h1>
             <p>{product.description}</p>
             <h5 className="price"> 
-              ${product.price}
+              {formatPrice(product.price)}
             </h5>
 
             <div className="mb-3">
               {product.available_colors && product.available_colors.length > 0 ? (
                 product.available_colors
-                  .filter(color => color) // Remove null/undefined colors
+                  .filter(color => color)
                   .map((color) => (
                     <Button
                       key={color}
@@ -159,14 +195,14 @@ export default function ProductPage() {
                     </Button>
                   ))
               ) : (
-              <p>Colors not available</p>
+                <p>Colors not available</p>
               )}
             </div>
 
             <div className="mb-3">
               {product.available_sizes && product.available_sizes.length > 0 ? (
                 product.available_sizes
-                  .filter(size => size) // Remove null/undefined sizes
+                  .filter(size => size)
                   .map((size) => (
                     <Button
                       key={size}

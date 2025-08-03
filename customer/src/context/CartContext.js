@@ -1,26 +1,32 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import axios from 'axios';
-import { AuthContext } from './AuthContext';
 
+import { AuthContext } from './AuthContext';
+import { CountryContext } from './CountryContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
-// Create the CartContext first
 const CartContext = createContext();
 
-// Helper function to calculate cart summary
-const calculateSummary = (items) => {
+// Currency conversion helpers
+const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+
+// Helper function to calculate cart summary with currency conversion
+const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
   const total_items = items.reduce((sum, item) => sum + item.quantity, 0);
   const total_amount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const converted_amount = total_amount * exchangeRate;
   
   return {
     total_items,
-    total_amount: total_amount.toFixed(2)
+    total_amount: converted_amount.toFixed(2),
+    currency_symbol: currencySymbol,
+    original_amount: total_amount.toFixed(2)
   };
 };
 
-// Cart reducer - moved hooks outside of reducer
+// Cart reducer
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'SET_LOADING':
@@ -30,8 +36,14 @@ const cartReducer = (state, action) => {
       return { 
         ...state, 
         items: action.payload.cart || [], 
-        summary: action.payload.summary || { total_items: 0, total_amount: '0.00' },
+        summary: action.payload.summary || { total_items: 0, total_amount: '0.00', currency_symbol: '$' },
         loading: false 
+      };
+    
+    case 'UPDATE_CURRENCY':
+      return {
+        ...state,
+        summary: calculateSummary(state.items, action.payload.rate, action.payload.symbol)
       };
     
     case 'ADD_TO_CART':
@@ -48,14 +60,14 @@ const cartReducer = (state, action) => {
         return { 
           ...state, 
           items: updatedItems,
-          summary: calculateSummary(updatedItems)
+          summary: calculateSummary(updatedItems, action.payload.exchangeRate, action.payload.currencySymbol)
         };
       } else {
         const newItems = [...state.items, action.payload];
         return { 
           ...state, 
           items: newItems,
-          summary: calculateSummary(newItems)
+          summary: calculateSummary(newItems, action.payload.exchangeRate, action.payload.currencySymbol)
         };
       }
     
@@ -73,22 +85,22 @@ const cartReducer = (state, action) => {
       return { 
         ...state, 
         items: updatedItems,
-        summary: calculateSummary(updatedItems)
+        summary: calculateSummary(updatedItems, action.payload.exchangeRate, action.payload.currencySymbol)
       };
     
     case 'REMOVE_FROM_CART':
-      const filteredItems = state.items.filter(item => item.cart_id !== action.payload);
+      const filteredItems = state.items.filter(item => item.cart_id !== action.payload.cart_id);
       return { 
         ...state, 
         items: filteredItems,
-        summary: calculateSummary(filteredItems)
+        summary: calculateSummary(filteredItems, action.payload.exchangeRate, action.payload.currencySymbol)
       };
     
     case 'CLEAR_CART':
       return { 
         ...state, 
         items: [], 
-        summary: { total_items: 0, total_amount: '0.00' }
+        summary: { total_items: 0, total_amount: '0.00', currency_symbol: action.payload?.currencySymbol || '$' }
       };
     
     case 'SET_ERROR':
@@ -105,7 +117,7 @@ const cartReducer = (state, action) => {
 // Initial state
 const initialState = {
   items: [],
-  summary: { total_items: 0, total_amount: '0.00' },
+  summary: { total_items: 0, total_amount: '0.00', currency_symbol: '$' },
   loading: false,
   error: null
 };
@@ -113,7 +125,69 @@ const initialState = {
 // Cart Provider
 export const CartProvider = ({ children }) => {
   const { user } = useContext(AuthContext);
+  const { country } = useContext(CountryContext);
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [exchangeRates, setExchangeRates] = useState({});
+  
+  // Get current exchange rate and currency symbol
+  const getCurrentCurrency = () => {
+    const symbol = currencySymbols[country] || '$';
+    let rate = 1;
+    
+    switch (country) {
+      case 'US':
+        rate = 1;
+        break;
+      case 'UK':
+        rate = exchangeRates['GBP'] || 0.75;
+        break;
+      case 'SL':
+        rate = exchangeRates['LKR'] || 320;
+        break;
+      default:
+        rate = 1;
+    }
+    
+    return { rate, symbol };
+  };
+
+  // Fetch exchange rates
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        if (response.data.success) {
+          setExchangeRates(response.data.rates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+        setExchangeRates({
+          GBP: 0.75,
+          LKR: 320
+        });
+      }
+    };
+    fetchExchangeRates();
+  }, []);
+
+  // Update cart summary when country or exchange rates change
+  useEffect(() => {
+    if (state.items.length > 0) {
+      const { rate, symbol } = getCurrentCurrency();
+      dispatch({ 
+        type: 'UPDATE_CURRENCY', 
+        payload: { rate, symbol } 
+      });
+    }
+  }, [country, exchangeRates, state.items]);
+
+  // Format price with current currency
+  const formatPrice = (price) => {
+    if (!price) return "0.00";
+    const { rate, symbol } = getCurrentCurrency();
+    const convertedPrice = (price * rate).toFixed(2);
+    return `${symbol}${convertedPrice}`;
+  };
   
   // Get auth token
   const getAuthToken = () => {
@@ -138,7 +212,6 @@ export const CartProvider = ({ children }) => {
   const getGuestCart = () => {
     try {
       const guestCart = localStorage.getItem(`guest_cart_${COMPANY_CODE}`);
-      console.log('Guest cart loaded:', guestCart);
       return guestCart ? JSON.parse(guestCart) : [];
     } catch (error) {
       console.error('Error parsing guest cart:', error);
@@ -164,7 +237,16 @@ export const CartProvider = ({ children }) => {
       const response = await axios.get(`${BASE_URL}/customer/cart/get-cart`, getAxiosConfig());
 
       if (response.data.success) {
-        dispatch({ type: 'SET_CART', payload: response.data });
+        const { rate, symbol } = getCurrentCurrency();
+        const summary = calculateSummary(response.data.cart || [], rate, symbol);
+        
+        dispatch({ 
+          type: 'SET_CART', 
+          payload: { 
+            ...response.data, 
+            summary 
+          } 
+        });
         return response.data;
       }
     } catch (error) {
@@ -172,7 +254,6 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
     }
   };
-
 
   useEffect(() => {
     loadCart();
@@ -187,52 +268,54 @@ export const CartProvider = ({ children }) => {
     const token = getAuthToken();
     dispatch({ type: 'SET_LOADING', payload: true });
      
-         if (token) {
-        // User is logged in, fetch from backend
-         fetchCartItems();
-         }
-
+    if (token) {
+      // User is logged in, fetch from backend
+      fetchCartItems();
+    }
   };
-
 
   // Load memo from localStorage
   const loadMemo = () => {
-       // Guest user, load from localStorage
-        const guestCart = getGuestCart();
-        
-        if (guestCart.length > 0) {
-          // Convert guest cart format to match backend format
-          const formattedCart = guestCart.map(item => ({
-            ...item,
-            total_price: item.price * item.quantity
-          }));
-          
-          dispatch({ 
-            type: 'SET_CART', 
-            payload: { 
-              cart: formattedCart,
-              summary: calculateSummary(formattedCart)
-            }
-          });
-        } else {
-          dispatch({ type: 'SET_CART', payload: { cart: [], summary: { total_items: 0, total_amount: '0.00' } } });
+    // Guest user, load from localStorage
+    const guestCart = getGuestCart();
+    
+    if (guestCart.length > 0) {
+      // Convert guest cart format to match backend format
+      const formattedCart = guestCart.map(item => ({
+        ...item,
+        total_price: item.price * item.quantity
+      }));
+      
+      const { rate, symbol } = getCurrentCurrency();
+      
+      dispatch({ 
+        type: 'SET_CART', 
+        payload: { 
+          cart: formattedCart,
+          summary: calculateSummary(formattedCart, rate, symbol)
         }
-      };
-
+      });
+    } else {
+      const { symbol } = getCurrentCurrency();
+      dispatch({ 
+        type: 'SET_CART', 
+        payload: { 
+          cart: [], 
+          summary: { total_items: 0, total_amount: '0.00', currency_symbol: symbol } 
+        } 
+      });
+    }
+  };
 
   // Add item to cart
   const addToCart = async (item) => {
     try {
-      // Validate required fields
-      // if (!item || !item.style_code || !item.variant_id) {
-      //   throw new Error('Missing required product information');
-      // }
-
       if (!item.size || !item.color) {
         throw new Error('Please select size and color');
       }
 
       const token = getAuthToken();
+      const { rate, symbol } = getCurrentCurrency();
 
       if (token) {
         // User is logged in, add to backend
@@ -244,8 +327,6 @@ export const CartProvider = ({ children }) => {
           name: item.name,
           sku: item.sku
         }, getAxiosConfig());
-
-        console.log('style', item);
 
         if (response.data.success) {
           // Refresh cart items after successful addition
@@ -277,10 +358,10 @@ export const CartProvider = ({ children }) => {
           size_name: item.size,
           material_name: item.material_name,
           fit_name: item.fit_name,
-          total_price: item.price * (item.quantity || 1)
+          total_price: item.price * (item.quantity || 1),
+          exchangeRate: rate,
+          currencySymbol: symbol
         };
-
-        console.log('item name', item.name);
         
         if (existingItemIndex >= 0) {
           guestCart[existingItemIndex].quantity += (item.quantity || 1);
@@ -291,7 +372,7 @@ export const CartProvider = ({ children }) => {
         }
         
         setGuestCart(guestCart);
-        dispatch({ type: 'ADD_TO_CART', payload: cartItem });
+        dispatch({ type: 'ADD_TO_CART', payload: { ...cartItem, exchangeRate: rate, currencySymbol: symbol } });
         
         return { success: true, message: 'Item added to cart successfully' };
       }
@@ -307,6 +388,7 @@ export const CartProvider = ({ children }) => {
   const updateQuantity = async (cart_id, quantity) => {
     try {
       const token = getAuthToken();
+      const { rate, symbol } = getCurrentCurrency();
       
       if (token) {
         // User is logged in, update in backend
@@ -317,7 +399,10 @@ export const CartProvider = ({ children }) => {
         );
         
         if (response.data.success) {
-          dispatch({ type: 'UPDATE_QUANTITY', payload: { cart_id, quantity } });
+          dispatch({ 
+            type: 'UPDATE_QUANTITY', 
+            payload: { cart_id, quantity, exchangeRate: rate, currencySymbol: symbol } 
+          });
           return { success: true, message: response.data.message };
         } else {
           dispatch({ type: 'SET_ERROR', payload: response.data.message });
@@ -332,7 +417,10 @@ export const CartProvider = ({ children }) => {
           guestCart[itemIndex].quantity = quantity;
           guestCart[itemIndex].total_price = guestCart[itemIndex].price * quantity;
           setGuestCart(guestCart);
-          dispatch({ type: 'UPDATE_QUANTITY', payload: { cart_id, quantity } });
+          dispatch({ 
+            type: 'UPDATE_QUANTITY', 
+            payload: { cart_id, quantity, exchangeRate: rate, currencySymbol: symbol } 
+          });
           return { success: true, message: 'Cart updated successfully' };
         } else {
           return { success: false, message: 'Item not found in cart' };
@@ -350,6 +438,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (cart_id) => {
     try {
       const token = getAuthToken();
+      const { rate, symbol } = getCurrentCurrency();
       
       if (token) {
         // User is logged in, remove from backend
@@ -359,7 +448,10 @@ export const CartProvider = ({ children }) => {
         );
         
         if (response.data.success) {
-          dispatch({ type: 'REMOVE_FROM_CART', payload: cart_id });
+          dispatch({ 
+            type: 'REMOVE_FROM_CART', 
+            payload: { cart_id, exchangeRate: rate, currencySymbol: symbol } 
+          });
           return { success: true, message: response.data.message };
         } else {
           dispatch({ type: 'SET_ERROR', payload: response.data.message });
@@ -370,7 +462,10 @@ export const CartProvider = ({ children }) => {
         const guestCart = getGuestCart();
         const filteredCart = guestCart.filter(item => item.cart_id !== cart_id);
         setGuestCart(filteredCart);
-        dispatch({ type: 'REMOVE_FROM_CART', payload: cart_id });
+        dispatch({ 
+          type: 'REMOVE_FROM_CART', 
+          payload: { cart_id, exchangeRate: rate, currencySymbol: symbol } 
+        });
         return { success: true, message: 'Item removed from cart successfully' };
       }
     } catch (error) {
@@ -385,6 +480,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       const token = getAuthToken();
+      const { symbol } = getCurrentCurrency();
       
       if (token) {
         // User is logged in, clear backend cart
@@ -394,7 +490,7 @@ export const CartProvider = ({ children }) => {
         );
         
         if (response.data.success) {
-          dispatch({ type: 'CLEAR_CART' });
+          dispatch({ type: 'CLEAR_CART', payload: { currencySymbol: symbol } });
           return { success: true, message: response.data.message };
         } else {
           dispatch({ type: 'SET_ERROR', payload: response.data.message });
@@ -403,7 +499,7 @@ export const CartProvider = ({ children }) => {
       } else {
         // Guest user, clear localStorage
         clearGuestCart();
-        dispatch({ type: 'CLEAR_CART' });
+        dispatch({ type: 'CLEAR_CART', payload: { currencySymbol: symbol } });
         return { success: true, message: 'Cart cleared successfully' };
       }
     } catch (error) {
@@ -472,7 +568,11 @@ export const CartProvider = ({ children }) => {
     clearCart,
     loadCart,
     mergeCartOnLogin,
-    clearError
+    clearError,
+    
+    // Currency helpers
+    formatPrice,
+    getCurrentCurrency
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
