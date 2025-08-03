@@ -30,6 +30,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const customerRoutes = require('./routes/customer/CustomerRoutes');
 const customerAuthRoutes = require('./routes/customer/CustomerAuthRoutes');
 const cartRoutes = require('./routes/customer/CartRoutes');
+const currencyRoutes = require('./routes/customer/CurrencyRoutes');
 
 // Admin
 const adminAuthRoutes = require('./routes/admin/AdminAuth');
@@ -47,6 +48,7 @@ const licenseRoutes = require('./routes/admin/License');
 app.use('/customer', customerRoutes);
 app.use('/customer/auth', customerAuthRoutes);
 app.use('/customer/cart', cartRoutes);
+app.use('/customer/currency', currencyRoutes);
 
 // Admin routes
 app.use('/api/admin/auth', adminAuthRoutes);

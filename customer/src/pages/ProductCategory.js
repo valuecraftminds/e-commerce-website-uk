@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import '../styles/ProductCategory.css';
+import { CountryContext } from "../context/CountryContext";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -14,12 +15,15 @@ const ProductCategory = () => {
   const [allProducts, setAllProducts] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [, setCategoryInfo] = useState(null);
+  const [exchangeRates, setExchangeRates] = useState({});
   
   // Filter states
   const [filters, setFilters] = useState({
     priceSort: ''
   });
+
+  const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+  const { country } = useContext(CountryContext);
 
   // Format display names
   const formatDisplayName = (name) => {
@@ -30,6 +34,25 @@ const ProductCategory = () => {
   const categoryDisplay = formatDisplayName(category);
   const productTypeDisplay = formatDisplayName(productType);
 
+  // Fetch exchange rates
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        if (response.data.success) {
+          setExchangeRates(response.data.rates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+        setExchangeRates({
+          GBP: 0.75,
+          LKR: 320
+        });
+      }
+    };
+    fetchExchangeRates();
+  }, []);
+
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -37,7 +60,7 @@ const ProductCategory = () => {
         setLoading(true);
         setError(null);
 
-        // get all categories to find the main category ID
+        // Get all categories to find the main category ID
         const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`, {
           params: { company_code: COMPANY_CODE }
         });
@@ -54,8 +77,6 @@ const ProductCategory = () => {
           setLoading(false);
           return;
         }
-
-        setCategoryInfo(matchedMainCategory);
 
         // Get product types (subcategories) for this main category
         const productTypesResponse = await axios.get(
@@ -77,13 +98,11 @@ const ProductCategory = () => {
           return;
         }
 
-        // fetch styles from the specific subcategory
+        // Fetch styles from the specific subcategory
         const stylesResponse = await axios.get(
           `${BASE_URL}/customer/styles-by-parent-category/${matchedMainCategory.category_id}`,
           {
-            params: {
-              company_code: COMPANY_CODE
-            }
+            params: { company_code: COMPANY_CODE }
           }
         );
 
@@ -106,6 +125,50 @@ const ProductCategory = () => {
       fetchProducts();
     }
   }, [category, productType]);
+
+  const getRate = () => {
+    switch (country) {
+      case 'US':
+        return 1;
+      case 'UK':
+        return exchangeRates['GBP'] || 0.75;
+      case 'SL':
+        return exchangeRates['LKR'] || 320;
+      default:
+        return 1;
+    }
+  };
+
+  // const formatPrice = (minPrice, maxPrice) => {
+  //   if (!minPrice && !maxPrice) return "Price on request";
+  //   const symbol = currencySymbols[country] || '$';
+  //   const rate = getRate();
+    
+  //   if (minPrice && maxPrice) {
+  //     if (minPrice === maxPrice) {
+  //       const convertedPrice = (minPrice * rate).toFixed(2);
+  //       return `${symbol}${convertedPrice}`;
+  //     } else {
+  //       const convertedMinPrice = (minPrice * rate).toFixed(2);
+  //       const convertedMaxPrice = (maxPrice * rate).toFixed(2);
+  //       return `${symbol}${convertedMinPrice} - ${symbol}${convertedMaxPrice}`;
+  //     }
+  //   } else if (minPrice) {
+  //     const convertedPrice = (minPrice * rate).toFixed(2);
+  //     return `${symbol}${convertedPrice}`;
+  //   }
+    
+  //   return "Price on request";
+  // };
+
+
+   const formatPrice = (minPrice) => {
+    if (!minPrice) return "Price not defined";
+    const symbol = currencySymbols[country] || '$';
+    const rate = getRate();
+    const convertedPrice = (minPrice * rate).toFixed(2);
+    return `${symbol}${convertedPrice}`;
+  };
 
   // Apply filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
@@ -273,7 +336,7 @@ const ProductCategory = () => {
                   />
                   
                   <div className="cat-product-overlay">
-                    <h5> Quick View </h5>
+                    <h5>Quick View</h5>
                   </div>
                 </div>
                 
@@ -286,21 +349,10 @@ const ProductCategory = () => {
                     }
                   </p>
                   <div className="product-price">
-                    {product.min_price && product.max_price ? (
-                      product.min_price === product.max_price ? (
-                        <span className="current-price">
-                          ${product.min_price}
-                        </span>
-                      ) : (
-                        <span className="price-range">
-                          ${product.min_price} - ${product.max_price}
-                        </span>
-                      )
-                    ) : (
-                      <span className="current-price">
-                        Price on request
-                      </span>
-                    )}
+                    {/* <span className={product.min_price && product.max_price && product.min_price !== product.max_price ? "price-range" : "current-price"}>
+                      {formatPrice(product.min_price, product.max_price)}
+                    </span> */}
+                    <span>{formatPrice(product.min_price)}</span>
                   </div>
                   
                   <div className="product-category">
@@ -318,16 +370,13 @@ const ProductCategory = () => {
               <i className="fas fa-search fa-3x"></i>
               <h3>No products found</h3>
               <p>
-                {filters.searchTerm
-                  ? "Try adjusting your filters to see more results."
-                  : `We couldn't find any ${productTypeDisplay.toLowerCase()} in the ${categoryDisplay.toLowerCase()} category.`
-                }
+                We couldn't find any {productTypeDisplay.toLowerCase()} in the {categoryDisplay.toLowerCase()} category.
               </p>
             </div>
           </div>
         )}
 
-        {/* Load More Button  */}
+        {/* Load More Button */}
         {filteredAndSortedProducts.length > 0 && filteredAndSortedProducts.length % 12 === 0 && (
           <div className="load-more-container">
             <button className="btn btn-outline-primary load-more-btn">

@@ -17,7 +17,8 @@ const Cart = () => {
     updateQuantity, 
     removeFromCart, 
     clearCart,
-    clearError 
+    clearError,
+    formatPrice
   } = useCart();
   
   const { userData, isLoggedIn } = useContext(AuthContext);
@@ -84,8 +85,17 @@ const Cart = () => {
       navigate('/login');
       return;
     }
-    // Navigate to checkout page or handle checkout logic
     console.log('Proceeding to checkout with cart:', cart);
+  };
+
+  // Helper function to format individual item prices
+  const formatItemPrice = (price) => {
+    return formatPrice(price);
+  };
+
+  // Helper function to format total price for an item
+  const formatItemTotal = (price, quantity) => {
+    return formatPrice(price * quantity);
   };
 
   if (loading) {
@@ -190,7 +200,7 @@ const Cart = () => {
                             
                             <Col md={2}>
                               <div className="price-display">
-                                ${parseFloat(item.price).toFixed(2)}
+                                {formatItemPrice(item.price)}
                               </div>
                             </Col>
                             
@@ -248,7 +258,7 @@ const Cart = () => {
                             
                             <Col md={2} className="text-center">
                               <div className="total-price">
-                                ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                {formatItemTotal(item.price, item.quantity)}
                               </div>
                               <Button
                                 variant="outline-danger"
@@ -315,7 +325,7 @@ const Cart = () => {
                       <Card.Body>
                         <div className="d-flex justify-content-between mb-3">
                           <span>Items ({summary.total_items}):</span>
-                          <span className="fw-bold">${summary.total_amount}</span>
+                          <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                         </div>
                         <div className="d-flex justify-content-between mb-3">
                           <span>🚚 Shipping:</span>
@@ -328,7 +338,7 @@ const Cart = () => {
                         <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
                         <div className="d-flex justify-content-between mb-4">
                           <strong style={{fontSize: '1.3rem'}}>💰 Total:</strong>
-                          <strong style={{fontSize: '1.3rem'}}>${summary.total_amount}</strong>
+                          <strong style={{fontSize: '1.3rem'}}>{summary.currency_symbol}{summary.total_amount}</strong>
                         </div>
                         
                         <div className="d-grid gap-3">
@@ -362,7 +372,7 @@ const Cart = () => {
                               <small className="text-muted d-block">Qty: {item.quantity}</small>
                             </span>
                             <span className="fw-bold ">
-                              ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                              {formatItemTotal(item.price, item.quantity)}
                             </span>
                           </div>
                         ))}

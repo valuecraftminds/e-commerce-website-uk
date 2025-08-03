@@ -1,26 +1,49 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
 import '../styles/Shop.css';
+import { CountryContext } from "../context/CountryContext";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function Shop() {
-  const { category: currentCategory } = useParams(); // Get category from URL
+  const { category: currentCategory } = useParams();
   const [styles, setStyles] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [, setProductTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exchangeRates, setExchangeRates] = useState({});
   const navigate = useNavigate();
+
+  const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+  const { country } = useContext(CountryContext);
 
   const getProductDetails = (id) => {
     navigate(`/product/${id}`);
   };
+
+  // Fetch exchange rates
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        if (response.data.success) {
+          setExchangeRates(response.data.rates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+        setExchangeRates({
+          GBP: 0.75,
+          LKR: 320
+        });
+      }
+    };
+    fetchExchangeRates();
+  }, []);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -33,9 +56,7 @@ export default function Shop() {
 
       try {
         const response = await axios.get(`${BASE_URL}/customer/main-categories`, {
-          params: {
-            company_code: COMPANY_CODE
-          }
+          params: { company_code: COMPANY_CODE }
         });
         setCategories(response.data);
       } catch (err) {
@@ -46,7 +67,7 @@ export default function Shop() {
     fetchCategories();
   }, []);
 
-  // Fetch styles and product types when category changes
+  // Fetch styles when category changes
   useEffect(() => {
     const fetchData = async () => {
       if (!currentCategory) {
@@ -64,12 +85,10 @@ export default function Shop() {
         setLoading(true);
         setError(null);
 
-        // If categories are not loaded yet, wait for them
         if (categories.length === 0) {
           return;
         }
 
-        // Find the category ID based on the current category name
         const matchedCategory = categories.find(
           cat => cat.category_name.toLowerCase() === currentCategory.toLowerCase()
         );
@@ -80,27 +99,13 @@ export default function Shop() {
           return;
         }
 
-        // Fetch styles filtered by parent category
         const stylesResponse = await axios.get(
           `${BASE_URL}/customer/styles-by-parent-category/${matchedCategory.category_id}`,
           {
-            params: {
-              company_code: COMPANY_CODE
-            }
+            params: { company_code: COMPANY_CODE }
           }
         );
         setStyles(stylesResponse.data);
-
-        // Fetch product types (subcategories) for this category
-        const typesResponse = await axios.get(
-          `${BASE_URL}/customer/product-types/${matchedCategory.category_id}`,
-          {
-            params: {
-              company_code: COMPANY_CODE
-            }
-          }
-        );
-        setProductTypes(typesResponse.data);
 
       } catch (err) {
         console.error('Error fetching shop data:', err);
@@ -128,17 +133,10 @@ export default function Shop() {
         setLoading(true);
         setError(null);
 
-        // Fetch all styles if no category is specified
         const stylesResponse = await axios.get(`${BASE_URL}/customer/all-styles`, {
-          params: {
-            company_code: COMPANY_CODE
-          }
+          params: { company_code: COMPANY_CODE }
         });
         setStyles(stylesResponse.data);
-        console.log('Fetched all styles:', stylesResponse.data);
-
-        // Clear product types
-        setProductTypes([]);
 
       } catch (err) {
         console.error('Error fetching all styles:', err);
@@ -151,14 +149,42 @@ export default function Shop() {
     fetchAllStyles();
   }, [currentCategory, categories]);
 
-  // Helper function to format price display
-  const formatPrice = (minPrice, maxPrice) => {
-    if (!minPrice && !maxPrice) return "Price not defined";
-    if (minPrice === maxPrice) return `$${minPrice}`;
-    return `$${minPrice} - $${maxPrice}`;
+  const getRate = () => {
+    switch (country) {
+      case 'US':
+        return 1;
+      case 'UK':
+        return exchangeRates['GBP'] || 0.75;
+      case 'SL':
+        return exchangeRates['LKR'] || 320;
+      default:
+        return 1;
+    }
   };
+
+  // const formatPrice = (minPrice, maxPrice) => {
+  //   if (!minPrice && !maxPrice) return "Price not defined";
+  //   const symbol = currencySymbols[country] || '$';
+  //   const rate = getRate();
+  //   const convertedMinPrice = (minPrice * rate).toFixed(2);
+    
+  //   if (minPrice === maxPrice || !maxPrice) {
+  //     return `${symbol}${convertedMinPrice}`;
+  //   }
+    
+  //   const convertedMaxPrice = (maxPrice * rate).toFixed(2);
+  //   return `${symbol}${convertedMinPrice} - ${symbol}${convertedMaxPrice}`;
+  // };
+
+   const formatPrice = (minPrice) => {
+    if (!minPrice) return "Price not defined";
+    const symbol = currencySymbols[country] || '$';
+    const rate = getRate();
+    const convertedPrice = (minPrice * rate).toFixed(2);
+    return `${symbol}${convertedPrice}`;
+  };
+
   
-  // Loading state
   if (loading) {
     return (
       <Container className="my-5">
@@ -170,7 +196,6 @@ export default function Shop() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Container className="my-5">
@@ -190,7 +215,6 @@ export default function Shop() {
 
   return (
     <>
-      {/* Banner Section */}
       {currentCategory && (
         <div className="shop-banner mb-4">
           {DataFile.banner
@@ -207,12 +231,10 @@ export default function Shop() {
       )}
 
       <Container fluid className="my-5 shop-product-container">
-        {/* Products Section */}
         <h2 className="mb-4 text-capitalize">
           {currentCategory ? `${currentCategory} Collection` : 'All Products'}
         </h2>
         
-        {/* Display styles */}
         {styles.length > 0 ? (
           <div className="shop-products-grid">
             {styles.map((product) => (
@@ -229,7 +251,7 @@ export default function Shop() {
                   />
                   
                   <div className="home-product-overlay">
-                    <h5> Quick View </h5>
+                    <h5>Quick View</h5>
                   </div>
                 </div>
                 
@@ -242,9 +264,7 @@ export default function Shop() {
                     }
                   </p>
                   <div className="shop-product-price">
-                    <span className={product.min_price && product.max_price && product.min_price !== product.max_price ? "price-range" : "current-price"}>
-                      {formatPrice(product.min_price, product.max_price)}
-                    </span>
+                    <span>{formatPrice(product.min_price)}</span>
                   </div>
                   
                   {product.category_name && (
