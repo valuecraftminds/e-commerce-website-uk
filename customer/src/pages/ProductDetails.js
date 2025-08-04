@@ -6,12 +6,12 @@ import axios from "axios";
 import SuccessMsg from "../components/SuccessMsg";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
-import "../styles/ProductPage.css"; 
+import "../styles/ProductDetails.css"; 
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
-export default function ProductPage() {
+export default function ProductDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const variantId = parseInt(id, 10);

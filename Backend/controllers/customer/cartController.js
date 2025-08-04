@@ -2,7 +2,20 @@ const db = require('../../config/database');
 
 const cartController = {
   addToCart: async (req, res) => {
-    const { name, price, sku, style_code, variant_id, quantity = 1 } = req.body;
+    const { 
+      name,
+      price,
+      sku,
+      style_code,
+      variant_id,
+      quantity = 1,
+      image,
+      currency = 'USD',
+      isAvailable = true,
+      productURL,
+      tax = 0.00,
+      shipping_fee = 0.00 
+    } = req.body;
     const { company_code } = req.query;
     const customer_id = req.user?.id || null;
 
@@ -39,12 +52,41 @@ const cartController = {
         });
       } else {
         const insertSql = `
-          INSERT INTO cart (company_code, customer_id, style_code, variant_id, quantity, price, sku, name)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+          INSERT INTO cart (
+          company_code,
+          customer_id,
+          style_code,
+          variant_id,
+          quantity,
+          price,
+          sku,
+          name,
+          image,
+          currency,
+          isAvailable,
+          productURL,
+          tax,
+          shipping_fee
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
 
-        await db.query(insertSql, [company_code, customer_id, style_code, variant_id, quantity, price, sku, name]);
-        
+        await db.query(insertSql, [
+          company_code,
+          customer_id,
+          style_code,
+          variant_id,
+          quantity,
+          price,
+          sku,
+          name,
+          image,
+          currency,
+          isAvailable,
+          productURL,
+          tax,
+          shipping_fee
+        ]);
+
         return res.json({
           success: true,
           message: 'Item added to cart successfully',

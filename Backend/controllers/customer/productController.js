@@ -2,7 +2,7 @@ const db = require('../../config/database');
 const path = require('path');
 const fs = require('fs');
 
-const customerController = {
+const productController = {
   // GET main categories
   getMainCategories: async (req, res) => {
     try {
@@ -319,4 +319,4 @@ const customerController = {
   }
 };
 
-module.exports = customerController;
+module.exports = productController;
