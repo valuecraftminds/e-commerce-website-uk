@@ -77,24 +77,17 @@
 }
 
 /* Color selection buttons */
-.product-page .product-btn-color {
-    background-color: white !important;
-    color: black !important;
-    border: 2px solid black !important;
-    min-width: 70px;
-    border-radius: 5px;
-    padding: 8px 12px;
-    transition: all 0.3s ease;
+.product-page .color-circle {
+  width: 40px;
+  height: 40px;
+    border-radius: 50%;
+  margin-right: 10px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  display: inline-block;
 }
-
-.product-page .product-btn-color.selected {
-    background-color: #3c3c41 !important;
-    color: white !important;
-}
-
-.product-page .product-btn-color:hover {
-    background-color: #3c3c41 !important;
-    color: white !important;
+.product-page .color-circle.selected {
+  border: 5px solid #cccce0;
 }
 
 /* Size selection buttons */
