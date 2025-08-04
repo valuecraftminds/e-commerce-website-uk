@@ -7,7 +7,7 @@ import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import Shop from './pages/Shop';
 import Home from './pages/Home';
-import ProductPage from './pages/ProductPage';
+import ProductDetails from './pages/ProductDetails';
 import ProductCategory from './pages/ProductCategory';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -52,7 +52,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/shop/:category" element={<Shop />} />
-              <Route path="/product/:id" element={<ProductPage />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/shop/:category/:productType" element={<ProductCategory />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/login" element={<LoginPage />} />
