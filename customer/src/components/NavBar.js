@@ -32,7 +32,7 @@ export default function NavigationBar() {
 
   // Fetch categories
   useEffect(() => {
-    axios.get(`${BASE_URL}/customer/main-categories`, {
+    axios.get(`${BASE_URL}/api/customer/main-categories`, {
       params: {
         company_code: COMPANY_CODE
       }

@@ -29,7 +29,7 @@ export default function Home() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/all-styles`, {
+        const response = await axios.get(`${BASE_URL}/api/customer/all-styles`, {
           params: { company_code: COMPANY_CODE }
         });
         setProducts(response.data);
@@ -48,7 +48,7 @@ export default function Home() {
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/customer/currency/rates`); 
+        const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`); 
         if (response.data.success) {
           setExchangeRates(response.data.rates);
         }
@@ -128,7 +128,7 @@ export default function Home() {
               >
                 <div className="home-product-image-container">
                   <img 
-                    src={`${BASE_URL}/customer/styles/${product.image}`}
+                    src={`${BASE_URL}/api/customer/styles/${product.image}`}
                     alt={product.name}
                     className="home-product-image"
                   />

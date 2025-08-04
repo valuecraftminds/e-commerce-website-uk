@@ -30,7 +30,7 @@ export default function Sidebar({
       return;
     }
 
-    axios.get(`${BASE_URL}/customer/main-categories`, {
+    axios.get(`${BASE_URL}/api/customer/main-categories`, {
       params: {
         company_code: COMPANY_CODE
       }
@@ -57,7 +57,7 @@ export default function Sidebar({
     if (matchedCategory) {
       setLoading(true);
       // Fix the API endpoint to match your backend route
-      axios.get(`${BASE_URL}/customer/product-types/${matchedCategory.category_id}`, {
+      axios.get(`${BASE_URL}/api/customer/product-types/${matchedCategory.category_id}`, {
         params: {
           company_code: COMPANY_CODE
         }

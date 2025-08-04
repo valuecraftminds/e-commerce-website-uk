@@ -45,10 +45,10 @@ const licenseRoutes = require('./routes/admin/License');
 
 // Route bindings
 // Customer routes
-app.use('/customer', customerRoutes);
-app.use('/customer/auth', customerAuthRoutes);
-app.use('/customer/cart', cartRoutes);
-app.use('/customer/currency', currencyRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/customer/auth', customerAuthRoutes);
+app.use('/api/customer/cart', cartRoutes);
+app.use('/api/customer/currency', currencyRoutes);
 
 // Admin routes
 app.use('/api/admin/auth', adminAuthRoutes);

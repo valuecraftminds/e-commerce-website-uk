@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../../config/database'); // Adjust the path as needed
+const db = require('../../config/database'); 
 const path = require('path');
 const fs = require('fs');
 

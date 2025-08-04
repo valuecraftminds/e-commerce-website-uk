@@ -22,7 +22,7 @@ export default function SearchSidebar({ show, onClose }) {
         setLoading(true);
         setError("");
         try {
-          const response = await axios.get(`${BASE_URL}/customer/search`, {
+          const response = await axios.get(`${BASE_URL}/api/customer/search`, {
             params: { 
               q: searchTerm,
               company_code: COMPANY_CODE

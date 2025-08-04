@@ -43,7 +43,7 @@ export default function ProductPage() {
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`);
         if (response.data.success) {
           setExchangeRates(response.data.rates);
         }
@@ -63,7 +63,7 @@ export default function ProductPage() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/product/${variantId}`, {
+        const response = await axios.get(`${BASE_URL}/api/customer/product/${variantId}`, {
           params: { company_code: COMPANY_CODE }
         });
         setProduct(response.data);
@@ -169,7 +169,7 @@ export default function ProductPage() {
           <Col className="img-col" md={6}>
             <Image 
               className="product-image" 
-              src={`${BASE_URL}/customer/styles/${product.image}`} 
+              src={`${BASE_URL}/api/customer/styles/${product.image}`} 
               alt={product.name} 
               fluid 
             />

@@ -38,7 +38,7 @@ const ProductCategory = () => {
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`);
         if (response.data.success) {
           setExchangeRates(response.data.rates);
         }
@@ -61,7 +61,7 @@ const ProductCategory = () => {
         setError(null);
 
         // Get all categories to find the main category ID
-        const categoriesResponse = await axios.get(`${BASE_URL}/customer/main-categories`, {
+        const categoriesResponse = await axios.get(`${BASE_URL}/api/customer/main-categories`, {
           params: { company_code: COMPANY_CODE }
         });
 
@@ -80,7 +80,7 @@ const ProductCategory = () => {
 
         // Get product types (subcategories) for this main category
         const productTypesResponse = await axios.get(
-          `${BASE_URL}/customer/product-types/${matchedMainCategory.category_id}`,
+          `${BASE_URL}/api/customer/product-types/${matchedMainCategory.category_id}`,
           {
             params: { company_code: COMPANY_CODE }
           }
@@ -100,7 +100,7 @@ const ProductCategory = () => {
 
         // Fetch styles from the specific subcategory
         const stylesResponse = await axios.get(
-          `${BASE_URL}/customer/styles-by-parent-category/${matchedMainCategory.category_id}`,
+          `${BASE_URL}/api/customer/styles-by-parent-category/${matchedMainCategory.category_id}`,
           {
             params: { company_code: COMPANY_CODE }
           }
@@ -330,7 +330,7 @@ const ProductCategory = () => {
               >
                 <div className="cat-product-image-container">
                   <img 
-                    src={`${BASE_URL}/customer/styles/${product.image}`}
+                    src={`${BASE_URL}/api/customer/styles/${product.image}`}
                     alt={product.name}
                     className="cat-product-image"
                   />
