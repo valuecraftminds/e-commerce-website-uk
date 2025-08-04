@@ -178,7 +178,7 @@ const Cart = () => {
                                 <small className="text-muted d-block">
                                   {item.color_name && ( 
                                     <span className="me-3">
-                                      <strong>Color:</strong> {item.color_name}
+                                      <strong>Color:</strong> {item.color_name }
                                     </span>
                                   )}
                                   {item.size_name && (
