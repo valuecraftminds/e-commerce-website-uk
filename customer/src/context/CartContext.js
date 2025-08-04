@@ -354,8 +354,8 @@ export const CartProvider = ({ children }) => {
           price: item.price,
           stock_quantity: item.stock_quantity,
           sku: item.sku,
-          color_name: item.color.name,
-          color_code: item.color.code,
+          color_name: item.color?.name,
+          color_code: item.color?.code,
           size_name: item.size,
           material_name: item.material_name,
           fit_name: item.fit_name,
@@ -363,6 +363,8 @@ export const CartProvider = ({ children }) => {
           exchangeRate: rate,
           currencySymbol: symbol
         };
+
+        console.log('Adding to guest cart:', cartItem);
         
         if (existingItemIndex >= 0) {
           guestCart[existingItemIndex].quantity += (item.quantity || 1);
