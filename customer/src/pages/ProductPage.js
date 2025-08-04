@@ -26,6 +26,7 @@ export default function ProductPage() {
   // State for user selections
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedColorName, setSelectedColorName] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
@@ -109,13 +110,17 @@ export default function ProductPage() {
         sku: product.sku,
         style_code: product.style_code,
         size: selectedSize,
-        color: selectedColor,
+        color: {
+          code: selectedColor,
+          name: selectedColorName,
+        },
+        image: product.image,
         quantity: quantity,
         price: product.price,
         variant_id: variantId  
       });
 
-      const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColor}`;
+      const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColorName}`;
       setSuccessMessage(message);
       setShowModal(true);
     } catch (error) {
@@ -162,6 +167,8 @@ export default function ProductPage() {
     );
   }
 
+  console.log('Available colors:', product.available_colors);
+
   return (
     <div className="product-page">
       <Container className="my-5 container">
@@ -169,7 +176,7 @@ export default function ProductPage() {
           <Col className="img-col" md={6}>
             <Image 
               className="product-image" 
-              src={`${BASE_URL}/api/customer/styles/${product.image}`} 
+              src={`${BASE_URL}/customer/styles/${product.image}`} 
               alt={product.name} 
               fluid 
             />
@@ -183,17 +190,19 @@ export default function ProductPage() {
 
             <div className="mb-3">
               {product.available_colors && product.available_colors.length > 0 ? (
-                product.available_colors
-                  .filter(color => color)
-                  .map((color) => (
-                    <Button
-                      key={color}
-                      className={`me-2 mb-2 product-btn-color ${selectedColor === color ? 'selected' : ''}`}
-                      onClick={() => setSelectedColor(color)}
-                    >
-                      {color}
-                    </Button>
-                  ))
+                product.available_colors.map((color) => (
+                  <button
+                    key={color.code}
+                    // onClick={() => setSelectedColor(color.code)}
+                    onClick={() => {
+                      setSelectedColor(color.code);
+                      setSelectedColorName(color.name);
+                    }}
+                    className={`color-circle ${selectedColor === color.code ? 'selected' : ''}`}
+                    style={{ backgroundColor: color.code }}
+                    title={color.name}
+                  />
+                ))
               ) : (
                 <p>Colors not available</p>
               )}

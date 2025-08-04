@@ -6,7 +6,7 @@ const customerController = {
   // GET main categories
   getMainCategories: async (req, res) => {
     try {
-      console.log('=== getMainCategories called ===');
+      console.log('getMainCategories called');
       console.log('Query params:', req.query);
       
       const { company_code } = req.query;
@@ -141,7 +141,9 @@ const customerController = {
           s.image,
           sv.price,
           sz.size_name,
-          c.color_name
+          c.color_name,
+          c.color_code,
+          c.color_id
         FROM styles s
         LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
@@ -159,8 +161,15 @@ const customerController = {
 
       // Group sizes and colors uniquely
       const sizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
-      const colors = [...new Set(results.map(r => r.color_name).filter(Boolean))];
-
+      
+      const colorMap = new Map();
+      results.forEach(r => {
+          if (r.color_name && r.color_code) {
+            colorMap.set(r.color_code, { name: r.color_name, code: r.color_code });
+          }
+        });
+      // Convert color map to array
+      const colors = Array.from(colorMap.values());
       const product = results[0];
       const price = results.length > 0 ? results[0].price : null;
 

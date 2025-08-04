@@ -111,6 +111,8 @@ const Cart = () => {
     );
   }
 
+  console.log('Cart data:', cart);
+
   return (
     <div className="cart-container">
       <Container className="my-5">
@@ -157,7 +159,7 @@ const Cart = () => {
                           <Row className="align-items-center">
                             <Col md={2} className="text-center">
                               <img
-                                src={`${BASE_URL}/admin/uploads/styles/${item.image}`}
+                                src={`${BASE_URL}/customer/styles/${item.image}`}
                                 alt={item.style_name}
                                 className="cart-item-image"
                               />
@@ -174,7 +176,7 @@ const Cart = () => {
                               </h6>
                               <div className="product-details">
                                 <small className="text-muted d-block">
-                                  {item.color_name && (
+                                  {item.color_name && ( 
                                     <span className="me-3">
                                       <strong>Color:</strong> {item.color_name}
                                     </span>
