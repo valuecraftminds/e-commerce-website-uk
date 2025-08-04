@@ -30,7 +30,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`);
         if (response.data.success) {
           setExchangeRates(response.data.rates);
         }
@@ -55,7 +55,7 @@ export default function Shop() {
       }
 
       try {
-        const response = await axios.get(`${BASE_URL}/customer/main-categories`, {
+        const response = await axios.get(`${BASE_URL}/api/customer/main-categories`, {
           params: { company_code: COMPANY_CODE }
         });
         setCategories(response.data);
@@ -100,7 +100,7 @@ export default function Shop() {
         }
 
         const stylesResponse = await axios.get(
-          `${BASE_URL}/customer/styles-by-parent-category/${matchedCategory.category_id}`,
+          `${BASE_URL}/api/customer/styles-by-parent-category/${matchedCategory.category_id}`,
           {
             params: { company_code: COMPANY_CODE }
           }
@@ -133,7 +133,7 @@ export default function Shop() {
         setLoading(true);
         setError(null);
 
-        const stylesResponse = await axios.get(`${BASE_URL}/customer/all-styles`, {
+        const stylesResponse = await axios.get(`${BASE_URL}/api/customer/all-styles`, {
           params: { company_code: COMPANY_CODE }
         });
         setStyles(stylesResponse.data);
@@ -245,7 +245,7 @@ export default function Shop() {
               >
                 <div className="home-product-image-container">
                   <img 
-                    src={`${BASE_URL}/customer/styles/${product.image}`}
+                    src={`${BASE_URL}/api/customer/styles/${product.image}`}
                     alt={product.name}
                     className="home-product-image"
                   />

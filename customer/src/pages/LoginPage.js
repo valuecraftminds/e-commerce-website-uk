@@ -33,7 +33,7 @@ export default function LoginPage() {
     setErrorMsg('');
 
     try {
-      const response = await fetch(`${BASE_URL}/customer/auth/login`, {
+      const response = await fetch(`${BASE_URL}/api/customer/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -155,7 +155,7 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/customer/currency/rates`);
+        const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`);
         if (response.data.success) {
           setExchangeRates(response.data.rates);
         }
@@ -234,7 +234,7 @@ export const CartProvider = ({ children }) => {
   // Fetch cart items from backend
   const fetchCartItems = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/customer/cart/get-cart`, getAxiosConfig());
+      const response = await axios.get(`${BASE_URL}/api/customer/cart/get-cart`, getAxiosConfig());
 
       if (response.data.success) {
         const { rate, symbol } = getCurrentCurrency();
@@ -319,7 +319,7 @@ export const CartProvider = ({ children }) => {
 
       if (token) {
         // User is logged in, add to backend
-        const response = await axios.post(`${BASE_URL}/customer/cart/add`, {
+        const response = await axios.post(`${BASE_URL}/api/customer/cart/add`, {
           style_code: item.style_code,
           variant_id: item.variant_id,
           quantity: item.quantity || 1,
@@ -393,7 +393,7 @@ export const CartProvider = ({ children }) => {
       if (token) {
         // User is logged in, update in backend
         const response = await axios.put(
-          `${BASE_URL}/customer/cart/${cart_id}`,
+          `${BASE_URL}/api/customer/cart/${cart_id}`,
           { quantity },
           getAxiosConfig()
         );
@@ -443,7 +443,7 @@ export const CartProvider = ({ children }) => {
       if (token) {
         // User is logged in, remove from backend
         const response = await axios.delete(
-          `${BASE_URL}/customer/cart/${cart_id}`,
+          `${BASE_URL}/api/customer/cart/${cart_id}`,
           getAxiosConfig()
         );
         
@@ -485,7 +485,7 @@ export const CartProvider = ({ children }) => {
       if (token) {
         // User is logged in, clear backend cart
         const response = await axios.delete(
-          `${BASE_URL}/customer/cart/clear-all`,
+          `${BASE_URL}/api/customer/cart/clear-all`,
           getAxiosConfig()
         );
         
@@ -528,7 +528,7 @@ export const CartProvider = ({ children }) => {
       }));
 
       const response = await axios.post(
-        `${BASE_URL}/customer/cart/merge`,
+        `${BASE_URL}/api/customer/cart/merge`,
         { guest_cart: guestCartData },
         getAxiosConfig()
       );

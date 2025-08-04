@@ -9,12 +9,7 @@ const authController = {
 
     try {
       // Check for duplicate email
-      const emailCheck = await new Promise((resolve, reject) => {
-        db.query('SELECT * FROM customers WHERE email = ?', [email], (err, results) => {
-          if (err) reject(err);
-          else resolve(results);
-        });
-      });
+      const [emailCheck] = await db.query('SELECT * FROM customers WHERE email = ?', [email]);
 
       if (emailCheck.length > 0) {
         return res.status(409).json({ 
@@ -24,12 +19,7 @@ const authController = {
       }
 
       // Check for duplicate phone
-      const phoneCheck = await new Promise((resolve, reject) => {
-        db.query('SELECT * FROM customers WHERE phone = ?', [phone], (err, results) => {
-          if (err) reject(err);
-          else resolve(results);
-        });
-      });
+      const [phoneCheck] = await db.query('SELECT * FROM customers WHERE phone = ?', [phone]);
 
       if (phoneCheck.length > 0) {
         return res.status(409).json({ 
@@ -42,16 +32,10 @@ const authController = {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert new user
-      await new Promise((resolve, reject) => {
-        db.query(
-          'INSERT INTO customers (company_code, name, email, phone, password, country) VALUES (?, ?, ?, ?, ?, ?)',
-          [company_code, name, email, phone, hashedPassword, country],
-          (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-          }
-        );
-      });
+      await db.query(
+        'INSERT INTO customers (company_code, name, email, phone, password, country) VALUES (?, ?, ?, ?, ?, ?)',
+        [company_code, name, email, phone, hashedPassword, country]
+      );
 
       res.json({ 
         success: true, 
@@ -72,16 +56,10 @@ const authController = {
     const { company_code, email, password } = req.body;
 
     try {
-      const results = await new Promise((resolve, reject) => {
-        db.query(
-          'SELECT * FROM customers WHERE email = ? AND company_code = ?',
-          [email, company_code],
-          (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-          }
-        );
-      });
+      const [results] = await db.query(
+        'SELECT * FROM customers WHERE email = ? AND company_code = ?',
+        [email, company_code]
+      );
 
       if (results.length === 0) {
         return res.status(401).json({ 
@@ -128,19 +106,7 @@ const authController = {
         message: 'Database error during login' 
       });
     }
-  },
-
-  // Protected route
-  // protectedProfile: async (req, res) => {
-  // const authHeader = req.headers.authorization;
-  // if (!authHeader) return res.sendStatus(401);
-
-  //   const token = authHeader.split(' ')[1];
-  //   jwt.verify(token, SECRET_KEY, (err, user) => {
-  //     if (err) return res.sendStatus(403);
-  //     res.json({ message: `Welcome ${user.username}` });
-  //   });
-  // }
-}
+  }
+};
 
 module.exports = authController;
