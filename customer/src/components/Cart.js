@@ -3,6 +3,8 @@ import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-b
 import { useCart } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+
+import CheckoutModal from '../components/CheckoutModal';
 import '../styles/Cart.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -22,7 +24,8 @@ const Cart = () => {
   } = useCart();
   
   const { userData, isLoggedIn } = useContext(AuthContext);
-  
+
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [updatingItems, setUpdatingItems] = useState(new Set());
   const [removingItems, setRemovingItems] = useState(new Set());
 
@@ -79,13 +82,12 @@ const Cart = () => {
     }
   };
 
-  const handleCheckOut = () => {
+  const handleBuyNow = () => {
     if (!isLoggedIn) {
-      alert('Please log in to proceed with checkout.');
       navigate('/login');
       return;
     }
-    console.log('Proceeding to checkout with cart:', cart);
+    setShowCheckoutModal(true);
   };
 
   // Helper function to format individual item prices
@@ -348,10 +350,15 @@ const Cart = () => {
                             variant="primary" 
                             size="lg"
                             disabled={cart.length === 0 || cart.some(item => item.stock_quantity === 0)}
-                            onClick={() => {handleCheckOut()}}
+                            onClick={() => handleBuyNow()}
                           >
                             🚀 Proceed to Checkout
                           </Button>
+                          <CheckoutModal 
+                            show={showCheckoutModal} 
+                            onHide={() => setShowCheckoutModal(false)}  
+                          />
+
                           <Link to="/" className="d-grid">
                             <Button variant="outline-secondary" size="lg">
                               🛍️ Continue Shopping

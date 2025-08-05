@@ -4,6 +4,7 @@ import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import axios from "axios";
 
 import SuccessMsg from "../components/SuccessMsg";
+import CheckoutModal from "../components/CheckoutModal";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
 import "../styles/ProductDetails.css"; 
@@ -30,6 +31,7 @@ export default function ProductDetails() {
   const [successMessage, setSuccessMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
@@ -132,11 +134,11 @@ export default function ProductDetails() {
 
   const handleBuyNow = (product) => {
     if (!isUserLoggedIn()) {
+      alert("Please log in to proceed with the purchase.");
       navigate('/login');
       return;
     }
-    console.log('Proceeding with buy now for product:', product);
-    // Check if customer has shipping details, if not navigate to ShippingDetails page
+    setShowCheckoutModal(true);
   };
 
   // Loading state
@@ -252,6 +254,14 @@ export default function ProductDetails() {
               >
                 Buy Now
               </Button>
+              <CheckoutModal
+                show={showCheckoutModal}
+                onHide={() => setShowCheckoutModal(false)}
+                onSubmit={(data) => {
+                  console.log('Checkout data:', data);
+                  setShowCheckoutModal(false);
+                }}
+              />
             </div>
 
             <SuccessMsg

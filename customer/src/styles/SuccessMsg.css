@@ -13,6 +13,7 @@
 .success-msg-modal-header {
   border-bottom: 2px solid #000000 !important;
   padding: 1.5rem !important;
+  background: rgb(233, 233, 233);
 }
 
 /* Modal title styling */
