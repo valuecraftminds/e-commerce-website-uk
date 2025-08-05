@@ -1,0 +1,354 @@
+/* Modal styling */
+.modal-content {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 15px !important;
+}
+
+.modal-header {
+    background: #545b62;
+    color: white;
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+    padding-left: 17% !important;
+}
+
+.modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.modal-body {
+    padding: 30px;
+    background-color: #f8f9fa;
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: none !important;
+    background-color: #f8f9fa !important;
+    border-radius: 0 0 15px 15px !important;
+}
+
+/* Container styling */
+.details-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.details-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.details-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.details-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Section headers */
+.details-container h5 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    position: relative;
+}
+
+.details-container h5::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Form styling */
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #051d36;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    background-color: white;
+}
+
+.form-control:hover {
+    border-color: #989a9b;
+}
+
+/* Checkbox styling */
+.form-check {
+    padding: 15px 20px;
+    margin: 20px 0;
+    transition: all 0.3s ease;
+}
+
+.form-check:hover {
+    border-color: #ced4da;
+    background-color: #f8f9fa;
+}
+
+.form-check-input {
+    width: 1.3em !important;
+    height: 1.3em !important;
+    margin-right: 0.75rem;
+    border: 2px solid #494952 !important;
+    border-radius: 4px;
+}
+
+.form-check-input:checked {
+    background-color: #203281;
+    border-color: #667eea;
+}
+
+.form-check-label {
+    font-weight: 500;
+    color: #495057;
+    user-select: none;
+}
+
+/* Button styling */
+.modal-footer .btn {
+    padding: 12px 24px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    transform: translateY(-1px);
+}
+
+.continue-btn {
+    background-color: black !important;
+    border: none;
+    color: white;
+}
+
+.continue-btn:hover {
+    transform: translateY(-1px);
+}
+
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .details-container {
+        max-height: 60vh;
+    }
+    
+    .modal-body {
+        padding: 20px 15px;
+    }
+    
+    .modal-header,
+    .modal-footer {
+        padding: 15px 20px;
+    }
+    
+    .form-control {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .modal-header .modal-title {
+        font-size: 1.3rem;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 10px;
+    }
+    
+    .details-container {
+        max-height: 55vh;
+    }
+    
+    .modal-body {
+        padding: 15px 10px;
+    }
+    
+    .form-check {
+        padding: 12px 15px;
+    }
+}
+
+/* Animation for smooth transitions */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+/* Loading state styles (for future use) */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading .btn {
+    position: relative;
+}
+
+.loading .btn::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Payment Method Styling */
+.payment-method-inline {
+  display: flex;
+  gap: 0px;
+}
+
+.payment-method-inline .form-check {
+  margin: 0;
+  padding: 0;
+  min-width: 150px;
+  display: flex;
+  justify-content: center;
+}
+
+.payment-method-inline .form-check-input {
+  width: 1.2em !important;
+  height: 1.2em !important;
+  margin-right: 8px !important;
+  border: 2px solid #6c757d !important;
+  border-radius: 50% !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-method-inline .form-check-input:checked {
+  background-color: #667eea !important;
+  border-color: #667eea !important;
+}
+
+.payment-method-inline .form-check-input:focus {
+  border-color: #667eea !important;
+}
+
+.payment-method-inline .form-check-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0;
+  font-size: 0.95rem;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.payment-method-inline .form-check:hover .form-check-label {
+  color: #667eea;
+}
+
+.payment-method-inline .form-check-input:checked + .form-check-label {
+  color: #667eea;
+}
+
+/* Payment method icons */
+/* .payment-method-inline .form-check-label::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 2px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: middle;
+}
+
+.payment-method-inline .form-check-input[value="credit-card"] + .form-check-label::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23667eea"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>');
+}
+
+.payment-method-inline .form-check-input[value="paypal"] + .form-check-label::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23667eea"><path d="M8.32 20.32c-.59 0-1.07-.46-1.12-1.04L6.24 9.5c-.07-.74.49-1.38 1.24-1.38h4.85c2.8 0 4.84 1.21 5.4 3.35.52 2-.18 3.42-1.38 4.27.85.59 1.29 1.65.98 2.96-.46 1.94-2.07 2.62-4.24 2.62H8.32zM9.67 18h3.76c1.47 0 2.12-.42 2.35-1.26.25-1.02-.29-1.74-1.76-1.74h-3.09l-.26 3zm.52-5.5h3.09c1.23 0 1.71-.58 1.95-1.5.24-.92-.18-1.5-1.41-1.5H10.7l-.51 3z"/></svg>');
+}
+
+.payment-method-inline .form-check-input[value="bank-transfer"] + .form-check-label::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23667eea"><path d="M11.5 1L2 6v2h20V6l-9.5-5zM4 8v6h2v-6H4zm6 0v6h2v-6h-2zm6 0v6h2v-6h-2zm4 8v2H4v-2H2v4h20v-4h-2z"/></svg>');
+}
+
+/* Responsive design for payment methods */
+@media (max-width: 768px) {
+  .payment-method-inline {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .payment-method-inline .form-check {
+    min-width: auto;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 576px) {
+  .payment-method-inline {
+    padding: 12px;
+  }
+  
+  .payment-method-inline .form-check {
+    padding: 10px 12px;
+  }
+  
+  .payment-method-inline .form-check-label {
+    font-size: 0.9rem;
+  }
+}
+
+
