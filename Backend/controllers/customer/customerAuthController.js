@@ -5,7 +5,7 @@ const db = require('../../config/database');
 const authController = {
   // User registration
   register: async (req, res) => {
-    const { company_code, name, email, phone, password, country } = req.body;
+    const { company_code, first_name, last_name, email, phone, password, country } = req.body;
 
     try {
       // Check for duplicate email
@@ -33,8 +33,8 @@ const authController = {
 
       // Insert new user
       await db.query(
-        'INSERT INTO customers (company_code, name, email, phone, password, country) VALUES (?, ?, ?, ?, ?, ?)',
-        [company_code, name, email, phone, hashedPassword, country]
+        'INSERT INTO customers (company_code, first_name, last_name, email, phone, password, country) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [company_code, first_name, last_name, email, phone, hashedPassword, country]
       );
 
       res.json({ 
@@ -92,7 +92,8 @@ const authController = {
         user: {
           id: user.customer_id,
           company_code: user.company_code,
-          name: user.name,
+          first_name: user.first_name,
+          last_name: user.last_name,
           phone: user.phone,
           email: user.email,
           country: user.country

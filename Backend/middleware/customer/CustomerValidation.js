@@ -14,9 +14,9 @@ const checkCompanyCode = (req, res, next) => {
 
 // Validate registration data
 const validateRegistration = (req, res, next) => {
-  const { company_code, name, email, phone, password, country } = req.body;
+  const { company_code, first_name, last_name, email, phone, password, country } = req.body;
 
-  if (!company_code || !name || !email || !phone || !password || !country) {
+  if (!company_code || !first_name || !last_name || !email || !phone || !password || !country) {
     return res.status(400).json({ 
       success: false, 
       message: 'All fields are required' 
@@ -24,7 +24,7 @@ const validateRegistration = (req, res, next) => {
   }
 
   // Name validation - no numbers or special chars
-  if (!/^[a-zA-Z\s]+$/.test(name)) {
+  if (!/^[a-zA-Z\s]+$/.test(first_name) || !/^[a-zA-Z\s]+$/.test(last_name)) {
     return res.status(400).json({ 
       success: false, 
       message: 'Name can only contain letters and spaces' 

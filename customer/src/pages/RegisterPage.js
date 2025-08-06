@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter } from 'react-icons
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { useNavigate } from 'react-router-dom';
+
 import '../styles/RegisterPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -12,7 +13,8 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     country: '',
@@ -57,9 +59,9 @@ export default function RegisterPage() {
 
   // prevent entering numbers or symbols to name field
   const handleNameChange = (e) => {
-    let value = e.target.value;
-    value = value.replace(/[^a-zA-Z\s]/g, '');
-    setFormData((prev) => ({ ...prev, name: value }));
+    const { name, value } = e.target;
+    const cleanValue = value.replace(/[^a-zA-Z\s]/g, ''); // Allow only letters and spaces
+    setFormData((prev) => ({ ...prev, [name]: cleanValue }));
   };
 
   // prevent entering letters and symbols and limit to 10 digits starting with 07
@@ -129,7 +131,8 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           company_code: COMPANY_CODE, // Updated this line
-          name: formData.name,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
@@ -142,7 +145,8 @@ export default function RegisterPage() {
       if (response.ok && data.success) {
         setSuccessMsg('User registered successfully!');
         setFormData({
-          name: '',
+          first_name: '',
+          last_name: '',
           email: '',
           phone: '',
           password: '',
@@ -186,16 +190,31 @@ export default function RegisterPage() {
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Control
-                          id="name"
+                          id="first_name"
                           type="text"
-                          name="name"
-                          value={formData.name}
+                          name="first_name"
+                          value={formData.first_name}
                           onChange={handleNameChange}
-                          placeholder="Enter full name"
+                          placeholder="Enter first name"
                           required
                         />
                       </Form.Group>
                     </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Control
+                          id="last_name"
+                          type="text"
+                          name="last_name"
+                          value={formData.last_name}
+                          onChange={handleNameChange}
+                          placeholder="Enter last name"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Control
@@ -209,11 +228,8 @@ export default function RegisterPage() {
                         />
                       </Form.Group>
                     </Col>
-                  </Row>
-
-                  <Row>
-                    <Col md={12}>
-                      <Form.Group className="mb-3">
+                    <Col md={6}>
+                      <Form.Group className="mb-3 phone-input-group">
                         <PhoneInput
                           country={'gb'}
                           value={formData.phone}
@@ -223,9 +239,8 @@ export default function RegisterPage() {
                             required: true,
                             className: phoneError ? 'form-control is-invalid' : 'form-control'
                           }}
-                          containerStyle={{ width: '100%' }}
                           enableSearch={true} // Add search functionality
-                          countryCodeEditable={false} // Prevent manual editing of country code
+                          countryCodeEditable={false} 
                         />
                         {phoneError && (
                           <div className="invalid-feedback d-block">{phoneError}</div>
