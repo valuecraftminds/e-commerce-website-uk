@@ -7,7 +7,7 @@ import logo from '../assets/logo.png';
 import '../styles/NavBar.css';
 import SearchSidebar from "./SearchSidebar";
 import Sidebar from './Sidebar';
-import UserMenu from "../pages/UserMenu";
+import UserMenu from "./UserMenu";
 import { AuthContext } from '../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -140,6 +140,7 @@ export default function NavigationBar() {
                   onMouseEnter={() => handleCategoryMouseEnter(category.category_name)}
                   onMouseLeave={handleCategoryMouseLeave}
                   onClick={() => handleCategoryClick(category.category_name)}
+                  className="navbar-category-link"
                 >
                   {category.category_name}
                 </Nav.Link>

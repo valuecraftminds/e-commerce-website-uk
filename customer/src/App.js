@@ -12,8 +12,9 @@ import ProductCategory from './pages/ProductCategory';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import Cart from './components/Cart';
-import UserMenu from './pages/UserMenu';
+import UserMenu from './components/UserMenu';
 import ProtectedRoute from './components/ProtectedRoute';
+import AccountSettings from './pages/AccountSettings';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -57,6 +58,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/account-settings" element={<AccountSettings />} />
 
               {/* Protected Routes */}
               <Route path="/usermenu" element={
@@ -64,7 +66,11 @@ function App() {
                   <UserMenu />
                 </ProtectedRoute>
               } />
-              
+              {/* <Route path="/account-settings" element={
+                <ProtectedRoute>
+                  <AccountSettings />
+                </ProtectedRoute>
+              } /> */}
             </Routes>
           </main>
           <Footer />
