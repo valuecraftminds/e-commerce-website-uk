@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form, Row, Col, Button, Container } from 'react-bootstrap';
 
 import '../styles/CheckoutModal.css';
@@ -24,6 +24,29 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
   });
 
   const [sameAsBilling, setSameAsBilling] = useState(true);
+
+  useEffect(() => {
+    if(!show){
+      setBillingData({
+      fullName: '',
+      address: '',
+      city: '',
+      postalCode: '',
+      country: '',
+      phone: '',
+      payment_method: 'credit-card',
+    });
+      setShippingData({
+        fullName: '',
+        address: '',
+        city: '',
+        postalCode: '',
+        country: '',
+        phone: '',
+      });
+      setSameAsBilling(true);
+    }
+  }, [show]);
 
   const handleBillingChange = (e) => {
     const { name, value } = e.target;
@@ -55,88 +78,145 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
         <Modal.Body>
           <Container className="details-container">
             <h5 className="mb-3">Billing Details</h5>
-            {/* Billing Inputs */}
+
+          {/* Name Fields */}
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="billingFirstName">
+                <Form.Label>First Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_first_name"
+                  value={billingData.first_name || ''}
+                  onChange={handleBillingChange}
+                  onKeyPress={(e) => {
+                    if (!/^[a-zA-Z\s]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="billingLastName">
+                <Form.Label>Last Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_last_name"
+                  value={billingData.last_name || ''}
+                  onChange={handleBillingChange}
+                  onKeyPress={(e) => {
+                    if (!/^[a-zA-Z\s]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          {/* Address Breakdown */}
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="billingHouseNumber">
+                <Form.Label>House / Apt</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_house_number"
+                  value={billingData.house_number || ''}
+                  onChange={handleBillingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="billingStreetName">
+                <Form.Label>Street Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_street_name"
+                  value={billingData.street_name || ''}
+                  onChange={handleBillingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="billingCity">
+                <Form.Label>City</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_city"
+                  value={billingData.city || ''}
+                  onChange={handleBillingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="billingProvince">
+                <Form.Label>Province / Region</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_province"
+                  value={billingData.province || ''}
+                  onChange={handleBillingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="billingCountry">
+                <Form.Label>Country</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_country"
+                  value={billingData.country || ''}
+                  onChange={handleBillingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="billingPostalCode">
+                <Form.Label>Postal Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="billing_postal_code"
+                  value={billingData.postal_code || ''}
+                  onChange={handleBillingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
             <Row className="mb-3">
-              <Col>
-                <Form.Group controlId="billingFullName">
-                  <Form.Label>Full Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="fullName"
-                    value={billingData.fullName}
-                    onChange={handleBillingChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col>
-                <Form.Group controlId="billingAddress">
-                  <Form.Label>Address</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="address"
-                    value={billingData.address}
-                    onChange={handleBillingChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group controlId="billingCity">
-                  <Form.Label>City</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="city"
-                    value={billingData.city}
-                    onChange={handleBillingChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group controlId="billingPostalCode">
-                  <Form.Label>Postal Code</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="postalCode"
-                    value={billingData.postalCode}
-                    onChange={handleBillingChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group controlId="billingCountry">
-                  <Form.Label>Country</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="country"
-                    value={billingData.country}
-                    onChange={handleBillingChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
               <Col md={6}>
                 <Form.Group controlId="billingPhone">
                   <Form.Label>Phone Number</Form.Label>
                   <Form.Control
                     type="text"
-                    name="phone"
+                    name="billing_phone"
                     value={billingData.phone}
                     onChange={handleBillingChange}
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     required
                   />
                 </Form.Group>
               </Col>
-
-            {/* Payment Method */}
+            </Row>
+            <Row className="mb-3 payment-method-inline">
               <Col md={6}>
                 <Form.Group controlId="paymentMethod" className="mt-3">
                   <Form.Label>Payment Method</Form.Label>
@@ -188,88 +268,143 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
               <>
                 <h5 className="mb-3">Shipping Details</h5>
                 <Row className="mb-3">
-                  <Col>
-                    <Form.Group controlId="shippingFullName">
-                      <Form.Label>Full Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="fullName"
-                        value={shippingData.fullName}
-                        onChange={handleShippingChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className="mb-3">
-                  <Col>
-                    <Form.Group controlId="shippingAddress">
-                      <Form.Label>Address</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="address"
-                        value={shippingData.address}
-                        onChange={handleShippingChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className="mb-3">
                   <Col md={6}>
-                    <Form.Group controlId="shippingCity">
-                      <Form.Label>City</Form.Label>
+                    <Form.Group controlId="shippingFirstName">
+                      <Form.Label>First Name</Form.Label>
                       <Form.Control
                         type="text"
-                        name="city"
-                        value={shippingData.city}
+                        name="shipping_first_name"
+                        value={shippingData.first_name || ''}
                         onChange={handleShippingChange}
+                        onKeyPress={(e) => {
+                          if (!/^[a-zA-Z\s]$/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         required
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="shippingPostalCode">
-                      <Form.Label>Postal Code</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="postalCode"
-                        value={shippingData.postalCode}
-                        onChange={handleShippingChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group controlId="shippingCountry">
-                      <Form.Label>Country</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="country"
-                        value={shippingData.country}
-                        onChange={handleShippingChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group controlId="shippingPhone">
-                      <Form.Label>Phone Number</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="phone"
-                        value={shippingData.phone}
-                        onChange={handleShippingChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </>
-            )}
-          </Container>
+            <Col md={6}>
+              <Form.Group controlId="shippingLastName">
+                <Form.Label>Last Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_last_name"
+                  value={shippingData.last_name || ''}
+                  onChange={handleShippingChange}
+                  onKeyPress={(e) => {
+                    if (!/^[a-zA-Z\s]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          {/* address */}
+           <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="shippingHouseNumber">
+                <Form.Label>House / Apt</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_house_number"
+                  value={shippingData.house_number || ''}
+                  onChange={handleShippingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="shippingStreetName">
+                <Form.Label>Street Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_street_name"
+                  value={shippingData.street_name || ''}
+                  onChange={handleShippingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="shippingCity">
+                <Form.Label>City</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_city"
+                  value={shippingData.city || ''}
+                  onChange={handleShippingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="shippingProvince">
+                <Form.Label>Province / Region</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_province"
+                  value={shippingData.province || ''}
+                  onChange={handleShippingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="shippingCountry">
+                <Form.Label>Country</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_country"
+                  value={shippingData.country || ''}
+                  onChange={handleShippingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="shippingPostalCode">
+                <Form.Label>Postal Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="shipping_postal_code"
+                  value={shippingData.postal_code || ''}
+                  onChange={handleShippingChange}
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="shippingPhone">
+                <Form.Label>Phone Number</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="phone"
+                  value={shippingData.phone}
+                  onChange={handleShippingChange}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+        </>
+      )}
+      </Container>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide}>

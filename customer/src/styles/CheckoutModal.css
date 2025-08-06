@@ -9,7 +9,6 @@
     color: white;
     padding-top: 20px !important;
     padding-bottom: 20px !important;
-    padding-left: 17% !important;
 }
 
 .modal-header .modal-title {
@@ -253,6 +252,7 @@
 .payment-method-inline {
   display: flex;
   gap: 0px;
+  align-items: left;
 }
 
 .payment-method-inline .form-check {
