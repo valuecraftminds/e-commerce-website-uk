@@ -170,10 +170,10 @@ const Cart = () => {
                             <Col md={4}>
                               <h6 className="mb-2">
                                 <Link 
-                                  to={`/product/${item.style_id}`}
+                                  to={`/product/${item.product_id}`}
                                   className="text-decoration-none"
                                 >
-                                  {item.style_name}
+                                  {item.product_name}
                                 </Link>
                               </h6>
                               <div className="product-details">
@@ -333,11 +333,11 @@ const Cart = () => {
                         </div>
                         <div className="d-flex justify-content-between mb-3">
                           <span>🚚 Shipping:</span>
-                          <span className="text">Calculated at checkout</span>
+                          {/* <span className="text">Calculated at checkout</span> */}
                         </div>
                         <div className="d-flex justify-content-between mb-3">
                           <span>🧾 Tax:</span>
-                          <span className="text">Calculated at checkout</span>
+                          {/* <span className="text">Calculated at checkout</span> */}
                         </div>
                         <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
                         <div className="d-flex justify-content-between mb-4">

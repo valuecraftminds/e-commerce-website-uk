@@ -124,11 +124,12 @@ const initialState = {
 
 // Cart Provider
 export const CartProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { isLoggedIn } = useContext(AuthContext);
   const { country } = useContext(CountryContext);
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const [exchangeRates, setExchangeRates] = useState({});
-  
+  const [isMerged, setIsMerged] = useState(false);
+
   // Get current exchange rate and currency symbol
   const getCurrentCurrency = () => {
     const symbol = currencySymbols[country] || '$';
@@ -191,7 +192,8 @@ export const CartProvider = ({ children }) => {
   
   // Get auth token
   const getAuthToken = () => {
-    return user?.token || localStorage.getItem('auth_token');
+    const token = localStorage.getItem('authToken');
+    return token;
   };
 
   // Get axios config with optional auth
@@ -255,9 +257,15 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
+  
+  
+ useEffect(() => {
+  if (isLoggedIn) {
+    const token = getAuthToken();
+    // console.log('token:', token);
     loadCart();
-  }, [user]);
+  }
+}, [isLoggedIn]);
 
   useEffect(() => {
     loadMemo();
@@ -266,11 +274,23 @@ export const CartProvider = ({ children }) => {
   // Load cart based on user authentication
   const loadCart = async () => {
     const token = getAuthToken();
+    // console.log(token);
     dispatch({ type: 'SET_LOADING', payload: true });
-     
+    //  if(!isMerged && token) {
+    //   mergeCartOnLogin().then(response => {
+    //     if (response.success) {
+    //       setIsMerged(true);
+    //       console.log('Cart merged successfully');
+    //     } else {
+    //       console.error('Failed to merge cart:', response.message);
+    //     }
+    //   }).catch(error => {
+    //     console.error('Error merging cart:', error);
+    //   });
+    // }
     if (token) {
       // User is logged in, fetch from backend
-      fetchCartItems();
+      await fetchCartItems();
     }
   };
 
@@ -324,8 +344,10 @@ export const CartProvider = ({ children }) => {
           variant_id: item.variant_id,
           quantity: item.quantity || 1,
           price: item.price,
-          name: item.name,
-          sku: item.sku
+          product_name: item.name,
+          sku: item.sku,
+          color_name: item.color?.name,
+          image: item.image,
         }, getAxiosConfig());
 
         if (response.data.success) {
@@ -345,10 +367,10 @@ export const CartProvider = ({ children }) => {
         const cartItem = {
           cart_id: `guest_${Date.now()}`,
           style_code: item.style_code,
-          variant_id: item.variant_id,
+          // variant_id: item.variant_id,
           quantity: item.quantity || 1,
           style_id: item.style_id,
-          style_name: item.name,
+          product_name: item.name,
           description: item.description,
           image: item.image,
           price: item.price,
@@ -515,42 +537,54 @@ export const CartProvider = ({ children }) => {
 
   // Merge guest cart with user cart on login
   const mergeCartOnLogin = async () => {
-    try {
-      const guestCart = getGuestCart();
-      
-      if (guestCart.length === 0) {
-        await loadCart();
-        return { success: true, message: 'No guest cart to merge' };
-      }
+  try {
+    const guestCart = getGuestCart();
 
-      // Prepare guest cart data for backend
-      const guestCartData = guestCart.map(item => ({
-        style_code: item.style_code,
-        variant_id: item.variant_id,
-        quantity: item.quantity
-      }));
-
-      const response = await axios.post(
-        `${BASE_URL}/api/customer/cart/merge`,
-        { guest_cart: guestCartData },
-        getAxiosConfig()
-      );
-
-      if (response.data.success) {
-        clearGuestCart();
-        await loadCart();
-        return { success: true, message: response.data.message };
-      } else {
-        dispatch({ type: 'SET_ERROR', payload: response.data.message });
-        return { success: false, message: response.data.message };
-      }
-    } catch (error) {
-      console.error('Error merging cart:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to merge cart';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      return { success: false, message: errorMessage };
+    if (!guestCart || guestCart.length === 0) {
+      await loadCart();
+      return { success: true, message: 'No guest cart to merge' };
     }
-  };
+
+    // Send full data to support server-side bulk insertion
+    const guestCartData = guestCart.map(item => ({
+      style_code: item.style_code,
+      variant_id: item.variant_id,
+      quantity: item.quantity,
+      price: item.price,
+      product_name: item.name,
+      color_name: item.color_name || null,
+      image: item.image || null,
+      currency: item.currency || 'USD',
+      product_url: item.product_url || null,
+      tax: item.tax || 0.00,
+      shipping_fee: item.shipping_fee || 0.00,
+      is_available: item.is_available !== undefined ? item.is_available : true
+    }));
+
+    console.log('Merging guest cart:', guestCartData);
+
+    const response = await axios.post(
+      `${BASE_URL}/api/customer/cart/merge`,
+      { guest_cart: guestCartData },
+      getAxiosConfig()
+    );
+
+    if (response.data.success) {
+      clearGuestCart();
+      await loadCart();
+      return { success: true, message: response.data.message };
+    } else {
+      dispatch({ type: 'SET_ERROR', payload: response.data.message });
+      return { success: false, message: response.data.message };
+    }
+  } catch (error) {
+    console.error('Error merging cart:', error);
+    const errorMessage = error.response?.data?.message || 'Failed to merge cart';
+    dispatch({ type: 'SET_ERROR', payload: errorMessage });
+    return { success: false, message: errorMessage };
+  }
+};
+
 
   // Clear error
   const clearError = () => {

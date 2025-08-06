@@ -49,10 +49,10 @@ export default function UserMenu() {
               {userData?.name || userData?.email || 'User'}
             </Dropdown.Header>
             <Dropdown.Divider />
-            <Dropdown.Item onClick={() => handleNavigate('/profile')}>
+            {/* <Dropdown.Item onClick={() => handleNavigate('/profile')}>
               <i className="bi bi-person me-2"></i>
               Profile
-            </Dropdown.Item>
+            </Dropdown.Item> */}
             <Dropdown.Item onClick={() => handleNavigate('/orders')}>
               <i className="bi bi-bag me-2"></i>
               My Orders
