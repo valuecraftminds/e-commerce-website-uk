@@ -1,5 +1,5 @@
 .main-container {
-    max-width: 100%;
+    max-width: 70%;
     margin: 0 auto;
     background: white;
     min-height: 100vh;
@@ -100,15 +100,14 @@
         }
         
         .address-card.default {
-          border-color: #28a745;
-          background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+          background: linear-gradient(135deg, #d4d4ed 0%, #c3c7e6 100%);
         }
         
         .default-badge {
           position: absolute;
           top: -10px;
           right: 15px;
-          background: #28a745;
+          background: #466d5d;
           color: white;
           padding: 5px 12px;
           border-radius: 15px;
@@ -117,11 +116,10 @@
         }
         
         .payment-card {
-          border: 2px solid #e9ecef;
           border-radius: 10px;
           padding: 1.5rem;
           margin-bottom: 1.5rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background-color: rgba(17, 0, 94, 0.692) !important;
           color: white;
           position: relative;
           transition: all 0.3s ease;
@@ -130,11 +128,6 @@
         .payment-card:hover {
           transform: translateY(-2px);
           box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-        
-        .payment-card.default {
-          border-color: #ffd700;
-          box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
         
         .card-chip {
@@ -191,3 +184,28 @@
           padding-bottom: 0.5rem;
           border-bottom: 2px solid #e9ecef;
         }
+
+.save-btn{
+  background-color: #466d5d !important;
+  color: white !important;
+}
+
+.save-btn:hover{
+  background-color: #3b5b4a !important;
+}
+
+.new-address-btn{
+   background-color: #466d5d !important;
+  color: white !important;
+}
+.new-address-btn:hover{
+  background-color: #3b5b4a !important;
+}
+
+.new-card-btn{
+  background-color: #466d5d !important;
+  color: white !important;
+}
+.new-card-btn:hover{
+   background-color: #3b5b4a !important;
+}

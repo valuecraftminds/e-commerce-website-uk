@@ -3,6 +3,7 @@ import { Dropdown } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthContext';
+import yellowLady from '../assets/yellow lady.jpg';
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -25,10 +26,28 @@ export default function UserMenu() {
         className="p-0 border-0 bg-transparent"
         style={{ boxShadow: 'none' }}
       >
-        <i
+        {/* <i
           className="bi bi-person"
           style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
+        /> */}
+         {isLoggedIn ? (
+        <img
+          src={userData.profileImage || yellowLady}
+          alt="Profile"
+          className="rounded-circle"
+          style={{
+            width: '36px',
+            height: '36px',
+            objectFit: 'cover',
+            cursor: 'pointer',
+          }}
         />
+      ) : (
+      <i
+        className="bi bi-person"
+        style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
+        />
+      )}
       </Dropdown.Toggle>
 
       <Dropdown.Menu>

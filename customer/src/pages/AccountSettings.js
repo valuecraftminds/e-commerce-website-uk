@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone, Calendar, Lock, Shield } from 'lucide-react';
+import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone, Lock, Shield } from 'lucide-react';
 
-// import '../styles/AccountSettings.css';
+import '../styles/AccountSettings.css';
 
 export default function EcommerceAccountSettings() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -71,9 +71,11 @@ export default function EcommerceAccountSettings() {
         {/* Header */}
         <div className="header-section">
           <div className="profile-avatar-large">
+            <i class="bi bi-person-circle fs-1"></i>
             {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
           </div>
-          <h2>{profileData.firstName} {profileData.lastName}</h2>
+          {/* <h2>{profileData.firstName} {profileData.lastName}</h2> */}
+          <h2> John Doe</h2>
           <p className="mb-0 opacity-75">Manage your account settings and preferences</p>
         </div>
 
@@ -196,7 +198,7 @@ export default function EcommerceAccountSettings() {
               </div>
 
               <div className="d-flex gap-3">
-                <button className="btn btn-primary-custom btn-custom">
+                <button className="btn save-btn">
                   Save All Changes
                 </button>
                 <button className="btn btn-outline-secondary btn-custom">
@@ -214,7 +216,7 @@ export default function EcommerceAccountSettings() {
                   <MapPin className="me-2" />
                   Shipping Addresses
                 </h3>
-                <button className="btn btn-primary-custom btn-custom">
+                <button className="btn new-address-btn">
                   <Plus size={18} className="me-2" />
                   Add New Address
                 </button>
@@ -266,7 +268,7 @@ export default function EcommerceAccountSettings() {
                   <CreditCard className="me-2" />
                   Payment Methods
                 </h3>
-                <button className="btn btn-primary-custom btn-custom">
+                <button className="btn new-card-btn">
                   <Plus size={18} className="me-2" />
                   Add New Card
                 </button>
