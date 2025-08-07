@@ -14,7 +14,7 @@ import LoginPage from './pages/LoginPage';
 import Cart from './components/Cart';
 import UserMenu from './components/UserMenu';
 import ProtectedRoute from './components/ProtectedRoute';
-import AccountSettings from './pages/AccountSettings';
+import UserAccountSettings from './pages/UserAccountSettings';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -58,7 +58,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/cart" element={<Cart />} />
-              <Route path="/account-settings" element={<AccountSettings />} />
+              <Route path="/account-settings" element={<UserAccountSettings />} />
 
               {/* Protected Routes */}
               <Route path="/usermenu" element={
