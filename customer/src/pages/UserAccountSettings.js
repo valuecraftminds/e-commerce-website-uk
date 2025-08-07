@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone, Lock, Shield } from 'lucide-react';
+import axios from 'axios';
 
 import '../styles/AccountSettings.css';
 
-export default function EcommerceAccountSettings() {
+const BASE_URL = process.env.REACT_APP_API_URL;
+const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
+
+export default function UserAccountSettings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -13,51 +17,11 @@ export default function EcommerceAccountSettings() {
     lastName: '',
     email: '',
     phone: '',
+    password: ''
   });
 
-  const [addresses] = useState([
-    {
-      id: 1,
-      type: 'Home',
-      name: 'John Smith',
-      address: '123 Main Street, Apt 4B',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'United States',
-      isDefault: true
-    },
-    {
-      id: 2,
-      type: 'Work',
-      name: 'John Smith',
-      address: '456 Business Avenue, Suite 200',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10002',
-      country: 'United States',
-      isDefault: false
-    }
-  ]);
-
-  const [paymentMethods] = useState([
-    {
-      id: 1,
-      type: 'Visa',
-      last4: '4242',
-      expiryDate: '12/25',
-      cardHolder: 'JOHN SMITH',
-      isDefault: true
-    },
-    {
-      id: 2,
-      type: 'Mastercard',
-      last4: '8888',
-      expiryDate: '08/26',
-      cardHolder: 'JOHN SMITH',
-      isDefault: false
-    }
-  ]);
+  const [addresses, setAddresses] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
 
   const sidebarItems = [
     { id: 'profile', label: 'Profile Information', icon: User },
@@ -65,17 +29,75 @@ export default function EcommerceAccountSettings() {
     { id: 'payment', label: 'Payment Methods', icon: CreditCard },
   ];
 
+  // Get auth token from logged in user
+  const getAuthToken = () => {
+    const token = localStorage.getItem('authToken');
+    return token;
+  };
+
+  // Get axios config with auth token
+  const getAxiosConfig = () => {
+    const token = getAuthToken();
+    const config = {
+      params: { company_code: COMPANY_CODE },
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    };
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // const token = localStorage.getItem('token');
+        // const company_code = localStorage.getItem('company_code'); // or get from context, cookie, etc.
+
+        // if (!token || !company_code) {
+        //   console.error('Missing token or company code');
+        //   return;
+        // }
+
+        const [response, addressResponse, paymentResponse] = await Promise.all([
+          axios.get(`${BASE_URL}/api/customer/user/profile`, getAxiosConfig()),
+          // axios.get(`/api/customer/addresses`, getAxiosConfig()),
+          // axios.get(`/api/customer/payment-methods`, getAxiosConfig())
+        ])
+
+        setProfileData({
+          firstName: response.data.first_name || '',
+          lastName: response.data.last_name || '',
+          email: response.data.email || '',
+          phone: response.data.phone || '',
+          password: response.data.password || '',
+        });
+
+        setAddresses(addressResponse.data || []);
+        setPaymentMethods(paymentResponse.data || []);
+      } catch (error) {
+        console.error('Error fetching account data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+console.log(profileData.firstName);
+
   return (
     <>
       <div className="main-container">
         {/* Header */}
         <div className="header-section">
           <div className="profile-avatar-large">
-            <i class="bi bi-person-circle fs-1"></i>
+            {/* <i class="bi bi-person-circle fs-1"></i> */}
             {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
           </div>
-          {/* <h2>{profileData.firstName} {profileData.lastName}</h2> */}
-          <h2> John Doe</h2>
+          <h2>{profileData.firstName} {profileData.lastName}</h2>
           <p className="mb-0 opacity-75">Manage your account settings and preferences</p>
         </div>
 

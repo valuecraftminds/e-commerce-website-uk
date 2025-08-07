@@ -20,9 +20,20 @@ const CheckoutController = {
 
     // Insert into address table
     const addressQuery = `
-      INSERT INTO address
-      (company_code, customer_id, first_name, last_name, house, address_line_1, address_line_2, city, state, country, postal_code, phone)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO address (
+        company_code, 
+        customer_id, 
+        first_name, 
+        last_name, 
+        house, 
+        address_line_1, 
+        address_line_2, 
+        city, 
+        state, 
+        country, 
+        postal_code, 
+        phone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const addressValues = [
       company_code,
@@ -58,9 +69,20 @@ const CheckoutController = {
       } = payment_method;
 
       const paymentQuery = `
-        INSERT INTO payment_method
-        (company_code, customer_id, method_type, provider, card_number, card_expiry_date, card_cvv, paypal_email, bank_account, bank_name, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO payment_method (
+          company_code, 
+          customer_id, 
+          method_type, 
+          provider, 
+          card_number, 
+          card_expiry_date, 
+          card_cvv, 
+          paypal_email, 
+          bank_account, 
+          bank_name, 
+          created_at, 
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const now = new Date();
       const paymentValues = [
@@ -74,8 +96,8 @@ const CheckoutController = {
         paypal_email,
         bank_account,
         bank_name,
-        now,
-        now
+        new Date(),
+        new Date()
       ];
 
       db.query(paymentQuery, paymentValues, (paymentErr, paymentResult) => {
