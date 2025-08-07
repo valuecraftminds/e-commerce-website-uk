@@ -24,13 +24,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+  
 // Import Routes
 // Customer
 const customerRoutes = require('./routes/customer/CustomerRoutes');
 const customerAuthRoutes = require('./routes/customer/CustomerAuthRoutes');
 const cartRoutes = require('./routes/customer/CartRoutes');
-const currencyRoutes = require('./routes/customer/CurrencyRoutes');
+const CustomercurrencyRoutes = require('./routes/customer/CurrencyRoutes');
 const checkoutRoutes = require('./routes/customer/CheckoutRoutes');
 
 // Admin
@@ -42,14 +42,16 @@ const colorRoutes = require('./routes/admin/Color');
 const fitRoutes = require('./routes/admin/Fit');
 const materialRoutes = require('./routes/admin/Material');
 const licenseRoutes = require('./routes/admin/License');
-
+const currencyRoutes = require('./routes/admin/Currency');
+const supplierRoutes = require('./routes/admin/Supplier');
+const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
 
 // Route bindings
 // Customer routes
 app.use('/api/customer', customerRoutes);
 app.use('/api/customer/auth', customerAuthRoutes);
 app.use('/api/customer/cart', cartRoutes);
-app.use('/api/customer/currency', currencyRoutes);
+app.use('/api/customer/currency', CustomercurrencyRoutes);
 app.use('/api/customer/checkout', checkoutRoutes);
 
 // Admin routes
@@ -61,6 +63,9 @@ app.use('/api/admin/colors', colorRoutes);
 app.use('/api/admin/fits', fitRoutes);
 app.use('/api/admin/materials', materialRoutes);
 app.use('/api/admin/license', licenseRoutes);
+app.use('/api/admin/currencies', currencyRoutes);
+app.use('/api/admin/suppliers', supplierRoutes);
+app.use('/api/admin/po', purchaseOrderRoutes);
 
 
 // Default route
@@ -78,7 +83,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Basic route
+app.get('/', (req, res) => {
+  res.json({ message: 'E-Commerce UK Backend API running successfully.' });
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+

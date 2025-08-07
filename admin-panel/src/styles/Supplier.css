@@ -1,0 +1,24 @@
+.supplier-container {
+  padding: 20px;
+}
+
+.action-icon {
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.action-icon.edit {
+  color: #007bff;
+}
+
+.action-icon.delete {
+  color: #dc3545;
+}
+
+.search-container {
+  width: 300px;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}

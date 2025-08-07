@@ -1,10 +1,10 @@
 import {
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable
 } from '@tanstack/react-table';
 import React, { useMemo } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
@@ -27,8 +27,7 @@ const StyleTable = ({
             {getValue() && getValue().split(',').map((img, idx) => (
               <img
                 key={idx}
-                src={`${BASE_URL}/admin/uploads/styles/${img}`}
-                alt={`Style ${idx + 1}`}
+                src={`${BASE_URL}/uploads/styles/${img.trim()}`}                alt={`Style ${idx + 1}`}
                 className="table-thumbnail"
                 title={`Click to view larger image ${idx + 1}`}
               />

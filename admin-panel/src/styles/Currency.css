@@ -1,0 +1,27 @@
+.currency-container {
+    padding: 20px;
+}
+
+.currency-header {
+    margin-bottom: 20px;
+}
+
+.currency-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.currency-table {
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.action-buttons button {
+    margin: 0 5px;
+}
