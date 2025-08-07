@@ -1,5 +1,4 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import DeleteAdmin from './components/DeleteAdmin';
@@ -14,6 +13,8 @@ import Currency from './pages/Currency';
 import LoginPage from './pages/LoginPage';
 import OrderingDashboard from './pages/OrderingDashboard';
 import PdcDashboard from './pages/PdcDashboard';
+import PurchaseOrder from './pages/PurchaseOrder';
+import PurchaseOrderForm from './pages/PurchaseOrderForm';
 import Style from './pages/Style';
 import ColorManagement from './pages/Style_Management/ColorManagement';
 import FitManagement from './pages/Style_Management/FitManagement';
@@ -27,7 +28,6 @@ import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import WarehouseGRN from './pages/WarehouseGRN';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
-import PurchaseOrder from './pages/PurchaseOrder';
 
 
 function App() {
@@ -70,7 +70,8 @@ function App() {
         <Route path="/finance/currency" element={<Currency />} />
         <Route path="/finance/supplier" element={<Supplier />} />
         <Route path="/merchandising/po" element={<PurchaseOrder />} />
-        
+        <Route path="/merchandising/po/new" element={<PurchaseOrderForm />} />
+        <Route path="/merchandising/po/:po_number" element={<PurchaseOrderForm />} />
 
       </Routes>  
     </>

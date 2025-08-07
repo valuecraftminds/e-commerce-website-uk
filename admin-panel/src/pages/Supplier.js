@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
@@ -19,7 +19,13 @@ export default function Supplier() {
     phone: '',
     address: '',
     brn: '',
-    payment: 'Credit' // Set default value
+    vat: '',
+    bank_name: '',
+    branch: '',
+    account_number: '',
+    payment_terms: 'Cash', // Updated field name
+    credit_period: '',
+    advance_percentage: ''
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -46,7 +52,13 @@ export default function Supplier() {
       phone: '',
       address: '',
       brn: '',
-      payment: 'Credit'
+      vat: '',
+      bank_name: '',
+      branch: '',
+      account_number: '',
+      payment_terms: 'Cash',
+      credit_period: '',
+      advance_percentage: ''
     });
     setEditingId(null);
   };
@@ -60,7 +72,13 @@ export default function Supplier() {
       phone: supplier.phone,
       address: supplier.address,
       brn: supplier.brn,
-      payment: supplier.payment
+      vat: supplier.vat || '',
+      bank_name: supplier.bank_name || '',
+      branch: supplier.branch || '',
+      account_number: supplier.account_number || '',
+      payment_terms: supplier.payment_terms,
+      credit_period: supplier.credit_period || '',
+      advance_percentage: supplier.advance_percentage || ''
     });
     setEditingId(supplier.supplier_id);
     setShowModal(true);
@@ -79,6 +97,18 @@ export default function Supplier() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate conditional fields
+    if (formData.payment_terms === 'Credit' && !formData.credit_period) {
+      alert('Credit period is required for credit payment terms');
+      return;
+    }
+    
+    if (formData.payment_terms === 'Advance' && !formData.advance_percentage) {
+      alert('Advance percentage is required for advance payment terms');
+      return;
+    }
+    
     try {
       if (editingId) {
         await axios.put(`${BASE_URL}/api/admin/suppliers/update-suppliers/${editingId}`, {
@@ -86,22 +116,32 @@ export default function Supplier() {
           company_code: userData?.company_code
         });
       } else {
-        await axios.post(`${BASE_URL}/api/admin/suppliers/add-suppliers`, {
+        const response = await axios.post(`${BASE_URL}/api/admin/suppliers/add-suppliers`, {
           ...formData,
           company_code: userData?.company_code,
           created_by: userData?.id
         });
+        
+        // Show success message with generated supplier ID
+        if (response.data.success && response.data.supplier_id) {
+          alert(`Supplier created successfully! Supplier ID: ${response.data.supplier_id}`);
+        }
       }
       handleClose();
       fetchSuppliers();
     } catch (error) {
       console.error('Error saving supplier:', error);
+      alert('Error saving supplier. Please try again.');
     }
   };
 
   const filteredSuppliers = suppliers.filter(supplier =>
     supplier.supplier_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.email.toLowerCase().includes(searchTerm.toLowerCase())
+    supplier.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.supplier_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.vat?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.bank_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -123,11 +163,14 @@ export default function Supplier() {
         <thead>
           <tr>
             <th>#</th>
+            <th>Supplier ID</th>
             <th>Name</th>
             <th>Phone</th>
             <th>Email</th>
             <th>Address</th>
             <th>BRN</th>
+            <th>VAT</th>
+            <th>Bank Details</th>
             <th>Payment Terms</th>
             <th>Actions</th>
           </tr>
@@ -136,12 +179,31 @@ export default function Supplier() {
           {filteredSuppliers.map((supplier, index) => (
             <tr key={supplier.supplier_id}>
               <td>{index + 1}</td>
+              <td>{supplier.supplier_id}</td>
               <td>{supplier.supplier_name}</td>
               <td>{supplier.phone}</td>
               <td>{supplier.email}</td>
               <td>{supplier.address}</td>
               <td>{supplier.brn}</td>
-              <td>{supplier.payment}</td>
+              <td>{supplier.vat}</td>
+              <td>
+                {supplier.bank_name && (
+                  <div>
+                    <div><strong>{supplier.bank_name}</strong></div>
+                    <div>{supplier.branch}</div>
+                    <div>{supplier.account_number}</div>
+                  </div>
+                )}
+              </td>
+              <td>
+                <div>{supplier.payment_terms}</div>
+                {supplier.payment_terms === 'Credit' && supplier.credit_period && (
+                  <small>({supplier.credit_period} days)</small>
+                )}
+                {supplier.payment_terms === 'Advance' && supplier.advance_percentage && (
+                  <small>({supplier.advance_percentage}%)</small>
+                )}
+              </td>
               <td>
                 <FaEdit className="action-icon edit" onClick={() => handleEdit(supplier)} />
                 <FaTrash className="action-icon delete" onClick={() => handleDelete(supplier.supplier_id)} />
@@ -166,6 +228,7 @@ export default function Supplier() {
                 required
               />
             </Form.Group>
+            
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -174,6 +237,7 @@ export default function Supplier() {
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
             </Form.Group>
+            
             <Form.Group className="mb-3">
               <Form.Label>Phone</Form.Label>
               <Form.Control
@@ -182,6 +246,7 @@ export default function Supplier() {
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
               />
             </Form.Group>
+            
             <Form.Group className="mb-3">
               <Form.Label>Address</Form.Label>
               <Form.Control
@@ -190,26 +255,98 @@ export default function Supplier() {
                 onChange={(e) => setFormData({...formData, address: e.target.value})}
               />
             </Form.Group>
+            
             <Form.Group className="mb-3">
-              <Form.Label>BRN</Form.Label>
+              <Form.Label>BRN (Business Registration Number)</Form.Label>
               <Form.Control
                 type="text"
                 value={formData.brn}
                 onChange={(e) => setFormData({...formData, brn: e.target.value})}
               />
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>VAT Number</Form.Label>
+              <Form.Control
+                type="text"
+                value={formData.vat}
+                onChange={(e) => setFormData({...formData, vat: e.target.value})}
+              />
+            </Form.Group>
+
+            <hr />
+            <h6>Bank Details</h6>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Bank Name</Form.Label>
+              <Form.Control
+                type="text"
+                value={formData.bank_name}
+                onChange={(e) => setFormData({...formData, bank_name: e.target.value})}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Branch</Form.Label>
+              <Form.Control
+                type="text"
+                value={formData.branch}
+                onChange={(e) => setFormData({...formData, branch: e.target.value})}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Account Number</Form.Label>
+              <Form.Control
+                type="text"
+                value={formData.account_number}
+                onChange={(e) => setFormData({...formData, account_number: e.target.value})}
+              />
+            </Form.Group>
+
+            <hr />
+            <h6>Payment Terms</h6>
+            
             <Form.Group className="mb-3">
               <Form.Label>Payment Terms</Form.Label>
               <Form.Select
-                value={formData.payment}
-                onChange={(e) => setFormData({...formData, payment: e.target.value})}
+                value={formData.payment_terms}
+                onChange={(e) => setFormData({...formData, payment_terms: e.target.value, credit_period: '', advance_percentage: ''})}
                 required
               >
+                <option value="Cash">Cash</option>
                 <option value="Credit">Credit</option>
-                <option value="Debit">Debit</option>
                 <option value="Advance">Advance</option>
               </Form.Select>
             </Form.Group>
+
+            {formData.payment_terms === 'Credit' && (
+              <Form.Group className="mb-3">
+                <Form.Label>Credit Period (Days)</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={formData.credit_period}
+                  onChange={(e) => setFormData({...formData, credit_period: e.target.value})}
+                  required
+                  min="1"
+                />
+              </Form.Group>
+            )}
+
+            {formData.payment_terms === 'Advance' && (
+              <Form.Group className="mb-3">
+                <Form.Label>Advance Percentage (%)</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={formData.advance_percentage}
+                  onChange={(e) => setFormData({...formData, advance_percentage: e.target.value})}
+                  required
+                  min="1"
+                  max="100"
+                />
+              </Form.Group>
+            )}
+            
             <Button variant="primary" type="submit">
               {editingId ? 'Update' : 'Save'}
             </Button>

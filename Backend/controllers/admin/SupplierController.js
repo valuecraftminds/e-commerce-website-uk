@@ -20,10 +20,34 @@ const SupplierController = {
     },
 
     addSupplier(req, res) {
-        const { company_code, supplier_name, email, phone, address, brn, payment, created_by } = req.body;
+        const { 
+            company_code, 
+            supplier_name, 
+            email, 
+            phone, 
+            address, 
+            brn, 
+            vat,
+            bank_name,
+            branch,
+            account_number,
+            payment_terms,
+            credit_period,
+            advance_percentage,
+            created_by 
+        } = req.body;
 
-        if (!company_code || !supplier_name || !payment || !created_by) {
+        if (!company_code || !supplier_name || !payment_terms || !created_by) {
             return res.status(400).json({ success: false, message: 'Required fields are missing' });
+        }
+
+        // Validate payment terms specific fields
+        if (payment_terms === 'Credit' && !credit_period) {
+            return res.status(400).json({ success: false, message: 'Credit period is required for credit payment terms' });
+        }
+
+        if (payment_terms === 'Advance' && !advance_percentage) {
+            return res.status(400).json({ success: false, message: 'Advance percentage is required for advance payment terms' });
         }
 
         // Check for duplicate supplier by name and company
@@ -42,16 +66,47 @@ const SupplierController = {
                     });
                 }
 
+
                 // Insert new supplier
                 db.query(
-                    'INSERT INTO suppliers (company_code, supplier_name, email, phone, address, brn, payment, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                    [company_code, supplier_name, email, phone, address, brn, payment, created_by],
+                    `INSERT INTO suppliers (
+                        company_code, 
+                        supplier_name, 
+                        email, 
+                        phone, 
+                        address, 
+                        brn, 
+                        vat,
+                        bank_name,
+                        branch,
+                        account_number,
+                        payment_terms,
+                        credit_period,
+                        advance_percentage,
+                        created_by
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        company_code, 
+                        supplier_name, 
+                        email, 
+                        phone, 
+                        address, 
+                        brn, 
+                        vat,
+                        bank_name,
+                        branch,
+                        account_number,
+                        payment_terms,
+                        credit_period,
+                        advance_percentage,
+                        created_by
+                    ],
                     (err, result) => {
                         if (err) {
                             console.error('Error adding supplier:', err);
                             return res.status(500).json({ success: false, message: 'Error adding supplier', error: err.message });
                         }
-                        res.json({ success: true, supplier_id: result.insertId });
+                        res.json({ success: true, supplier_id: custom_supplier_id });
                     }
                 );
             }
@@ -60,10 +115,33 @@ const SupplierController = {
 
     updateSupplier(req, res) {
         const { supplier_id } = req.params;
-        const { supplier_name, email, phone, address, brn, payment, company_code } = req.body;
+        const { 
+            supplier_name, 
+            email, 
+            phone, 
+            address, 
+            brn, 
+            vat,
+            bank_name,
+            branch,
+            account_number,
+            payment_terms,
+            credit_period,
+            advance_percentage,
+            company_code 
+        } = req.body;
 
-        if (!supplier_name || !payment || !company_code) {
+        if (!supplier_name || !payment_terms || !company_code) {
             return res.status(400).json({ success: false, message: 'Required fields are missing' });
+        }
+
+        // Validate payment terms specific fields
+        if (payment_terms === 'Credit' && !credit_period) {
+            return res.status(400).json({ success: false, message: 'Credit period is required for credit payment terms' });
+        }
+
+        if (payment_terms === 'Advance' && !advance_percentage) {
+            return res.status(400).json({ success: false, message: 'Advance percentage is required for advance payment terms' });
         }
 
         db.query(
@@ -82,8 +160,38 @@ const SupplierController = {
                 }
 
                 db.query(
-                    'UPDATE suppliers SET supplier_name = ?, email = ?, phone = ?, address = ?, brn = ?, payment = ?, company_code = ?, updated_at = NOW() WHERE supplier_id = ?',
-                    [supplier_name, email, phone, address, brn, payment, company_code, supplier_id],
+                    `UPDATE suppliers SET 
+                        supplier_name = ?, 
+                        email = ?, 
+                        phone = ?, 
+                        address = ?, 
+                        brn = ?, 
+                        vat = ?,
+                        bank_name = ?,
+                        branch = ?,
+                        account_number = ?,
+                        payment_terms = ?,
+                        credit_period = ?,
+                        advance_percentage = ?,
+                        company_code = ?, 
+                        updated_at = NOW() 
+                    WHERE supplier_id = ?`,
+                    [
+                        supplier_name, 
+                        email, 
+                        phone, 
+                        address, 
+                        brn, 
+                        vat,
+                        bank_name,
+                        branch,
+                        account_number,
+                        payment_terms,
+                        credit_period,
+                        advance_percentage,
+                        company_code, 
+                        supplier_id
+                    ],
                     (err, result) => {
                         if (err) {
                             return res.status(500).json({ success: false, message: 'Error updating supplier' });

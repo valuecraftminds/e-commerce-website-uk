@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import DeleteAdmin from '../../components/DeleteAdmin';
-import LicenseModal from '../../components/LicenseModal';
+import LicenseModal from '../../components/modals/LicenseModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 

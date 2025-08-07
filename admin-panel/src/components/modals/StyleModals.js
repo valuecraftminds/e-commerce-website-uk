@@ -9,7 +9,7 @@ import {
 import React, { useMemo } from 'react';
 import { Col, Form, Modal, Row } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import '../styles/StyleModals.css';
+import '../../styles/StyleModals.css';
 
 export const StyleFormModal = ({ 
 show, 

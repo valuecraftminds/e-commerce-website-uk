@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { StyleFormModal, VariantFormModal } from '../components/StyleModals';
+import { StyleFormModal, VariantFormModal } from '../components/modals/StyleModals';
 import StyleTable from '../components/StyleTable';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Style.css';
