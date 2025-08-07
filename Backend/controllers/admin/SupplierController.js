@@ -84,7 +84,7 @@ const SupplierController = {
                         credit_period,
                         advance_percentage,
                         created_by
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         company_code, 
                         supplier_name, 
@@ -106,7 +106,7 @@ const SupplierController = {
                             console.error('Error adding supplier:', err);
                             return res.status(500).json({ success: false, message: 'Error adding supplier', error: err.message });
                         }
-                        res.json({ success: true, supplier_id: custom_supplier_id });
+                        res.json({ success: true , message: 'Supplier added successfully', supplier_id: result.insertId });
                     }
                 );
             }
