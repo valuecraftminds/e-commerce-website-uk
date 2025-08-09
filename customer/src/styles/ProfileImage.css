@@ -1,0 +1,75 @@
+.profile-picture-modal {
+  max-width: 500px;
+  min-height: 450px;
+  height: 65%;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-picture-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top:0;
+    z-index: 10;
+}
+
+.current-profile-picture {
+  width: 120px;
+  height: 120px;
+  object-fit: contain !important; 
+  background-color: #f0f0f0; 
+}
+
+.current-profile-picture .initials {
+  font-size: 48px;
+  color: #aaa;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preview-section {
+  position: relative;
+}
+
+.preview-image {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 10px 20px !important;
+  margin: 20px !important;
+}
+
+.profile-picture-modal .modal-body {
+  padding: 1rem;
+  overflow-y: auto;
+  flex-grow: 1; 
+}
+
+.profile-picture-modal .modal-body::-webkit-scrollbar {
+  width: 12px;
+}
+
+.profile-picture-modal .modal-body::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 6px;
+}
+
+.profile-picture-modal .modal-body::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 6px;
+  border: 2px solid #f0f0f0;
+}
+

@@ -3,6 +3,7 @@ import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone
 import axios from 'axios';
 
 import '../styles/AccountSettings.css';
+import ProfilePictureModal from '../components/ProfileImageModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -249,7 +250,7 @@ export default function UserAccountSettings() {
     <>
       <div className="main-container">
         {/* Header */}
-        <div className="header-section">
+        {/* <div className="header-section">
           <div 
             className="profile-avatar-large clickable"
             onClick={() => setShowProfilePictureModal(true)}
@@ -269,7 +270,29 @@ export default function UserAccountSettings() {
           </div>
           <h2>{profileData.firstName} {profileData.lastName}</h2>
           <p className="mb-0 opacity-75">Manage your account settings and preferences</p>
-        </div>
+        </div> */}
+
+        <div className="header-section">
+  <div
+    className="profile-avatar-large clickable"
+    onClick={() => setShowProfilePictureModal(true)}
+    style={{
+      backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
+      color: profileImageUrl ? 'transparent' : 'inherit',
+    }}
+  >
+    {!profileImageUrl && getInitials()}
+    <div className="profile-picture-overlay">
+      <Camera size={20} />
+    </div>
+  </div>
+
+  <div>
+    <h2>{profileData.firstName} {profileData.lastName}</h2>
+    <p>Manage your account settings and preferences</p>
+  </div>
+</div>
+
 
         {/* Navigation Tabs */}
         <div className="nav-tabs-custom">
@@ -532,101 +555,20 @@ export default function UserAccountSettings() {
       </div>
 
       {/* Profile Picture Modal */}
-      {showProfilePictureModal && (
-        <div className="modal-overlay" onClick={() => setShowProfilePictureModal(false)}>
-          <div className="modal-content profile-picture-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h5>Profile Picture</h5>
-            </div>
-            
-            <div className="modal-body">
-              {/* Current Profile Picture */}
-              <div className="current-picture-section">
-                <h6>Current Picture</h6>
-                <div 
-                  className="current-profile-picture"
-                  style={{
-                    backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                >
-                  {!profileImageUrl && (
-                    <span className="initials">{getInitials()}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Upload New Picture */}
-              <div className="upload-section">
-                <h6>Upload New Picture</h6>
-                <div className="upload-area">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    accept="image/*"
-                    className="file-input"
-                    style={{ display: 'none' }}
-                  />
-                  
-                  {!selectedFile ? (
-                    <div 
-                      className="upload-placeholder"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload size={32} />
-                      <p>Click to select an image</p>
-                      <small>Supports: JPEG and PNG (Max: 5MB)</small>
-                    </div>
-                  ) : (
-                    <div className="preview-section">
-                      <img src={previewUrl} alt="Preview" className="preview-image" />
-                      <button 
-                        className="btn btn-outline-secondary btn-sm mt-2"
-                        onClick={resetFileSelection}
-                      >
-                        Choose Different Image
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <div className="d-flex gap-2 w-100">
-                {selectedFile && (
-                  <button 
-                    className="btn btn-primary"
-                    onClick={handleUploadProfilePicture}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? 'Uploading...' : 'Upload Picture'}
-                  </button>
-                )}
-                
-                {profileImageUrl && (
-                  <button 
-                    className="btn btn-outline-danger"
-                    onClick={handleDeleteProfilePicture}
-                  >
-                    <Trash2 size={16} className="me-1" />
-                    Delete Current Picture
-                  </button>
-                )}
-                
-                <button 
-                  className="btn btn-outline-secondary ms-auto"
-                  onClick={() => setShowProfilePictureModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProfilePictureModal
+        show={showProfilePictureModal}
+        onClose={() => setShowProfilePictureModal(false)}
+        profileImageUrl={profileImageUrl}
+        getInitials={getInitials}
+        fileInputRef={fileInputRef}
+        handleFileSelect={handleFileSelect}
+        selectedFile={selectedFile}
+        previewUrl={previewUrl}
+        resetFileSelection={resetFileSelection}
+        handleUploadProfilePicture={handleUploadProfilePicture}
+        handleDeleteProfilePicture={handleDeleteProfilePicture}
+        isUploading={isUploading}
+      />
     </>
   );
 }

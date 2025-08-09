@@ -12,20 +12,6 @@
     padding: 2rem;
     text-align: center;
 }
-        
-.profile-avatar-large {
-    width: 100px;
-    height: 100px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    border: 3px solid rgba(255,255,255,0.3);
-}
 
 .nav-tabs-custom {
     border-bottom: 2px solid #e9ecef;
@@ -212,30 +198,6 @@
   background-color: #3b5b4a !important;
 }
 
-.profile-avatar-large {
-  position: relative;
-  overflow: hidden;
-}
-
-.profile-avatar-large.clickable:hover .profile-picture-overlay {
-  opacity: 1;
-}
-
-.profile-picture-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  color: white;
-}
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -338,4 +300,89 @@
   max-height: 200px;
   border-radius: 8px;
   object-fit: cover;
+  object-fit: contain !important; 
 }
+
+@media (max-width: 768px) {
+  .main-container {
+    max-width: 100%;
+  }
+  
+  .header-section {
+    padding: 1rem;
+  }
+  
+  .profile-avatar-large {
+    width: 100px !important;
+    height: 100px !important;
+    font-size: 2.5rem;
+  }
+  
+  .nav-tabs-custom {
+    padding: 0 1rem;
+  }
+  
+  .content-section {
+    padding: 1rem;
+  }
+  
+  .info-card, .address-card, .payment-card {
+    padding: 1rem;
+  }
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* space between image and text */
+}
+
+.profile-avatar-large {
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: inherit;
+  user-select: none;
+  width: 150px;
+  height: 150px;
+}
+
+.header-section h2 {
+  margin: 0;
+  font-weight: 600;
+  text-align: left;
+}
+
+.header-section p {
+  margin: 0;
+  opacity: 0.75;
+  text-align: left;
+}
+
+.profile-picture-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  border-radius: 50%;
+}
+
+.profile-avatar-large.clickable:hover .profile-picture-overlay {
+  opacity: 1;
+}
+
