@@ -142,6 +142,65 @@ const ProfileController = {
                 });
             });
         });
+    },
+    
+    deleteProfileImage: (req, res) => {
+        const customer_id = req.user?.id;
+        const { company_code } = req.query;
+
+        if (!company_code) {
+            return res.status(400).json({ error: 'Company code required' });
+        }
+
+        if (!customer_id) {
+            return res.status(400).json({ error: 'Customer ID required' });
+        }
+
+        // Get current profile image
+        const getCurrentImageSql = `
+            SELECT profile_image FROM customers 
+            WHERE company_code = ? AND customer_id = ?
+        `;
+
+        db.query(getCurrentImageSql, [company_code, customer_id], (err, results) => {
+            if (err) {
+                console.error('Error getting current image:', err);
+                return res.status(500).json({ error: 'Server error' });
+            }
+
+            if (results.length === 0 || !results[0].profile_image) {
+                return res.status(404).json({ error: 'User not found or no profile image to delete' });
+            }
+
+            const profileImage = results[0].profile_image;
+
+            if(!profileImage) {
+                return res.status(404).json({ error: 'No profile image to delete' });
+            }
+            // Delete image from filesystem
+            const imagePath = path.join('uploads/profile_images', profileImage);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+
+            // Update database to remove profile image
+            const updateSql = `
+                UPDATE customers 
+                SET profile_image = NULL, updated_at = NOW()
+                WHERE customer_id = ? AND company_code = ?
+            `;
+
+            db.query(updateSql, [customer_id, company_code], (updateErr) => {
+                if (updateErr) {
+                    console.error('Error updating profile image:', updateErr);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+
+                res.status(200).json({
+                    message: 'Profile image deleted successfully'
+                });
+            });
+        });
     }
 };
 

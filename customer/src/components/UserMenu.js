@@ -25,6 +25,10 @@ export default function UserMenu({ profilePicture }) {
         className="p-0 border-0 bg-transparent"
         style={{ boxShadow: 'none' }}
       >
+        {/* <i
+          className="bi bi-person"
+          style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
+        /> */}
         {isLoggedIn ? (
           profilePicture ? (
             <img
