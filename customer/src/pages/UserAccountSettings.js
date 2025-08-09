@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone, Lock, Shield } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone, Lock, Shield, Camera, Upload, X } from 'lucide-react';
 import axios from 'axios';
 
 import '../styles/AccountSettings.css';
@@ -11,13 +11,20 @@ export default function UserAccountSettings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const fileInputRef = useRef(null);
   
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    password: ''
+    password: '',
+    profilePicture: '' // profile picture URL
   });
 
   const [addresses, setAddresses] = useState([]);
@@ -52,17 +59,152 @@ export default function UserAccountSettings() {
     return config;
   };
 
+  // Handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPEG, PNG, or GIF)');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      setSelectedFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Upload profile picture
+  const handleUploadProfilePicture = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('profile_picture', selectedFile);
+    formData.append('company_code', COMPANY_CODE);
+
+    try {
+      const token = getAuthToken();
+      const response = await axios.post(
+        `${BASE_URL}/api/customer/user/update-profile`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: token ? `Bearer ${token}` : undefined,
+          }
+        }
+      );
+
+      // Update profile data with new profile picture URL
+      setProfileData(prev => ({
+        ...prev,
+        profilePicture: response.data.profile_picture_url
+      }));
+
+      // Reset states
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setShowProfilePictureModal(false);
+      
+      alert('Profile picture updated successfully!');
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      alert('Failed to upload profile picture. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Delete profile picture
+  const handleDeleteProfilePicture = async () => {
+    if (!profileData.profilePicture) return;
+
+    if (!window.confirm('Are you sure you want to delete your profile picture?')) {
+      return;
+    }
+
+    try {
+      const config = getAxiosConfig();
+      await axios.delete(`${BASE_URL}/api/customer/user/profile-picture`, config);
+
+      // Update profile data to remove profile picture
+      setProfileData(prev => ({
+        ...prev,
+        profilePicture: ''
+      }));
+
+      setShowProfilePictureModal(false);
+      alert('Profile picture deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting profile picture:', error);
+      alert('Failed to delete profile picture. Please try again.');
+    }
+  };
+
+  // Reset file selection
+  const resetFileSelection = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUpdateProfileDetails = async () => {
+    const { firstName, lastName, email, phone, password, profilePicture } = profileData;
+    if (!firstName || !lastName || !email || !phone) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    try {
+      const config = getAxiosConfig();
+      const response = await axios.put(
+        `${BASE_URL}/api/customer/user/update-profile`,
+        {
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone: phone,
+          password,
+          profile_image: profileData.profilePicture
+        },
+        config
+      );
+      alert('Profile updated successfully!');
+      // Refresh the profile data after update
+      setProfileData(prev => ({
+        ...prev,
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        profilePicture: response.data.profile_image || prev.profilePicture
+      }));
+    } catch (error) {
+      console.error('Error updating profile details:', error);
+      alert('Failed to update profile details. Please try again.');
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const token = localStorage.getItem('token');
-        // const company_code = localStorage.getItem('company_code'); // or get from context, cookie, etc.
-
-        // if (!token || !company_code) {
-        //   console.error('Missing token or company code');
-        //   return;
-        // }
-
         const [response, addressResponse, paymentResponse] = await Promise.all([
           axios.get(`${BASE_URL}/api/customer/user/profile`, getAxiosConfig()),
           // axios.get(`/api/customer/addresses`, getAxiosConfig()),
@@ -75,10 +217,11 @@ export default function UserAccountSettings() {
           email: response.data.email || '',
           phone: response.data.phone || '',
           password: response.data.password || '',
+          profilePicture: response.data.profile_picture_url || '',
         });
 
-        setAddresses(addressResponse.data || []);
-        setPaymentMethods(paymentResponse.data || []);
+        setAddresses(addressResponse?.data || []);
+        setPaymentMethods(paymentResponse?.data || []);
       } catch (error) {
         console.error('Error fetching account data:', error);
       }
@@ -86,16 +229,32 @@ export default function UserAccountSettings() {
 
     fetchData();
   }, []);
-console.log(profileData.firstName);
+
+  const getInitials = () => {
+    return `${profileData.firstName.charAt(0)}${profileData.lastName.charAt(0)}`;
+  };
 
   return (
     <>
       <div className="main-container">
         {/* Header */}
         <div className="header-section">
-          <div className="profile-avatar-large">
-            {/* <i class="bi bi-person-circle fs-1"></i> */}
-            {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
+          <div 
+            className="profile-avatar-large clickable"
+            onClick={() => setShowProfilePictureModal(true)}
+            style={{ 
+              cursor: 'pointer', 
+              position: 'relative',
+              backgroundImage: profileData.profilePicture ? `url(${profileData.profilePicture})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              color: profileData.profilePicture ? 'transparent' : 'inherit'
+            }}
+          >
+            {!profileData.profilePicture && getInitials()}
+            <div className="profile-picture-overlay">
+              <Camera size={24} />
+            </div>
           </div>
           <h2>{profileData.firstName} {profileData.lastName}</h2>
           <p className="mb-0 opacity-75">Manage your account settings and preferences</p>
@@ -220,7 +379,10 @@ console.log(profileData.firstName);
               </div>
 
               <div className="d-flex gap-3">
-                <button className="btn save-btn">
+                <button 
+                  className="btn save-btn"
+                  onClick={() => handleUpdateProfileDetails()}  
+                >
                   Save All Changes
                 </button>
                 <button className="btn btn-outline-secondary btn-custom">
@@ -357,6 +519,106 @@ console.log(profileData.firstName);
           )}
         </div>
       </div>
+
+      {/* Profile Picture Modal */}
+      {showProfilePictureModal && (
+        <div className="modal-overlay" onClick={() => setShowProfilePictureModal(false)}>
+          <div className="modal-content profile-picture-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h5>Profile Picture</h5>
+            </div>
+            
+            <div className="modal-body">
+              {/* Current Profile Picture */}
+              <div className="current-picture-section">
+                <h6>Current Picture</h6>
+                <div 
+                  className="current-profile-picture"
+                  style={{
+                    backgroundImage: profileData.profilePicture ? `url(${profileData.profilePicture})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                >
+                  {!profileData.profilePicture && (
+                    <span className="initials">{getInitials()}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Upload New Picture */}
+              <div className="upload-section">
+                <h6>Upload New Picture</h6>
+                <div className="upload-area">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                    className="file-input"
+                    style={{ display: 'none' }}
+                  />
+                  
+                  {!selectedFile ? (
+                    <div 
+                      className="upload-placeholder"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload size={32} />
+                      <p>Click to select an image</p>
+                      <small>Supports: JPEG and PNG (Max: 5MB)</small>
+                    </div>
+                  ) : (
+                    <div className="preview-section">
+                      <img src={previewUrl} alt="Preview" className="preview-image" />
+                      <button 
+                        className="btn btn-outline-secondary btn-sm mt-2"
+                        onClick={resetFileSelection}
+                      >
+                        Choose Different Image
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <div className="d-flex gap-2 w-100">
+                {selectedFile && (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={handleUploadProfilePicture}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? 'Uploading...' : 'Upload Picture'}
+                  </button>
+                )}
+                
+                {profileData.profilePicture && (
+                  <button 
+                    className="btn btn-outline-danger"
+                    onClick={handleDeleteProfilePicture}
+                  >
+                    <Trash2 size={16} className="me-1" />
+                    Delete Current Picture
+                  </button>
+                )}
+                
+                <button 
+                  className="btn btn-outline-secondary ms-auto"
+                  onClick={() => setShowProfilePictureModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
+
+      
+      
