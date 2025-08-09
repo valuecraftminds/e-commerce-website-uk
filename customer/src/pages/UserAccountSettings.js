@@ -149,7 +149,7 @@ export default function UserAccountSettings() {
 
     try {
       const config = getAxiosConfig();
-      await axios.delete(`${BASE_URL}/api/customer/user/profile-picture`, config);
+      await axios.delete(`${BASE_URL}/api/customer/user/delete-profile-image`, config);
 
       // Update profile data to remove profile picture
       setProfileData(prev => ({
@@ -249,7 +249,7 @@ export default function UserAccountSettings() {
   return (
     <>
       <div className="main-container">
-        {/* Header */}
+        {/* Header- Dsiplay pro pic center*/}
         {/* <div className="header-section">
           <div 
             className="profile-avatar-large clickable"
@@ -272,27 +272,28 @@ export default function UserAccountSettings() {
           <p className="mb-0 opacity-75">Manage your account settings and preferences</p>
         </div> */}
 
+      {/* Header - Display profile picture left aligned */}
         <div className="header-section">
-  <div
-    className="profile-avatar-large clickable"
-    onClick={() => setShowProfilePictureModal(true)}
-    style={{
-      backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
-      color: profileImageUrl ? 'transparent' : 'inherit',
-    }}
-  >
-    {!profileImageUrl && getInitials()}
-    <div className="profile-picture-overlay">
-      <Camera size={20} />
-    </div>
-  </div>
+          <div
+            className="profile-avatar-large clickable"
+            onClick={() => setShowProfilePictureModal(true)}
+            style={{
+              backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
+              backgroundColor: profileImageUrl ? 'transparent' : 'hsl(266, 70%, 26%, 0.5)',  // add this line
+              color: profileImageUrl ? 'transparent' : 'white',
+            }}
+          >
+            {!profileImageUrl && getInitials()}
+            <div className="profile-picture-overlay">
+              <Camera size={20} />
+            </div>
+          </div>
 
-  <div>
-    <h2>{profileData.firstName} {profileData.lastName}</h2>
-    <p>Manage your account settings and preferences</p>
-  </div>
-</div>
-
+          <div>
+            <h2>{profileData.firstName} {profileData.lastName}</h2>
+            <p>Manage your account settings and preferences</p>
+          </div>
+        </div>
 
         {/* Navigation Tabs */}
         <div className="nav-tabs-custom">

@@ -346,12 +346,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
+  font-size: 56px;
   font-weight: bold;
   color: inherit;
   user-select: none;
   width: 150px;
   height: 150px;
+  object-fit: contain !important;
+  /* background:hsl(266, 70%, 26%, 0.5); */
 }
 
 .header-section h2 {

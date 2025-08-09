@@ -9,5 +9,6 @@ const { uploadProfileImg } = require('../../middleware/upload');
 router.get('/profile', checkCompanyCode, optionalAuth, ProfileController.getProfileDetails);
 router.put('/update-profile', checkCompanyCode, optionalAuth, ProfileController.updateProfileDetails);
 router.post('/upload-profile-image', checkCompanyCode, optionalAuth, uploadProfileImg.single('profile_image'), ProfileController.uploadProfileImage);
+router.delete('/delete-profile-image', checkCompanyCode, optionalAuth, ProfileController.deleteProfileImage);
 
 module.exports = router;
