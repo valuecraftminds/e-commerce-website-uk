@@ -58,7 +58,34 @@ const uploadLogo = multer({
   fileFilter
 });
 
+// update profile image
+const profileDir = 'uploads/profile_images';
+ensureDirExists(profileDir);
+
+const profileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, profileDir);
+  },
+  filename: function (req, file, cb) {
+    const customerId = req.user?.id || 'unknown';
+    const uniqueSuffix = crypto.randomBytes(16).toString('hex');
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `profile_${customerId}_${uniqueSuffix}${fileExtension}`;
+    cb(null, fileName);
+  }
+});
+
+const uploadProfileImg = multer({
+  storage: profileStorage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Limit to 5MB
+    files: 1 // Limit to 1 file
+  }
+});
+
 module.exports = {
   uploadStyles,  // for style image uploads
-  uploadLogo     // for company logo uploads
+  uploadLogo,     // for company logo uploads
+  uploadProfileImg // for profile image uploads
 };
