@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function RegisterCompanyAdmins() {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const isUpdateMode = Boolean(id);
+  const companyCodeFromParams = searchParams.get('company_code');
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     role: 'Company_Admin',
     password: '',
-    company_name: '',
-    company_address: '',
-    company_logo: null,
-    currency: 'GBP'
+    company_code: companyCodeFromParams || ''
   });
+
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
   const [phoneError, setPhoneError] = useState('');
   const [passwordRules, setPasswordRules] = useState({
@@ -28,134 +34,103 @@ export default function RegisterCompanyAdmins() {
   });
   const [showRules, setShowRules] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [logoPreview, setLogoPreview] = useState(null);
-
-  const currencies = [
-    { code: 'GBP', symbol: '£', name: 'British Pound Sterling' },
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-    { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
-    { code: 'AFN', symbol: '؋', name: 'Afghan Afghani' },
-    { code: 'ALL', symbol: 'L', name: 'Albanian Lek' },
-    { code: 'AMD', symbol: '֏', name: 'Armenian Dram' },
-    { code: 'ANG', symbol: 'ƒ', name: 'Netherlands Antillean Guilder' },
-    { code: 'AOA', symbol: 'Kz', name: 'Angolan Kwanza' },
-    { code: 'ARS', symbol: '$', name: 'Argentine Peso' },
-    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-    { code: 'BAM', symbol: 'KM', name: 'Bosnia-Herzegovina Convertible Mark' },
-    { code: 'BBD', symbol: '$', name: 'Barbadian Dollar' },
-    { code: 'BDT', symbol: '৳', name: 'Bangladeshi Taka' },
-    { code: 'BGN', symbol: 'лв', name: 'Bulgarian Lev' },
-    { code: 'BHD', symbol: '.د.ب', name: 'Bahraini Dinar' },
-    { code: 'BIF', symbol: 'FBu', name: 'Burundian Franc' },
-    { code: 'BMD', symbol: '$', name: 'Bermudan Dollar' },
-    { code: 'BND', symbol: '$', name: 'Brunei Dollar' },
-    { code: 'BOB', symbol: 'Bs.', name: 'Bolivian Boliviano' },
-    { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-    { code: 'BSD', symbol: '$', name: 'Bahamian Dollar' },
-    { code: 'BWP', symbol: 'P', name: 'Botswanan Pula' },
-    { code: 'BYN', symbol: 'Br', name: 'Belarusian Ruble' },
-    { code: 'BZD', symbol: 'BZ$', name: 'Belize Dollar' },
-    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-    { code: 'CDF', symbol: 'FC', name: 'Congolese Franc' },
-    { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
-    { code: 'CLP', symbol: '$', name: 'Chilean Peso' },
-    { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-    { code: 'COP', symbol: '$', name: 'Colombian Peso' },
-    { code: 'CRC', symbol: '₡', name: 'Costa Rican Colón' },
-    { code: 'CVE', symbol: '$', name: 'Cape Verdean Escudo' },
-    { code: 'CZK', symbol: 'Kč', name: 'Czech Koruna' },
-    { code: 'DJF', symbol: 'Fdj', name: 'Djiboutian Franc' },
-    { code: 'DKK', symbol: 'kr', name: 'Danish Krone' },
-    { code: 'DOP', symbol: 'RD$', name: 'Dominican Peso' },
-    { code: 'DZD', symbol: 'د.ج', name: 'Algerian Dinar' },
-    { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound' },
-    { code: 'ETB', symbol: 'Br', name: 'Ethiopian Birr' },
-    { code: 'FJD', symbol: 'FJ$', name: 'Fijian Dollar' },
-    { code: 'GEL', symbol: '₾', name: 'Georgian Lari' },
-    { code: 'GHS', symbol: 'GH₵', name: 'Ghanaian Cedi' },
-    { code: 'GMD', symbol: 'D', name: 'Gambian Dalasi' },
-    { code: 'GNF', symbol: 'FG', name: 'Guinean Franc' },
-    { code: 'GTQ', symbol: 'Q', name: 'Guatemalan Quetzal' },
-    { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
-    { code: 'HNL', symbol: 'L', name: 'Honduran Lempira' },
-    { code: 'HRK', symbol: 'kn', name: 'Croatian Kuna' },
-    { code: 'HTG', symbol: 'G', name: 'Haitian Gourde' },
-    { code: 'HUF', symbol: 'Ft', name: 'Hungarian Forint' },
-    { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
-    { code: 'ILS', symbol: '₪', name: 'Israeli New Shekel' },
-    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-    { code: 'IQD', symbol: 'ع.د', name: 'Iraqi Dinar' },
-    { code: 'IRR', symbol: '﷼', name: 'Iranian Rial' },
-    { code: 'ISK', symbol: 'kr', name: 'Icelandic Króna' },
-    { code: 'JMD', symbol: 'J$', name: 'Jamaican Dollar' },
-    { code: 'JOD', symbol: 'د.ا', name: 'Jordanian Dinar' },
-    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-    { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
-    { code: 'KHR', symbol: '៛', name: 'Cambodian Riel' },
-    { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
-    { code: 'KWD', symbol: 'د.ك', name: 'Kuwaiti Dinar' },
-    { code: 'KZT', symbol: '₸', name: 'Kazakhstani Tenge' },
-    { code: 'LAK', symbol: '₭', name: 'Laotian Kip' },
-    { code: 'LBP', symbol: 'ل.ل', name: 'Lebanese Pound' },
-    { code: 'LKR', symbol: 'Rs', name: 'Sri Lankan Rupee' },
-    { code: 'MAD', symbol: 'د.م.', name: 'Moroccan Dirham' },
-    { code: 'MDL', symbol: 'L', name: 'Moldovan Leu' },
-    { code: 'MGA', symbol: 'Ar', name: 'Malagasy Ariary' },
-    { code: 'MKD', symbol: 'ден', name: 'Macedonian Denar' },
-    { code: 'MMK', symbol: 'K', name: 'Myanmar Kyat' },
-    { code: 'MNT', symbol: '₮', name: 'Mongolian Tugrik' },
-    { code: 'MOP', symbol: 'MOP$', name: 'Macanese Pataca' },
-    { code: 'MUR', symbol: '₨', name: 'Mauritian Rupee' },
-    { code: 'MVR', symbol: 'Rf', name: 'Maldivian Rufiyaa' },
-    { code: 'MWK', symbol: 'MK', name: 'Malawian Kwacha' },
-    { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
-    { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
-    { code: 'NAD', symbol: '$', name: 'Namibian Dollar' },
-    { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
-    { code: 'NIO', symbol: 'C$', name: 'Nicaraguan Córdoba' },
-    { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone' },
-    { code: 'NPR', symbol: '₨', name: 'Nepalese Rupee' },
-    { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar' },
-    { code: 'OMR', symbol: 'ر.ع.', name: 'Omani Rial' },
-    { code: 'PAB', symbol: 'B/.', name: 'Panamanian Balboa' },
-    { code: 'PEN', symbol: 'S/.', name: 'Peruvian Nuevo Sol' },
-    { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
-    { code: 'PKR', symbol: '₨', name: 'Pakistani Rupee' },
-    { code: 'PLN', symbol: 'zł', name: 'Polish Złoty' },
-    { code: 'PYG', symbol: '₲', name: 'Paraguayan Guarani' },
-    { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Rial' },
-    { code: 'RON', symbol: 'lei', name: 'Romanian Leu' },
-    { code: 'RSD', symbol: 'din.', name: 'Serbian Dinar' },
-    { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
-    { code: 'RWF', symbol: 'FRw', name: 'Rwandan Franc' },
-    { code: 'SAR', symbol: '﷼', name: 'Saudi Riyal' },
-    { code: 'SEK', symbol: 'kr', name: 'Swedish Krona' },
-    { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
-    { code: 'THB', symbol: '฿', name: 'Thai Baht' },
-    { code: 'TND', symbol: 'د.ت', name: 'Tunisian Dinar' },
-    { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
-    { code: 'TTD', symbol: 'TT$', name: 'Trinidad and Tobago Dollar' },
-    { code: 'TWD', symbol: 'NT$', name: 'New Taiwan Dollar' },
-    { code: 'TZS', symbol: 'TSh', name: 'Tanzanian Shilling' },
-    { code: 'UAH', symbol: '₴', name: 'Ukrainian Hryvnia' },
-    { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
-    { code: 'UYU', symbol: '$U', name: 'Uruguayan Peso' },
-    { code: 'UZS', symbol: 'so\'m', name: 'Uzbekistani Som' },
-    { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
-    { code: 'XAF', symbol: 'FCFA', name: 'Central African CFA Franc' },
-    { code: 'XOF', symbol: 'CFA', name: 'West African CFA Franc' },
-    { code: 'YER', symbol: '﷼', name: 'Yemeni Rial' },
-    { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
-    { code: 'ZMW', symbol: 'ZK', name: 'Zambian Kwacha' }
-  ].map(currency => ({
-    value: currency.code,
-    label: `${currency.code} (${currency.symbol}) - ${currency.name}`
-  }));
 
   const navigate = useNavigate();
+
+  // Fetch companies list
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/admin/companies`);
+        const data = await response.json();
+        if (data.success) {
+          setCompanies(data.companies);
+          
+          // If company_code is provided in params, auto-select that company
+          if (companyCodeFromParams) {
+            const matchedCompany = data.companies.find(c => c.company_code === companyCodeFromParams);
+            if (matchedCompany) {
+              setSelectedCompany(matchedCompany);
+              setFormData(prev => ({ ...prev, company_code: companyCodeFromParams }));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+      }
+    };
+    
+    fetchCompanies();
+  }, [companyCodeFromParams]);
+
+  // Fetch admin data for update mode
+  useEffect(() => {
+    if (isUpdateMode && id) {
+      console.log('Update mode detected, ID:', id);
+      fetchAdminData();
+    } else {
+      console.log('Create mode or no ID provided');
+    }
+  }, [id, isUpdateMode]);
+
+  const fetchAdminData = async () => {
+    setIsLoadingData(true);
+    setErrorMsg('');
+    try {
+      console.log('Fetching admin data for ID:', id);
+      const url = `${BASE_URL}/api/admin/auth/get-admin/${id}`;
+      console.log('Request URL:', url);
+      
+      const response = await fetch(url);
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      const data = await response.json();
+      console.log('Full API Response:', JSON.stringify(data, null, 2)); // Detailed debug log
+
+      if (response.ok && data.success) {
+        const admin = data.admin;
+        console.log('Admin data received:', JSON.stringify(admin, null, 2)); // Detailed debug log
+        console.log('All admin object keys:', Object.keys(admin)); // Show all available keys
+        
+        // Use the exact database column names based on backend code
+        setFormData({
+          name: admin.name || '',
+          email: admin.email || '',
+          phone: admin.phone_number || '',
+          role: admin.role || 'Company_Admin',
+          password: '', // Keep empty for security
+          company_code: admin.company_code || ''
+        });
+
+        console.log('Form data set to:', {
+          name: admin.name || '',
+          email: admin.email || '',
+          phone: admin.phone_number || '',
+          company_code: admin.company_code || ''
+        }); // Debug log
+        
+        // Find and set the selected company
+        if (admin.company_code) {
+          const matchedCompany = companies.find(c => c.company_code === admin.company_code);
+          if (matchedCompany) {
+            setSelectedCompany(matchedCompany);
+          }
+        }
+      } else {
+        console.error('API Error Response:', data);
+        setErrorMsg(data.message || 'Failed to fetch admin data');
+      }
+    } catch (error) {
+      console.error('Fetch Error:', error);
+      setErrorMsg('Error fetching admin data. Please try again.');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleNameChange = (e) => {
     let value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
@@ -163,12 +138,11 @@ export default function RegisterCompanyAdmins() {
   };
 
   const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
-    value = value.slice(0, 15); // Limit to 15 digits
+    let value = e.target.value.replace(/\D/g, '');
+    value = value.slice(0, 15);
     
     setFormData((prev) => ({ ...prev, phone: value }));
   
-    // Validation rules
     if (!value) {
       setPhoneError('Phone number is required');
     } else if (value.length < 8) {
@@ -199,16 +173,10 @@ export default function RegisterCompanyAdmins() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({ ...prev, company_logo: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleCompanySelect = (selectedOption) => {
+    const company = companies.find(c => c.company_code === selectedOption.value);
+    setSelectedCompany(company);
+    setFormData((prev) => ({ ...prev, company_code: selectedOption.value }));
   };
   
   const handleSubmit = async (e) => {
@@ -224,61 +192,139 @@ export default function RegisterCompanyAdmins() {
       setIsLoading(false);
       return;
     }
+
+    // Password validation for update mode (only if password is provided)
+    if (isUpdateMode && formData.password) {
+      const allRulesPassed = Object.values(passwordRules).every(rule => rule);
+      if (!allRulesPassed) {
+        setErrorMsg('Please ensure password meets all requirements');
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // Password validation for create mode
+    if (!isUpdateMode) {
+      const allRulesPassed = Object.values(passwordRules).every(rule => rule);
+      if (!allRulesPassed) {
+        setErrorMsg('Please ensure password meets all requirements');
+        setIsLoading(false);
+        return;
+      }
+    }
   
     try {
-      // Create FormData
-      const formDataToSend = new FormData();
-      
-      // Add all fields - ensure phone has only digits
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('phone', cleanPhone);
-      formDataToSend.append('role', formData.role);
-      formDataToSend.append('password', formData.password);
-      formDataToSend.append('company_name', formData.company_name);
-      formDataToSend.append('company_address', formData.company_address);
-      formDataToSend.append('currency', formData.currency);
-      
-      if (formData.company_logo) {
-        formDataToSend.append('company_logo', formData.company_logo);
-      }
-  
-      const response = await fetch(`${BASE_URL}/api/admin/auth/company-admin-register`, {
-        method: 'POST',
-        body: formDataToSend,
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-  
-      if (data.success) {
-        setSuccessMsg('Company admin registered successfully!');
-        // Reset form
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          role: 'Company_Admin',
-          password: '',
-          company_name: '',
-          company_address: '',
-          company_logo: null,
-          currency: 'GBP'
-        });
-        setLogoPreview(null);
+      if (isUpdateMode) {
+        // Update existing admin
+        await updateCompanyAdmin();
       } else {
-        setErrorMsg(data.message || 'Registration failed. Please try again.');
+        // Create new admin for existing company
+        await createCompanyAdmin();
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error(`${isUpdateMode ? 'Update' : 'Registration'} error:`, error);
       setErrorMsg(error.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const createCompanyAdmin = async () => {
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    
+    if (!formData.company_code) {
+      throw new Error('Please select a company');
+    }
+
+    const adminFormData = new FormData();
+    adminFormData.append('name', formData.name);
+    adminFormData.append('email', formData.email);
+    adminFormData.append('phone', cleanPhone);
+    adminFormData.append('role', formData.role);
+    adminFormData.append('password', formData.password);
+    adminFormData.append('company_code', formData.company_code);
+
+    console.log('Creating admin user...', {
+      name: formData.name,
+      email: formData.email,
+      phone: cleanPhone,
+      role: formData.role,
+      company_code: formData.company_code
+    });
+
+    const response = await fetch(`${BASE_URL}/api/admin/auth/create-company-admin`, {
+      method: 'POST',
+      body: adminFormData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to create admin user');
+    }
+
+    setSuccessMsg(`Admin account created successfully for company "${selectedCompany?.company_name}"!`);
+    
+    // Reset form
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'Company_Admin',
+      password: '',
+      company_code: companyCodeFromParams || ''
+    });
+  };
+
+  const updateCompanyAdmin = async () => {
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    
+    const requestBody = {
+      name: formData.name,
+      email: formData.email,
+      phone_number: cleanPhone, // Match backend expectation
+      role: formData.role
+    };
+    
+    // Only include password if provided
+    if (formData.password) {
+      requestBody.password = formData.password;
+    }
+
+    const response = await fetch(`${BASE_URL}/api/admin/auth/update-admin/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Update failed');
+    }
+
+    setSuccessMsg('Company admin updated successfully!');
+    
+    // Redirect after a delay
+    setTimeout(() => {
+      if (formData.company_code) {
+        navigate(`/vcm-admin/view-company-admins/${formData.company_code}`);
+      } else {
+        navigate('/vcm-admin/view-companies');
+      }
+    }, 2000);
+  };
+
+  if (isLoadingData) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
   return (
     <div className="register-container">
       <Container>
@@ -286,13 +332,21 @@ export default function RegisterCompanyAdmins() {
           <Button 
             variant="primary" 
             className="btn-custom-primary mb-3" 
-            onClick={() => navigate('/vcm-admin/view-company-admins')}
+            onClick={() => {
+              if (companyCodeFromParams) {
+                navigate(`/vcm-admin/view-company-admins/${companyCodeFromParams}`);
+              } else {
+                navigate('/vcm-admin/view-companies');
+              }
+            }}
           >
-            ← Back
+            ← Back to {companyCodeFromParams ? 'Company Admins' : 'Companies'}
           </Button>
 
           <Card.Body>
-            <h2 className="register-title">Add Company Admin</h2>
+            <h2 className="register-title">
+              {isUpdateMode ? 'Update Company Admin' : 'Add Company Admin'}
+            </h2>
 
             {successMsg && (
               <div className="mb-3 text-success text-center fw-semibold">
@@ -306,89 +360,71 @@ export default function RegisterCompanyAdmins() {
             )}
 
             <Form className="register-form" onSubmit={handleSubmit}>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Company Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="company_name"
-                      value={formData.company_name}
-                      onChange={handleChange}
-                      placeholder="Enter company name"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
+              {!isUpdateMode && (
+                <Row>
+                  <Col md={12}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Select Company</Form.Label>
+                      <Select
+                        name="company_code"
+                        value={companies.find(c => c.company_code === formData.company_code) ? 
+                          { value: formData.company_code, label: `${formData.company_code} - ${selectedCompany?.company_name}` } : null}
+                        onChange={handleCompanySelect}
+                        options={companies.map(company => ({
+                          value: company.company_code,
+                          label: `${company.company_code} - ${company.company_name}`
+                        }))}
+                        isSearchable={true}
+                        placeholder="Select a company"
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                        required
+                        isDisabled={!!companyCodeFromParams}
+                      />
+                      {companyCodeFromParams && (
+                        <Form.Text className="text-muted">
+                          Company pre-selected from navigation
+                        </Form.Text>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
+              )}
 
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Currency</Form.Label>
-                    <Select
-                      name="currency"
-                      value={currencies.find(c => c.value === formData.currency)}
-                      onChange={(selected) => handleChange({ target: { name: 'currency', value: selected.value } })}
-                      options={currencies}
-                      isSearchable={true}
-                      placeholder="Select Currency"
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Company Address</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      name="company_address"
-                      value={formData.company_address}
-                      onChange={handleChange}
-                      placeholder="Enter company address"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Company Logo</Form.Label>
-                    <Form.Control
-                      type="file"
-                      name="company_logo"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      required
-                    />
-                    <Form.Text className="text-muted">
-                      Please upload a company logo (PNG, JPG, JPEG)
-                    </Form.Text>
-                    {logoPreview && (
-                      <div className="mt-2 text-center">
-                        <img 
-                          src={logoPreview} 
-                          alt="Company Logo Preview" 
-                          style={{
-                            maxWidth: '200px',
-                            maxHeight: '100px',
-                            objectFit: 'contain',
-                            border: '1px solid #dee2e6',
-                            borderRadius: '4px',
-                            padding: '5px'
-                          }}
-                        />
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-              </Row>
+              {selectedCompany && (
+                <Row>
+                  <Col md={12}>
+                    <Card className="mb-3 bg-light">
+                      <Card.Body>
+                        <h6>Company Details:</h6>
+                        <div className="d-flex align-items-center">
+                          {selectedCompany.company_logo && (
+                            <img 
+                              src={`${BASE_URL}/uploads/company_logos/${selectedCompany.company_logo}`} 
+                              alt="Company Logo" 
+                              style={{
+                                width: '50px',
+                                height: '50px',
+                                objectFit: 'contain',
+                                marginRight: '15px',
+                                border: '1px solid #dee2e6',
+                                borderRadius: '4px',
+                                backgroundColor: '#fff',
+                                padding: '5px'
+                              }}
+                            />
+                          )}
+                          <div>
+                            <strong>{selectedCompany.company_name}</strong><br/>
+                            <small className="text-muted">Code: {selectedCompany.company_code}</small><br/>
+                            <small className="text-muted">Currency: {selectedCompany.currency}</small>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+              )}
 
               <Row>
                 <Col md={6}>
@@ -421,55 +457,70 @@ export default function RegisterCompanyAdmins() {
               </Row>
 
               <Row>
-              <Form.Control
-  type="text"
-  name="phone"
-  value={formData.phone}
-  onChange={handlePhoneChange}
-  isInvalid={!!phoneError}
-  inputMode="numeric"
-  pattern="[0-9]*"
-  maxLength="15"  // Changed from 10 to 15
-  placeholder="Enter phone number with country code"
-  required
-/>
-              </Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Phone Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      isInvalid={!!phoneError}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength="15"
+                      placeholder="Enter phone number with country code"
+                      required
+                    />
+                    {phoneError && (
+                      <Form.Control.Feedback type="invalid">
+                        {phoneError}
+                      </Form.Control.Feedback>
+                    )}
+                  </Form.Group>
+                </Col>
 
-              <Form.Group className="mb-3">
-                <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="password"  
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
-                  onFocus={() => setShowRules(true)}
-                  onBlur={() => setShowRules(false)}
-                  required
-                />
-                {showRules && (
-                  <div className="password-rules mt-2">
-                    <small>Password requirements:</small>
-                    <ul className="list-unstyled ms-2">
-                      <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.length ? '✅' : '❌'} 8-12 characters
-                      </li>
-                      <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.uppercase ? '✅' : '❌'} At least one uppercase letter
-                      </li>
-                      <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.lowercase ? '✅' : '❌'} At least one lowercase letter
-                      </li>
-                      <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.number ? '✅' : '❌'} At least one number
-                      </li>
-                      <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
-                        {passwordRules.specialChar ? '✅' : '❌'} At least one special character
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </Form.Group>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>
+                      Password 
+                      {isUpdateMode && <small className="text-muted"> (Leave empty to keep current)</small>}
+                    </Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="password"  
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder={isUpdateMode ? "Enter new password (optional)" : "Enter password"}
+                      onFocus={() => setShowRules(true)}
+                      onBlur={() => setShowRules(false)}
+                      required={!isUpdateMode}
+                    />
+                    {showRules && (
+                      <div className="password-rules mt-2">
+                        <small>Password requirements:</small>
+                        <ul className="list-unstyled ms-2">
+                          <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
+                            {passwordRules.length ? '✅' : '❌'} 8-12 characters
+                          </li>
+                          <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
+                            {passwordRules.uppercase ? '✅' : '❌'} At least one uppercase letter
+                          </li>
+                          <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
+                            {passwordRules.lowercase ? '✅' : '❌'} At least one lowercase letter
+                          </li>
+                          <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
+                            {passwordRules.number ? '✅' : '❌'} At least one number
+                          </li>
+                          <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
+                            {passwordRules.specialChar ? '✅' : '❌'} At least one special character
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </Form.Group>
+                </Col>
+              </Row>
 
               <div className="text-center">
                 <Button 
@@ -480,10 +531,10 @@ export default function RegisterCompanyAdmins() {
                   {isLoading ? (
                     <>
                       <Spinner animation="border" size="sm" className="me-2" />
-                      Registering...
+                      {isUpdateMode ? 'Updating...' : 'Registering...'}
                     </>
                   ) : (
-                    'Register Admin'
+                    isUpdateMode ? 'Update Admin' : 'Register Admin'
                   )}
                 </Button>
               </div>

@@ -21,9 +21,10 @@ import FitManagement from './pages/Style_Management/FitManagement';
 import MaterialManagement from './pages/Style_Management/MaterialManagement';
 import SizeManagement from './pages/Style_Management/SizeManagement';
 import Supplier from './pages/Supplier';
-import EditCompanyAdmin from './pages/VCM_Admin/EditCompanyAdmin';
+import RegisterCompany from './pages/VCM_Admin/RegisterCompany';
 import RegisterCompanyAdmins from './pages/VCM_Admin/RegisterCompanyAdmins';
 import VcmAdminDashboard from './pages/VCM_Admin/VcmAdminDashboard';
+import Companies from './pages/VCM_Admin/ViewCompanies';
 import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import WarehouseGRN from './pages/WarehouseGRN';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
@@ -45,12 +46,16 @@ function App() {
         <Route path='/' element={<LoginPage />} />
         <Route path='/vcm-admin-dashboard' element={<VcmAdminDashboard />} />
         <Route path='/vcm-admin/register-company-admins/*' element={<RegisterCompanyAdmins />} />
-        <Route path='/vcm-admin/view-company-admins/*' element={<ViewCompanyAdmins />} />
+        <Route path='/vcm-admin/edit-company-admins/:id' element={<RegisterCompanyAdmins />} />
+        <Route path='/vcm-admin/view-companies' element={<Companies />} />
+        <Route path='/vcm-admin/view-company-admins/:companyCode' element={<ViewCompanyAdmins />} />
+        <Route path='/vcm-admin/register-company' element={<RegisterCompany />} />
+        <Route path='/vcm-admin/edit-company/:id' element={<RegisterCompany />} />
+
         <Route path='ViewAdmins' element={<ViewAdmins />} />
         <Route path='register' element={<RegisterPage />} />
         <Route path='EditAdmins/:id' element={<EditAdmin />} />
         <Route path='DleteAdmin/:id' element={<DeleteAdmin />} />
-        <Route path="edit-company-admin/:id" element={<EditCompanyAdmin />} />
         <Route path='dashboard' element={<AdminDashboard />} />
         <Route path='/OrderingDashboard/*' element={<OrderingDashboard />} />
         <Route path='/PdcDashboard/*' element={<PdcDashboard />} />

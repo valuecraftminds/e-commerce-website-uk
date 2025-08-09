@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { Button, Nav } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -34,7 +34,12 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
   const roleBasedMenuItems = {
     VCM_Admin: [
       { label: 'Dashboard', path: '/vcm-admin-dashboard', icon: 'bi-speedometer2' },
-      { label: 'Manage Company Admins', path: '/vcm-admin/view-company-admins', icon: 'bi-people' },
+      {
+        label: 'Company Management',
+         path: '/vcm-admin/view-companies',
+        icon: 'bi-buildings'
+        
+      },
     ],
     Company_Admin: [
       { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' },

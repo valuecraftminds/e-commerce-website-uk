@@ -14,6 +14,12 @@ router.post('/login', AuthController.login);
 // Admin Management
 // ======================
 router.post('/register-company-admin', uploadLogo.single('company_logo'), AuthController.registerCompanyAdmin);
+// New two-step process endpoints
+router.post('/create-company', uploadLogo.single('company_logo'), AuthController.createCompany);
+router.put('/update-company/:id', uploadLogo.single('company_logo'), AuthController.updateCompany);
+router.post('/create-company-admin', AuthController.createCompanyAdmin);
+// Update endpoints
+router.put('/update-company-admin/:user_id', uploadLogo.single('company_logo'), AuthController.updateCompanyAdmin); // Update company admin
 router.get('/get-admin/:user_id', AuthController.getAdminById);              // Get admin by ID
 router.put('/update-admin/:user_id', AuthController.editAdmin);                 // Update admin
 router.delete('/delete-admin/:user_id', AuthController.deleteAdmin);           // Delete admin

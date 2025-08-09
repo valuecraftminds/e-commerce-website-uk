@@ -9,18 +9,19 @@ const port = process.env.PORT || 3000;
 
 // Global middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Debug middleware for logging requests
-// app.use((req, res, next) => {
-//   console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
-//   console.log('Query params:', req.query);
-//   if (req.body && Object.keys(req.body).length > 0) {
-//     console.log('Body:', req.body);
-//   }
-//   next();
-// });
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Query params:', req.query);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', req.body);
+  }
+  next();
+});
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -46,6 +47,7 @@ const licenseRoutes = require('./routes/admin/License');
 const currencyRoutes = require('./routes/admin/Currency');
 const supplierRoutes = require('./routes/admin/Supplier');
 const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
+const companyRoutes = require('./routes/admin/Company');
 
 // Route bindings
 // Customer routes
@@ -68,6 +70,7 @@ app.use('/api/admin/license', licenseRoutes);
 app.use('/api/admin/currencies', currencyRoutes);
 app.use('/api/admin/suppliers', supplierRoutes);
 app.use('/api/admin/po', purchaseOrderRoutes);
+app.use('/api/admin', companyRoutes);
 
 
 // Default route

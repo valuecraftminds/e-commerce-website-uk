@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../../config/database'); // Adjust the path as needed
+const db = require('../../config/database');
+const CompanyController = require('./CompanyController'); // Adjust the path as needed
 const path = require('path');
 const fs = require('fs');
 
@@ -126,12 +127,12 @@ class AdminAuthController {
 
 
   // Register company admin
-  static registerCompanyAdmin(req, res) {
-    const { name, email, phone, role, password, company_name, company_address, currency } = req.body;
+  static async registerCompanyAdmin(req, res) {
+    const { name, email, phone, role, password } = req.body;
     const logoFile = req.file;
 
     // Field presence check and validation
-    if (!name || !email || !phone || !role || !password || !company_name || !company_address || !currency || !logoFile) {
+    if (!name || !email || !phone || !role || !password || !logoFile) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
@@ -139,90 +140,235 @@ class AdminAuthController {
       return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
     }
 
-    // Check for existing email
-    db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, emailResults) => {
-      if (err) {
-        console.error('Email check error:', err);
-        return res.status(500).json({ success: false, message: 'Server error' });
-      }
+    try {
+      // Check for existing email
+      const emailCheckResult = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
 
-      if (emailResults.length > 0) {
+      if (emailCheckResult.length > 0) {
         return res.status(409).json({ success: false, message: 'Email already exists' });
       }
 
       // Check for existing phone
-      db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, phoneResults) => {
-        if (err) {
-          console.error('Phone check error:', err);
-          return res.status(500).json({ success: false, message: 'Server error' });
-        }
+      const phoneCheckResult = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
 
-        if (phoneResults.length > 0) {
-          return res.status(409).json({ success: false, message: 'Phone number already exists' });
-        }
+      if (phoneCheckResult.length > 0) {
+        return res.status(409).json({ success: false, message: 'Phone number already exists' });
+      }
 
-        // Get latest company code
+      // Generate next company code
+      const newCompanyCode = await CompanyController.generateNextCompanyCode();
+
+      
+
+      // Then create admin user with company_code reference only
+      await new Promise((resolve, reject) => {
         db.query(
-          'SELECT company_code FROM admin_users WHERE company_code IS NOT NULL ORDER BY company_code DESC LIMIT 1',
-          (err, latest) => {
-            if (err) {
-              console.error('Company code error:', err);
-              return res.status(500).json({ success: false, message: 'Server error' });
-            }
-
-            let newCompanyCode = 'C001';
-            if (latest.length > 0 && latest[0].company_code) {
-              const lastNum = parseInt(latest[0].company_code.slice(1));
-              const nextNum = lastNum + 1;
-              newCompanyCode = 'C' + nextNum.toString().padStart(3, '0');
-            }
-
-            // Hash password
-            bcrypt.hash(password, 10, (err, hashedPassword) => {
-              if (err) {
-                console.error('Password hash error:', err);
-                return res.status(500).json({ success: false, message: 'Server error' });
-              }
-
-              const company_logo = logoFile.filename;
-
-              // Insert new company admin
-              db.query(
-                `INSERT INTO admin_users (name, email, phone_number, role, password, company_name, 
-                  company_address, company_logo, currency, company_code) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [name, email, phone, role, hashedPassword, company_name, 
-                  company_address, company_logo, currency, newCompanyCode],
-                (err) => {
-                  if (err) {
-                    console.error('Insert error:', err);
-                    return res.status(500).json({ success: false, message: 'Server error' });
-                  }
-                  res.status(201).json({
-                    success: true,
-                    message: 'Company admin registered successfully',
-                    company_code: newCompanyCode
-                  });
-                }
-              );
-            });
+          'INSERT INTO admin_users (name, email, phone_number, role, password, company_code) VALUES (?, ?, ?, ?, ?, ?)',
+          [name, email, phone, role, hashedPassword, newCompanyCode],
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
           }
         );
       });
-    });
+
+      return res.status(201).json({ 
+        success: true, 
+        message: 'Company admin registered successfully',
+        company_code: newCompanyCode 
+      });
+
+    } catch (error) {
+      console.error('Register company admin error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+
+  // Create company only (Step 1)
+  static async createCompany(req, res) {
+    const { company_name, company_address, currency } = req.body;
+    const logoFile = req.file;
+
+    if (!company_name || !company_address || !currency || !logoFile) {
+      return res.status(400).json({ success: false, message: 'All company fields are required' });
+    }
+
+    try {
+      // Generate next company code
+      const newCompanyCode = await CompanyController.generateNextCompanyCode();
+      const company_logo = logoFile.filename;
+
+      // Create company
+      const companyId = await CompanyController.createCompany({
+        company_code: newCompanyCode,
+        company_name,
+        company_address,
+        company_logo,
+        currency
+      });
+
+      return res.status(201).json({ 
+        success: true, 
+        message: 'Company created successfully',
+        company_code: newCompanyCode,
+        company_id: companyId
+      });
+
+    } catch (error) {
+      console.error('Create company error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+
+  // Update existing company
+  static async updateCompany(req, res) {
+    const { id } = req.params;
+    const { company_name, company_address, currency } = req.body;
+    const logoFile = req.file;
+
+    if (!company_name || !company_address || !currency) {
+      return res.status(400).json({ success: false, message: 'Company name, address, and currency are required' });
+    }
+
+    try {
+      // Get existing company to check if it exists
+      const existingCompany = await CompanyController.getCompanyById(id);
+      if (!existingCompany) {
+        return res.status(404).json({ success: false, message: 'Company not found' });
+      }
+
+      // Prepare update data
+      const updateData = {
+        company_name,
+        company_address,
+        currency
+      };
+
+      // Add logo filename if a new file was uploaded
+      if (logoFile) {
+        updateData.company_logo = logoFile.filename;
+      }
+
+      // Update company
+      const updated = await CompanyController.updateCompany(id, updateData);
+
+      if (!updated) {
+        return res.status(500).json({ success: false, message: 'Failed to update company' });
+      }
+
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Company updated successfully'
+      });
+
+    } catch (error) {
+      console.error('Update company error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+
+  // Create company admin user only (Step 2)
+  static async createCompanyAdmin(req, res) {
+    const { name, email, phone, role, password, company_code } = req.body;
+
+    if (!name || !email || !phone || !role || !password || !company_code) {
+      return res.status(400).json({ success: false, message: 'All admin fields are required' });
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(name)) {
+      return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
+    }
+
+    try {
+      // Check if company exists
+      const company = await CompanyController.getCompanyByCode(company_code);
+      if (!company) {
+        return res.status(404).json({ success: false, message: 'Company not found' });
+      }
+
+      // Check for existing email
+      const emailCheckResult = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
+
+      if (emailCheckResult.length > 0) {
+        return res.status(409).json({ success: false, message: 'Email already exists' });
+      }
+
+      // Check for existing phone
+      const phoneCheckResult = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
+
+      if (phoneCheckResult.length > 0) {
+        return res.status(409).json({ success: false, message: 'Phone number already exists' });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create admin user with company_code reference
+      await new Promise((resolve, reject) => {
+        db.query(
+          'INSERT INTO admin_users (name, email, phone_number, role, password, company_code) VALUES (?, ?, ?, ?, ?, ?)',
+          [name, email, phone, role, hashedPassword, company_code],
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          }
+        );
+      });
+
+      return res.status(201).json({ 
+        success: true, 
+        message: 'Company admin created successfully',
+        company_code: company_code
+      });
+
+    } catch (error) {
+      console.error('Create company admin error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
   }
 
   // Edit admin
   static editAdmin(req, res) {
     const { user_id } = req.params;
-    const { name, email, phone_number, role, currentPassword, newPassword } = req.body;
+    
+    // Debug logging
+    console.log('Edit Admin - Request params:', req.params);
+    console.log('Edit Admin - Request body:', req.body);
+    console.log('Edit Admin - Content-Type:', req.headers['content-type']);
+    
+    const { name, email, phone_number, role, currentPassword, newPassword, password } = req.body || {};
 
     if (!name || !email || !phone_number) {
       return res.status(400).json({ success: false, message: 'All basic fields are required' });
     }
 
+    // Handle both password scenarios:
+    // 1. currentPassword + newPassword (from EditCompanyAdmin component)
+    // 2. password (from RegisterCompanyAdmins component)
+    const shouldUpdatePassword = (currentPassword && newPassword) || password;
+
     if (currentPassword && newPassword) {
-      // Get current password for comparison
+      // Get current password for comparison (used by EditCompanyAdmin)
       db.query(
         'SELECT password FROM admin_users WHERE user_id = ?',
         [user_id],
@@ -273,6 +419,46 @@ class AdminAuthController {
           });
         }
       );
+    } else if (password) {
+      // Direct password update (used by RegisterCompanyAdmins)
+      const isValidPassword = (pwd) => {
+        const lengthValid = pwd.length >= 8 && pwd.length <= 12;
+        const hasUppercase = /[A-Z]/.test(pwd);
+        const hasLowercase = /[a-z]/.test(pwd);
+        const hasNumber = /\d/.test(pwd);
+        const hasSpecialChar = /[\W_]/.test(pwd);
+        return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+      };
+
+      if (!isValidPassword(password)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid password. Must be 8–12 characters and include uppercase, lowercase, number, and special character.' 
+        });
+      }
+
+      bcrypt.hash(password, 10, (err, hashedPassword) => {
+        if (err) {
+          console.error('Password hash error:', err);
+          return res.status(500).json({ success: false, message: 'Server error' });
+        }
+
+        // Update with new password
+        db.query(
+          'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ?, password = ? WHERE user_id = ?',
+          [name, email, phone_number, role, hashedPassword, user_id],
+          (err, result) => {
+            if (err) {
+              console.error('Update error:', err);
+              return res.status(500).json({ success: false, message: 'Server error' });
+            }
+            if (result.affectedRows === 0) {
+              return res.status(404).json({ success: false, message: 'Admin not found' });
+            }
+            res.json({ success: true, message: 'Admin updated successfully with new password' });
+          }
+        );
+      });
     } else {
       // Update without password change
       db.query(
@@ -394,7 +580,19 @@ class AdminAuthController {
   // Display Company admins only
   static getCompanyAdmins(req, res) {
     db.query(
-      'SELECT user_id, name AS Name, email AS Email, phone_number AS Phone, company_code AS Company_Code FROM admin_users WHERE role = "Company_Admin"',
+      `SELECT 
+        au.user_id, 
+        au.name AS Name, 
+        au.email AS Email, 
+        au.phone_number AS Phone, 
+        au.company_code AS Company_Code,
+        c.company_name,
+        c.company_address,
+        c.company_logo,
+        c.currency
+      FROM admin_users au 
+      LEFT JOIN companies c ON au.company_code = c.company_code 
+      WHERE au.role = "Company_Admin"`,
       (err, results) => {
         if (err) {
           console.error('Database error:', err);
@@ -426,12 +624,88 @@ class AdminAuthController {
     );
   }
 
+  // Update Company Admin
+  static async updateCompanyAdmin(req, res) {
+    const { user_id } = req.params;
+    const { name, email, phone, role, password } = req.body;
+
+    console.log('Update Company Admin - Request params:', req.params);
+    console.log('Update Company Admin - Request body:', req.body);
+    console.log('Update Company Admin - Content-Type:', req.headers['content-type']);
+
+    if (!name || !email || !phone || !role) {
+      return res.status(400).json({ success: false, message: 'All basic fields are required' });
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(name)) {
+      return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
+    }
+
+    try {
+      // Build admin update query
+      let adminUpdateFields = ['name = ?', 'email = ?', 'phone_number = ?', 'role = ?'];
+      let adminUpdateValues = [name, email, phone, role];
+
+      // Handle password if provided
+      if (password) {
+        const isValidPassword = (pwd) => {
+          const lengthValid = pwd.length >= 8 && pwd.length <= 12;
+          const hasUppercase = /[A-Z]/.test(pwd);
+          const hasLowercase = /[a-z]/.test(pwd);
+          const hasNumber = /\d/.test(pwd);
+          const hasSpecialChar = /[\W_]/.test(pwd);
+          return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+        };
+
+        if (!isValidPassword(password)) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid password. Must be 8–12 characters and include uppercase, lowercase, number, and special character.' 
+          });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        adminUpdateFields.push('password = ?');
+        adminUpdateValues.push(hashedPassword);
+      }
+
+      adminUpdateValues.push(user_id); // Add user_id for WHERE clause
+
+      // Update admin details only
+      const adminUpdateQuery = `UPDATE admin_users SET ${adminUpdateFields.join(', ')} WHERE user_id = ?`;
+      const result = await new Promise((resolve, reject) => {
+        db.query(adminUpdateQuery, adminUpdateValues, (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+
+      res.json({ success: true, message: 'Company admin updated successfully' });
+
+    } catch (error) {
+      console.error('Update error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+
   // Get admin by user ID
   static getAdminById(req, res) {
     const { user_id } = req.params;
 
     db.query(
-      'SELECT * FROM admin_users WHERE user_id = ?',
+      `SELECT 
+        au.*, 
+        c.company_name,
+        c.company_address,
+        c.company_logo,
+        c.currency
+      FROM admin_users au 
+      LEFT JOIN companies c ON au.company_code = c.company_code 
+      WHERE au.user_id = ?`,
       [user_id],
       (err, result) => {
         if (err) {
