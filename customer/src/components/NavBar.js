@@ -26,9 +26,33 @@ export default function NavigationBar() {
   const [isHoveringCategory, setIsHoveringCategory] = useState(false);
   const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
   const [showsearchSidebar, setShowsearchSidebar] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
   const [country, setCountry] = useState(() => {
     return localStorage.getItem("selectedCountry") || "US";
   });
+
+  // Get auth token from logged in user
+  const getAuthToken = () => {
+    const token = localStorage.getItem('authToken');
+    return token;
+  };
+
+  // Get axios config with auth token
+  const getAxiosConfig = () => {
+    const token = getAuthToken();
+    const config = {
+      params: { company_code: COMPANY_CODE },
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    };
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  };
 
   // Fetch categories
   useEffect(() => {
@@ -65,6 +89,21 @@ export default function NavigationBar() {
   useEffect(() => {
     localStorage.setItem("selectedCountry", country);
   }, [country]);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    axios.get(`${BASE_URL}/api/customer/user/profile`, {
+      params: { company_code: COMPANY_CODE },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => {
+      const data = res.data;
+      setProfilePicture(data.profile_image ? `${BASE_URL}/uploads/profile_images/${data.profile_image}` : null);
+    })
+  .catch(err => {
+    console.error('Failed to load user profile:', err);
+  });
+}, []);
 
   // Handlers for mouse enter and leave events
   const handleCategoryMouseEnter = (category) => {
@@ -179,7 +218,7 @@ export default function NavigationBar() {
             />
 
              {/* User icons */}
-            <UserMenu />
+            <UserMenu profilePicture={profilePicture} />
 
           </div>
         </Container>

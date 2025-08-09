@@ -29,24 +29,32 @@ export default function UserMenu({ profilePicture }) {
           className="bi bi-person"
           style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
         /> */}
-         {isLoggedIn ? (
-        <img
-          src={profilePicture || "bi bi-person"}
-          alt="Profile"
-          className="rounded-circle"
-          style={{
-            width: '36px',
-            height: '36px',
-            objectFit: 'cover',
-            cursor: 'pointer',
-          }}
-        />
-      ) : (
-      <i
-        className="bi bi-person"
-        style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
-        />
-      )}
+        {isLoggedIn ? (
+          profilePicture ? (
+            <img
+              src={profilePicture} 
+              alt="Profile"
+              className="rounded-circle"
+              style={{
+                width: '36px',
+                height: '36px',
+                objectFit: 'cover',
+                cursor: 'pointer',
+              }}
+            />
+          ) : (
+            <i
+              className="bi bi-person"
+              style={{ fontSize: '1.8rem', cursor: 'pointer', color: '#000' }}
+            />
+          )
+        ) : (
+          <i
+            className="bi bi-person"
+            style={{ fontSize: '1.8rem', cursor: 'pointer', color: '#000' }}
+          />
+        )}
+
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
