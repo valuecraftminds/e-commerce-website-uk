@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 // Helper to create upload folder if not exists
 function ensureDirExists(dir) {
@@ -87,5 +88,5 @@ const uploadProfileImg = multer({
 module.exports = {
   uploadStyles,  // for style image uploads
   uploadLogo,     // for company logo uploads
-  uploadProfileImg // for profile image uploads
+  uploadProfileImg
 };

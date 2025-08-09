@@ -3,9 +3,8 @@ import { Dropdown } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthContext';
-import yellowLady from '../assets/yellow lady.jpg';
 
-export default function UserMenu() {
+export default function UserMenu({ profilePicture }) {
   const navigate = useNavigate();
   const { isLoggedIn, userData, logout } = useContext(AuthContext);
 
@@ -30,24 +29,32 @@ export default function UserMenu() {
           className="bi bi-person"
           style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
         /> */}
-         {isLoggedIn ? (
-        <img
-          src={userData.profileImage || yellowLady}
-          alt="Profile"
-          className="rounded-circle"
-          style={{
-            width: '36px',
-            height: '36px',
-            objectFit: 'cover',
-            cursor: 'pointer',
-          }}
-        />
-      ) : (
-      <i
-        className="bi bi-person"
-        style={{ fontSize: "1.4rem", cursor: "pointer", color: "#000" }}
-        />
-      )}
+        {isLoggedIn ? (
+          profilePicture ? (
+            <img
+              src={profilePicture} 
+              alt="Profile"
+              className="rounded-circle"
+              style={{
+                width: '36px',
+                height: '36px',
+                objectFit: 'cover',
+                cursor: 'pointer',
+              }}
+            />
+          ) : (
+            <i
+              className="bi bi-person"
+              style={{ fontSize: '1.8rem', cursor: 'pointer', color: '#000' }}
+            />
+          )
+        ) : (
+          <i
+            className="bi bi-person"
+            style={{ fontSize: '1.8rem', cursor: 'pointer', color: '#000' }}
+          />
+        )}
+
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
