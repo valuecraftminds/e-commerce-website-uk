@@ -59,6 +59,14 @@ export default function UserAccountSettings() {
     return config;
   };
 
+  // Helper function to get full profile image URL
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // construct full URL
+    return `${BASE_URL}/uploads/profile_images/${imagePath}`;
+  };
+
   // Handle file selection
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -66,7 +74,7 @@ export default function UserAccountSettings() {
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
       if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPEG, PNG, or GIF)');
+        alert('Please select a valid image file (JPEG, JPG or PNG)');
         return;
       }
 
@@ -94,28 +102,28 @@ export default function UserAccountSettings() {
 
     setIsUploading(true);
     const formData = new FormData();
-    formData.append('profile_picture', selectedFile);
-    formData.append('company_code', COMPANY_CODE);
+    formData.append('profile_image', selectedFile);
 
     try {
       const token = getAuthToken();
       const response = await axios.post(
-        `${BASE_URL}/api/customer/user/update-profile`,
+        `${BASE_URL}/api/customer/user/upload-profile-image`,
         formData,
         {
+          params: { company_code: COMPANY_CODE },
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: token ? `Bearer ${token}` : undefined,
           }
         }
       );
-
+    
       // Update profile data with new profile picture URL
       setProfileData(prev => ({
         ...prev,
-        profilePicture: response.data.profile_picture_url
+        profilePicture: response.data.profile_image 
       }));
-
+    
       // Reset states
       setSelectedFile(null);
       setPreviewUrl(null);
@@ -166,7 +174,7 @@ export default function UserAccountSettings() {
   };
 
   const handleUpdateProfileDetails = async () => {
-    const { firstName, lastName, email, phone, password, profilePicture } = profileData;
+    const { firstName, lastName, email, phone, password } = profileData;
     if (!firstName || !lastName || !email || !phone) {
       alert('Please fill in all required fields');
       return;
@@ -217,7 +225,7 @@ export default function UserAccountSettings() {
           email: response.data.email || '',
           phone: response.data.phone || '',
           password: response.data.password || '',
-          profilePicture: response.data.profile_picture_url || '',
+          profilePicture: response.data.profile_image || '',
         });
 
         setAddresses(addressResponse?.data || []);
@@ -234,6 +242,9 @@ export default function UserAccountSettings() {
     return `${profileData.firstName.charAt(0)}${profileData.lastName.charAt(0)}`;
   };
 
+  // Get the display URL for profile picture
+  const profileImageUrl = getProfileImageUrl(profileData.profilePicture);
+
   return (
     <>
       <div className="main-container">
@@ -245,13 +256,13 @@ export default function UserAccountSettings() {
             style={{ 
               cursor: 'pointer', 
               position: 'relative',
-              backgroundImage: profileData.profilePicture ? `url(${profileData.profilePicture})` : 'none',
+              backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              color: profileData.profilePicture ? 'transparent' : 'inherit'
+              color: profileImageUrl ? 'transparent' : 'inherit'
             }}
           >
-            {!profileData.profilePicture && getInitials()}
+            {!profileImageUrl && getInitials()}
             <div className="profile-picture-overlay">
               <Camera size={24} />
             </div>
@@ -535,12 +546,12 @@ export default function UserAccountSettings() {
                 <div 
                   className="current-profile-picture"
                   style={{
-                    backgroundImage: profileData.profilePicture ? `url(${profileData.profilePicture})` : 'none',
+                    backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
-                  {!profileData.profilePicture && (
+                  {!profileImageUrl && (
                     <span className="initials">{getInitials()}</span>
                   )}
                 </div>
@@ -595,7 +606,7 @@ export default function UserAccountSettings() {
                   </button>
                 )}
                 
-                {profileData.profilePicture && (
+                {profileImageUrl && (
                   <button 
                     className="btn btn-outline-danger"
                     onClick={handleDeleteProfilePicture}
@@ -619,6 +630,3 @@ export default function UserAccountSettings() {
     </>
   );
 }
-
-      
-      
