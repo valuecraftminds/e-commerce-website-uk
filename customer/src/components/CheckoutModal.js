@@ -28,32 +28,62 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
     bank_name: '',
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    if(!COMPANY_CODE) {
+    if (!COMPANY_CODE) {
       console.error('Company code not configured');
       return;
     }
 
-    setShippingData({
-      first_name: '',
-      last_name: '',
-      house: '',
-      address_line_1: '',
-      address_line_2: '',
-      city: '',
-      state: '',
-      country: '',
-      postal_code: '',
-      phone: '',
-      payment_method: '',
-      card_number: '',
-      card_expiry: '',
-      card_cvv: '',
-      paypal_email: '',
-      bank_account: '',
-      bank_name: '',
-    });
+    // Reset form when modal opens
+    if (show) {
+      setShippingData({
+        first_name: '',
+        last_name: '',
+        house: '',
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        state: '',
+        country: '',
+        postal_code: '',
+        phone: '',
+        payment_method: '',
+        card_number: '',
+        card_expiry: '',
+        card_cvv: '',
+        paypal_email: '',
+        bank_account: '',
+        bank_name: '',
+      });
+      setError('');
+    }
   }, [show]);
+
+  // Get auth token from logged in user
+  const getAuthToken = () => {
+    const token = localStorage.getItem('authToken');
+    return token;
+  };
+
+  // Get axios config with auth token
+  const getAxiosConfig = () => {
+    const token = getAuthToken();
+    const config = {
+      params: { company_code: COMPANY_CODE },
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    };
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  };
 
   const handleShippingChange = (e) => {
     const { name, value } = e.target;
@@ -62,33 +92,44 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-      try {
+    try {
+      const token = getAuthToken();
+      console.log(token);
+
       const { data, status } = await axios.post(
         `${BASE_URL}/api/customer/checkout/checkout-details`,
         shippingData,
-        {
-          params: {
-            company_code: COMPANY_CODE, // passed via URL
-          },
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        getAxiosConfig()
       );
 
-      if (status === 200) {
+      if (status === 200 || status === 201) {
         console.log('Checkout successful:', data);
-        onSubmit?.(shippingData); // call callback if provided
-        onHide(); // close modal
+        onSubmit?.(data); // Pass the response data to callback
+        onHide(); // Close modal
       } else {
-        console.error(`Checkout failed: ${status}`);
+        setError(`Checkout failed with status: ${status}`);
       }
     } catch (error) {
       console.error('Error during checkout submission:', error);
+      
+      if (error.response) {
+        // Server responded with error status
+        const message = error.response.data?.message || `Server error: ${error.response.status}`;
+        setError(message);
+      } else if (error.request) {
+        // Request was made but no response received
+        setError('Network error. Please check your connection.');
+      } else {
+        // other
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
-
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered scrollable>
@@ -237,7 +278,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                     <Form.Check 
                       type="radio"
                       id="credit-card"
-                      label="Credit Card"
+                      label="Card"
                       name="payment_method"
                       value="credit-card"
                       checked={shippingData.payment_method === "credit-card"}

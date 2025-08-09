@@ -349,10 +349,19 @@ const ProductCategory = () => {
                     }
                   </p>
                   <div className="product-price">
-                    {/* <span className={product.min_price && product.max_price && product.min_price !== product.max_price ? "price-range" : "current-price"}>
-                      {formatPrice(product.min_price, product.max_price)}
-                    </span> */}
-                    <span>{formatPrice(product.min_price)}</span>
+                    {/* <span>{formatPrice(product.min_price)}</span> */}
+                     {product.offer_price && product.offer_price !== 0 ? (
+                      <>
+                        <span className="me-2">
+                          {formatPrice(product.offer_price)}
+                        </span>
+                        <span className="text-muted text-decoration-line-through small">
+                          {formatPrice(product.min_price)}
+                        </span>
+                      </>
+                    ) : (
+                      <span>{formatPrice(product.min_price)}</span>
+                    )}
                   </div>
                   
                   <div className="product-category">

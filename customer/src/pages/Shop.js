@@ -264,7 +264,19 @@ export default function Shop() {
                     }
                   </p>
                   <div className="shop-product-price">
-                    <span>{formatPrice(product.min_price)}</span>
+                    {/* <span>{formatPrice(product.min_price)}</span> */}
+                     {product.offer_price && product.offer_price !== 0 ? (
+                      <>
+                        <span className="me-2">
+                          {formatPrice(product.offer_price)}
+                        </span>
+                        <span className="text-muted text-decoration-line-through small">
+                          {formatPrice(product.min_price)}
+                        </span>
+                      </>
+                    ) : (
+                      <span>{formatPrice(product.min_price)}</span>
+                    )}
                   </div>
                   
                   {product.category_name && (

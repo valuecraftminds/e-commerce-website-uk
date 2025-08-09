@@ -167,9 +167,7 @@ export default function NavigationBar() {
               style={{ fontSize: "1.4rem", cursor: "pointer" }}
               onClick={() => setShowsearchSidebar(true)}
             />
-            {/* User icons */}
-            <UserMenu />
-
+        
             {/* Cart icon */}
             <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
               onClick={() => navigate('/cart')}
@@ -179,6 +177,10 @@ export default function NavigationBar() {
               style={{ fontSize: "1.6rem", cursor: "pointer" }}
               onClick={() => handleHamburgerClicked(true)}
             />
+
+             {/* User icons */}
+            <UserMenu />
+
           </div>
         </Container>
       </Navbar>

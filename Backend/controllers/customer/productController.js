@@ -1,6 +1,7 @@
 const db = require('../../config/database');
 const path = require('path');
 const fs = require('fs');
+const { off } = require('process');
 
 const productController = {
   // GET main categories
@@ -54,6 +55,7 @@ const productController = {
         parent_cat.category_name as parent_category_name,
         MIN(sv.price) as min_price,
         MAX(sv.price) as max_price,
+        sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
@@ -95,6 +97,7 @@ const productController = {
         parent_cat.category_name as parent_category_name,
         MIN(sv.price) as min_price,
         MAX(sv.price) as max_price,
+        sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
@@ -129,6 +132,7 @@ const productController = {
         s.description,
         s.image,
         sv.price,
+        sv.offer_price,
         sz.size_name,
         c.color_name,
         c.color_code,
@@ -171,6 +175,7 @@ const productController = {
         name: product.name,
         description: product.description,
         price,
+        offer_price: product.offer_price,
         available_sizes: sizes,
         available_colors: colors,
         image: product.image

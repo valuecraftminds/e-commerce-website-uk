@@ -119,6 +119,7 @@ export default function ProductDetails() {
         image: product.image,
         quantity: quantity,
         price: product.price,
+        Offer_price: product.offer_price,
         variant_id: variantId  
       });
 
@@ -186,8 +187,19 @@ export default function ProductDetails() {
           <Col md={6}>
             <h1>{product.name}</h1>
             <p>{product.description}</p>
-            <h5 className="price"> 
-              {formatPrice(product.price)}
+            <h5 className="price">
+              {product.offer_price && product.offer_price !== 0 ? (
+                <>
+                  <span className="me-2 offer-price">
+                    {formatPrice(product.offer_price)}
+                  </span>
+                  <span className="text-muted text-decoration-line-through small">
+                    {formatPrice(product.price)}
+                  </span>
+                </>
+              ) : (
+                <span>{formatPrice(product.price)}</span>
+              )}
             </h5>
 
             <div className="mb-3">
