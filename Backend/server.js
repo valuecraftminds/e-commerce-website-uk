@@ -34,6 +34,7 @@ const cartRoutes = require('./routes/customer/CartRoutes');
 const CustomercurrencyRoutes = require('./routes/customer/CurrencyRoutes');
 const checkoutRoutes = require('./routes/customer/CheckoutRoutes');
 const ProfileRoutes = require('./routes/customer/ProfileRoutes');
+const CompanyDetailsRoutes = require('./routes/customer/CompanyDetailsRoutes');
 
 // Admin
 const adminAuthRoutes = require('./routes/admin/AdminAuth');
@@ -48,6 +49,8 @@ const currencyRoutes = require('./routes/admin/Currency');
 const supplierRoutes = require('./routes/admin/Supplier');
 const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
 const companyRoutes = require('./routes/admin/Company');
+const AddressRoutes = require('./routes/customer/AddressRoutes');
+const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
 
 // Route bindings
 // Customer routes
@@ -57,6 +60,9 @@ app.use('/api/customer/cart', cartRoutes);
 app.use('/api/customer/currency', CustomercurrencyRoutes);
 app.use('/api/customer/checkout', checkoutRoutes);
 app.use('/api/customer/user', ProfileRoutes);
+app.use('/api/customer/company', CompanyDetailsRoutes);
+app.use('/api/customer/address', AddressRoutes);
+app.use('/api/customer/payment-methods', PaymentMethodsRoutes);
 
 // Admin routes
 app.use('/api/admin/auth', adminAuthRoutes);
