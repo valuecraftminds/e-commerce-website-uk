@@ -3,6 +3,7 @@ import { Dropdown } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthContext';
+import '../styles/UserMenu.css';
 
 export default function UserMenu({ profilePicture }) {
   const navigate = useNavigate();
@@ -18,11 +19,11 @@ export default function UserMenu({ profilePicture }) {
   };
 
   return (
-    <Dropdown align="end">
-      <Dropdown.Toggle 
-        variant="link" 
+    <Dropdown align="end" className="user-menu">
+      <Dropdown.Toggle
+        variant="link"
         id="user-dropdown"
-        className="p-0 border-0 bg-transparent"
+        className="p-0 border-0"
         style={{ boxShadow: 'none' }}
       >
         {/* <i

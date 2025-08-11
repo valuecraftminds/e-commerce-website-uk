@@ -12,20 +12,48 @@ export default function UserAccountSettings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [addressError, setAddressError] = useState(null);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [paymentsError, setPaymentsError] = useState(null);
   
   const fileInputRef = useRef(null);
-  
+  const passwordInputRef = useRef(null);
+
+  const passwordRules = {
+  length: newPassword.length >= 8 && newPassword.length <= 12,
+  uppercase: /[A-Z]/.test(newPassword),
+  lowercase: /[a-z]/.test(newPassword),
+  number: /\d/.test(newPassword),
+  specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword),
+};
+
+// close rules box when clicking outside
+useEffect(() => {
+  function handleClickOutside(event) {
+    if (passwordInputRef.current && !passwordInputRef.current.contains(event.target)) {
+      setShowRules(false);
+    }
+  }
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
+
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     password: '',
-    profilePicture: '' // profile picture URL
+    profilePicture: ''
   });
 
   const [addresses, setAddresses] = useState([]);
@@ -60,7 +88,68 @@ export default function UserAccountSettings() {
     return config;
   };
 
-  // Helper function to get full profile image URL
+  // Fetch payment methods separately
+  const fetchPaymentMethods = async () => {
+    setPaymentsLoading(true);
+    setPaymentsError(null);
+    try {
+      const config = getAxiosConfig();
+      const response = await axios.get(`${BASE_URL}/api/customer/payment-methods/get-payment-methods`, config);
+      
+      // Transform the data to match UI 
+      const formattedPayments = response.data.map(payment => ({
+        id: payment.id,
+        last4: payment.card_number ? payment.card_number.slice(-4) : '0000',
+        cardHolder: `${payment.cardholder_name || 'N/A'}`,
+        expiryDate: payment.expiry_month && payment.expiry_year 
+          ? `${payment.expiry_month.toString().padStart(2, '0')}/${payment.expiry_year.toString().slice(-2)}`
+          : 'N/A',
+        type: payment.card_type || 'Unknown',
+        isDefault: payment.is_default === 1 || payment.is_default === true,
+        brand: payment.card_brand || 'VISA'
+      }));
+      
+      setPaymentMethods(formattedPayments);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      setPaymentsError('Failed to load payment methods');
+      setPaymentMethods([]); // Set empty array on error
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+  const fetchAddresses = async () => {
+    setAddressesLoading(true);
+    setAddressError(null);
+    try {
+      const config = getAxiosConfig();
+      const response = await axios.get(`${BASE_URL}/api/customer/address/get-address`, config);
+      
+      // Transform the data to match UI
+      const formattedAddresses = response.data.map(addr => ({
+        id: addr.id,
+        name: `${addr.first_name || ''} ${addr.last_name || ''}`.trim(),
+        type: addr.address_type || 'Shipping',
+        address: `${addr.address_line_1 || ''} ${addr.address_line_2 || ''}`.trim(),
+        city: addr.city || '',
+        state: addr.state || '',
+        zipCode: addr.postal_code || '',
+        country: addr.country || '',
+        isDefault: addr.is_default === 1 || addr.is_default === true,
+        phone: addr.phone || ''
+      }));
+      
+      setAddresses(formattedAddresses);
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      setAddressError('Failed to load addresses');
+      setAddresses([]); // Set empty array on error
+    } finally {
+      setAddressesLoading(false);
+    }
+  };
+
+  // Get full profile image URL
   const getProfileImageUrl = (imagePath) => {
     if (!imagePath) return null;
     
@@ -214,11 +303,7 @@ export default function UserAccountSettings() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [response, addressResponse, paymentResponse] = await Promise.all([
-          axios.get(`${BASE_URL}/api/customer/user/profile`, getAxiosConfig()),
-          // axios.get(`/api/customer/addresses`, getAxiosConfig()),
-          // axios.get(`/api/customer/payment-methods`, getAxiosConfig())
-        ])
+        const response = await axios.get(`${BASE_URL}/api/customer/user/profile`, getAxiosConfig());
 
         setProfileData({
           firstName: response.data.first_name || '',
@@ -229,8 +314,6 @@ export default function UserAccountSettings() {
           profilePicture: response.data.profile_image || '',
         });
 
-        setAddresses(addressResponse?.data || []);
-        setPaymentMethods(paymentResponse?.data || []);
       } catch (error) {
         console.error('Error fetching account data:', error);
       }
@@ -238,6 +321,20 @@ export default function UserAccountSettings() {
 
     fetchData();
   }, []);
+
+  // Fetch addresses when addresses tab is active
+  useEffect(() => {
+    if (activeTab === 'addresses' && addresses.length === 0) {
+      fetchAddresses();
+    }
+  }, [activeTab]);
+
+  // Fetch payment methods when payment tab is active
+  useEffect(() => {
+    if (activeTab === 'payment' && paymentMethods.length === 0) {
+      fetchPaymentMethods();
+    }
+  }, [activeTab]);
 
   const getInitials = () => {
     return `${profileData.firstName.charAt(0)}${profileData.lastName.charAt(0)}`;
@@ -249,37 +346,14 @@ export default function UserAccountSettings() {
   return (
     <>
       <div className="main-container">
-        {/* Header- Dsiplay pro pic center*/}
-        {/* <div className="header-section">
-          <div 
-            className="profile-avatar-large clickable"
-            onClick={() => setShowProfilePictureModal(true)}
-            style={{ 
-              cursor: 'pointer', 
-              position: 'relative',
-              backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              color: profileImageUrl ? 'transparent' : 'inherit'
-            }}
-          >
-            {!profileImageUrl && getInitials()}
-            <div className="profile-picture-overlay">
-              <Camera size={24} />
-            </div>
-          </div>
-          <h2>{profileData.firstName} {profileData.lastName}</h2>
-          <p className="mb-0 opacity-75">Manage your account settings and preferences</p>
-        </div> */}
-
-      {/* Header - Display profile picture left aligned */}
+        {/* Header */}
         <div className="header-section">
           <div
             className="profile-avatar-large clickable"
             onClick={() => setShowProfilePictureModal(true)}
             style={{
               backgroundImage: profileImageUrl ? `url(${profileImageUrl})` : 'none',
-              backgroundColor: profileImageUrl ? 'transparent' : 'hsl(266, 70%, 26%, 0.5)',  // add this line
+              backgroundColor: profileImageUrl ? 'transparent' : 'hsl(266, 70%, 26%, 0.5)',
               color: profileImageUrl ? 'transparent' : 'white',
             }}
           >
@@ -376,7 +450,7 @@ export default function UserAccountSettings() {
                   Security Settings
                 </h5>
                 <div className="row">
-                  <div className="col-md-6 form-group-custom">
+                 <div className="col-md-6 form-group-custom"> 
                     <label className="form-label fw-bold">Current Password</label>
                     <div className="password-input-wrapper">
                       <input
@@ -393,25 +467,66 @@ export default function UserAccountSettings() {
                       </button>
                     </div>
                   </div>
-                  <div className="col-md-6 form-group-custom">
-                    <label className="form-label fw-bold">New Password</label>
-                    <div className="password-input-wrapper">
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        className="form-control form-control-custom"
-                        placeholder="Enter new password"
-                      />
-                      <button
-                        type="button"
-                        className="password-toggle"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
+                  <div className="col-md-6 form-group-custom" style={{ position: 'relative' }}>
+                  <label className="form-label fw-bold">New Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      className="form-control form-control-custom"
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={e => {
+                        setNewPassword(e.target.value);
+                        setShowRules(true);
+                      }}
+                      onFocus={() => setShowRules(true)}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
+
+                  {showRules && (
+                    <div className="password-rules" ref={passwordInputRef} style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      background: '#fff',
+                      border: '1px solid #ddd',
+                      padding: '10px',
+                      marginTop: '5px',
+                      borderRadius: '4px',
+                      zIndex: 10,
+                      width: '280px',
+                      color: '#000',
+                    }}>
+                      <small>Password requirements:</small>
+                      <ul className="list-unstyled ms-2 mb-0" style={{fontSize: '0.85rem'}}>
+                        <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
+                          {passwordRules.length ? '✅' : '❌'} 8-12 characters
+                        </li>
+                        <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
+                          {passwordRules.uppercase ? '✅' : '❌'} Uppercase letter
+                        </li>
+                        <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
+                          {passwordRules.lowercase ? '✅' : '❌'} Lowercase letter
+                        </li>
+                        <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
+                          {passwordRules.number ? '✅' : '❌'} Number
+                        </li>
+                        <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
+                          {passwordRules.specialChar ? '✅' : '❌'} Special character
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              </div>
+                </div>
+              </div> 
 
               <div className="d-flex gap-3">
                 <button 
@@ -441,12 +556,46 @@ export default function UserAccountSettings() {
                 </button>
               </div>
 
-              {addresses.map((address) => (
+              {/* Loading State */}
+              {addressesLoading && (
+                <div className="info-card text-center">
+                  <p>Loading addresses...</p>
+                </div>
+              )}
+
+              {/* Error State */}
+              {addressError && (
+                <div className="info-card text-center">
+                  <p className="text-danger">{addressError}</p>
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={fetchAddresses}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {/* No Addresses */}
+              {!addressesLoading && !addressError && addresses.length === 0 && (
+                <div className="info-card text-center">
+                  <MapPin size={48} className="text-muted mb-3" />
+                  <h5>No addresses found</h5>
+                  <p className="text-muted">Add your first shipping address to get started.</p>
+                  <button className="btn new-address-btn">
+                    <Plus size={18} className="me-2" />
+                    Add Your First Address
+                  </button>
+                </div>
+              )}
+
+              {/* Address List */}
+              {/* {!addressesLoading && !addressError && addresses.length > 0 && addresses.map((address) => (
                 <div key={address.id} className={`address-card ${address.isDefault ? 'default' : ''}`}>
                   {address.isDefault && <div className="default-badge">DEFAULT</div>}
                   
                   <div className="row">
-                    <div className="col-md-8">
+                    <div className="col-md-8 details-column">
                       <h5 className="mb-2">
                         <MapPin size={18} className="me-2 text-primary" />
                         {address.type} Address
@@ -455,19 +604,25 @@ export default function UserAccountSettings() {
                       <p className="mb-1 text-muted">{address.address}</p>
                       <p className="mb-1 text-muted">{address.city}, {address.state} {address.zipCode}</p>
                       <p className="mb-0 text-muted">{address.country}</p>
+                      {address.phone && (
+                        <p className="mb-0 text-muted">
+                          <Phone size={14} className="me-1" />
+                          {address.phone}
+                        </p>
+                      )}
                     </div>
                     <div className="col-md-4 text-end">
-                      <div className="d-flex flex-column gap-2">
-                        <button className="btn btn-outline-primary btn-sm">
+                      <div className="d-flex flex-column">
+                        <button className="btn btn-outline-primary btn-sm address-edit-btn">
                           <Edit3 size={14} className="me-1" />
                           Edit
                         </button>
                         {!address.isDefault && (
-                          <button className="btn btn-outline-success btn-sm">
+                          <button className="btn btn-outline-success btn-sm address-default-btn">
                             Set as Default
                           </button>
                         )}
-                        <button className="btn btn-outline-danger btn-sm">
+                        <button className="btn btn-outline-danger btn-sm address-remove-btn">
                           <Trash2 size={14} className="me-1" />
                           Remove
                         </button>
@@ -475,12 +630,69 @@ export default function UserAccountSettings() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))} */}
+
+              <div className="row">
+  {!addressesLoading && !addressError && addresses.length > 0 && 
+    addresses.map((address) => (
+      <div key={address.id} className="col-md-6 mb-4">
+        <div className={`address-card ${address.isDefault ? 'default' : ''}`}>
+          {address.isDefault && <div className="default-badge">DEFAULT</div>}
+          
+          <div className="row">
+            <div className="col-8 details-column">
+              <h5 className="mb-2">
+                <MapPin size={18} className="me-2 text-primary" />
+                {address.type} Address
+              </h5>
+              <h6 className="text-dark address-name">{address.name}</h6>
+              <p className="mb-1 address-lines">{address.address}</p>
+              <p className="mb-1 address-lines">{address.city}</p>
+              <p className="mb-1 address-lines">{address.state}, {address.zipCode}</p>
+              <p className="mb-0 address-lines">{address.country}</p>
+              {address.phone && (
+                <p className="mb-0 address-phone">
+                  <Phone size={14} className="me-1" />
+                  {address.phone}
+                </p>
+              )}
+            </div>
+            <div className="col-4 text-end">
+              <div className="d-flex flex-column gap-1">
+                <button className="btn btn-outline-primary btn-sm">Edit</button>
+                {!address.isDefault && (
+                  <button className="btn btn-outline-success btn-sm">Set as Default</button>
+                )}
+                <button className="btn btn-outline-danger btn-sm">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+
             </div>
           )}
 
           {/* Payment Methods Tab */}
           {activeTab === 'payment' && (
+            <div className="info-card mt-4">
+                <div className="d-flex align-items-center">
+                  <Shield size={24} className="text-success me-3" />
+                  <div>
+                    <h6 className="mb-1">Your payments are secure</h6>
+                    <small className="text-muted">
+                      We use industry-standard encryption to protect your payment information. 
+                      Your full card number is never stored on our servers.
+                    </small>
+                  </div>
+                </div>
+              </div>
+          )}
+          {/* {activeTab === 'payment' && (
             <div>
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="section-title mb-0">
@@ -491,9 +703,43 @@ export default function UserAccountSettings() {
                   <Plus size={18} className="me-2" />
                   Add New Card
                 </button>
-              </div>
+              </div> */}
 
-              {paymentMethods.map((payment) => (
+              {/* Loading State */}
+              {/* {paymentsLoading && (
+                <div className="info-card text-center">
+                  <p>Loading payment methods...</p>
+                </div>
+              )} */}
+
+              {/* Error State */}
+              {/* {paymentsError && (
+                <div className="info-card text-center">
+                  <p className="text-danger">{paymentsError}</p>
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={fetchPaymentMethods}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )} */}
+
+              {/* No Payment Methods */}
+              {/* {!paymentsLoading && !paymentsError && paymentMethods.length === 0 && (
+                <div className="info-card text-center">
+                  <CreditCard size={48} className="text-muted mb-3" />
+                  <h5>No payment methods found</h5>
+                  <p className="text-muted">Add your first payment method to make purchases easier.</p>
+                  <button className="btn new-card-btn">
+                    <Plus size={18} className="me-2" />
+                    Add Your First Card
+                  </button>
+                </div>
+              )} */}
+
+              {/* Payment Methods List */}
+              {/* {!paymentsLoading && !paymentsError && paymentMethods.length > 0 && paymentMethods.map((payment) => (
                 <div key={payment.id} className={`payment-card ${payment.isDefault ? 'default' : ''}`}>
                   {payment.isDefault && <div className="default-badge">DEFAULT</div>}
                   
@@ -515,6 +761,7 @@ export default function UserAccountSettings() {
                       </div>
                       <div className="mt-2">
                         <span className="badge bg-light text-dark">{payment.type}</span>
+                        <span className="badge bg-primary text-white ms-2">{payment.brand}</span>
                       </div>
                     </div>
                     <div className="col-md-4 text-end">
@@ -536,9 +783,9 @@ export default function UserAccountSettings() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))} */}
 
-              <div className="info-card mt-4">
+              {/* <div className="info-card mt-4">
                 <div className="d-flex align-items-center">
                   <Shield size={24} className="text-success me-3" />
                   <div>
@@ -549,10 +796,10 @@ export default function UserAccountSettings() {
                     </small>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
-          )}
-        </div>
+          {/* )} */}
+        {/* </div> */}
       </div>
 
       {/* Profile Picture Modal */}

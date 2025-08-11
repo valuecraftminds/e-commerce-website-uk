@@ -272,9 +272,10 @@ return (
                               </div>
                             </div>
                           </Col>
+                          </Row>
                           
                           {/* Delete Button */}
-                          <Col md={1} className="d-flex align-items-start justify-content-end">
+                          <Col md={1} className="d-flex">
                             <Button
                               className="cart-bin-square"
                               size="sm"
@@ -291,7 +292,7 @@ return (
                               )}
                             </Button>
                           </Col>
-                        </Row>
+                       
                         
                         {/* Stock warnings */}
                         {item.stock_quantity < 5 && item.stock_quantity > 0 && (
