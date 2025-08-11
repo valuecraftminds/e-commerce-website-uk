@@ -17,6 +17,7 @@ export default function NavigationBar() {
   const navigate = useNavigate();
   const { isLoggedIn } = useContext(AuthContext);
 
+  const [companyLogo, setCompanyLogo] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -158,7 +159,7 @@ export default function NavigationBar() {
   
   return (
     <>
-      <Navbar bg="light" expand="lg" className="shadow-sm sticky-top">
+      <Navbar bg="light" expand="lg" className="shadow-sm sticky-top nav-bar">
         <Container fluid className="d-flex justify-content-between align-items-center">
           {/* Left side */}
           <Navbar.Brand href="/">

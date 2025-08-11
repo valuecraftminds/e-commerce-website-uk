@@ -1,11 +1,13 @@
 .success-msg-modal-wrapper {
-  z-index: 1055;
+  z-index: 10 !important;
 }
 
 .success-msg-modal-dialog .modal-content {
   border-radius: 15px !important;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
   border: none !important;
+  min-height: 30vh !important;
+  max-height: 40px !important;
 }
 
 /* Modal header styling */
@@ -27,6 +29,7 @@
   padding: 1.5rem !important;
   font-size: 1rem !important;
   color: #333333 !important;
+
 }
 
 /* Modal footer styling */

@@ -1,67 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useContext} from 'react';
 import { Modal, Form, Row, Col, Button, Container } from 'react-bootstrap';
 import axios from 'axios';
-
 import '../styles/CheckoutModal.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 const CheckoutModal = ({ show, onHide, onSubmit }) => {
-  const [shippingData, setShippingData] = useState({
-    first_name: '',
-    last_name: '',
-    house: '',
-    address_line_1: '',
-    address_line_2: '',
-    city: '',
-    state: '',
-    country: '',
-    postal_code: '',
-    phone: '',
-    payment_method: '',
-    card_number: '',
-    card_expiry: '',
-    card_cvv: '',
-    paypal_email: '',
-    bank_account: '',
-    bank_name: '',
-  });
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!COMPANY_CODE) {
-      console.error('Company code not configured');
-      return;
-    }
-
-    // Reset form when modal opens
-    if (show) {
-      setShippingData({
-        first_name: '',
-        last_name: '',
-        house: '',
-        address_line_1: '',
-        address_line_2: '',
-        city: '',
-        state: '',
-        country: '',
-        postal_code: '',
-        phone: '',
-        payment_method: '',
-        card_number: '',
-        card_expiry: '',
-        card_cvv: '',
-        paypal_email: '',
-        bank_account: '',
-        bank_name: '',
-      });
-      setError('');
-    }
-  }, [show]);
-
   // Get auth token from logged in user
   const getAuthToken = () => {
     const token = localStorage.getItem('authToken');
@@ -85,6 +30,61 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
     return config;
   };
 
+  const [shippingData, setShippingData] = useState({
+    first_name: '',
+    last_name: '',
+    house: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    state: '',
+    country: '',
+    postal_code: '',
+    phone: '',
+    payment_method: '',
+    card_number: '',
+    card_expiry_date: '', 
+    card_cvv: '',
+    paypal_email: '',
+    bank_account: '',
+    bank_name: '',
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+
+  useEffect(() => {
+    if (!COMPANY_CODE) {
+      console.error('Company code not configured');
+      return;
+    }
+
+    // Reset form when modal opens
+    if (show) {
+      setShippingData({
+        first_name: '',
+        last_name: '',
+        house: '',
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        state: '',
+        country: '',
+        postal_code: '',
+        phone: '',
+        payment_method: '',
+        card_number: '',
+        card_expiry_date: '',
+        card_cvv: '',
+        paypal_email: '',
+        bank_account: '',
+        bank_name: '',
+      });
+      setError('');
+    }
+  }, [show]);
+
   const handleShippingChange = (e) => {
     const { name, value } = e.target;
     setShippingData((prev) => ({ ...prev, [name]: value }));
@@ -96,13 +96,44 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
     setError('');
 
     try {
+
       const token = getAuthToken();
-      console.log(token);
+
+      console.log('token:', token);
+
+      // Prepare data in the format expected by backend
+      const requestData = {
+        first_name: shippingData.first_name,
+        last_name: shippingData.last_name,
+        house: shippingData.house,
+        address_line_1: shippingData.address_line_1,
+        address_line_2: shippingData.address_line_2,
+        city: shippingData.city,
+        state: shippingData.state,
+        country: shippingData.country,
+        postal_code: shippingData.postal_code,
+        phone: shippingData.phone,
+        payment_method: {
+          method_type: shippingData.payment_method,
+          provider: shippingData.payment_method === 'paypal' ? 'PayPal' : 
+                   shippingData.payment_method === 'credit-card' ? 'Credit Card' :
+                   shippingData.payment_method === 'bank-transfer' ? 'Bank Transfer' : null,
+          card_number: shippingData.payment_method === 'credit-card' ? shippingData.card_number : null,
+          card_expiry_date: shippingData.payment_method === 'credit-card' ? shippingData.card_expiry_date : null,
+          card_cvv: shippingData.payment_method === 'credit-card' ? shippingData.card_cvv : null,
+          paypal_email: shippingData.payment_method === 'paypal' ? shippingData.paypal_email : null,
+          bank_account: shippingData.payment_method === 'bank-transfer' ? shippingData.bank_account : null,
+          bank_name: shippingData.payment_method === 'bank-transfer' ? shippingData.bank_name : null,
+        }
+      };
 
       const { data, status } = await axios.post(
         `${BASE_URL}/api/customer/checkout/checkout-details`,
-        shippingData,
-        getAxiosConfig()
+        requestData,
+        {
+          params: { company_code: COMPANY_CODE },
+          headers: { Authorization: `Bearer ${token}` }
+        }
       );
 
       if (status === 200 || status === 201) {
@@ -132,125 +163,150 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered scrollable>
+    <Modal show={show} onHide={onHide} size="lg" centered className='checkout-modal'>
       <Modal.Header>
         <Modal.Title>Update Shipping Information</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
           <Container className="details-container">
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Group controlId="shippingFirstName">
-                    <Form.Label>First Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="first_name"
-                      value={shippingData.first_name || ''}
-                      onChange={handleShippingChange}
-                      onKeyPress={(e) => {
-                        if (!/^[a-zA-Z\s]$/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="shippingLastName">
-                    <Form.Label>Last Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="last_name"
-                      value={shippingData.last_name || ''}
-                      onChange={handleShippingChange}
-                      onKeyPress={(e) => {
-                        if (!/^[a-zA-Z\s]$/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              {/* address */}
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Group controlId="shippingHouseNumber">
-                    <Form.Label>House / Apt</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="house_number"
-                      value={shippingData.house_number || ''}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="shippingStreetName">
-                    <Form.Label>Street Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="street_name"
-                      value={shippingData.street_name || ''}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="shippingCity">
-                    <Form.Label>City</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="city"
-                      value={shippingData.city || ''}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="shippingProvince">
-                    <Form.Label>Province / State</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="state"
-                      value={shippingData.state || ''}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="shippingCountry">
-                    <Form.Label>Country</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="country"
-                      value={shippingData.country || ''}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="shippingPostalCode">
-                    <Form.Label>Postal Code</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="postal_code"
-                      value={shippingData.postal_code || ''}
-                      onChange={handleShippingChange}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+            {error && (
+              <div className="alert alert-danger mb-3">
+                {error}
+              </div>
+            )}
+            
             <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="shippingFirstName">
+                  <Form.Label>First Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="first_name"
+                    value={shippingData.first_name || ''}
+                    onChange={handleShippingChange}
+                    onKeyPress={(e) => {
+                      if (!/^[a-zA-Z\s]$/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="shippingLastName">
+                  <Form.Label>Last Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="last_name"
+                    value={shippingData.last_name || ''}
+                    onChange={handleShippingChange}
+                    onKeyPress={(e) => {
+                      if (!/^[a-zA-Z\s]$/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Address Fields */}
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="shippingHouse">
+                  <Form.Label>House / Apt</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="house"
+                    value={shippingData.house || ''}
+                    onChange={handleShippingChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="shippingAddressLine1">
+                  <Form.Label>Address Line 1</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="address_line_1"
+                    value={shippingData.address_line_1 || ''}
+                    onChange={handleShippingChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="shippingAddressLine2">
+                  <Form.Label>Address Line 2 (Optional)</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="address_line_2"
+                    value={shippingData.address_line_2 || ''}
+                    onChange={handleShippingChange}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="shippingCity">
+                  <Form.Label>City</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="city"
+                    value={shippingData.city || ''}
+                    onChange={handleShippingChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="shippingState">
+                  <Form.Label>Province / State</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="state"
+                    value={shippingData.state || ''}
+                    onChange={handleShippingChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="shippingCountry">
+                  <Form.Label>Country</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="country"
+                    value={shippingData.country || ''}
+                    onChange={handleShippingChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="shippingPostalCode">
+                  <Form.Label>Postal Code</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="postal_code"
+                    value={shippingData.postal_code || ''}
+                    onChange={handleShippingChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
               <Col md={6}>
                 <Form.Group controlId="shippingPhone">
                   <Form.Label>Phone Number</Form.Label>
@@ -269,8 +325,9 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                 </Form.Group>
               </Col>
             </Row>
+
             <Row className="mb-3 payment-method-inline">
-              <Col md={6}>
+              <Col md={12}>
                 <Form.Group controlId="paymentMethod" className="mt-3">
                   <Form.Label>Payment Method</Form.Label>
 
@@ -278,14 +335,14 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                     <Form.Check 
                       type="radio"
                       id="credit-card"
-                      label="Card"
+                      label="Add Card Details"
                       name="payment_method"
                       value="credit-card"
                       checked={shippingData.payment_method === "credit-card"}
                       onChange={handleShippingChange}
                     />
 
-                    <Form.Check 
+                    {/* <Form.Check 
                       type="radio"
                       id="paypal"
                       label="PayPal"
@@ -303,13 +360,13 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                       value="bank-transfer"
                       checked={shippingData.payment_method === "bank-transfer"}
                       onChange={handleShippingChange}
-                    />
+                    /> */}
                   </div>
                 </Form.Group>
               </Col>
             </Row>
 
-            {/* Conditional Fields */}
+            {/* Conditional Payment Fields */}
             {shippingData.payment_method === 'credit-card' && (
               <Row className="mb-3">
                 <Col md={4}>
@@ -325,25 +382,25 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                   </Form.Group>
                 </Col>
                 <Col md={4}>
-                  <Form.Group controlId="expiryDate">
+                  <Form.Group controlId="cardExpiryDate">
                     <Form.Label>Expiry Date</Form.Label>
                     <Form.Control
                       type="text"
                       placeholder="MM/YY"
-                      name="expiry_date"
-                      value={shippingData.expiry_date}
+                      name="card_expiry_date"
+                      value={shippingData.card_expiry_date}
                       onChange={handleShippingChange}
                       required
                     />
                   </Form.Group>
                 </Col>
                 <Col md={4}>
-                  <Form.Group controlId="cvv">
+                  <Form.Group controlId="cardCvv">
                     <Form.Label>CVV</Form.Label>
                     <Form.Control
                       type="password"
-                      name="cvv"
-                      value={shippingData.cvv}
+                      name="card_cvv"
+                      value={shippingData.card_cvv}
                       onChange={handleShippingChange}
                       required
                     />
@@ -352,7 +409,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
               </Row>
             )}
 
-            {shippingData.payment_method === 'paypal' && (
+            {/* {shippingData.payment_method === 'paypal' && (
               <Row className="mb-3">
                 <Col md={6}>
                   <Form.Group controlId="paypalEmail">
@@ -393,18 +450,23 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                       onChange={handleShippingChange}
                       required
                     />
-                  </Form.Group>
+                  </Form.Group> 
                 </Col>
               </Row>
-            )}
-        </Container>
+            )}*/}
+          </Container>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={onHide}>
+          <Button variant="secondary" onClick={onHide} disabled={isLoading}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" className='continue-btn' onClick={handleSubmit}>
-            Continue
+          <Button 
+            type="submit" 
+            variant="primary" 
+            className='continue-btn' 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Processing...' : 'Continue'}
           </Button>
         </Modal.Footer>
       </Form>

@@ -109,17 +109,15 @@
 /* Delete Button for Square Layout */
 .cart-bin-square {
   background: linear-gradient(135deg, #dc3545, #c82333);
-  border: none;
   color: white;
-  padding: 0.5rem;
+  border: none !important;
   border-radius: 8px;
-  width: 40px;
-  height: 40px;
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
   transition: all 0.2s ease;
+  height: 40px;
 }
 
 .cart-bin-square:hover {
