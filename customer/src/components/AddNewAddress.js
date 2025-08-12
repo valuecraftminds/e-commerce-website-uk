@@ -21,8 +21,11 @@ const createAxios = () => {
   return instance;
 };
 
-// Helper function for phone number formatting
+// prevent adding symbols or letters
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
+
+// prevent adding symbols or numbers
+const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name.trim());
 
 const AddNewAddress = ({ show, onHide, onSubmit }) => {
   const api = useMemo(() => createAxios(), []);
@@ -72,6 +75,13 @@ const AddNewAddress = ({ show, onHide, onSubmit }) => {
     if (name === 'phone') {
       const digits = onlyDigits(value).slice(0, 20);
       setNewAddress((prev) => ({ ...prev, [name]: digits }));
+      return;
+    }
+
+    // Validate name fields
+    if (name === 'first_name' || name === 'last_name' || name === 'state' || name === 'country') {
+      const characters = isValidName(value) ? value : '';
+      setNewAddress((prev) => ({ ...prev, [name]: characters }));
       return;
     }
     

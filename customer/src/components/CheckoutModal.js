@@ -23,7 +23,12 @@ const createAxios = () => {
 };
 
 // helpers
+// prevent adding symbols or letters
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
+
+// no symbols or digits in name
+const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name.trim());
+
 const luhnValid = (num) => {
   const s = onlyDigits(num);
   if (!s) return false;
@@ -167,6 +172,14 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
       setShippingData((p) => ({ ...p, [name]: digits }));
       return;
     }
+
+    // Validate name fields
+    if (name === 'first_name' || name === 'last_name' || name === 'state' || name === 'country') {
+      const characters = isValidName(value) ? value : '';
+      setShippingData((prev) => ({ ...prev, [name]: characters }));
+      return;
+    }
+
     setShippingData((prev) => ({ ...prev, [name]: value }));
   };
 

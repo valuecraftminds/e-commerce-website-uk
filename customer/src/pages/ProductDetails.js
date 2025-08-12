@@ -179,7 +179,7 @@ export default function ProductDetails() {
           <Col className="img-col" md={6}>
             <Image 
               className="product-image" 
-              src={`${BASE_URL}/customer/styles/${product.image}`} 
+              src={`${BASE_URL}/api/customer/styles/${product.image}`} 
               alt={product.name} 
               fluid 
             />

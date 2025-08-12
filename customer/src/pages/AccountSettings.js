@@ -10,7 +10,7 @@ import EditAddress from '../components/EditAddress';
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
-export default function UserAccountSettings() {
+export default function AccountSettings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -22,10 +22,7 @@ export default function UserAccountSettings() {
   const [showRules, setShowRules] = useState(false);
   const [addressesLoading, setAddressesLoading] = useState(false);
   const [addressError, setAddressError] = useState(null);
-  // const [paymentsLoading, setPaymentsLoading] = useState(false);
-  // const [paymentsError, setPaymentsError] = useState(null);
   const [addresses, setAddresses] = useState([]);
-  // const [paymentMethods, setPaymentMethods] = useState([]);
   const [showAddNewAddress, setShowAddNewAddress] = useState(false);
   const [showEditAddress, setShowEditAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -48,6 +45,7 @@ useEffect(() => {
       setShowRules(false);
     }
   }
+
   document.addEventListener('mousedown', handleClickOutside);
   return () => {
     document.removeEventListener('mousedown', handleClickOutside);

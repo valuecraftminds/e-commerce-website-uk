@@ -21,8 +21,11 @@ const createAxios = () => {
   return instance;
 };
 
-// Helper function to get only digits from phone
+// prevent adding symbols or letters
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
+
+// no symbols or digits
+const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name.trim());
 
 const EditAddress = ({ show, address, onHide, onSubmit }) => {
   const api = useMemo(() => createAxios(), []);
@@ -145,6 +148,13 @@ const EditAddress = ({ show, address, onHide, onSubmit }) => {
     if (name === 'phone') {
       const digits = onlyDigits(value).slice(0, 20);
       setAddressData(prev => ({ ...prev, [name]: digits }));
+      return;
+    }
+
+    // Validate name fields
+    if (name === 'first_name' || name === 'last_name' || name === 'state' || name === 'country') {
+      const characters = isValidName(value) ? value : '';
+      setAddressData((prev) => ({ ...prev, [name]: characters }));
       return;
     }
     
