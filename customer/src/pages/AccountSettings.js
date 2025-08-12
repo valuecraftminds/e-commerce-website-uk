@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, MapPin, CreditCard, Plus, Edit3, Trash2, Eye, EyeOff, Mail, Phone, Lock, Shield, Camera, Upload, X } from 'lucide-react';
+import { User, MapPin, Plus, Eye, EyeOff, Mail, Phone, Lock, Camera } from 'lucide-react';
 import axios from 'axios';
 
 import '../styles/AccountSettings.css';

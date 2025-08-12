@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import axios from "axios";
 
-import SuccessMsg from "../components/SuccessMsg";
+import NotifyModal from "../components/NotifyModal";
 import CheckoutModal from "../components/CheckoutModal";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
@@ -15,7 +15,7 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 export default function ProductDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const variantId = parseInt(id, 10);
+  const styleId = parseInt(id, 10);
   const { addToCart } = useCart();
 
   // State for product data and loading
@@ -66,7 +66,7 @@ export default function ProductDetails() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/customer/product/${variantId}`, {
+        const response = await axios.get(`${BASE_URL}/api/customer/product/${styleId}`, {
           params: { company_code: COMPANY_CODE }
         });
         setProduct(response.data);
@@ -79,10 +79,10 @@ export default function ProductDetails() {
       }
     };
 
-    if (variantId) {
+    if (styleId) {
       fetchProductDetails();
     }
-  }, [variantId]);
+  }, [styleId]);
 
   const getRate = () => {
     switch (country) {
@@ -119,8 +119,7 @@ export default function ProductDetails() {
         image: product.image,
         quantity: quantity,
         price: product.price,
-        Offer_price: product.offer_price,
-        variant_id: variantId  
+        Offer_price: product.offer_price
       });
 
       const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColorName}`;
@@ -276,7 +275,7 @@ export default function ProductDetails() {
               />
             </div>
 
-            <SuccessMsg
+            <NotifyModal
               show={showModal}
               onClose={() => setShowModal(false)}
               message={successMessage}

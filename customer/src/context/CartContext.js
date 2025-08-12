@@ -341,13 +341,13 @@ export const CartProvider = ({ children }) => {
         // User is logged in, add to backend
         const response = await axios.post(`${BASE_URL}/api/customer/cart/add`, {
           style_code: item.style_code,
-          variant_id: item.variant_id,
           quantity: item.quantity || 1,
           price: item.price,
           product_name: item.name,
           sku: item.sku,
           color_name: item.color?.name,
           image: item.image,
+          size: item.size,
         }, getAxiosConfig());
 
         if (response.data.success) {
