@@ -20,8 +20,10 @@ export default function UserAccountSettings() {
   const [showRules, setShowRules] = useState(false);
   const [addressesLoading, setAddressesLoading] = useState(false);
   const [addressError, setAddressError] = useState(null);
-  const [paymentsLoading, setPaymentsLoading] = useState(false);
-  const [paymentsError, setPaymentsError] = useState(null);
+  // const [paymentsLoading, setPaymentsLoading] = useState(false);
+  // const [paymentsError, setPaymentsError] = useState(null);
+  const [addresses, setAddresses] = useState([]);
+  // const [paymentMethods, setPaymentMethods] = useState([]);
   
   const fileInputRef = useRef(null);
   const passwordInputRef = useRef(null);
@@ -56,13 +58,12 @@ useEffect(() => {
     profilePicture: ''
   });
 
-  const [addresses, setAddresses] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
+
 
   const sidebarItems = [
     { id: 'profile', label: 'Profile Information', icon: User },
     { id: 'addresses', label: 'Shipping Addresses', icon: MapPin },
-    { id: 'payment', label: 'Payment Methods', icon: CreditCard },
+    // { id: 'payment', label: 'Payment Methods', icon: CreditCard },
   ];
 
   // Get auth token from logged in user
@@ -89,45 +90,53 @@ useEffect(() => {
   };
 
   // Fetch payment methods separately
-  const fetchPaymentMethods = async () => {
-    setPaymentsLoading(true);
-    setPaymentsError(null);
-    try {
-      const config = getAxiosConfig();
-      const response = await axios.get(`${BASE_URL}/api/customer/payment-methods/get-payment-methods`, config);
+  // const fetchPaymentMethods = async () => {
+  //   setPaymentsLoading(true);
+  //   setPaymentsError(null);
+  //   try {
+  //     const config = getAxiosConfig();
+  //     const response = await axios.get(`${BASE_URL}/api/customer/payment-methods/get-payment-methods`, config);
       
-      // Transform the data to match UI 
-      const formattedPayments = response.data.map(payment => ({
-        id: payment.id,
-        last4: payment.card_number ? payment.card_number.slice(-4) : '0000',
-        cardHolder: `${payment.cardholder_name || 'N/A'}`,
-        expiryDate: payment.expiry_month && payment.expiry_year 
-          ? `${payment.expiry_month.toString().padStart(2, '0')}/${payment.expiry_year.toString().slice(-2)}`
-          : 'N/A',
-        type: payment.card_type || 'Unknown',
-        isDefault: payment.is_default === 1 || payment.is_default === true,
-        brand: payment.card_brand || 'VISA'
-      }));
+  //     // Transform the data to match UI 
+  //     const formattedPayments = response.data.map(payment => ({
+  //       id: payment.id,
+  //       last4: payment.card_number ? payment.card_number.slice(-4) : '0000',
+  //       cardHolder: `${payment.cardholder_name || 'N/A'}`,
+  //       expiryDate: payment.expiry_month && payment.expiry_year 
+  //         ? `${payment.expiry_month.toString().padStart(2, '0')}/${payment.expiry_year.toString().slice(-2)}`
+  //         : 'N/A',
+  //       type: payment.card_type || 'Unknown',
+  //       isDefault: payment.is_default === 1 || payment.is_default === true,
+  //       brand: payment.card_brand || 'VISA'
+  //     }));
       
-      setPaymentMethods(formattedPayments);
-    } catch (error) {
-      console.error('Error fetching payment methods:', error);
-      setPaymentsError('Failed to load payment methods');
-      setPaymentMethods([]); // Set empty array on error
-    } finally {
-      setPaymentsLoading(false);
-    }
-  };
+  //     setPaymentMethods(formattedPayments);
+  //   } catch (error) {
+  //     console.error('Error fetching payment methods:', error);
+  //     setPaymentsError('Failed to load payment methods');
+  //     setPaymentMethods([]); // Set empty array on error
+  //   } finally {
+  //     setPaymentsLoading(false);
+  //   }
+  // };
+
   const fetchAddresses = async () => {
-    setAddressesLoading(true);
-    setAddressError(null);
-    try {
-      const config = getAxiosConfig();
-      const response = await axios.get(`${BASE_URL}/api/customer/address/get-address`, config);
-      
-      // Transform the data to match UI
-      const formattedAddresses = response.data.map(addr => ({
-        id: addr.id,
+  setAddressesLoading(true);
+  setAddressError(null);
+  console.log('Fetching addresses...');
+  try {
+    const config = getAxiosConfig();
+    const response = await axios.get(`${BASE_URL}/api/customer/address/get-address`, config);
+
+    console.log('Fetched addresses:', response.data);
+    const formattedAddresses = response.data.map((addr, idx) => {
+      console.log('Formatting address:', addr);
+      const reactKeyBase =
+        addr.id ??
+        `${addr.address_line_1 || ''}-${addr.city || ''}-${addr.postal_code || ''}-${idx}`;
+      return {
+        id: addr.address_id, // keep the server id for setDefault/delete calls
+        reactKey: `addr-${reactKeyBase}`,         // <-- stable UI key
         name: `${addr.first_name || ''} ${addr.last_name || ''}`.trim(),
         type: addr.address_type || 'Shipping',
         address: `${addr.address_line_1 || ''} ${addr.address_line_2 || ''}`.trim(),
@@ -137,15 +146,82 @@ useEffect(() => {
         country: addr.country || '',
         isDefault: addr.is_default === 1 || addr.is_default === true,
         phone: addr.phone || ''
-      }));
-      
-      setAddresses(formattedAddresses);
+      };
+    });
+
+    setAddresses(formattedAddresses);
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    setAddressError('Failed to load addresses');
+    setAddresses([]);
+  } finally {
+    setAddressesLoading(false);
+  }
+};
+
+
+  const [loadingDefault, setLoadingDefault] = React.useState(null); // track which address is updating
+
+// Set default address function
+  const setDefaultAddress = async (addressId) => {
+    if (!addressId) return;
+
+    setLoadingDefault(addressId); // disable btn for this address
+
+    try {
+      const config = getAxiosConfig();
+      const response = await axios.post(
+        `${BASE_URL}/api/customer/address/set-default-address`,
+        {
+          address_id: addressId,
+          company_code: COMPANY_CODE,
+        },
+        config
+      );
+
+      if (response.status === 200) {
+        // Mark selected address isDefault true, rest false
+        setAddresses((prev) =>
+          prev.map((addr) => ({
+            ...addr,
+            isDefault: addr.id === addressId,
+          }))
+        );
+        
+        alert('Default address updated successfully!');
+      }
     } catch (error) {
-      console.error('Error fetching addresses:', error);
-      setAddressError('Failed to load addresses');
-      setAddresses([]); // Set empty array on error
+      console.error('Error setting default address:', error);
+      alert(error.response?.data?.message || 'Error setting default address');
     } finally {
-      setAddressesLoading(false);
+      setLoadingDefault(null);
+    }
+  };
+
+  //delete address
+  const deleteAddress = async (addressId) => {  
+    if (!addressId) return;
+    if (!window.confirm('Are you sure you want to delete this address?')) {
+      return;
+    }
+    console.log("delete");
+    try {
+      const config = getAxiosConfig();
+      const response = await axios.delete(
+        `${BASE_URL}/api/customer/address/delete-address`,
+        {
+          data: { address_id: addressId },
+          ...config
+        }
+      );
+      if (response.status === 200) {
+        // Remove deleted address from state
+        setAddresses((prev) => prev.filter((addr) => addr.id !== addressId));
+        alert('Address deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      alert(error.response?.data?.message || 'Error deleting address');
     }
   };
 
@@ -330,11 +406,11 @@ useEffect(() => {
   }, [activeTab]);
 
   // Fetch payment methods when payment tab is active
-  useEffect(() => {
-    if (activeTab === 'payment' && paymentMethods.length === 0) {
-      fetchPaymentMethods();
-    }
-  }, [activeTab]);
+  // useEffect(() => {
+  //   if (activeTab === 'payment' && paymentMethods.length === 0) {
+  //     fetchPaymentMethods();
+  //   }
+  // }, [activeTab]);
 
   const getInitials = () => {
     return `${profileData.firstName.charAt(0)}${profileData.lastName.charAt(0)}`;
@@ -506,19 +582,19 @@ useEffect(() => {
                     }}>
                       <small>Password requirements:</small>
                       <ul className="list-unstyled ms-2 mb-0" style={{fontSize: '0.85rem'}}>
-                        <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
+                        <li key="length" style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
                           {passwordRules.length ? '✅' : '❌'} 8-12 characters
                         </li>
-                        <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
+                        <li key="uppercase" style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
                           {passwordRules.uppercase ? '✅' : '❌'} Uppercase letter
                         </li>
-                        <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
+                        <li key="lowercase" style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
                           {passwordRules.lowercase ? '✅' : '❌'} Lowercase letter
                         </li>
-                        <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
+                        <li key="number" style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
                           {passwordRules.number ? '✅' : '❌'} Number
                         </li>
-                        <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
+                        <li key="specialChar" style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
                           {passwordRules.specialChar ? '✅' : '❌'} Special character
                         </li>
                       </ul>
@@ -590,109 +666,66 @@ useEffect(() => {
               )}
 
               {/* Address List */}
-              {/* {!addressesLoading && !addressError && addresses.length > 0 && addresses.map((address) => (
-                <div key={address.id} className={`address-card ${address.isDefault ? 'default' : ''}`}>
-                  {address.isDefault && <div className="default-badge">DEFAULT</div>}
-                  
-                  <div className="row">
-                    <div className="col-md-8 details-column">
-                      <h5 className="mb-2">
-                        <MapPin size={18} className="me-2 text-primary" />
-                        {address.type} Address
-                      </h5>
-                      <h6 className="text-dark">{address.name}</h6>
-                      <p className="mb-1 text-muted">{address.address}</p>
-                      <p className="mb-1 text-muted">{address.city}, {address.state} {address.zipCode}</p>
-                      <p className="mb-0 text-muted">{address.country}</p>
-                      {address.phone && (
-                        <p className="mb-0 text-muted">
-                          <Phone size={14} className="me-1" />
-                          {address.phone}
-                        </p>
-                      )}
-                    </div>
-                    <div className="col-md-4 text-end">
-                      <div className="d-flex flex-column">
-                        <button className="btn btn-outline-primary btn-sm address-edit-btn">
-                          <Edit3 size={14} className="me-1" />
-                          Edit
-                        </button>
-                        {!address.isDefault && (
-                          <button className="btn btn-outline-success btn-sm address-default-btn">
-                            Set as Default
-                          </button>
-                        )}
-                        <button className="btn btn-outline-danger btn-sm address-remove-btn">
-                          <Trash2 size={14} className="me-1" />
-                          Remove
-                        </button>
+              <div className="row">
+                {!addressesLoading && !addressError && addresses.length > 0 && 
+                  addresses.map((address, index) => (
+                    <div key={address.id || index} className="col-md-6 mb-4">
+                      <div className={`address-card ${address.isDefault ? 'default' : ''}`}>
+                        {address.isDefault && <div className="default-badge">DEFAULT</div>}
+                        
+                        <div className="row">
+                          <div className="col-8 details-column">
+                            <h5 className="mb-2">
+                              <MapPin size={18} className="me-2 text-primary" />
+                              {address.type} Address
+                            </h5>
+                            <h6 className="text-dark address-name">{address.name}</h6>
+                            <p className="mb-1 address-lines">{address.address}</p>
+                            <p className="mb-1 address-lines">{address.city}</p>
+                            <p className="mb-1 address-lines">{address.state}, {address.zipCode}</p>
+                            <p className="mb-0 address-lines">{address.country}</p>
+                            {address.phone && (
+                              <p className="mb-0 address-phone">
+                                <Phone size={14} className="me-1" />
+                                {address.phone}
+                              </p>
+                            )}
+                          </div>
+                          <div className="col-4 text-end">
+                            <div className="d-flex flex-column gap-1">
+                              {/* edit */}
+                              <button className="btn btn-outline-primary btn-sm">Edit</button>
+                              {/* set default */}
+                              {!address.isDefault && (
+                                <button
+                                  className="btn btn-outline-success btn-sm"
+                                  onClick={() => setDefaultAddress(address.id)}
+                                  disabled={loadingDefault === address.id}
+                                >
+                                  {loadingDefault === address.id ? 'Setting...' : 'Set as Default'}
+                                </button>
+                              )}
+                              {/* delete */}
+                              <button 
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => deleteAddress(address.id)}
+                                // disabled={loadingDelete === address.id}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))} */}
-
-              <div className="row">
-  {!addressesLoading && !addressError && addresses.length > 0 && 
-    addresses.map((address) => (
-      <div key={address.id} className="col-md-6 mb-4">
-        <div className={`address-card ${address.isDefault ? 'default' : ''}`}>
-          {address.isDefault && <div className="default-badge">DEFAULT</div>}
-          
-          <div className="row">
-            <div className="col-8 details-column">
-              <h5 className="mb-2">
-                <MapPin size={18} className="me-2 text-primary" />
-                {address.type} Address
-              </h5>
-              <h6 className="text-dark address-name">{address.name}</h6>
-              <p className="mb-1 address-lines">{address.address}</p>
-              <p className="mb-1 address-lines">{address.city}</p>
-              <p className="mb-1 address-lines">{address.state}, {address.zipCode}</p>
-              <p className="mb-0 address-lines">{address.country}</p>
-              {address.phone && (
-                <p className="mb-0 address-phone">
-                  <Phone size={14} className="me-1" />
-                  {address.phone}
-                </p>
-              )}
-            </div>
-            <div className="col-4 text-end">
-              <div className="d-flex flex-column gap-1">
-                <button className="btn btn-outline-primary btn-sm">Edit</button>
-                {!address.isDefault && (
-                  <button className="btn btn-outline-success btn-sm">Set as Default</button>
-                )}
-                <button className="btn btn-outline-danger btn-sm">Remove</button>
+                  ))
+                }
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ))
-  }
-</div>
-
-
             </div>
           )}
 
           {/* Payment Methods Tab */}
-          {activeTab === 'payment' && (
-            <div className="info-card mt-4">
-                <div className="d-flex align-items-center">
-                  <Shield size={24} className="text-success me-3" />
-                  <div>
-                    <h6 className="mb-1">Your payments are secure</h6>
-                    <small className="text-muted">
-                      We use industry-standard encryption to protect your payment information. 
-                      Your full card number is never stored on our servers.
-                    </small>
-                  </div>
-                </div>
-              </div>
-          )}
-          {/* {activeTab === 'payment' && (
+           {/* {activeTab === 'payment' && (
             <div>
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="section-title mb-0">
@@ -739,8 +772,8 @@ useEffect(() => {
               )} */}
 
               {/* Payment Methods List */}
-              {/* {!paymentsLoading && !paymentsError && paymentMethods.length > 0 && paymentMethods.map((payment) => (
-                <div key={payment.id} className={`payment-card ${payment.isDefault ? 'default' : ''}`}>
+              {/* {!paymentsLoading && !paymentsError && paymentMethods.length > 0 && paymentMethods.map((payment,index) => (
+                <div key={payment.id || index} className={`payment-card ${payment.isDefault ? 'default' : ''}`}>
                   {payment.isDefault && <div className="default-badge">DEFAULT</div>}
                   
                   <div className="row align-items-center">
@@ -796,11 +829,12 @@ useEffect(() => {
                     </small>
                   </div>
                 </div>
-              </div> */}
+              </div>
             </div>
-          {/* )} */}
-        {/* </div> */}
+          )} */}
+        </div>
       </div>
+               
 
       {/* Profile Picture Modal */}
       <ProfilePictureModal
