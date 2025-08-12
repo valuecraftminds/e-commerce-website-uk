@@ -163,7 +163,7 @@ return (
                           <Col md={3} className="d-flex align-items-center justify-content-center">
                             <div className="square-image-container">
                               <img
-                                src={`${BASE_URL}/customer/styles/${item.image}`}
+                                src={`${BASE_URL}/api/customer/styles/${item.image}`}
                                 alt={item.style_name}
                                 className="cart-item-square-image"
                               />

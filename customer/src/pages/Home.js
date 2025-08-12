@@ -33,6 +33,7 @@ export default function Home() {
           params: { company_code: COMPANY_CODE }
         });
         setProducts(response.data);
+        console.log('Fetched products:', response.data);
       } catch (error) {
         console.error('Error fetching product listings:', error);
         setError('Failed to load products');

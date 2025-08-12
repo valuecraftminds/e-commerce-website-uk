@@ -1,117 +1,180 @@
 const db = require('../../config/database');
-const path = require('path');
-const fs = require('fs');
+
+
+async function getVariantIdByStyleColorSize({
+  company_code,
+  style_code,
+  color_name,
+  size_name
+}) {
+  const sql = `
+    SELECT sv.variant_id
+    FROM style_variants sv
+    INNER JOIN colors c 
+      ON c.color_id = sv.color_id 
+     AND c.company_code = sv.company_code
+    INNER JOIN sizes s  
+      ON s.size_id = sv.size_id
+     AND s.company_code = sv.company_code
+    WHERE sv.company_code = ?
+      AND sv.style_code   = ?
+      AND c.color_name    = ?
+      AND s.size_name     = ?
+      AND sv.is_active    = 1
+    LIMIT 1
+  `;
+
+  const params = [company_code, style_code, color_name, size_name];
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, rows) => {
+      if (err) return reject(err);
+      if (!rows || rows.length === 0) return resolve(null);
+      resolve(rows[0].variant_id);
+    });
+  });
+}
+
 
 const cartController = {
-  addToCart: (req, res) => {
+  addToCart: async (req, res) => {
     const {
       customer_id = req.user?.id,
       style_code,
-      variant_id,
+      variant_id: bodyVariantId, 
       quantity = 1,
       price,
       product_name,
       color_name = null,
-      image = null
+      size_name = req.body.size_name ?? req.body.size ?? null, 
+      image = null,
+      sku: bodySku = null
     } = req.body;
 
     const { company_code } = req.query;
 
-    if (!company_code || !variant_id || !price || !product_name || !customer_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: company_code, variant_id, price, product_name, or customer_id'
-      });
-    }
-
-    const currency = 'USD';
-    const is_available = true;
-    const product_url = null;
-    const tax = 0.00;
-    const shipping_fee = 0.00;
-    const sku = style_code || null;
-
     try {
+      // Resolve variant_id if not provided
+      let variant_id = bodyVariantId;
+
+      if (!variant_id) {
+        if (!company_code || !style_code || !color_name || !size_name) {
+          return res.status(400).json({
+            success: false,
+            message: 'Missing required fields to find variant: company_code, style_code, color_name, size_name'
+          });
+        }
+
+        variant_id = await getVariantIdByStyleColorSize({
+          company_code,
+          style_code,
+          color_name,
+          size_name
+        });
+
+        if (!variant_id) {
+          return res.status(404).json({
+            success: false,
+            message: 'Variant not found for the given style/color/size'
+          });
+        }
+      }
+
+      if (!company_code || !variant_id || !price || !product_name || !customer_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields: company_code, variant_id, price, product_name, or customer_id'
+        });
+      }
+
+      const currency = 'USD';
+      const is_available = true;
+      const product_url = null;
+      const tax = 0.00;
+      const shipping_fee = 0.00;
+      const sku = bodySku ?? style_code ?? null;
+
+      // Check if item already in cart
       const selectSql = `
         SELECT * FROM cart 
         WHERE company_code = ? AND variant_id = ? AND customer_id = ?
       `;
-     db.query(selectSql, [company_code, variant_id, customer_id], (err, existing) => {
-      if (err) {
-        console.error('Error checking existing cart item:', err);
-        return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
-      }
+      db.query(selectSql, [company_code, variant_id, customer_id], (err, existing) => {
+        if (err) {
+          console.error('Error checking existing cart item:', err);
+          return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+        }
 
-      if (existing.length > 0) {
-        const existingItem = existing[0];
-        const updatedQty = existingItem.quantity + Number(quantity);
+        if (existing.length > 0) {
+          const existingItem = existing[0];
+          const updatedQty = existingItem.quantity + Number(quantity);
 
-        const updateSql = `
-          UPDATE cart 
-          SET quantity = ?, updated_at = CURRENT_TIMESTAMP 
-          WHERE cart_id = ?
-        `;
-       db.query(updateSql, [updatedQty, existingItem.cart_id], (updateErr) => {
-         if (updateErr) {
-           console.error('Error updating cart item:', updateErr);
-           return res.status(500).json({ success: false, message: 'Internal server error', error: updateErr.message });
-         }
+          const updateSql = `
+            UPDATE cart 
+            SET quantity = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE cart_id = ?
+          `;
+          db.query(updateSql, [updatedQty, existingItem.cart_id], (updateErr) => {
+            if (updateErr) {
+              console.error('Error updating cart item:', updateErr);
+              return res.status(500).json({ success: false, message: 'Internal server error', error: updateErr.message });
+            }
 
-        return res.status(200).json({
-          success: true,
-          message: 'Cart item updated',
-          data: { cart_id: existingItem.cart_id, company_code, customer_id, variant_id, quantity: updatedQty, price, product_name, sku }
-       });
-      });
-      } else {
-        const insertSql = `
-          INSERT INTO cart (
+            return res.status(200).json({
+              success: true,
+              message: 'Cart item updated',
+              data: { cart_id: existingItem.cart_id, company_code, customer_id, variant_id, quantity: updatedQty, price, product_name, sku }
+            });
+          });
+        } else {
+          const insertSql = `
+            INSERT INTO cart (
+              company_code, 
+              customer_id, 
+              product_name, 
+              variant_id, 
+              quantity,
+              color_name, 
+              price, 
+              image, 
+              currency, 
+              product_url, 
+              tax,
+              shipping_fee, 
+              is_available, 
+              sku
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+          const insertParams = [
             company_code, 
             customer_id, 
             product_name, 
             variant_id, 
-            quantity,
+            quantity, 
             color_name, 
             price, 
             image, 
             currency, 
             product_url, 
-            tax,
+            tax, 
             shipping_fee, 
             is_available, 
             sku
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const insertParams = [
-          company_code, 
-          customer_id, 
-          product_name, 
-          variant_id, 
-          quantity, 
-          color_name, 
-          price, 
-          image, 
-          currency, 
-          product_url, 
-          tax, 
-          shipping_fee, 
-          is_available, 
-          sku
-        ];
-         db.query(insertSql, insertParams, (insertErr, result) => {
-          if (insertErr) {
-            console.error('Error adding cart item:', insertErr);
-            return res.status(500).json({ success: false, message: 'Internal server error', error: insertErr.message });
-          }
+          ];
+          db.query(insertSql, insertParams, (insertErr, result) => {
+            if (insertErr) {
+              console.error('Error adding cart item:', insertErr);
+              return res.status(500).json({ success: false, message: 'Internal server error', error: insertErr.message });
+            }
 
-        return res.status(201).json({
-          success: true,
-          message: 'Cart item added',
-          data: { cart_id: result.insertId, company_code, customer_id, variant_id, quantity, price, product_name, sku }
-        });
+            return res.status(201).json({
+              success: true,
+              message: 'Cart item added',
+              data: { cart_id: result.insertId, company_code, customer_id, variant_id, quantity, price, product_name, sku }
+            });
+          });
+        }
       });
-    }
-  });
     } catch (error) {
       console.error('Error in addToCart:', error);
       return res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
@@ -139,7 +202,8 @@ const cartController = {
           sv.stock_quantity, 
           sv.sku AS variant_sku,
           col.color_name AS variant_color, 
-          sz.size_name, m.material_name, 
+          sz.size_name, 
+          m.material_name, 
           f.fit_name
         FROM cart c
         JOIN style_variants sv ON c.variant_id = sv.variant_id
@@ -162,28 +226,28 @@ const cartController = {
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
         }
 
-      const cartItems = results.map(item => {
-        const subtotal = item.price * item.quantity;
-        const tax = parseFloat(item.tax) || 0;
-        const shippingFee = parseFloat(item.shipping_fee) || 0;
-        const total = subtotal + tax + shippingFee;
+        const cartItems = results.map(item => {
+          const subtotal = item.price * item.quantity;
+          const tax = parseFloat(item.tax) || 0;
+          const shippingFee = parseFloat(item.shipping_fee) || 0;
+          const total = subtotal + tax + shippingFee;
 
-        return { 
-          ...item, 
-          subtotal: subtotal.toFixed(2), 
-          total_price: total.toFixed(2) 
-        };
+          return { 
+            ...item, 
+            subtotal: subtotal.toFixed(2), 
+            total_price: total.toFixed(2) 
+          };
+        });
+
+        const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+        const totalAmount = cartItems.reduce((sum, i) => sum + parseFloat(i.total_price), 0);
+
+        return res.json({
+          success: true,
+          cart: cartItems,
+          summary: { total_items: totalItems, total_amount: totalAmount.toFixed(2) }
+        });
       });
-
-      const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-      const totalAmount = cartItems.reduce((sum, i) => sum + parseFloat(i.total_price), 0);
-
-      return res.json({
-        success: true,
-        cart: cartItems,
-        summary: { total_items: totalItems, total_amount: totalAmount.toFixed(2) }
-      });
-    });
     } catch (error) {
       console.error('Error fetching cart:', error);
       return res.status(500).json({ success: false, message: 'Server error while retrieving cart', error: error.message });
@@ -210,17 +274,17 @@ const cartController = {
         AND (customer_id = ? OR customer_id IS NULL)
       `;
       db.query(sql, [quantity, cart_id, company_code, customer_id], (err, result) => {
-      if (err) {
-        console.error('Error updating cart item:', err);
-        return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
-      }
+        if (err) {
+          console.error('Error updating cart item:', err);
+          return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+        }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ success: false, message: 'Cart item not found' });
-      }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ success: false, message: 'Cart item not found' });
+        }
 
-      res.json({ success: true, message: 'Cart updated successfully' });
-    });
+        res.json({ success: true, message: 'Cart updated successfully' });
+      });
     } catch (error) {
       console.error('Error updating cart:', error);
       return res.status(500).json({ success: false, message: 'Server error' });
@@ -245,17 +309,17 @@ const cartController = {
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
         }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ success: false, message: 'Cart item not found' });
-      }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ success: false, message: 'Cart item not found' });
+        }
 
-      res.json({ success: true, message: 'Item removed from cart successfully' });
-    });
-  } catch (error) {
-    console.error('Error removing from cart:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-},
+        res.json({ success: true, message: 'Item removed from cart successfully' });
+      });
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  },
 
   clearCart: (req, res) => {
     const { company_code } = req.query;
@@ -273,7 +337,7 @@ const cartController = {
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
         }
 
-      res.json({ success: true, message: 'Cart cleared successfully', cleared_items: result.affectedRows });
+        res.json({ success: true, message: 'Cart cleared successfully', cleared_items: result.affectedRows });
       });
     } catch (error) {
       console.error('Error clearing cart:', error);
@@ -281,155 +345,151 @@ const cartController = {
     }
   },
 
-  // Merge guest cart into customer cart
+  // Merge guest cart into customer cart (expects variant_id already resolved)
   mergeGuestCart: (req, res) => {
-  const { guest_cart } = req.body;
-  const { company_code } = req.query;
-  const customer_id = req.user?.id;
+    const { guest_cart } = req.body;
+    const { company_code } = req.query;
+    const customer_id = req.user?.id;
 
-  if (!customer_id) {
-    return res.status(401).json({ success: false, message: 'User must be logged in to merge cart' });
-  }
-
-  if (!guest_cart || !Array.isArray(guest_cart)) {
-    return res.status(400).json({ success: false, message: 'Invalid guest cart data' });
-  }
-
-  if (guest_cart.length === 0) {
-    return res.json({
-      success: true,
-      message: 'No guest cart items to merge',
-      data: { company_code, customer_id, processed_items: 0 }
-    });
-  }
-
-  let processedItems = 0;
-  let errors = [];
-  let mergedItems = [];
-  let bulkInsertValues = [];
-
-  const processNextItem = (index) => {
-    if (index >= guest_cart.length) {
-      // All items processed
-      if (bulkInsertValues.length > 0) {
-        const insertSql = `
-          INSERT INTO cart (
-            company_code, customer_id, product_name, variant_id, quantity,
-            color_name, price, image, currency, product_url, tax,
-            shipping_fee, is_available, sku
-          ) VALUES ?
-        `;
-        db.query(insertSql, [bulkInsertValues], (insertErr) => {
-          if (insertErr) {
-            console.error('Error inserting new items:', insertErr);
-            return res.status(500).json({ success: false, message: 'Error inserting items', error: insertErr.message });
-          }
-
-          finishResponse();
-        });
-      } else {
-        finishResponse();
-      }
-      return;
+    if (!customer_id) {
+      return res.status(401).json({ success: false, message: 'User must be logged in to merge cart' });
     }
 
-    const item = guest_cart[index];
-    const { style_code, variant_id, quantity } = item;
-
-    if (!style_code || !variant_id || !quantity) {
-      errors.push(`Missing fields for variant_id: ${variant_id}`);
-      return processNextItem(index + 1);
+    if (!guest_cart || !Array.isArray(guest_cart)) {
+      return res.status(400).json({ success: false, message: 'Invalid guest cart data' });
     }
 
-    const checkSql = `
-      SELECT * FROM cart 
-      WHERE company_code = ? AND variant_id = ? AND customer_id = ?
-    `;
-    db.query(checkSql, [company_code, variant_id, customer_id], (checkErr, existing) => {
-      if (checkErr) {
-        console.error(`Error checking cart for variant_id ${variant_id}:`, checkErr);
-        errors.push(`Error checking cart for variant_id: ${variant_id}`);
-        return processNextItem(index + 1);
-      }
+    if (guest_cart.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No guest cart items to merge',
+        data: { company_code, customer_id, processed_items: 0 }
+      });
+    }
 
-      if (existing.length > 0) {
-        const existingItem = existing[0];
-        const updatedQty = existingItem.quantity + parseInt(quantity);
+    let processedItems = 0;
+    let errors = [];
+    let mergedItems = [];
+    let bulkInsertValues = [];
 
-        db.query(
-          `UPDATE cart SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE cart_id = ?`,
-          [updatedQty, existingItem.cart_id],
-          (updateErr) => {
-            if (updateErr) {
-              console.error(`Error updating cart for variant_id ${variant_id}:`, updateErr);
-              errors.push(`Error updating cart for variant_id: ${variant_id}`);
-            } else {
-              mergedItems.push({
-                company_code,
-                customer_id,
-                variant_id,
-                quantity: updatedQty,
-                status: 'updated'
-              });
-              processedItems++;
+    const processNextItem = (index) => {
+      if (index >= guest_cart.length) {
+        if (bulkInsertValues.length > 0) {
+          const insertSql = `
+            INSERT INTO cart (
+              company_code, customer_id, product_name, variant_id, quantity,
+              color_name, price, image, currency, product_url, tax,
+              shipping_fee, is_available, sku
+            ) VALUES ?
+          `;
+          db.query(insertSql, [bulkInsertValues], (insertErr) => {
+            if (insertErr) {
+              console.error('Error inserting new items:', insertErr);
+              return res.status(500).json({ success: false, message: 'Error inserting items', error: insertErr.message });
             }
-            return processNextItem(index + 1);
-          }
-        );
-      } else {
-        bulkInsertValues.push([
-          company_code,
-          customer_id,
-          item.product_name || null,
-          variant_id,
-          parseInt(quantity),
-          item.color_name || null,
-          item.price || 0.00,
-          item.image || null,
-          item.currency || 'USD',
-          item.product_url || null,
-          item.tax || 0.00,
-          item.shipping_fee || 0.00,
-          item.is_available !== undefined ? item.is_available : true,
-          style_code
-        ]);
+            finishResponse();
+          });
+        } else {
+          finishResponse();
+        }
+        return;
+      }
 
-        mergedItems.push({
-          company_code,
-          customer_id,
-          variant_id,
-          quantity: parseInt(quantity),
-          status: 'inserted'
-        });
-        processedItems++;
+      const item = guest_cart[index];
+      const { style_code, variant_id, quantity } = item;
+
+      if (!style_code || !variant_id || !quantity) {
+        errors.push(`Missing fields for variant_id: ${variant_id}`);
         return processNextItem(index + 1);
       }
-    });
-  };
 
-  const finishResponse = () => {
-    const response = {
-      success: true,
-      message: errors.length
-        ? `Cart merged with ${processedItems} items. ${errors.length} had issues.`
-        : `Successfully merged ${processedItems} items.`,
-      data: {
-        company_code,
-        customer_id,
-        processed_items: processedItems,
-        merged_items: mergedItems
-      }
+      const checkSql = `
+        SELECT * FROM cart 
+        WHERE company_code = ? AND variant_id = ? AND customer_id = ?
+      `;
+      db.query(checkSql, [company_code, variant_id, customer_id], (checkErr, existing) => {
+        if (checkErr) {
+          console.error(`Error checking cart for variant_id ${variant_id}:`, checkErr);
+          errors.push(`Error checking cart for variant_id: ${variant_id}`);
+          return processNextItem(index + 1);
+        }
+
+        if (existing.length > 0) {
+          const existingItem = existing[0];
+          const updatedQty = existingItem.quantity + parseInt(quantity, 10);
+
+          db.query(
+            `UPDATE cart SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE cart_id = ?`,
+            [updatedQty, existingItem.cart_id],
+            (updateErr) => {
+              if (updateErr) {
+                console.error(`Error updating cart for variant_id ${variant_id}:`, updateErr);
+                errors.push(`Error updating cart for variant_id: ${variant_id}`);
+              } else {
+                mergedItems.push({
+                  company_code,
+                  customer_id,
+                  variant_id,
+                  quantity: updatedQty,
+                  status: 'updated'
+                });
+                processedItems++;
+              }
+              return processNextItem(index + 1);
+            }
+          );
+        } else {
+          bulkInsertValues.push([
+            company_code,
+            customer_id,
+            item.product_name || null,
+            variant_id,
+            parseInt(quantity, 10),
+            item.color_name || null,
+            item.price || 0.00,
+            item.image || null,
+            item.currency || 'USD',
+            item.product_url || null,
+            item.tax || 0.00,
+            item.shipping_fee || 0.00,
+            item.is_available !== undefined ? item.is_available : true,
+            style_code
+          ]);
+
+          mergedItems.push({
+            company_code,
+            customer_id,
+            variant_id,
+            quantity: parseInt(quantity, 10),
+            status: 'inserted'
+          });
+          processedItems++;
+          return processNextItem(index + 1);
+        }
+      });
     };
 
-    if (errors.length > 0) response.data.errors = errors;
+    const finishResponse = () => {
+      const response = {
+        success: true,
+        message: errors.length
+          ? `Cart merged with ${processedItems} items. ${errors.length} had issues.`
+          : `Successfully merged ${processedItems} items.`,
+        data: {
+          company_code,
+          customer_id,
+          processed_items: processedItems,
+          merged_items: mergedItems
+        }
+      };
 
-    return res.json(response);
-  };
+      if (errors.length > 0) response.data.errors = errors;
 
-  processNextItem(0); // Start processing guest cart
-}
+      return res.json(response);
+    };
 
-
-  };
+    processNextItem(0);
+  }
+};
 
 module.exports = cartController;
