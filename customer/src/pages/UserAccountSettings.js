@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import '../styles/AccountSettings.css';
 import ProfilePictureModal from '../components/ProfileImageModal';
+import AddNewAddress from '../components/AddNewAddress';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -24,6 +25,7 @@ export default function UserAccountSettings() {
   // const [paymentsError, setPaymentsError] = useState(null);
   const [addresses, setAddresses] = useState([]);
   // const [paymentMethods, setPaymentMethods] = useState([]);
+  const [showAddNewAddress, setShowAddNewAddress] = useState(false);
   
   const fileInputRef = useRef(null);
   const passwordInputRef = useRef(null);
@@ -626,7 +628,10 @@ useEffect(() => {
                   <MapPin className="me-2" />
                   Shipping Addresses
                 </h3>
-                <button className="btn new-address-btn">
+                <button 
+                  className="btn new-address-btn"
+                  onClick={() => setShowAddNewAddress(true)}
+                >
                   <Plus size={18} className="me-2" />
                   Add New Address
                 </button>
@@ -850,6 +855,38 @@ useEffect(() => {
         handleUploadProfilePicture={handleUploadProfilePicture}
         handleDeleteProfilePicture={handleDeleteProfilePicture}
         isUploading={isUploading}
+      />
+
+      {/* Add New Address Modal */}
+      <AddNewAddress 
+        show={showAddNewAddress}
+        onHide={() => setShowAddNewAddress(false)}
+        onSubmit={(result) => {
+          // Handle the new address creation
+          console.log('New address created:', result);
+          
+          // Add the new address
+          const newFormattedAddress = {
+            id: result.addressId,
+            reactKey: `addr-${result.addressId}`,
+            name: `${result.addressData.first_name} ${result.addressData.last_name}`,
+            type: 'Shipping',
+            address: `${result.addressData.address_line_1} ${result.addressData.address_line_2 || ''}`.trim(),
+            city: result.addressData.city,
+            state: result.addressData.state,
+            zipCode: result.addressData.postal_code,
+            country: result.addressData.country,
+            isDefault: false,
+            phone: result.addressData.phone
+          };
+          
+          setAddresses(prev => [...prev, newFormattedAddress]);
+          
+          // Close the modal
+          setShowAddNewAddress(false);
+
+          alert('Address added successfully!');
+        }}
       />
     </>
   );
