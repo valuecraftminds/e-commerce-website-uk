@@ -1,4 +1,8 @@
 /* link hover effect */
+.nav-bar{
+  padding: 0 !important;
+  max-height: 70px;
+}
 .navbar-category-link {
   color: #333 !important;
   font-weight: 500;
@@ -21,4 +25,8 @@
     margin-right: 0 !important;
     gap: 1;
   }
+}
+
+.user-menu{
+  margin-left: 15px !important;
 }

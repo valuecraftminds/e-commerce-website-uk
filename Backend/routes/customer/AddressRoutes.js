@@ -1,0 +1,13 @@
+const express = require('express');
+const router = express.Router();
+const AddressController = require('../../controllers/customer/AddressController');
+const { checkCompanyCode } = require('../../middleware/customer/CustomerValidation');
+const { optionalAuth } = require('../../middleware/customer/CustomerAuth');
+
+router.get('/get-address', checkCompanyCode, optionalAuth, AddressController.getAddresses);
+router.post('/add-address', checkCompanyCode, optionalAuth, AddressController.addAddress); 
+router.post('/set-default-address', checkCompanyCode, optionalAuth, AddressController.setDefaultAddress);
+router.delete('/delete-address', checkCompanyCode, optionalAuth, AddressController.deleteAddress);
+router.put('/update-address', checkCompanyCode, optionalAuth, AddressController.updateAddress);
+
+module.exports = router;

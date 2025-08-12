@@ -1,7 +1,8 @@
 import React, { useContext, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
-import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter } from 'react-icons/fa';
+import { FaFacebookF, FaGoogle, FaTwitter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { AuthContext } from '../context/AuthContext';
 import '../styles/LoginPage.css';
@@ -89,7 +90,7 @@ export default function LoginPage() {
                     />
                   </Form.Group>
 
-                  <Form.Group className="mb-4">
+                  {/* <Form.Group className="mb-4">
                     <InputGroup>
                       <Form.Control
                         type={showPassword ? "text" : "password"}
@@ -97,6 +98,7 @@ export default function LoginPage() {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="Enter password"
+                        className="password-input"
                         required
                       />
                       <Button
@@ -104,11 +106,39 @@ export default function LoginPage() {
                         onClick={() => setShowPassword(!showPassword)}
                         style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
                       >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        {showPassword ? <FaEyeSlash /> : <FaEye />} 
                       </Button>
                     </InputGroup>
-                  </Form.Group>
+                  </Form.Group> */}
+                  <Form.Group className="mb-4" style={{ position: "relative" }}>
+                    <Form.Control
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Enter password"
+                      className="password-input"
+                      style={{ paddingRight: "40px" }} // Space for the button
+                      required
+                    />
 
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </Form.Group>
                   <div className="d-flex justify-content-center">
                     <Button 
                       type="submit" 

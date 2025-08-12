@@ -388,3 +388,50 @@
   opacity: 1;
 }
 
+.address-card .btn-outline-primary,
+.address-card .btn-outline-success,
+.address-card .btn-outline-danger {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.address-card .btn:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+} 
+
+.address-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  height: 90%;
+}
+.address-card .d-flex.flex-column {
+  gap: none !important;
+  padding: 0px 10px 0px 0px !important;
+}
+.address-card .btn {
+  width: 100%;
+  font-size: 14px;
+  padding: 7px !important;
+  border-radius: 6px;
+}
+
+.address-name{
+  margin-left: 25px !important;
+  margin-top: 20px !important;
+}
+
+.address-lines{
+  margin-left: 25px !important;
+}
+
+.address-phone{
+  margin-left: 20px !important;
+  margin-top: 20px !important;
+}
+
+.address-house{
+  margin-left: 25px !important;
+  margin-top: 20px !important;
+}
