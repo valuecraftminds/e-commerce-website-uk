@@ -113,11 +113,11 @@ const AddNewAddress = ({ show, onHide, onSubmit }) => {
       state: newAddress.state,
       country: newAddress.country,
       postal_code: newAddress.postal_code,
-      phone: newAddress.phone,
-      company_code: COMPANY_CODE
+      phone: newAddress.phone
+      // company_code: COMPANY_CODE
     };
 
-    const { data } = await api.post('/api/customer/address/add-address', payload);
+    const { data } = await api.post(`${BASE_URL}/api/customer/address/add-address`, payload);
 
     const addressId =
       data?.address_id ??
@@ -132,7 +132,7 @@ const AddNewAddress = ({ show, onHide, onSubmit }) => {
     // Set as default if requested
     if (setAsDefault) {
       try {
-        await api.post('/api/customer/address/set-default-address', {
+        await api.post(`${BASE_URL}/api/customer/address/set-default-address`, {
           address_id: addressId,
           company_code: COMPANY_CODE,
         });

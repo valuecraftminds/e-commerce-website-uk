@@ -102,7 +102,7 @@ const AddressController = {
     },
 
 
-    // ADD address
+    // Add address
     addAddress: (req, res) => {
     const customer_id = req.user?.id;
     // accept company_code from body or query (frontend sends in body)
@@ -198,6 +198,64 @@ const AddressController = {
         }
     });
     },
+
+    // Update address
+    updateAddress: (req, res) => {
+        const { address_id, first_name, last_name, house, address_line_1, address_line_2, city, state, country, postal_code, phone } = req.body;
+
+        const customer_id = req.user?.id;
+        const company_code = req.body.company_code || req.query.company_code;
+
+        if (!customer_id) return res.status(400).json({ error: 'Customer ID required' });
+        if (!company_code) return res.status(400).json({ error: 'Company code required' });
+        if (!address_id) return res.status(400).json({ error: 'Address ID required' });
+
+        // basic requireds (match frontend)
+        const required = { first_name, last_name, house, address_line_1, city, state, country, postal_code, phone };
+        const missing = Object.entries(required).filter(([_, v]) => !String(v || '').trim()).map(([k]) => k);
+        if (missing.length) {
+            return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
+        }
+        const sql = `
+            UPDATE address 
+            SET 
+                first_name = ?, 
+                last_name = ?, 
+                house = ?, 
+                address_line_1 = ?, 
+                address_line_2 = ?, 
+                city = ?, 
+                state = ?, 
+                country = ?, 
+                postal_code = ?, 
+                phone = ?
+            WHERE address_id = ? AND customer_id = ? AND company_code = ?
+        `;
+
+        const params = [
+            first_name,
+            last_name,
+            house,
+            address_line_1,
+            address_line_2 || null,
+            city,
+            state,
+            country,
+            postal_code,
+            phone,
+            address_id,
+            customer_id,
+            company_code
+        ];
+
+        db.query(sql, params, (error, results) => {
+            if (error) {
+                console.error('Error updating address:', error);
+                return res.status(500).json({ error: 'Failed to update address' });
+            }
+            return res.status(200).json({ message: 'Address updated successfully' });
+        });
+    }
 
 };
 

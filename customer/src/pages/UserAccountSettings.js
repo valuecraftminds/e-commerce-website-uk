@@ -5,6 +5,7 @@ import axios from 'axios';
 import '../styles/AccountSettings.css';
 import ProfilePictureModal from '../components/ProfileImageModal';
 import AddNewAddress from '../components/AddNewAddress';
+import EditAddress from '../components/EditAddress';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -26,6 +27,8 @@ export default function UserAccountSettings() {
   const [addresses, setAddresses] = useState([]);
   // const [paymentMethods, setPaymentMethods] = useState([]);
   const [showAddNewAddress, setShowAddNewAddress] = useState(false);
+  const [showEditAddress, setShowEditAddress] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   
   const fileInputRef = useRef(null);
   const passwordInputRef = useRef(null);
@@ -141,10 +144,11 @@ useEffect(() => {
         reactKey: `addr-${reactKeyBase}`,         // <-- stable UI key
         name: `${addr.first_name || ''} ${addr.last_name || ''}`.trim(),
         type: addr.address_type || 'Shipping',
+        house: addr.house || '',
         address: `${addr.address_line_1 || ''} ${addr.address_line_2 || ''}`.trim(),
         city: addr.city || '',
         state: addr.state || '',
-        zipCode: addr.postal_code || '',
+        postalCode: addr.postal_code || '',
         country: addr.country || '',
         isDefault: addr.is_default === 1 || addr.is_default === true,
         phone: addr.phone || ''
@@ -685,9 +689,10 @@ useEffect(() => {
                               {address.type} Address
                             </h5>
                             <h6 className="text-dark address-name">{address.name}</h6>
+                            <p className="mb-1 address-house">{address.house}</p>
                             <p className="mb-1 address-lines">{address.address}</p>
                             <p className="mb-1 address-lines">{address.city}</p>
-                            <p className="mb-1 address-lines">{address.state}, {address.zipCode}</p>
+                            <p className="mb-1 address-lines">{address.state}, {address.postalCode}</p>
                             <p className="mb-0 address-lines">{address.country}</p>
                             {address.phone && (
                               <p className="mb-0 address-phone">
@@ -698,8 +703,19 @@ useEffect(() => {
                           </div>
                           <div className="col-4 text-end">
                             <div className="d-flex flex-column gap-1">
+
                               {/* edit */}
-                              <button className="btn btn-outline-primary btn-sm">Edit</button>
+                              <button 
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => {
+                                  console.log('Editing address:', address);
+                                  setSelectedAddress(address);
+                                  setShowEditAddress(true);
+                                }}
+                              >
+                                Edit 
+                              </button>
+
                               {/* set default */}
                               {!address.isDefault && (
                                 <button
@@ -710,6 +726,7 @@ useEffect(() => {
                                   {loadingDefault === address.id ? 'Setting...' : 'Set as Default'}
                                 </button>
                               )}
+
                               {/* delete */}
                               <button 
                                 className="btn btn-outline-danger btn-sm"
@@ -871,10 +888,11 @@ useEffect(() => {
             reactKey: `addr-${result.addressId}`,
             name: `${result.addressData.first_name} ${result.addressData.last_name}`,
             type: 'Shipping',
+            house: result.addressData.house || '',
             address: `${result.addressData.address_line_1} ${result.addressData.address_line_2 || ''}`.trim(),
             city: result.addressData.city,
             state: result.addressData.state,
-            zipCode: result.addressData.postal_code,
+            postalCode: result.addressData.postal_code,
             country: result.addressData.country,
             isDefault: false,
             phone: result.addressData.phone
@@ -886,6 +904,42 @@ useEffect(() => {
           setShowAddNewAddress(false);
 
           alert('Address added successfully!');
+        }}
+      />
+
+      {/* Edit Address Modal */}
+      <EditAddress
+        show={showEditAddress}
+        address={selectedAddress}
+        onHide={() => {
+          setShowEditAddress(false);
+          setSelectedAddress(null);
+        }}
+        onSubmit={(result) => {
+          // Handle the address editing
+          console.log('Address edited:', result);
+
+          // Update the address
+          const updatedAddress = {
+            id: result.addressId,
+            reactKey: `addr-${result.addressId}`,
+            name: `${result.addressData.first_name} ${result.addressData.last_name}`,
+            type: 'Shipping',
+            house: result.addressData.house || '',
+            address: `${result.addressData.address_line_1} ${result.addressData.address_line_2 || ''}`.trim(),
+            city: result.addressData.city,
+            state: result.addressData.state,
+            postalCode: result.addressData.postal_code,
+            country: result.addressData.country,
+          };
+
+          setAddresses(prev => prev.map(addr => addr.id === updatedAddress.id ? updatedAddress : addr));
+
+          // Close the modal
+          setShowEditAddress(false);
+          setSelectedAddress(null);
+
+          alert('Address updated successfully!');
         }}
       />
     </>
