@@ -28,7 +28,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
   
 // Import Routes
 // Customer
-const customerRoutes = require('./routes/customer/CustomerRoutes');
+const productRoutes = require('./routes/customer/ProductRoutes');
 const customerAuthRoutes = require('./routes/customer/CustomerAuthRoutes');
 const cartRoutes = require('./routes/customer/CartRoutes');
 const CustomercurrencyRoutes = require('./routes/customer/CurrencyRoutes');
@@ -55,7 +55,7 @@ const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
 
 // Route bindings
 // Customer routes
-app.use('/api/customer', customerRoutes);
+app.use('/api/customer', productRoutes);
 app.use('/api/customer/auth', customerAuthRoutes);
 app.use('/api/customer/cart', cartRoutes);
 app.use('/api/customer/currency', CustomercurrencyRoutes);
