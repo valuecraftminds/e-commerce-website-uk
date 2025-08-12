@@ -5,5 +5,8 @@ const { checkCompanyCode } = require('../../middleware/customer/CustomerValidati
 const { optionalAuth } = require('../../middleware/customer/CustomerAuth');
 
 router.get('/get-address', checkCompanyCode, optionalAuth, AddressController.getAddresses);
+router.post('/add-address', checkCompanyCode, optionalAuth, AddressController.addAddress); 
+router.post('/set-default-address', checkCompanyCode, optionalAuth, AddressController.setDefaultAddress);
+router.delete('/delete-address', checkCompanyCode, optionalAuth, AddressController.deleteAddress);
 
 module.exports = router;
