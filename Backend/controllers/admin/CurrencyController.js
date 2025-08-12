@@ -1,6 +1,25 @@
 const db = require('../../config/database');
 
+const fetch = require('node-fetch');
+const fetchFn = fetch.default || fetch;
+
 const CurrencyController = {
+    // Get all available currency codes and names from openexchangerates.org
+    async getAllCurrencySymbols(req, res) {
+        try {
+            const response = await fetchFn('https://openexchangerates.org/api/currencies.json');
+            if (!response.ok) throw new Error('Failed to fetch currency list');
+            const data = await response.json();
+            // Format for frontend select   
+            const currencies = Object.entries(data).map(([code, name]) => ({
+                value: code,
+                label: `${code} - ${name}`
+            }));
+            res.json({ success: true, currencies });
+        } catch (err) {
+            res.status(500).json({ success: false, message: 'Error fetching currency symbols', error: err.message });
+        }
+    },
     getCurrency(req, res) {
         const { company_code } = req.query;
         if (!company_code) {

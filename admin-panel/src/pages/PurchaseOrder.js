@@ -14,7 +14,6 @@ export default function PurchaseOrder() {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedPO, setSelectedPO] = useState(null);
   const [poDetails, setPoDetails] = useState(null);
   const [filter, setFilter] = useState({
@@ -454,6 +453,7 @@ export default function PurchaseOrder() {
               <th>Total Quantity</th>
               <th>Total Styles</th>
               <th>Total Cost</th>
+              <th>Tolerance Limit (%)</th>
               <th>Status</th>
               <th>GRN</th>
               <th>Date</th>
@@ -477,6 +477,7 @@ export default function PurchaseOrder() {
                   <td>
                     {po.total_cost ||"0.00"}
                   </td>
+                  <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}</td>
                   <td>
                     <span className={`badge ${po.status === 'Pending' ? 'bg-warning text-dark' : 
                       po.status === 'Approved' ? 'bg-success' : 'bg-secondary'}`}>

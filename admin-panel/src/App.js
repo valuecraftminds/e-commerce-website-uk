@@ -29,7 +29,7 @@ import ViewCompanyAdmins from './pages/VCM_Admin/ViewCompanyAdmins';
 import WarehouseGRN from './pages/WarehouseGRN';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
-
+import CompanySettings from './pages/Company_Admin/CompanySettings';
 
 function App() {
   const location = useLocation();
@@ -65,6 +65,7 @@ function App() {
         <Route path="category" element={<Category />} />
         <Route path="style" element={<Style />} />
         <Route path="warehouse/grn" element={<WarehouseGRN />} />
+
                   
         <Route path='/settings/*' element={<Settings />} />
         <Route path="/colors" element={<ColorManagement />} />
@@ -77,6 +78,8 @@ function App() {
         <Route path="/merchandising/po" element={<PurchaseOrder />} />
         <Route path="/merchandising/po/new" element={<PurchaseOrderForm />} />
         <Route path="/merchandising/po/:po_number" element={<PurchaseOrderForm />} />
+
+        <Route path="/company-settings" element={<CompanySettings />} />
 
       </Routes>  
     </>

@@ -96,7 +96,7 @@ const PurchaseOrderController = {
     createPurchaseOrder(req, res) {
         console.log('Creating purchase order with data:', JSON.stringify(req.body, null, 2));
         
-        const { company_code, supplier_id, attention, remark, items, status } = req.body;
+        const { company_code, supplier_id, attention, remark, items, status, tolerance_limit } = req.body;
 
         // Enhanced Validation
         if (!company_code || typeof company_code !== 'string') {
@@ -198,8 +198,8 @@ const PurchaseOrderController = {
                 const headerSql = `
                     INSERT INTO purchase_order_headers (
                         po_number, company_code, supplier_id, attention, 
-                        remark, status, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+                        remark, status, tolerance_limit, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 `;
 
                 const headerValues = [
@@ -208,7 +208,8 @@ const PurchaseOrderController = {
                     parseInt(supplier_id), 
                     attention.trim(), 
                     (remark || '').trim(),
-                    status || 'Pending'
+                    status || 'Pending',
+                    parseFloat(tolerance_limit) || 0
                 ];
                 
                 console.log('Header SQL:', headerSql);
@@ -324,7 +325,7 @@ const PurchaseOrderController = {
         console.log('Update data:', JSON.stringify(req.body, null, 2));
         
         const { po_number } = req.params;
-        const { attention, supplier_id, remark, items, status } = req.body;
+        const { attention, supplier_id, remark, items, status, tolerance_limit } = req.body;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             console.error('Missing or empty items array for update');
@@ -348,11 +349,11 @@ const PurchaseOrderController = {
             // Update header
             const updateHeaderSql = `
                 UPDATE purchase_order_headers 
-                SET attention = ?, supplier_id = ?, remark = ?, status = ?, updated_at = NOW()
+                SET attention = ?, supplier_id = ?, remark = ?, status = ?, tolerance_limit = ?, updated_at = NOW()
                 WHERE po_number = ?
             `;
 
-            const headerValues = [attention, supplier_id, remark || '', status || 'Pending', po_number];
+            const headerValues = [attention, supplier_id, remark || '', status || 'Pending', parseFloat(tolerance_limit) || 0, po_number];
             console.log('Updating header with values:', headerValues);
 
             db.query(updateHeaderSql, headerValues, (err, updateResult) => {
@@ -534,6 +535,7 @@ const PurchaseOrderController = {
                    sz.size_name,
                    f.fit_name,
                    m.material_name
+                  , poh.tolerance_limit
             FROM purchase_order_headers poh
             LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id
             LEFT JOIN purchase_order_items poi ON poh.po_number = poi.po_number
@@ -579,23 +581,30 @@ const PurchaseOrderController = {
                 remark: results[0].remark,
                 status: results[0].status,
                 created_at: results[0].created_at,
-                updated_at: results[0].updated_at
+                updated_at: results[0].updated_at,
+                tolerance_limit: results[0].tolerance_limit || 0
             };
 
-            const items = results.filter(row => row.item_id).map(row => ({
-                item_id: row.item_id,
-                sku: row.sku,
-                quantity: row.quantity,
-                unit_price: row.unit_price,
-                total_price: row.total_price,
-                catalog_price: row.catalog_price,
-                style_code: row.style_code,
-                style_name: row.style_name,
-                color_name: row.color_name,
-                size_name: row.size_name,
-                fit_name: row.fit_name,
-                material_name: row.material_name
-            }));
+            const tolerance = parseFloat(header.tolerance_limit) || 0;
+            const items = results.filter(row => row.item_id).map(row => {
+                const ordered_qty = parseFloat(row.quantity || 0);
+                const max_qty = ordered_qty + (ordered_qty * tolerance / 100);
+                return {
+                    item_id: row.item_id,
+                    sku: row.sku,
+                    quantity: row.quantity,
+                    unit_price: row.unit_price,
+                    total_price: row.total_price,
+                    catalog_price: row.catalog_price,
+                    style_code: row.style_code,
+                    style_name: row.style_name,
+                    color_name: row.color_name,
+                    size_name: row.size_name,
+                    fit_name: row.fit_name,
+                    material_name: row.material_name,
+                    max_qty: parseFloat(max_qty.toFixed(2))
+                };
+            });
 
             const total_amount = items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
 
@@ -628,10 +637,10 @@ const PurchaseOrderController = {
         // First get the header and company info
         const headerSql = `
             SELECT poh.*, s.supplier_name, s.address as supplier_address,
-                   au.company_name, au.company_address, au.phone_number, au.email
+                   co.company_name, co.company_address, co.phone_number, co.email
             FROM purchase_order_headers poh
             LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id AND s.company_code = poh.company_code
-            LEFT JOIN admin_users au ON poh.company_code = au.company_code
+            LEFT JOIN companies co ON poh.company_code = co.company_code
             WHERE poh.po_number = ? AND poh.company_code = ?
         `;
 

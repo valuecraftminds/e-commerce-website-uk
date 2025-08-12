@@ -77,18 +77,37 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
         ]
       },
       { label: 'Accounting', path: '/accounting', icon: 'bi-calculator' },
+      {
+        label: 'Settings',
+        icon: 'bi bi-gear me-2',
+        dropdown: true,
+        items: [
+          { label: 'Profile settings', path: '/settings', icon: 'bi bi-gear me-2' },
+          { label: 'Company settings', path: '/company-settings', icon: 'bi bi-gear me-2' },
+
+        ]
+      },
     ],
+
     PDC: [
       { label: 'Dashboard', path: '/pdcDashboard', icon: 'bi-speedometer2' },
+      { label: 'Settings', path: '/settings', icon: 'bi bi-gear me-2' },
+
     ],
     Warehouse_GRN: [
       { label: 'Dashboard', path: '/warehouseGRNDashboard', icon: 'bi-speedometer2' },
+      { label: 'Settings', path: '/settings', icon: 'bi bi-gear me-2' },
+
     ],
     Warehouse_Issuing: [
       { label: 'Dashboard', path: '/warehouseIssuingDashboard', icon: 'bi-speedometer2' },
+      { label: 'Settings', path: '/settings', icon: 'bi bi-gear me-2' },
+
     ],
     order: [
       { label: 'Dashboard', path: '/orderingDashboard', icon: 'bi-speedometer2' },
+      { label: 'Settings', path: '/settings', icon: 'bi bi-gear me-2' },
+
     ]
   };
 
@@ -184,17 +203,7 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
             }
           })}
 
-          {/* settings */}
-          <Nav.Link
-            as={Link}
-            to="/settings"
-            className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`}
-            onClick={toggleSidebar}
-          >
-            <i className="bi bi-gear me-2"></i>
-            Settings
-          </Nav.Link>
-
+         
           <hr className='my-2' />
 
           <Button variant="link" className="text-start logout-btn" onClick={handleLogout}>

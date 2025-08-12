@@ -29,7 +29,8 @@ export default function PurchaseOrderForm() {
     attention: '',
     supplier_id: '',
     remark: '',
-    status: 'Pending'
+    status: 'Pending',
+    tolerance_limit: 0
   });
   const [skuOptions, setSkuOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +74,8 @@ export default function PurchaseOrderForm() {
                 attention: response.data.header.attention || '',
                 supplier_id: response.data.header.supplier_id?.toString() || '',
                 remark: response.data.header.remark || '',
-                status: response.data.header.status || 'Pending'
+                status: response.data.header.status || 'Pending',
+                tolerance_limit: response.data.header.tolerance_limit || 0
               });
               
               const formattedItems = (response.data.items || []).map(item => ({
@@ -263,6 +265,7 @@ export default function PurchaseOrderForm() {
         attention: formData.attention.trim(),
         remark: formData.remark ? formData.remark.trim() : '',
         status: formData.status || 'Pending',
+        tolerance_limit: parseFloat(formData.tolerance_limit) || 0,
         items: poItems.map(item => ({
           sku: item.sku,
           quantity: parseInt(item.quantity),
@@ -312,6 +315,7 @@ export default function PurchaseOrderForm() {
                     <tr><th>PO Number:</th><td>{poDetails.header.po_number}</td></tr>
                     <tr><th>Supplier:</th><td>{poDetails.header.supplier_name}</td></tr>
                     <tr><th>Attention:</th><td>{poDetails.header.attention}</td></tr>
+                    <tr><th>Tolerance Limit (%):</th><td>{poDetails.header.tolerance_limit}</td></tr>
                     <tr>
                       <th>Status:</th>
                       <td>
@@ -455,7 +459,24 @@ export default function PurchaseOrderForm() {
             </Row>
 
             <Row className="mb-3">
-              <Col>
+              <Col md={6}>
+                <Form.Group controlId="formToleranceLimit">
+                  <Form.Label>Tolerance Limit (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData.tolerance_limit}
+                    onChange={e => setFormData({ ...formData, tolerance_limit: e.target.value })}
+                    placeholder="Enter tolerance %"
+                    disabled={isViewing}
+                  />
+                  <Form.Text className="text-muted">
+                    Allowed range: 0 - 100
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
                 <Form.Group controlId="formRemark">
                   <Form.Label>Remarks</Form.Label>
                   <Form.Control

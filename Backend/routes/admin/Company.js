@@ -31,7 +31,7 @@ router.get('/companies/:id', authenticateToken, async (req, res) => {
 });
 
 // Get company by code
-router.get('/companies/code/:code', authenticateToken, async (req, res) => {
+router.get('/companies-by-code/:code', async (req, res) => {
   try {
     const company = await CompanyController.getCompanyByCode(req.params.code);
     if (!company) {
@@ -111,6 +111,51 @@ router.put('/companies/:id', authenticateToken, uploadLogo.single('company_logo'
 
     // Update company
     const updated = await CompanyController.updateCompany(id, updateData);
+
+    if (!updated) {
+      return res.status(500).json({ success: false, message: 'Failed to update company' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Company updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Update company error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Update company by code
+router.put('/companies-by-code/:code', uploadLogo.single('company_logo'), async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { company_name, company_address, currency } = req.body;
+    const logoFile = req.file;
+
+    if (!company_name || !company_address || !currency) {
+      return res.status(400).json({ success: false, message: 'Company name, address, and currency are required' });
+    }
+
+    // Check if company exists by code
+    const existingCompany = await CompanyController.getCompanyByCode(code);
+    if (!existingCompany) {
+      return res.status(404).json({ success: false, message: 'Company not found' });
+    }
+
+    // Prepare update data
+    const updateData = {
+      company_name,
+      company_address,
+      currency
+    };
+    if (logoFile) {
+      updateData.company_logo = logoFile.filename;
+    }
+
+    // Update company by code
+    const updated = await CompanyController.updateCompanyByCode(code, updateData);
 
     if (!updated) {
       return res.status(500).json({ success: false, message: 'Failed to update company' });

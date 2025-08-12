@@ -16,6 +16,7 @@ import UserMenu from './components/UserMenu';
 import ProtectedRoute from './components/ProtectedRoute';
 import UserAccountSettings from './pages/UserAccountSettings';
 
+
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 

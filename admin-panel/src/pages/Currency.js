@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import Select from 'react-select';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Currency.css';
 
@@ -7,10 +8,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function Currency() {
   const [currencies, setCurrencies] = useState([]);
-  const [formData, setFormData] = useState({
-    currency_name: '',
-    short_name: ''
-  });
+  const [selectedCurrency, setSelectedCurrency] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [currentId, setCurrentId] = useState(null);
@@ -23,7 +21,33 @@ const user_id = userData?.id;
 
   useEffect(() => {
     fetchCurrencies();
+    fetchCurrencyOptions();
   }, []);
+
+  // For dropdown options from backend API
+  const [currencyOptions, setCurrencyOptions] = useState([
+    { value: 'GBP', label: 'GBP (£) - British Pound Sterling' }
+  ]);
+
+  const fetchCurrencyOptions = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/admin/currencies/get-all-currency-symbols`);
+      if (!res.ok) throw new Error('Currency API error');
+      const data = await res.json();
+      if (data && data.currencies) {
+        setCurrencyOptions(data.currencies);
+      } else {
+        throw new Error('Currency API returned no symbols');
+      }
+    } catch (err) {
+      setCurrencyOptions([
+        { value: 'GBP', label: 'GBP (£) - British Pound Sterling' },
+        { value: 'USD', label: 'USD ($) - US Dollar' },
+        { value: 'EUR', label: 'EUR (€) - Euro' },
+        { value: 'AED', label: 'AED (د.إ) - UAE Dirham' }
+      ]);
+    }
+  };
 
   const fetchCurrencies = async () => {
     try {
@@ -47,21 +71,28 @@ const user_id = userData?.id;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!selectedCurrency) {
+      alert('Please select a currency');
+      return;
+    }
     try {
       const url = editMode 
         ? `${BASE_URL}/api/admin/currencies/update-currencies/${currentId}`
         : `${BASE_URL}/api/admin/currencies/add-currencies`;
-      
+
+      const payload = {
+        currency_name: selectedCurrency.label,
+        short_name: selectedCurrency.value,
+        company_code: company_code,
+        ...(editMode ? {} : { created_by: user_id })
+      };
+
       const response = await fetch(url, {
         method: editMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          company_code: company_code,
-          ...(editMode ? {} : { created_by: user_id })
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -79,10 +110,7 @@ const user_id = userData?.id;
   };
 
   const handleEdit = (currency) => {
-    setFormData({
-      currency_name: currency.currency_name,
-      short_name: currency.short_name
-    });
+    setSelectedCurrency({ value: currency.short_name, label: currency.currency_name });
     setCurrentId(currency.currency_id);
     setEditMode(true);
   };
@@ -112,7 +140,7 @@ const user_id = userData?.id;
   };
 
   const resetForm = () => {
-    setFormData({ currency_name: '', short_name: '' });
+    setSelectedCurrency(null);
     setEditMode(false);
     setCurrentId(null);
   };
@@ -131,23 +159,13 @@ const user_id = userData?.id;
       <div className="currency-form">
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
-            <div className="col-md-4">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Currency Name"
-                value={formData.currency_name}
-                onChange={(e) => setFormData({...formData, currency_name: e.target.value})}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Short Name"
-                value={formData.short_name}
-                onChange={(e) => setFormData({...formData, short_name: e.target.value})}
+            <div className="col-md-8">
+              <Select
+                options={currencyOptions}
+                value={selectedCurrency}
+                onChange={setSelectedCurrency}
+                placeholder="Select Currency..."
+                isClearable
                 required
               />
             </div>

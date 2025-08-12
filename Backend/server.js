@@ -48,6 +48,7 @@ const currencyRoutes = require('./routes/admin/Currency');
 const supplierRoutes = require('./routes/admin/Supplier');
 const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
 const companyRoutes = require('./routes/admin/Company');
+const GRNRoutes = require('./routes/admin/GRN');
 
 // Route bindings
 // Customer routes
@@ -71,6 +72,7 @@ app.use('/api/admin/currencies', currencyRoutes);
 app.use('/api/admin/suppliers', supplierRoutes);
 app.use('/api/admin/po', purchaseOrderRoutes);
 app.use('/api/admin', companyRoutes);
+app.use('/api/admin/grn', GRNRoutes);
 
 
 // Default route
