@@ -14,7 +14,9 @@ export default function RegisterCompany() {
     company_name: '',
     company_address: '',
     company_logo: null,
-    currency: 'GBP'
+    currency: 'GBP',
+    company_phone: '',
+    company_email: ''
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -102,7 +104,9 @@ export default function RegisterCompany() {
           company_name: company.company_name || '',
           company_address: company.company_address || '',
           company_logo: null, // Reset file input
-          currency: company.currency || 'GBP'
+          currency: company.currency || 'GBP',
+          company_phone: company.company_phone || '',
+          company_email: company.company_email || ''
         });
         
         if (company.company_logo) {
@@ -155,6 +159,8 @@ export default function RegisterCompany() {
       companyFormData.append('company_name', formData.company_name);
       companyFormData.append('company_address', formData.company_address);
       companyFormData.append('currency', formData.currency);
+      companyFormData.append('company_phone', formData.company_phone);
+      companyFormData.append('company_email', formData.company_email);
       
       if (formData.company_logo) {
         companyFormData.append('company_logo', formData.company_logo);
@@ -210,7 +216,9 @@ export default function RegisterCompany() {
           company_name: '',
           company_address: '',
           company_logo: null,
-          currency: 'GBP'
+          currency: 'GBP',
+          company_phone: '',
+          company_email: ''
         });
         setLogoPreview(null);
         setCurrentLogo(null);
@@ -281,7 +289,35 @@ export default function RegisterCompany() {
                         />
                       </Form.Group>
                     </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Company Phone</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="company_phone"
+                          value={formData.company_phone}
+                          onChange={handleChange}
+                          placeholder="Enter company phone"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Company Email</Form.Label>
+                        <Form.Control
+                          type="email"
+                          name="company_email"
+                          value={formData.company_email}
+                          onChange={handleChange}
+                          placeholder="Enter company email"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Currency</Form.Label>

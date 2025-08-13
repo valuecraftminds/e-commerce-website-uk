@@ -152,6 +152,8 @@ export default function ViewCompanies() {
                 <th className='table-header'>Company Code</th>
                 <th className='table-header'>Company Name</th>
                 <th className='table-header'>Address</th>
+                <th className='table-header'>Phone</th>
+                <th className='table-header'>Email</th> {/* Add this line */}
                 <th className='table-header'>Currency</th>
                 <th className='table-header'>Logo</th>
                 <th className='table-header'>License (Categories)</th>
@@ -166,6 +168,12 @@ export default function ViewCompanies() {
                   <td>{company.company_name}</td>
                   <td style={{ maxWidth: '200px', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                     {company.company_address}
+                  </td>
+                  <td style={{ maxWidth: '200px', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {company.company_phone || 'N/A'}
+                  </td>
+                  <td style={{ maxWidth: '200px', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {company.company_email || 'N/A'}
                   </td>
                   <td>{company.currency}</td>
                   <td>

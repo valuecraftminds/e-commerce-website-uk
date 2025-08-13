@@ -82,9 +82,9 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
         icon: 'bi bi-gear me-2',
         dropdown: true,
         items: [
-          { label: 'Profile settings', path: '/settings', icon: 'bi bi-gear me-2' },
-          { label: 'Company settings', path: '/company-settings', icon: 'bi bi-gear me-2' },
-
+        { label: 'Profile settings', path: '/settings', icon: 'bi bi-person-gear me-2' },
+        { label: 'Company settings', path: '/company-settings', icon: 'bi bi-building-gear me-2' },
+        { label: 'Website settings', path: '/website-settings', icon: 'bi bi-globe2 me-2' }
         ]
       },
     ],

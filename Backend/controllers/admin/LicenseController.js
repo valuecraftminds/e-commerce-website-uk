@@ -135,6 +135,8 @@ class LicenseController {
         c.company_address,
         c.currency,
         c.company_logo,
+        c.company_phone,
+        c.company_email,
         COALESCE(l.category_count, 0) as category_count
         FROM companies c 
       LEFT JOIN admin_license l ON c.company_code = l.company_code 

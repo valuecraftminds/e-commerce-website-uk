@@ -637,7 +637,7 @@ const PurchaseOrderController = {
         // First get the header and company info
         const headerSql = `
             SELECT poh.*, s.supplier_name, s.address as supplier_address,
-                   co.company_name, co.company_address, co.phone_number, co.email
+                   co.company_name, co.company_address, co.company_phone, co.company_email, co.currency
             FROM purchase_order_headers poh
             LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id AND s.company_code = poh.company_code
             LEFT JOIN companies co ON poh.company_code = co.company_code
@@ -714,12 +714,13 @@ const PurchaseOrderController = {
                     updated_at: headerData.updated_at
                 };
 
-                // Company details from admin_users table
+                // Company details from companies table
                 const company = {
                     company_name: headerData.company_name || 'CLUB TEX MARK (PVT) LTD',
                     company_address: headerData.company_address || 'NO 145 DUTUGEMU MAWATHA, PELIYAGODA, SRI LANKA',
-                    phone_number: headerData.phone_number || '011-2943115 011-2943718',
-                    email: headerData.email || ''
+                    company_phone: headerData.company_phone || '011-2943115 011-2943718',
+                    company_email: headerData.company_email || '',
+                    currency: headerData.currency || 'Rs' // <-- Add this line
                 };
 
                 const items = itemsResults.map(row => ({
@@ -767,12 +768,12 @@ const PurchaseOrderController = {
         
         // Build contact info line
         let contactInfo = '';
-        if (company.phone_number) {
-            contactInfo += `TEL: ${company.phone_number}`;
+        if (company.company_phone) {
+            contactInfo += `TEL: ${company.company_phone}`;
         }
-        if (company.email) {
+        if (company.company_email) {
             if (contactInfo) contactInfo += ' ';
-            contactInfo += `EMAIL: ${company.email}`;
+            contactInfo += `EMAIL: ${company.company_email}`;
         }
         if (contactInfo) {
             doc.text(contactInfo, 50, 90, { align: 'center' });
@@ -813,15 +814,14 @@ const PurchaseOrderController = {
 
         // Table Headers
         const tableTop = 290;
-        const col1X = 50;   // SO
+        const col1X = 50;   // #
         const col2X = 80;   // Item Code
         const col3X = 150;  // Description
         const col4X = 280;  // Color
         const col5X = 340;  // Size/Width
-        const col6X = 400;  // Qty
-        const col7X = 440;  // Unit
-        const col8X = 480;  // Unit Price
-        const col9X = 530;  // Total
+        const col6X = 380;  // Qty
+        const col7X = 430;  // Unit Price
+        const col8X = 510;  // Total
 
         doc.fontSize(9)
            .font('Helvetica-Bold');
@@ -830,15 +830,15 @@ const PurchaseOrderController = {
         doc.text('Item Code', col2X, tableTop);
         doc.text('Description', col3X, tableTop);
         doc.text('Color', col4X, tableTop);
-        doc.text('Size/Width', col5X, tableTop);
+        doc.text('Size', col5X, tableTop);
         doc.text('Qty', col6X, tableTop);
-        doc.text('Unit', col7X, tableTop);
-        doc.text('Unit Price', col8X, tableTop);
-        doc.text('Total', col9X, tableTop);
+        // Show currency in header
+        doc.text(`Unit Price (${company.currency || 'Rs'})`, col7X, tableTop);
+        doc.text(`Total (${company.currency || 'Rs'})`, col8X, tableTop);
 
         // Draw header line
-        doc.moveTo(50, tableTop + 15)
-           .lineTo(580, tableTop + 15)
+        doc.moveTo(50, tableTop + 20)
+           .lineTo(580, tableTop + 20)
            .stroke();
 
         // Table Content
@@ -851,19 +851,20 @@ const PurchaseOrderController = {
                 currentY = 50;
             }
 
-            doc.text((index + 1).toString(), col1X, currentY);
-            doc.text(item.sku || '', col2X, currentY);
-            
+            doc.text((index + 1).toString(), col1X, currentY, { width: 25, ellipsis: true });
+            doc.text(item.sku || '', col2X, currentY, { width: 60, ellipsis: true });
+
             // Description (Style Name + Material)
-            const description = `${item.style_name || ''} - ${item.material_name || ''}`.replace(' - ', '');
-            doc.text(description, col3X, currentY);
-            
-            doc.text(item.color_name || '', col4X, currentY);
-            doc.text(item.size_name || '', col5X, currentY);
-            doc.text(item.quantity?.toString() || '0', col6X, currentY);
-            doc.text('PC', col7X, currentY);
-            doc.text(`Rs ${parseFloat(item.unit_price || 0).toFixed(2)}`, col8X, currentY);
-            doc.text(`Rs ${parseFloat(item.total_price || 0).toFixed(2)}`, col9X, currentY);
+            const description = `${item.style_name || ''}${item.material_name ? ' - ' + item.material_name : ''}`;
+            doc.text(description, col3X, currentY, { width: 120, ellipsis: true });
+
+            doc.text(item.color_name || '', col4X, currentY, { width: 50, ellipsis: true });
+            doc.text(item.size_name || '', col5X, currentY, { width: 50, ellipsis: true });
+            doc.text(item.quantity?.toString() || '0', col6X, currentY, { width: 35, ellipsis: true });
+
+            // Use company currency for prices
+            doc.text(`${parseFloat(item.unit_price || 0).toFixed(2)}`, col7X, currentY, { width: 70, ellipsis: true });
+            doc.text(` ${parseFloat(item.total_price || 0).toFixed(2)}`, col8X, currentY, { width: 70, ellipsis: true });
 
             currentY += 20;
         });
@@ -882,7 +883,7 @@ const PurchaseOrderController = {
         doc.font('Helvetica-Bold');
         doc.text(`Total Items: ${totalItems}`, 400, currentY);
         doc.text(`Total Quantity: ${totalQuantity}`, 400, currentY + 15);
-        doc.text(`Total Cost (Rs): Rs ${totalCost.toFixed(2)}`, 400, currentY + 30);
+        doc.text(`Total Cost (${company.currency || 'Rs'}): ${totalCost.toFixed(2)}`, 400, currentY + 30);
 
         // Remarks
         if (header.remark) {

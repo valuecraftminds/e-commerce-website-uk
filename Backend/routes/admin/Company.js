@@ -47,10 +47,10 @@ router.get('/companies-by-code/:code', async (req, res) => {
 // Create company
 router.post('/companies', authenticateToken, uploadLogo.single('company_logo'), async (req, res) => {
   try {
-    const { company_name, company_address, currency } = req.body;
+    const { company_name, company_address, currency, company_phone, company_email } = req.body;
     const logoFile = req.file;
 
-    if (!company_name || !company_address || !currency || !logoFile) {
+    if (!company_name || !company_address || !currency || !company_phone || !company_email || !logoFile) {
       return res.status(400).json({ success: false, message: 'All company fields are required' });
     }
 
@@ -64,7 +64,9 @@ router.post('/companies', authenticateToken, uploadLogo.single('company_logo'), 
       company_name,
       company_address,
       company_logo,
-      currency
+      currency,
+      company_phone,
+      company_email
     });
 
     res.status(201).json({ 
@@ -84,11 +86,11 @@ router.post('/companies', authenticateToken, uploadLogo.single('company_logo'), 
 router.put('/companies/:id', authenticateToken, uploadLogo.single('company_logo'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { company_name, company_address, currency } = req.body;
+    const { company_name, company_address, currency, company_phone, company_email } = req.body;
     const logoFile = req.file;
 
-    if (!company_name || !company_address || !currency) {
-      return res.status(400).json({ success: false, message: 'Company name, address, and currency are required' });
+    if (!company_name || !company_address || !currency || !company_phone || !company_email) {
+      return res.status(400).json({ success: false, message: 'Company name, address, currency, phone, and email are required' });
     }
 
     // Check if company exists
@@ -101,7 +103,9 @@ router.put('/companies/:id', authenticateToken, uploadLogo.single('company_logo'
     const updateData = {
       company_name,
       company_address,
-      currency
+      currency,
+      company_phone,
+      company_email
     };
 
     // Add logo filename if a new file was uploaded
@@ -131,11 +135,11 @@ router.put('/companies/:id', authenticateToken, uploadLogo.single('company_logo'
 router.put('/companies-by-code/:code', uploadLogo.single('company_logo'), async (req, res) => {
   try {
     const { code } = req.params;
-    const { company_name, company_address, currency } = req.body;
+    const { company_name, company_address, currency, company_phone, company_email } = req.body;
     const logoFile = req.file;
 
-    if (!company_name || !company_address || !currency) {
-      return res.status(400).json({ success: false, message: 'Company name, address, and currency are required' });
+    if (!company_name || !company_address || !currency || !company_phone || !company_email) {
+      return res.status(400).json({ success: false, message: 'Company name, address, currency, phone, and email are required' });
     }
 
     // Check if company exists by code
@@ -148,7 +152,9 @@ router.put('/companies-by-code/:code', uploadLogo.single('company_logo'), async 
     const updateData = {
       company_name,
       company_address,
-      currency
+      currency,
+      company_phone,
+      company_email
     };
     if (logoFile) {
       updateData.company_logo = logoFile.filename;

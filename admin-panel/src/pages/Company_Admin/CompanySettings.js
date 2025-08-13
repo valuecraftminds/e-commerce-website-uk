@@ -1,13 +1,10 @@
-
-
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import { useEffect, useState,useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
-import '../../styles/CompanySettings.css';
 import { AuthContext } from '../../context/AuthContext';
+import '../../styles/CompanySettings.css';
 
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -20,7 +17,9 @@ export default function CompanySettings() {
     company_name: '',
     company_address: '',
     company_logo: null,
-    currency: 'GBP'
+    currency: 'GBP',
+    company_phone: '',
+    company_email: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -78,7 +77,9 @@ export default function CompanySettings() {
           company_name: company.company_name || '',
           company_address: company.company_address || '',
           company_logo: null,
-          currency: company.currency || 'GBP'
+          currency: company.currency || 'GBP',
+          company_phone: company.company_phone || '',
+          company_email: company.company_email || ''
         });
         if (company.company_logo) {
           setCurrentLogo(company.company_logo);
@@ -121,6 +122,8 @@ export default function CompanySettings() {
       companyFormData.append('company_name', formData.company_name);
       companyFormData.append('company_address', formData.company_address);
       companyFormData.append('currency', formData.currency);
+      companyFormData.append('company_phone', formData.company_phone);
+      companyFormData.append('company_email', formData.company_email);
       if (formData.company_logo) {
         companyFormData.append('company_logo', formData.company_logo);
       }
@@ -174,7 +177,7 @@ export default function CompanySettings() {
                   </Col>
                 </Row>
                 <Row>
-                  <Col md={12}>
+                  <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Company Name</Form.Label>
                       <Form.Control
@@ -183,6 +186,32 @@ export default function CompanySettings() {
                         value={formData.company_name}
                         onChange={handleChange}
                         placeholder="Enter company name"
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Company Phone</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="company_phone"
+                        value={formData.company_phone}
+                        onChange={handleChange}
+                        placeholder="Enter company phone"
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Company Email</Form.Label>
+                      <Form.Control
+                        type="email"
+                        name="company_email"
+                        value={formData.company_email}
+                        onChange={handleChange}
+                        placeholder="Enter company email"
                         required
                       />
                     </Form.Group>
