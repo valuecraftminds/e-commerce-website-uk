@@ -131,9 +131,11 @@ const productController = {
         s.name,
         s.description,
         s.image,
+        sv.sku,
         sv.price,
         sv.offer_price,
         sz.size_name,
+        sv.variant_id,
         c.color_name,
         c.color_code,
         c.color_id
@@ -173,9 +175,11 @@ const productController = {
         style_id: product.style_id,
         style_code: product.style_code,
         name: product.name,
+        sku: product.sku,
         description: product.description,
         price,
         offer_price: product.offer_price,
+        variant_id: product.variant_id,
         available_sizes: sizes,
         available_colors: colors,
         image: product.image
