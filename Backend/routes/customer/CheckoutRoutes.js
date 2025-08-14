@@ -4,6 +4,6 @@ const checkoutController = require('../../controllers/customer/CheckoutControlle
 const { checkCompanyCode } = require('../../middleware/customer/CustomerValidation');
 const { optionalAuth } = require('../../middleware/customer/CustomerAuth');
 
-router.post('/checkout-details', checkCompanyCode, optionalAuth, checkoutController.submitCheckout);
+router.post('/submit-checkout', checkCompanyCode, optionalAuth, checkoutController.submitCheckout);
 
 module.exports = router;

@@ -42,6 +42,15 @@ export default function ProductDetails() {
     return !!token;
   };
 
+  // Function to get available colors for selected size
+  const getAvailableColors = () => {
+    if (!selectedSize || !product.colors_by_size) {
+      return product.available_colors || [];
+    }
+    return product.colors_by_size[selectedSize] || [];
+  };
+
+
   // Fetch exchange rates
   useEffect(() => {
     const fetchExchangeRates = async () => {
@@ -170,6 +179,7 @@ export default function ProductDetails() {
   }
 
   console.log('Available colors:', product.available_colors);
+  console.log('Available clr by size: ', product.colors_by_size);
 
   return (
     <div className="product-page">
@@ -202,41 +212,54 @@ export default function ProductDetails() {
             </h5>
 
             <div className="mb-3">
-              {product.available_colors && product.available_colors.length > 0 ? (
-                product.available_colors.map((color) => (
-                  <button
-                    key={color.code}
-                    // onClick={() => setSelectedColor(color.code)}
-                    onClick={() => {
-                      setSelectedColor(color.code);
-                      setSelectedColorName(color.name);
-                    }}
-                    className={`color-circle ${selectedColor === color.code ? 'selected' : ''}`}
-                    style={{ backgroundColor: color.code }}
-                    title={color.name}
-                  />
-                ))
-              ) : (
-                <p>Colors not available</p>
-              )}
-            </div>
-
-            <div className="mb-3">
-              {product.available_sizes && product.available_sizes.length > 0 ? (
-                product.available_sizes
-                  .filter(size => size)
-                  .map((size) => (
-                    <Button
+              {/* Size selection first */}
+              <div className="mb-3">
+                <h4>Select Size:</h4>
+                {product.available_sizes && product.available_sizes.length > 0 ? (
+                  product.available_sizes.map((size) => (
+                    <button
                       key={size}
+                      onClick={() => {
+                        setSelectedSize(size);
+                        // Reset color selection when size changes
+                        setSelectedColor('');
+                        setSelectedColorName('');
+                      }}
                       className={`me-2 mb-2 btn-size ${selectedSize === size ? 'selected' : ''}`}
-                      onClick={() => setSelectedSize(size)}
                     >
                       {size}
-                    </Button>
+                    </button>
                   ))
-              ) : (
-                <p>Sizes not available</p>
-              )}
+                ) : (
+                  // display all colors until size is selected
+                  <h5>Sizes not available</h5>
+                )}
+              </div>
+
+              {/* Color selection based on selected size */}
+              <div className="mb-3">
+                <h4>Select Color:</h4>
+                {selectedSize ? (
+                  getAvailableColors().length > 0 ? (
+                    getAvailableColors().map((color) => (
+                      <button
+                        key={color.code}
+                        onClick={() => {
+                          setSelectedColor(color.code);
+                          setSelectedColorName(color.name);
+                        }}
+                        className={`color-circle ${selectedColor === color.code ? 'selected' : ''}`}
+                        style={{ backgroundColor: color.code }}
+                        title={color.name}
+                      />
+                    ))
+                  ) : (
+                    <p>No colors available for this size</p>
+                  )
+                ) : (
+                  <h6>Please select a size first</h6>
+                )}
+              </div>
             </div>
             
             <div className="mb-3">

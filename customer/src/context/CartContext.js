@@ -348,12 +348,16 @@ export const CartProvider = ({ children }) => {
           color_name: item.color?.name,
           image: item.image,
           size: item.size,
+          customer_id: item.customer_id,
+          variant_id: item.variant_id
         }, getAxiosConfig());
 
         if (response.data.success) {
           // Refresh cart items after successful addition
+          console.log('Item added to cart successfully:', response.data);
           await fetchCartItems();
           return { success: true, message: response.data.message };
+          
         } else {
           throw new Error(response.data.message || 'Failed to add item to cart');
         }
@@ -367,7 +371,6 @@ export const CartProvider = ({ children }) => {
         const cartItem = {
           cart_id: `guest_${Date.now()}`,
           style_code: item.style_code,
-          // variant_id: item.variant_id,
           quantity: item.quantity || 1,
           style_id: item.style_id,
           product_name: item.name,
@@ -383,7 +386,8 @@ export const CartProvider = ({ children }) => {
           fit_name: item.fit_name,
           total_price: item.price * (item.quantity || 1),
           exchangeRate: rate,
-          currencySymbol: symbol
+          currencySymbol: symbol,
+          variant_id: item.variant_id,
         };
 
         console.log('Adding to guest cart:', cartItem);
