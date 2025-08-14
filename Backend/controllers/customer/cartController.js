@@ -8,21 +8,22 @@ async function getVariantIdByStyleColorSize({
   size_name
 }) {
   const sql = `
-    SELECT sv.variant_id
-    FROM style_variants sv
-    INNER JOIN colors c 
-      ON c.color_id = sv.color_id 
-     AND c.company_code = sv.company_code
-    INNER JOIN sizes s  
-      ON s.size_id = sv.size_id
-     AND s.company_code = sv.company_code
-    WHERE sv.company_code = ?
-      AND sv.style_code   = ?
-      AND c.color_name    = ?
-      AND s.size_name     = ?
-      AND sv.is_active    = 1
-    LIMIT 1
-  `;
+  SELECT sv.variant_id, sv.sku
+  FROM style_variants sv
+  INNER JOIN colors c 
+    ON c.color_id = sv.color_id 
+   AND c.company_code = sv.company_code
+  INNER JOIN sizes s  
+    ON s.size_id = sv.size_id
+   AND s.company_code = sv.company_code
+  WHERE sv.company_code = ?
+    AND sv.style_code   = ?
+    AND c.color_name    = ?
+    AND s.size_name     = ?
+    AND sv.is_active    = 1
+  LIMIT 1
+`;
+
 
   const params = [company_code, style_code, color_name, size_name];
 
@@ -92,7 +93,7 @@ const cartController = {
       const product_url = null;
       const tax = 0.00;
       const shipping_fee = 0.00;
-      const sku = bodySku ?? style_code ?? null;
+      const sku = bodySku?? null;
 
       // Check if item already in cart
       const selectSql = `
@@ -299,11 +300,10 @@ const cartController = {
     try {
       const sql = `
         DELETE FROM cart 
-        WHERE cart_id = ? 
-        AND company_code = ? 
+        WHERE company_code = ? 
         AND (customer_id = ? OR customer_id IS NULL)
       `;
-      db.query(sql, [cart_id, company_code, customer_id], (err, result) => {
+      db.query(sql, [company_code, customer_id], (err, result) => {
         if (err) {
           console.error('Error removing cart item:', err);
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
