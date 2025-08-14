@@ -158,5 +158,5 @@ vite.config.ts.timestamp-*
 # pnpm-lock.yaml
 
 # Uploads directory
-uploads/
-**/uploads/
+# uploads/
+# **/uploads/

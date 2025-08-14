@@ -87,7 +87,6 @@ const cartController = {
           message: 'Missing required fields: company_code, variant_id, price, product_name, or customer_id'
         });
       }
-
       const currency = 'USD';
       const is_available = true;
       const product_url = null;
@@ -124,7 +123,16 @@ const cartController = {
             return res.status(200).json({
               success: true,
               message: 'Cart item updated',
-              data: { cart_id: existingItem.cart_id, company_code, customer_id, variant_id, quantity: updatedQty, price, product_name, sku }
+              data: { 
+                cart_id: existingItem.cart_id, 
+                company_code, 
+                customer_id, 
+                variant_id, 
+                quantity: updatedQty, 
+                price, 
+                product_name, 
+                sku
+              }
             });
           });
         } else {
