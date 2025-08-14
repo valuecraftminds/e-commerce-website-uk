@@ -206,7 +206,7 @@ return (
                             </div>
                           </Col>
                           
-                          {/* Price, Quantity, Total - Vertical Stack */}
+                          {/* Price */}
                           <Col md={3} className="d-flex flex-column justify-content-center align-items-center">
                             {/* Unit Price */}
                             <div className="price-section mb-3">
