@@ -6,7 +6,7 @@ import Header from './components/Header';
 import Settings from './components/Setting';
 import AdminDashboard from './pages/AdminDashboard';
 import Category from './pages/Category';
-import EditAdmin from './pages/Company_Admin/EditAdmins';
+import EditAdmin from './pages/Company_Admin/RegisterPage';
 import RegisterPage from './pages/Company_Admin/RegisterPage';
 import ViewAdmins from './pages/Company_Admin/ViewAdmins';
 import Currency from './pages/Currency';
@@ -30,6 +30,9 @@ import WarehouseGRN from './pages/WarehouseGRN';
 import WarehouseGRNDashboard from './pages/WarehouseGRNDashboard';
 import WarehouseIssuingDashboard from './pages/WarehouseIssuingDashboard';
 import CompanySettings from './pages/Company_Admin/CompanySettings';
+import ApprovePO from './pages/ApprovePO';
+import GRNDetails from './components/GRNDetails';
+import Location from './pages/Location';
 
 function App() {
   const location = useLocation();
@@ -64,7 +67,9 @@ function App() {
         <Route path="users" element={<ViewAdmins />} />
         <Route path="category" element={<Category />} />
         <Route path="style" element={<Style />} />
-        <Route path="warehouse/grn" element={<WarehouseGRN />} />
+         <Route path="/warehouse/grn" element={<WarehouseGRN />} />
+    <Route path="/warehouse/grn/:po_number" element={<WarehouseGRN />} />
+    <Route path="/warehouse/grn-details/:grn_id" element={<GRNDetails />} />
 
                   
         <Route path='/settings/*' element={<Settings />} />
@@ -75,12 +80,13 @@ function App() {
 
         <Route path="/finance/currency" element={<Currency />} />
         <Route path="/finance/supplier" element={<Supplier />} />
+        <Route path="/finance/location" element={<Location />} />
         <Route path="/merchandising/po" element={<PurchaseOrder />} />
         <Route path="/merchandising/po/new" element={<PurchaseOrderForm />} />
         <Route path="/merchandising/po/:po_number" element={<PurchaseOrderForm />} />
 
         <Route path="/company-settings" element={<CompanySettings />} />
-
+        <Route path="/approve-po" element={<ApprovePO />} />
       </Routes>  
     </>
   );

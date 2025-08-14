@@ -10,120 +10,147 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 class AdminAuthController {
   // Register admin
   static register(req, res) {
-    const { company_code, name, email, phone, role, password } = req.body;
-  
-    if (!company_code || !name || !email || !phone || !role || !password) {
-      return res.status(400).json({ success: false, message: 'All fields are required' });
+  const { company_code, name, email, phone, role, password, side_bar_options } = req.body;
+
+  if (!company_code || !name || !email || !phone || !role || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  if (!/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
+  }
+
+  db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, emailExists) => {
+    if (err) {
+      console.error('Register error:', err);
+      return res.status(500).json({ success: false, message: 'Server error' });
     }
-  
-    if (!/^[a-zA-Z\s]+$/.test(name)) {
-      return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
+    
+    if (emailExists.length > 0) {
+      return res.status(409).json({ success: false, message: 'Email already exists' });
     }
-  
-    db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, emailExists) => {
+    
+    db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, phoneExists) => {
       if (err) {
         console.error('Register error:', err);
         return res.status(500).json({ success: false, message: 'Server error' });
       }
       
-      if (emailExists.length > 0) {
-        return res.status(409).json({ success: false, message: 'Email already exists' });
+      if (phoneExists.length > 0) {
+        return res.status(409).json({ success: false, message: 'Phone number already exists' });
       }
-      
-      db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, phoneExists) => {
+
+      const isValidPassword = (pwd) => {
+        const lengthValid = pwd.length >= 8 && pwd.length <= 12;
+        const hasUppercase = /[A-Z]/.test(pwd);
+        const hasLowercase = /[a-z]/.test(pwd);
+        const hasNumber = /\d/.test(pwd);
+        const hasSpecialChar = /[\W_]/.test(pwd);
+        return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+      };
+
+      if (!isValidPassword(password)) {
+        return res.status(400).json({ success: false, message: 'Invalid password. Must be 8–12 characters and include uppercase, lowercase, number, and special character.' });
+      }
+
+      // Process side_bar_options - ensure we save both parent and child options
+      let sidebarOptionsToSave = null;
+      if (side_bar_options) {
+        try {
+          let optionsArray = Array.isArray(side_bar_options) ? side_bar_options : JSON.parse(side_bar_options);
+          
+          // Validate and ensure dropdown parents are included
+          const validatedOptions = validateAndNormalizeSidebarOptions(optionsArray);
+          sidebarOptionsToSave = JSON.stringify(validatedOptions);
+        } catch {
+          sidebarOptionsToSave = null;
+        }
+      }
+
+      bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
-          console.error('Register error:', err);
+          console.error('Password hash error:', err);
           return res.status(500).json({ success: false, message: 'Server error' });
         }
         
-        if (phoneExists.length > 0) {
-          return res.status(409).json({ success: false, message: 'Phone number already exists' });
-        }
-
-        const isValidPassword = (pwd) => {
-          const lengthValid = pwd.length >= 8 && pwd.length <= 12;
-          const hasUppercase = /[A-Z]/.test(pwd);
-          const hasLowercase = /[a-z]/.test(pwd);
-          const hasNumber = /\d/.test(pwd);
-          const hasSpecialChar = /[\W_]/.test(pwd);
-          return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
-        };
-    
-        if (!isValidPassword(password)) {
-          return res.status(400).json({ success: false, message: 'Invalid password. Must be 8–12 characters and include uppercase, lowercase, number, and special character.' });
-        }
-    
-        bcrypt.hash(password, 10, (err, hashedPassword) => {
-          if (err) {
-            console.error('Password hash error:', err);
-            return res.status(500).json({ success: false, message: 'Server error' });
-          }
-          
-          db.query(
-            'INSERT INTO admin_users (company_code, name, email, phone_number, role, password) VALUES (?, ?, ?, ?, ?, ?)',
-            [company_code, name, email, phone, role, hashedPassword],
-            (err) => {
-              if (err) {
-                console.error('Register error:', err);
-                return res.status(500).json({ success: false, message: 'Server error' });
-              }
-              return res.status(201).json({ success: true, message: 'User registered successfully' });
+        db.query(
+          'INSERT INTO admin_users (company_code, name, email, phone_number, role, password, side_bar_options) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [company_code, name, email, phone, role, hashedPassword, sidebarOptionsToSave],
+          (err) => {
+            if (err) {
+              console.error('Register error:', err);
+              return res.status(500).json({ success: false, message: 'Server error' });
             }
-          );
-        });
+            return res.status(201).json({ success: true, message: 'User registered successfully' });
+          }
+        );
       });
     });
-  }
+  });
+}
   
   
  // Admin login
-  static login(req, res) {
-    const { email, password } = req.body;
+static login(req, res) {
+  const { email, password } = req.body;
 
-    db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, rows) => {
+  db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, rows) => {
+    if (err) {
+      console.error('Login error:', err);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid email' });
+    }
+
+    const user = rows[0];
+
+    bcrypt.compare(password, user.password, (err, validPassword) => {
       if (err) {
-        console.error('Login error:', err);
+        console.error('Password comparison error:', err);
         return res.status(500).json({ success: false, message: 'Server error' });
       }
 
-      if (rows.length === 0) {
-        return res.status(401).json({ success: false, message: 'Invalid email' });
+      if (!validPassword) {
+        return res.status(401).json({ success: false, message: 'Invalid password' });
       }
 
-      const user = rows[0];
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
 
-      bcrypt.compare(password, user.password, (err, validPassword) => {
-        if (err) {
-          console.error('Password comparison error:', err);
-          return res.status(500).json({ success: false, message: 'Server error' });
+      // Parse and validate sidebar options
+      let sideBarOptions = null;
+      if (user.side_bar_options) {
+        try {
+          sideBarOptions = JSON.parse(user.side_bar_options);
+          // Ensure backward compatibility and proper parent-child relationships
+          sideBarOptions = validateAndNormalizeSidebarOptions(sideBarOptions);
+        } catch {
+          sideBarOptions = null;
         }
+      }
 
-        if (!validPassword) {
-          return res.status(401).json({ success: false, message: 'Invalid password' });
-        }
-
-        const token = jwt.sign(
-          { id: user.id, email: user.email },
-          process.env.JWT_SECRET,
-          { expiresIn: '1h' }
-        );
-
-        return res.json({
-          success: true,
-          message: 'Login successful',
-          token,
-          user: {
-            id: user.user_id,
-            company_code: user.company_code,
-            name: user.name,
-            phone_number: user.phone_number,
-            email: user.email,
-            role: user.role,
-          },
-        });
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        token,
+        user: {
+          id: user.user_id,
+          company_code: user.company_code,
+          name: user.name,
+          phone_number: user.phone_number,
+          email: user.email,
+          role: user.role,
+          side_bar_options: sideBarOptions
+        },
       });
     });
-  }
+  });
+}
 
 
   // Register company admin
@@ -348,122 +375,128 @@ class AdminAuthController {
   }
 
   // Edit admin
-  static editAdmin(req, res) {
-    const { user_id } = req.params;
-    
-    // Debug logging
-    console.log('Edit Admin - Request params:', req.params);
-    console.log('Edit Admin - Request body:', req.body);
-    console.log('Edit Admin - Content-Type:', req.headers['content-type']);
-    
-    const { name, email, phone_number, role, currentPassword, newPassword, password } = req.body || {};
+static editAdmin(req, res) {
+  const { user_id } = req.params;
 
-    if (!name || !email || !phone_number) {
-      return res.status(400).json({ success: false, message: 'All basic fields are required' });
+  console.log('Edit Admin - Request params:', req.params);
+  console.log('Edit Admin - Request body:', req.body);
+
+  const { name, email, phone_number, role, currentPassword, newPassword, password, side_bar_options } = req.body || {};
+
+  if (!name || !email || !phone_number) {
+    return res.status(400).json({ success: false, message: 'All basic fields are required' });
+  }
+
+  // Prepare update fields and values
+  let updateFields = ['name = ?', 'email = ?', 'phone_number = ?'];
+  let updateValues = [name, email, phone_number];
+
+  // Only update role if provided
+  if (role) {
+    updateFields.push('role = ?');
+    updateValues.push(role);
+  }
+
+  // Handle side_bar_options with proper validation
+  if (typeof side_bar_options !== 'undefined') {
+    updateFields.push('side_bar_options = ?');
+    let sidebarOptionsToSave = null;
+    try {
+      let optionsArray = Array.isArray(side_bar_options) ? side_bar_options : JSON.parse(side_bar_options);
+      const validatedOptions = validateAndNormalizeSidebarOptions(optionsArray);
+      sidebarOptionsToSave = JSON.stringify(validatedOptions);
+    } catch {
+      sidebarOptionsToSave = null;
     }
+    updateValues.push(sidebarOptionsToSave);
+  }
 
-    // Handle both password scenarios:
-    // 1. currentPassword + newPassword (from EditCompanyAdmin component)
-    // 2. password (from RegisterCompanyAdmins component)
-    const shouldUpdatePassword = (currentPassword && newPassword) || password;
+  // Handle password update logic (same as before)
+  const shouldUpdatePassword = (currentPassword && newPassword) || password;
 
-    if (currentPassword && newPassword) {
-      // Get current password for comparison (used by EditCompanyAdmin)
-      db.query(
-        'SELECT password FROM admin_users WHERE user_id = ?',
-        [user_id],
-        (err, userRows) => {
-          if (err) {
-            console.error('Password fetch error:', err);
-            return res.status(500).json({ success: false, message: 'Server error' });
-          }
-
-          if (userRows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Admin not found' });
-          }
-
-          // Compare passwords
-          bcrypt.compare(currentPassword, userRows[0].password, (err, isMatch) => {
-            if (err) {
-              console.error('Password compare error:', err);
-              return res.status(500).json({ success: false, message: 'Server error' });
-            }
-
-            if (!isMatch) {
-              return res.status(400).json({ success: false, message: 'Current password is incorrect' });
-            }
-
-            // Hash new password
-            bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
-              if (err) {
-                console.error('Password hash error:', err);
-                return res.status(500).json({ success: false, message: 'Server error' });
-              }
-
-              // Update with new password
-              db.query(
-                'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ?, password = ? WHERE user_id = ?',
-                [name, email, phone_number, role, hashedPassword, user_id],
-                (err, result) => {
-                  if (err) {
-                    console.error('Update error:', err);
-                    return res.status(500).json({ success: false, message: 'Server error' });
-                  }
-                  if (result.affectedRows === 0) {
-                    return res.status(404).json({ success: false, message: 'Admin not found' });
-                  }
-                  res.json({ success: true, message: 'Admin updated successfully with new password' });
-                }
-              );
-            });
-          });
-        }
-      );
-    } else if (password) {
-      // Direct password update (used by RegisterCompanyAdmins)
-      const isValidPassword = (pwd) => {
-        const lengthValid = pwd.length >= 8 && pwd.length <= 12;
-        const hasUppercase = /[A-Z]/.test(pwd);
-        const hasLowercase = /[a-z]/.test(pwd);
-        const hasNumber = /\d/.test(pwd);
-        const hasSpecialChar = /[\W_]/.test(pwd);
-        return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
-      };
-
-      if (!isValidPassword(password)) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Invalid password. Must be 8–12 characters and include uppercase, lowercase, number, and special character.' 
-        });
-      }
-
-      bcrypt.hash(password, 10, (err, hashedPassword) => {
+  if (currentPassword && newPassword) {
+    // Get current password for comparison
+    db.query(
+      'SELECT password FROM admin_users WHERE user_id = ?',
+      [user_id],
+      (err, userRows) => {
         if (err) {
-          console.error('Password hash error:', err);
+          console.error('Password fetch error:', err);
           return res.status(500).json({ success: false, message: 'Server error' });
         }
 
-        // Update with new password
-        db.query(
-          'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ?, password = ? WHERE user_id = ?',
-          [name, email, phone_number, role, hashedPassword, user_id],
-          (err, result) => {
+        if (userRows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Admin not found' });
+        }
+
+        // Compare passwords
+        bcrypt.compare(currentPassword, userRows[0].password, (err, isMatch) => {
+          if (err) {
+            console.error('Password compare error:', err);
+            return res.status(500).json({ success: false, message: 'Server error' });
+          }
+
+          if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+          }
+
+          // Hash new password
+          bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
             if (err) {
-              console.error('Update error:', err);
+              console.error('Password hash error:', err);
               return res.status(500).json({ success: false, message: 'Server error' });
             }
-            if (result.affectedRows === 0) {
-              return res.status(404).json({ success: false, message: 'Admin not found' });
-            }
-            res.json({ success: true, message: 'Admin updated successfully with new password' });
-          }
-        );
+
+            // Update with new password
+            const fields = [...updateFields, 'password = ?'];
+            const values = [...updateValues, hashedPassword, user_id];
+            db.query(
+              `UPDATE admin_users SET ${fields.join(', ')} WHERE user_id = ?`,
+              values,
+              (err, result) => {
+                if (err) {
+                  console.error('Update error:', err);
+                  return res.status(500).json({ success: false, message: 'Server error' });
+                }
+                if (result.affectedRows === 0) {
+                  return res.status(404).json({ success: false, message: 'Admin not found' });
+                }
+                res.json({ success: true, message: 'Admin updated successfully with new password' });
+              }
+            );
+          });
+        });
+      }
+    );
+  } else if (password) {
+    // Direct password update
+    const isValidPassword = (pwd) => {
+      const lengthValid = pwd.length >= 8 && pwd.length <= 12;
+      const hasUppercase = /[A-Z]/.test(pwd);
+      const hasLowercase = /[a-z]/.test(pwd);
+      const hasNumber = /\d/.test(pwd);
+      const hasSpecialChar = /[\W_]/.test(pwd);
+      return lengthValid && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+    };
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid password. Must be 8–12 characters and include uppercase, lowercase, number, and special character.' 
       });
-    } else {
-      // Update without password change
+    }
+
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error('Password hash error:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+      }
+
+      const fields = [...updateFields, 'password = ?'];
+      const values = [...updateValues, hashedPassword, user_id];
       db.query(
-        'UPDATE admin_users SET name = ?, email = ?, phone_number = ?, role = ? WHERE user_id = ?',
-        [name, email, phone_number, role, user_id],
+        `UPDATE admin_users SET ${fields.join(', ')} WHERE user_id = ?`,
+        values,
         (err, result) => {
           if (err) {
             console.error('Update error:', err);
@@ -472,11 +505,29 @@ class AdminAuthController {
           if (result.affectedRows === 0) {
             return res.status(404).json({ success: false, message: 'Admin not found' });
           }
-          res.json({ success: true, message: 'Admin updated successfully' });
+          res.json({ success: true, message: 'Admin updated successfully with new password' });
         }
       );
-    }
+    });
+  } else {
+    // Update without password change
+    updateValues.push(user_id);
+    db.query(
+      `UPDATE admin_users SET ${updateFields.join(', ')} WHERE user_id = ?`,
+      updateValues,
+      (err, result) => {
+        if (err) {
+          console.error('Update error:', err);
+          return res.status(500).json({ success: false, message: 'Server error' });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ success: false, message: 'Admin not found' });
+        }
+        res.json({ success: true, message: 'Admin updated successfully' });
+      }
+    );
   }
+}
 
   // Delete admin
   static deleteAdmin(req, res) {
@@ -715,16 +766,45 @@ class AdminAuthController {
         if (result.length === 0) {
           return res.json({ success: false, message: 'Admin not found' });
         }
-        res.json({ success: true, admin: result[0] });
+        res.json({ success: true, admin: { ...result[0], side_bar_options: result[0].side_bar_options ? JSON.parse(result[0].side_bar_options) : null } });
       }
     );
   }
 
 
+
+  
+
 }
 
 
+// Helper function to validate and normalize sidebar options
+function validateAndNormalizeSidebarOptions(options) {
+  if (!Array.isArray(options)) return [];
 
+  // Define dropdown relationships
+  const dropdownMap = {
+    warehouse: ['warehouse_grn', 'warehouse_issuing'],
+    merchandising: ['merchandising_po'],
+    finance: ['finance_currency', 'finance_supplier'],
+    settings: ['settings_profile', 'settings_company', 'settings_website']
+  };
+
+  const normalizedOptions = [...options];
+
+  // Ensure parent dropdowns are included when their children are selected
+  Object.keys(dropdownMap).forEach(parent => {
+    const children = dropdownMap[parent];
+    const hasAnyChild = children.some(child => normalizedOptions.includes(child));
+    
+    if (hasAnyChild && !normalizedOptions.includes(parent)) {
+      normalizedOptions.push(parent);
+    }
+  });
+
+  // Remove duplicates and return
+  return [...new Set(normalizedOptions)];
+}
 
 
 module.exports = AdminAuthController;

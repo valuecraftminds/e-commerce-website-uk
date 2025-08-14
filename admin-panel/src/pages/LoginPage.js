@@ -40,8 +40,9 @@ export default function LoginPage() {
           phone_number: data.user.phone_number,
           email: data.user.email,
           role: data.user.role,
+          side_bar_options: data.user.side_bar_options || []
         };
-        
+        console.log('User Data:', userData);
         login(data.token, userData);
         const role = data.user.role;
 

@@ -1,6 +1,6 @@
-import React from 'react';
 import { Button, Card, Form, Table } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+
 
 const ManagementTable = ({ 
   title,
@@ -14,13 +14,9 @@ const ManagementTable = ({
   isEditing,
   loading,
   error,
-  success
+  success,
+  onCancel
 }) => {
-  const defaultFormFields = { ...formData };
-
-  const handleReset = () => {
-    setFormData(defaultFormFields);
-  };
 
   return (
     <div className="management-container">
@@ -56,7 +52,7 @@ const ManagementTable = ({
                 {loading ? 'Saving...' : isEditing ? 'Update' : 'Add'}
               </Button>
               {isEditing && (
-                <Button variant="secondary" onClick={handleReset}>
+                <Button variant="secondary" onClick={onCancel}>
                   Cancel
                 </Button>
               )}

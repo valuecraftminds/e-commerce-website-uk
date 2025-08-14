@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import ManagementTable from '../../components/ManagementTable';
 import { AuthContext } from '../../context/AuthContext';
@@ -126,6 +126,7 @@ const SizeManagement = () => {
         loading={loading}
         error={error}
         success={success}
+        onCancel={resetForm}
       />
     </Container>
   );

@@ -911,7 +911,23 @@ const PurchaseOrderController = {
 
         // Finalize the PDF
         doc.end();
+    },
+
+    approvePurchaseOrder(req, res) {
+        const { po_number } = req.params;
+        if (!po_number) {
+            return res.status(400).json({ success: false, message: 'PO number is required' });
+        }
+        const sql = `UPDATE purchase_order_headers SET status = 'Approved', updated_at = NOW() WHERE po_number = ?`;
+        db.query(sql, [po_number], (err, result) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Error approving PO', error: err.message });
+            }
+            res.json({ success: true, message: 'Purchase order approved successfully' });
+        });
     }
+
+    
 };
 
 module.exports = PurchaseOrderController;

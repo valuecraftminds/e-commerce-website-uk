@@ -101,7 +101,6 @@ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 UNIQUE KEY unique_fit (company_code, fit_name)
 );
 
-
 # Then modify the style_variants table to include foreign keys
 
 ALTER TABLE style_variants
@@ -114,33 +113,18 @@ ADD FOREIGN KEY (size_id) REFERENCES sizes(size_id) ON DELETE RESTRICT,
 ADD FOREIGN KEY (material_id) REFERENCES materials(material_id) ON DELETE RESTRICT,
 ADD FOREIGN KEY (fit_id) REFERENCES fits(fit_id) ON DELETE RESTRICT;
 
-
-
 CREATE TABLE grn (
-    grn_id VARCHAR(20) PRIMARY KEY,
-    company_code VARCHAR(10) NOT NULL,
-    style_code VARCHAR(50) NOT NULL,
-    sku VARCHAR(50) NOT NULL,
-    quantity_in INT NOT NULL,
-    received_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    warehouse_user_id int(11) NOT NULL,
-    location VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP 
+grn_id VARCHAR(20) PRIMARY KEY,
+company_code VARCHAR(10) NOT NULL,
+style_code VARCHAR(50) NOT NULL,
+sku VARCHAR(50) NOT NULL,
+quantity_in INT NOT NULL,
+received_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+warehouse_user_id int(11) NOT NULL,
+location VARCHAR(50) NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # sample data
 
@@ -276,3 +260,8 @@ name: 'Oversized Fit',
 description: 'Intentionally larger cut for a loose, casual style'
 }
 ];
+
+# convert collation in database or table
+
+ALTER TABLE locations CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+ALTER DATABASE database_name CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;

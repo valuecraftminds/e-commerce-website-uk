@@ -61,42 +61,210 @@ class GRNController {
     }
 
     // Search PO numbers
-    static async searchPO(req, res) {
-        const { company_code, po_number } = req.query;
-        let sql = `SELECT po_number, supplier_id, created_at FROM purchase_order_headers WHERE company_code = ?`;
+static async searchPO(req, res) {
+    const { company_code, po_number } = req.query;
+    
+    if (!company_code) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Missing company_code' 
+        });
+    }
+
+    try {
+        // Base query for purchase orders
+        let sql = `
+            SELECT poh.po_number, poh.supplier_id, poh.created_at,
+                   s.supplier_name
+            FROM purchase_order_headers poh
+            LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id 
+                AND poh.company_code = s.company_code
+            WHERE poh.company_code = ?
+        `;
+        
         const params = [company_code];
         
+        // Add PO number filter if provided
         if (po_number) {
-            sql += ' AND po_number LIKE ?';
+            sql += ' AND poh.po_number LIKE ?';
             params.push(`%${po_number}%`);
         }
         
-        sql += ' ORDER BY created_at DESC LIMIT 10';
+        sql += ' ORDER BY poh.created_at DESC LIMIT 10';
         
+        // Execute query
         db.query(sql, params, (err, results) => {
             if (err) {
-                return res.status(500).json({ success: false, message: 'Error searching PO numbers', error: err.message });
+                console.error('Error searching PO numbers:', err);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error searching PO numbers', 
+                    error: err.message 
+                });
             }
-            res.json({ success: true, purchase_orders: results });
+            
+            // Format results with supplier info
+            const formattedResults = results.map(po => ({
+                po_number: po.po_number,
+                supplier_id: po.supplier_id,
+                supplier_name: po.supplier_name || 'Unknown Supplier',
+                supplier_code: po.supplier_code || '',
+                created_at: po.created_at
+            }));
+            
+            res.json({ 
+                success: true, 
+                purchase_orders: formattedResults 
+            });
+        });
+    } catch (error) {
+        console.error('Error in searchPO:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error searching PO numbers', 
+            error: error.message 
         });
     }
+}
 
     // Get PO details (reuse PurchaseOrderController)
     static async getPODetails(req, res) {
         return PurchaseOrderController.getPurchaseOrderDetails(req, res);
     }
 
+    // Get GRN details by ID
+    static async getGRNDetails(req, res) {
+        const { grn_id } = req.params;
+        const { company_code } = req.query;
+
+        if (!grn_id || !company_code) {
+            return res.status(400).json({ success: false, message: 'Missing grn_id or company_code' });
+        }
+
+        try {
+            // Get GRN header
+            const headerSql = 'SELECT * FROM grn_headers WHERE grn_id = ? AND company_code = ?';
+            const headerResult = await new Promise((resolve, reject) => {
+                db.query(headerSql, [grn_id, company_code], (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results[0]);
+                });
+            });
+
+            if (!headerResult) {
+                return res.status(404).json({ success: false, message: 'GRN not found' });
+            }
+
+            // Get GRN items with location info
+            const itemsSql = `
+                SELECT gi.*, l.location_name, l.description as location_description
+                FROM grn_items gi
+                LEFT JOIN locations l ON gi.location_id = l.location_id AND gi.company_code = l.company_code
+                WHERE gi.grn_id = ?
+            `;
+            const itemsResult = await new Promise((resolve, reject) => {
+                db.query(itemsSql, [grn_id], (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results);
+                });
+            });
+
+            res.json({
+                success: true,
+                header: headerResult,
+                items: itemsResult
+            });
+        } catch (error) {
+            res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching GRN details', 
+                error: error.message 
+            });
+        }
+    }
+
+    // Get all GRNs for a company
+    static async getGRNHistory(req, res) {
+        const { company_code, page = 1, limit = 10, search = '' } = req.query;
+        
+        if (!company_code) {
+            return res.status(400).json({ success: false, message: 'Missing company_code' });
+        }
+
+        try {
+            // Calculate offset for pagination
+            const offset = (page - 1) * limit;
+            
+            // Base query
+            let sql = `
+                SELECT gh.grn_id, gh.po_number, gh.supplier_id, gh.received_date, 
+                       gh.status, gh.total_items, gh.total_qty, gh.batch_number,
+                       s.supplier_name,
+                       COUNT(gi.id) as items_count
+                FROM grn_headers gh
+                LEFT JOIN grn_items gi ON gh.grn_id = gi.grn_id
+                LEFT JOIN suppliers s ON gh.supplier_id = s.supplier_id
+                WHERE gh.company_code = ?
+            `;
+            
+            const params = [company_code];
+            
+            // Add search filter if provided
+            if (search) {
+                sql += ` AND (gh.grn_id LIKE ? OR gh.po_number LIKE ? OR gh.batch_number LIKE ? OR s.supplier_name LIKE ?)`;
+                params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+            }
+            
+            // Group and order
+            sql += ` GROUP BY gh.grn_id ORDER BY gh.received_date DESC LIMIT ? OFFSET ?`;
+            params.push(parseInt(limit), offset);
+            
+            // Execute query
+            const results = await new Promise((resolve, reject) => {
+                db.query(sql, params, (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results);
+                });
+            });
+            
+            // Get total count for pagination
+            let countSql = `SELECT COUNT(*) as total FROM grn_headers WHERE company_code = ?`;
+            const countParams = [company_code];
+            
+            if (search) {
+                countSql += ` AND (grn_id LIKE ? OR po_number LIKE ? OR batch_number LIKE ?)`;
+                countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+            }
+            
+            const countResult = await new Promise((resolve, reject) => {
+                db.query(countSql, countParams, (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results[0].total);
+                });
+            });
+            
+            res.json({
+                success: true,
+                grns: results,
+                total: countResult,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(countResult / limit)
+            });
+        } catch (error) {
+            res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching GRN history', 
+                error: error.message 
+            });
+        }
+    }
+
     // Validate GRN item before adding
     static async validateGRNItem(req, res) {
         const { po_number, sku, received_qty, company_code } = req.body;
-        // Add error logging for debugging
-        console.log('validateGRNItem called with:', req.body);
-
-        // Defensive: ensure received_qty is a valid integer
-        const receivedQty = parseInt(received_qty);
-
-        if (!po_number || !sku || isNaN(receivedQty) || receivedQty <= 0 || !company_code) {
-            console.error('Missing or invalid fields:', { po_number, sku, received_qty, company_code });
+        
+        if (!po_number || !sku || isNaN(received_qty) || received_qty <= 0 || !company_code) {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Missing or invalid required fields: po_number, sku, received_qty (>0), company_code' 
@@ -115,18 +283,16 @@ class GRNController {
             });
 
             if (!remainingResponse.success) {
-                console.error('getRemainingQty failed:', remainingResponse);
                 return res.status(400).json(remainingResponse);
             }
 
             const { remaining_qty, max_qty, ordered_qty, tolerance_limit } = remainingResponse;
 
             // Validation checks
-            if (receivedQty > remaining_qty) {
-                console.error(`Received quantity (${receivedQty}) exceeds remaining (${remaining_qty})`);
+            if (received_qty > remaining_qty) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: `Cannot receive ${receivedQty} items. Only ${remaining_qty} items remaining (Max: ${max_qty}, Ordered: ${ordered_qty}, Tolerance: ${tolerance_limit}%)` 
+                    message: `Cannot receive ${received_qty} items. Only ${remaining_qty} items remaining (Max: ${max_qty}, Ordered: ${ordered_qty}, Tolerance: ${tolerance_limit}%)` 
                 });
             }
 
@@ -138,12 +304,11 @@ class GRNController {
                     max_qty,
                     tolerance_limit,
                     remaining_qty,
-                    received_qty: receivedQty
+                    received_qty: parseInt(received_qty)
                 }
             });
 
         } catch (error) {
-            console.error('Error in validateGRNItem:', error);
             res.status(500).json({ 
                 success: false, 
                 message: 'Error validating GRN item', 
@@ -161,7 +326,9 @@ class GRNController {
             company_code, 
             received_date, 
             batch_number, 
-            invoice_number 
+            invoice_number,
+            reference,
+            supplier_id
         } = req.body;
 
         // Validation
@@ -175,7 +342,7 @@ class GRNController {
         // Generate GRN ID
         const generateGRNId = async () => {
             return new Promise((resolve, reject) => {
-                const sql = `SELECT grn_id FROM grn WHERE company_code = ? ORDER BY created_at DESC LIMIT 1`;
+                const sql = `SELECT grn_id FROM grn_headers WHERE company_code = ? ORDER BY created_at DESC LIMIT 1`;
                 db.query(sql, [company_code], (err, results) => {
                     if (err) return reject(err);
                     
@@ -188,7 +355,7 @@ class GRNController {
                             nextNumber = parseInt(numberPart) + 1;
                         }
                     }
-                    const newGrnId = `GRN-${company_code}-${String(nextNumber).padStart(3, '0')}`;
+                    const newGrnId = `GRN-${company_code}-${String(nextNumber).padStart(4, '0')}`;
                     resolve(newGrnId);
                 });
             }); 
@@ -197,10 +364,10 @@ class GRNController {
         // Validate all items before processing
         for (let idx = 0; idx < grn_items.length; idx++) {
             const item = grn_items[idx];
-            if (!item.sku || !item.style_code || isNaN(parseInt(item.received_qty)) || parseInt(item.received_qty) <= 0) {
+            if (!item.sku || !item.style_code || isNaN(parseInt(item.received_qty)) || parseInt(item.received_qty) <= 0 || !item.location_id) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: `Invalid GRN item at index ${idx}. Check SKU, style_code, and received_qty` 
+                    message: `Invalid GRN item at index ${idx}. Check SKU, style_code, received_qty, and location_id` 
                 });
             }
         }
@@ -299,14 +466,15 @@ class GRNController {
                 }
 
                 // Insert GRN header
-                const headerSql = `INSERT INTO grn (
-                    grn_id, company_code, warehouse_user_id, po_number, received_date, 
-                    batch_number, invoice_number, status, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+                const headerSql = `INSERT INTO grn_headers (
+                    grn_id, company_code, supplier_id, warehouse_user_id, po_number, received_date, 
+                    batch_number, invoice_number, reference, status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
                 
                 const headerValues = [
-                    grn_id, company_code, warehouse_user_id, po_number, grnReceivedDate,
-                    batch_number || '', invoice_number || '', grnStatus
+                    grn_id, company_code, supplier_id || poDetails.header.supplier_id, 
+                    warehouse_user_id, po_number, grnReceivedDate,
+                    batch_number || '', invoice_number || '', reference || '', grnStatus
                 ];
 
                 await new Promise((resolve, reject) => {
@@ -316,7 +484,7 @@ class GRNController {
                     });
                 });
 
-                // Insert GRN items and update stock
+                // Insert GRN items
                 for (const item of grn_items) {
                     const received_qty = parseInt(item.received_qty);
                     const itemData = orderedQtyMap[item.sku];
@@ -341,51 +509,26 @@ class GRNController {
                         itemStatus = 'pending';
                     }
 
+                    // Insert GRN item
+                   const itemSql = `INSERT INTO grn_items (
+    grn_id, company_code, po_number, style_code, sku, lot_no,
+    ordered_qty, received_qty, remaining_qty, status,
+    location_id, notes, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
 
-                // Insert GRN item (add po_number column)
-                const itemSql = `INSERT INTO grn_items (
-                    grn_id, company_code, po_number, style_code, sku, ordered_qty, 
-                    received_qty, remaining_qty, status, location, notes, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-
-                const itemValues = [
-                    grn_id, company_code, po_number, item.style_code, item.sku, itemData.ordered_qty,
-                    received_qty, Math.max(0, remaining_qty), itemStatus, 
-                    item.location || '', item.notes || ''
-                ];
-
-                await new Promise((resolve, reject) => {
-                    db.query(itemSql, itemValues, (err, result) => {
-                        if (err) reject(err);
-                        else resolve(result);
-                    });
-                });
-
-                    // Update style_variants stock
-                    const updateStockSql = `UPDATE style_variants 
-                                          SET stock_quantity = COALESCE(stock_quantity, 0) + ?, updated_at = NOW()
-                                          WHERE style_code = ? AND sku = ? AND company_code = ?`;
-                    
-                    const updateResult = await new Promise((resolve, reject) => {
-                        db.query(updateStockSql, [received_qty, item.style_code, item.sku, company_code], (err, result) => {
+const itemValues = [
+    grn_id, company_code, po_number, 
+    item.style_code, item.sku, item.lot_no || '',
+    itemData.ordered_qty, received_qty, 
+    Math.max(0, remaining_qty), itemStatus,
+    item.location_id || '', item.notes || ''
+];
+                    await new Promise((resolve, reject) => {
+                        db.query(itemSql, itemValues, (err, result) => {
                             if (err) reject(err);
                             else resolve(result);
                         });
                     });
-
-                    // If no rows updated, insert new style_variant
-                    if (updateResult.affectedRows === 0) {
-                        const insertVariantSql = `INSERT INTO style_variants 
-                                                (style_code, sku, company_code, stock_quantity, created_at, updated_at) 
-                                                VALUES (?, ?, ?, ?, NOW(), NOW())`;
-                        
-                        await new Promise((resolve, reject) => {
-                            db.query(insertVariantSql, [item.style_code, item.sku, company_code, received_qty], (err, result) => {
-                                if (err) reject(err);
-                                else resolve(result);
-                            });
-                        });
-                    }
                 }
 
                 // Commit transaction
@@ -418,66 +561,6 @@ class GRNController {
                     });
                 });
             }
-        });
-    }
-
-    // Get GRN history for a PO
-    static async getGRNHistory(req, res) {
-        const { po_number } = req.params;
-        const { company_code } = req.query;
-
-        if (!po_number || !company_code) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Missing po_number or company_code' 
-            });
-        }
-
-        const sql = `SELECT g.grn_id, g.received_date, g.status, g.batch_number, g.invoice_number,
-                           gi.sku, gi.style_code, gi.received_qty, gi.location, gi.notes
-                    FROM grn g 
-                    LEFT JOIN grn_items gi ON g.grn_id = gi.grn_id
-                    WHERE g.po_number = ? AND g.company_code = ?
-                    ORDER BY g.created_at DESC, gi.sku`;
-
-        db.query(sql, [po_number, company_code], (err, results) => {
-            if (err) {
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error fetching GRN history', 
-                    error: err.message 
-                });
-            }
-
-            // Group results by GRN ID
-            const grnHistory = {};
-            results.forEach(row => {
-                if (!grnHistory[row.grn_id]) {
-                    grnHistory[row.grn_id] = {
-                        grn_id: row.grn_id,
-                        received_date: row.received_date,
-                        status: row.status,
-                        batch_number: row.batch_number,
-                        invoice_number: row.invoice_number,
-                        items: []
-                    };
-                }
-                
-                if (row.sku) {
-                    grnHistory[row.grn_id].items.push({
-                        sku: row.sku,
-                        style_code: row.style_code,
-                        received_qty: row.received_qty,
-                        location: row.location,
-                        notes: row.notes
-                    });
-                }
-            });
-
-            res.json({ 
-                success: true, 
-                grn_history: Object.values(grnHistory) 
-            });
         });
     }
 }

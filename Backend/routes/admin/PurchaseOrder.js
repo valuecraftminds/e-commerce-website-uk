@@ -20,4 +20,6 @@ router.put('/update-purchase-orders/:po_number', PurchaseOrderController.updateP
 // DELETE /api/admin/po/delete-purchase-orders/:po_number
 router.delete('/delete-purchase-orders/:po_number', PurchaseOrderController.deletePurchaseOrder);
 
+router.put('/approve/:po_number', PurchaseOrderController.approvePurchaseOrder);
+
 module.exports = router;

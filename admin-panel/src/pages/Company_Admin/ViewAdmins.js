@@ -65,6 +65,8 @@ export default function ViewAdmins() {
                 <th className='table-header'>Email</th>
                 <th className='table-header'>Phone</th>
                 <th className='table-header'>Role</th>
+                <th className='table-header'>Side bar options</th>
+
                 <th className='table-header'>Actions</th>
               </tr>
             </thead>
@@ -76,6 +78,7 @@ export default function ViewAdmins() {
                   <td>{admin_users.Email}</td>
                   <td>{admin_users.Phone}</td>
                   <td>{admin_users.Role}</td>
+                  <td>{admin_users.side_bar_options ? JSON.stringify(admin_users.side_bar_options) : 'N/A'}</td>
                   <td>
                     <Button variant="warning" onClick={() => navigate(`/EditAdmins/${admin_users.user_id}`)}><i className="bi-pencil"></i>
                     </Button>

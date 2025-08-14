@@ -50,8 +50,11 @@ const supplierRoutes = require('./routes/admin/Supplier');
 const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
 const companyRoutes = require('./routes/admin/Company');
 const GRNRoutes = require('./routes/admin/GRN');
+const LocationRoutes = require('./routes/admin/Location');
 const AddressRoutes = require('./routes/customer/AddressRoutes');
 const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
+
+
 
 // Route bindings
 // Customer routes
@@ -79,6 +82,7 @@ app.use('/api/admin/suppliers', supplierRoutes);
 app.use('/api/admin/po', purchaseOrderRoutes);
 app.use('/api/admin', companyRoutes);
 app.use('/api/admin/grn', GRNRoutes);
+app.use('/api/admin/locations', LocationRoutes);
 
 
 // Default route
