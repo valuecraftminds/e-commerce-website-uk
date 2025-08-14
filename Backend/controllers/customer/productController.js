@@ -119,7 +119,6 @@ const productController = {
     });
   },
 
-  // GET product details
   getProductDetails: (req, res) => {
     const { style_id } = req.params;
     const { company_code } = req.query;
@@ -158,16 +157,43 @@ const productController = {
         return res.status(404).json({ error: 'Product not found' });
       }
 
+      // Get unique sizes
       const sizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
 
-      const colorMap = new Map();
+      // Create size-color mapping
+      const sizeColorMap = {};
+      const allColorsMap = new Map();
+
       results.forEach(r => {
-        if (r.color_name && r.color_code) {
-          colorMap.set(r.color_code, { name: r.color_name, code: r.color_code });
+        if (r.size_name && r.color_name && r.color_code) {
+          // Add to size-specific colors
+          if (!sizeColorMap[r.size_name]) {
+            sizeColorMap[r.size_name] = new Map();
+          }
+          sizeColorMap[r.size_name].set(r.color_code, {
+            name: r.color_name,
+            code: r.color_code,
+            color_id: r.color_id
+          });
+
+          // Add to all colors map
+          allColorsMap.set(r.color_code, {
+            name: r.color_name,
+            code: r.color_code,
+            color_id: r.color_id
+          });
         }
       });
 
-      const colors = Array.from(colorMap.values());
+      // Convert size-color map to the desired format
+      const availableBySize = {};
+      Object.keys(sizeColorMap).forEach(size => {
+        availableBySize[size] = Array.from(sizeColorMap[size].values());
+      });
+
+      // Get all unique colors
+      const allColors = Array.from(allColorsMap.values());
+
       const product = results[0];
       const price = product.price;
 
@@ -181,7 +207,8 @@ const productController = {
         offer_price: product.offer_price,
         variant_id: product.variant_id,
         available_sizes: sizes,
-        available_colors: colors,
+        available_colors: allColors, // All available colors
+        colors_by_size: availableBySize, // Colors available for each size
         image: product.image
       });
     });
