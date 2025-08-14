@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Form, Row, Col, Button, Container, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+
+import { useCart } from '../context/CartContext';
 import '../styles/CheckoutModal.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -89,7 +91,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
     setAddressesLoading(true);
     setAddressesError('');
     try {
-      const { data } = await api.get('/api/customer/address/get-address');
+      const { data } = await api.get(`${BASE_URL}/api/customer/address/get-address`);
       const sorted = [...data].sort((a, b) => {
         const aDef = a.is_default === 1 || a.is_default === true;
         const bDef = b.is_default === 1 || b.is_default === true;
@@ -158,7 +160,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'card_number') {
-      const digits = onlyDigits(value).slice(0, 19);
+      const digits = onlyDigits(value).slice(0, 16);
       setShippingData((p) => ({ ...p, [name]: digits }));
       return;
     }
@@ -239,7 +241,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
       company_code: COMPANY_CODE
     };
 
-    const { data } = await api.post('/api/customer/address/add-address', payload);
+    const { data } = await api.post(`${BASE_URL}/api/customer/address/add-address`, payload);
 
     const id =
       data?.address_id ??
@@ -255,7 +257,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
     // The new address will always be the selected shipping address
     if (setShippingAsDefault) {
       try {
-        await api.post('/api/customer/address/set-default-address', {
+        await api.post(`${BASE_URL}/api/customer/address/set-default-address`, {
           address_id: id,
           company_code: COMPANY_CODE,
         });
@@ -317,6 +319,19 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
   };
 
   /** STEP 2 → Pay & Submit */
+  const { cart, summary, clearCart } = useCart();
+
+  // 1. Calculate shipping fee function
+  const calculateShippingFee = () => {
+    return 10.00; //fixed shipping fee
+  };
+
+  // 2. Calculate tax function
+  const calculateTax = (subtotal) => {
+    const TAX_RATE = 0.08; // fixed tax rate
+    return subtotal * TAX_RATE;
+  };
+
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -328,6 +343,20 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
       setError('No shipping address selected.');
       return;
     }
+    
+    // Get cart items and totals from cart context
+    const cartItems = cart;
+    const subtotal = parseFloat(summary.original_amount || summary.total_amount); // Get original amount before currency conversion
+    
+    // Validate cart has items
+    if (!cartItems || cartItems.length === 0) {
+      setError('Your cart is empty.');
+      return;
+    }
+
+    const shippingFee = calculateShippingFee();
+    const tax = calculateTax(subtotal);
+    const totalAmount = subtotal + shippingFee + tax;
 
     const payment_method = {
       method_type: 'card',
@@ -342,11 +371,26 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
       const payload = {
         address_id: selectedAddressId,
         payment_method,
+        // Add order-related data
+        order_items: cartItems.map(item => ({
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          unit_price: item.price, 
+          total_price: item.total_price
+        })),
+        subtotal,
+        shipping_fee: shippingFee,
+        tax_amount: tax,
+        total_amount: totalAmount,
+        total_items: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        order_notes: shippingData.order_notes || null
       };
 
-      const { data, status } = await api.post('/api/customer/checkout/checkout-details', payload);
+      const { data, status } = await api.post(`${BASE_URL}/api/customer/checkout/submit-checkout`, payload);
 
       if (status === 200 || status === 201) {
+        // Clear cart after successful order
+        clearCart();
         onSubmit?.(data);
         onHide?.();
       } else {
@@ -755,6 +799,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                           value={shippingData.card_number}
                           onChange={handleChange}
                           isInvalid={!!fieldErrors.card_number}
+                          minLength={16}
                           maxLength={19}
                           disabled={disabled}
                           required
