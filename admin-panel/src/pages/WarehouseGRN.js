@@ -41,6 +41,9 @@ export default function WarehouseGRN() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+
+    // State for GRN header status
+    const [headerStatus, setHeaderStatus] = useState('partial');
     
     // State for GRN history
     const [grnHistory, setGrnHistory] = useState([]);
@@ -55,7 +58,8 @@ export default function WarehouseGRN() {
         received_qty: '',
         location_id: '',
         lot_no: '',
-        notes: ''
+        notes: '',
+        status: 'pending'
     });
     const [modalError, setModalError] = useState('');
     const [modalLoading, setModalLoading] = useState(false);
@@ -284,12 +288,6 @@ export default function WarehouseGRN() {
             setModalLoading(false);
             return;
         }
-        // Optionally require lot_no (uncomment if needed)
-        // if (!lot_no) {
-        //     setModalError('Please enter a lot number');
-        //     setModalLoading(false);
-        //     return;
-        // }
         try {
             // Validate with backend
             const validateResponse = await fetch(`${BASE_URL}/api/admin/grn/validate-item`, {
@@ -323,7 +321,8 @@ export default function WarehouseGRN() {
                     ...updatedItems[existingIndex],
                     received_qty: newReceivedQty,
                     lot_no: lot_no || updatedItems[existingIndex].lot_no,
-                    notes: modalForm.notes || updatedItems[existingIndex].notes
+                    notes: modalForm.notes || updatedItems[existingIndex].notes,
+                    status: modalForm.status || 'pending'
                 };
                 setGRNItems(updatedItems);
             } else {
@@ -337,10 +336,10 @@ export default function WarehouseGRN() {
                     location_id: location_id,
                     lot_no: lot_no,
                     notes: modalForm.notes || '',
-                    tolerance_limit: selectedItem.tolerance_limit
+                    tolerance_limit: selectedItem.tolerance_limit,
+                    status: modalForm.status || 'pending'
                 };
                 setGRNItems(prev => [...prev, newGRNItem]);
-                
             }
             // Update remaining quantity in PO details
             const updatedPODetails = { ...poDetails };
@@ -371,7 +370,8 @@ export default function WarehouseGRN() {
             received_qty: item.received_qty.toString(),
             location_id: item.location_id,
             lot_no: item.lot_no || '',
-            notes: item.notes
+            notes: item.notes,
+            status: item.status || 'pending'
         });
         // Remove the item from grnItems temporarily
         setGRNItems(prev => prev.filter((_, i) => i !== index));
@@ -420,10 +420,10 @@ export default function WarehouseGRN() {
             return;
         }
         try {
-            // Ensure lot_no is included in payload for each item
+            // Ensure lot_no and status are included in payload for each item
             const payload = {
                 po_number: selectedPO,
-                grn_items: grnItems.map(item => ({ ...item, lot_no: item.lot_no || '' })),
+                grn_items: grnItems.map(item => ({ ...item, lot_no: item.lot_no || '', status: item.status || 'pending' })),
                 warehouse_user_id: warehouse_user_id,
                 company_code: company_code,
                 received_date: new Date().toISOString(),
@@ -431,6 +431,7 @@ export default function WarehouseGRN() {
                 invoice_number: invoiceNumber,
                 reference: reference,
                 supplier_id: poDetails?.header?.supplier_id,
+                status: headerStatus
             };
 
             console.log('Submitting GRN with payload:', payload);
@@ -777,14 +778,27 @@ useEffect(() => {
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <Button
-                                                variant="success"
-                                                onClick={handleSubmitGRN}
-                                                disabled={loading || grnItems.length === 0 || !batchNumber.trim() || poDetails.header.status !== 'Approved'}
-                                            >
-                                                {loading ? <Spinner size="sm" className="me-2" /> : null}
-                                                Submit GRN ({grnItems.length} items)
-                                            </Button>
+                                            <div className="d-flex align-items-center">
+                                                <Form.Group className="me-3 mb-0">
+                                                    <Form.Label visuallyHidden>Status</Form.Label>
+                                                    <Form.Select
+                                                        value={headerStatus}
+                                                        onChange={e => setHeaderStatus(e.target.value)}
+                                                        style={{ minWidth: 140 }}
+                                                    >
+                                                        <option value="partial">Partial</option>
+                                                        <option value="completed">Completed</option>
+                                                    </Form.Select>
+                                                </Form.Group>
+                                                <Button
+                                                    variant="success"
+                                                    onClick={handleSubmitGRN}
+                                                    disabled={loading || grnItems.length === 0 || !batchNumber.trim() || poDetails.header.status !== 'Approved'}
+                                                >
+                                                    {loading ? <Spinner size="sm" className="me-2" /> : null}
+                                                    Submit GRN ({grnItems.length} items)
+                                                </Button>
+                                            </div>
                                         </div>
                                     </Card.Body>
                                 </Card>
@@ -962,6 +976,23 @@ useEffect(() => {
                                         placeholder="Additional notes (optional)"
                                     />
                                 </Form.Group>
+
+                                {/* Status selection */}
+                                <Row className="mb-3">
+                                    <Col md={4}>
+                                        <Form.Group>
+                                            <Form.Label>Status</Form.Label>
+                                            <Form.Select
+                                                value={modalForm.status}
+                                                onChange={e => handleModalFormChange('status', e.target.value)}
+                                                required
+                                            >
+                                                <option value="partial">Partial</option>
+                                                <option value="received">Received</option>
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
                             </Form>
                         </>
                     )}

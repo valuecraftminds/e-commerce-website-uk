@@ -454,16 +454,8 @@ static async searchPO(req, res) {
                     }
                 }
 
-                // Determine GRN status
-                let grnStatus = 'partial';
-                const allItemsComplete = grn_items.every(item => {
-                    const itemData = orderedQtyMap[item.sku];
-                    return parseInt(item.received_qty) === itemData.max_qty;
-                });
-                
-                if (allItemsComplete) {
-                    grnStatus = 'completed';
-                }
+                // Use status from request body for GRN header
+                let grnStatus = req.body.status || 'partial';
 
                 // Insert GRN header
                 const headerSql = `INSERT INTO grn_headers (
@@ -488,7 +480,6 @@ static async searchPO(req, res) {
                 for (const item of grn_items) {
                     const received_qty = parseInt(item.received_qty);
                     const itemData = orderedQtyMap[item.sku];
-                    
                     // Get current received quantity
                     const currentReceived = await new Promise((resolve, reject) => {
                         const sql = 'SELECT SUM(received_qty) as total FROM grn_items WHERE po_number = ? AND sku = ?';
@@ -497,32 +488,23 @@ static async searchPO(req, res) {
                             else resolve(results[0]?.total || 0);
                         });
                     });
-
                     const new_total = currentReceived + received_qty;
                     const remaining_qty = itemData.max_qty - new_total;
-                    
-                    // Determine item status
-                    let itemStatus = 'partial';
-                    if (new_total >= itemData.max_qty) {
-                        itemStatus = 'received';
-                    } else if (new_total === 0) {
-                        itemStatus = 'pending';
-                    }
-
+                    // Use status from item (provided by frontend)
+                    let itemStatus = item.status || 'pending';
                     // Insert GRN item
-                   const itemSql = `INSERT INTO grn_items (
-    grn_id, company_code, po_number, style_code, sku, lot_no,
-    ordered_qty, received_qty, remaining_qty, status,
-    location_id, notes, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-
-const itemValues = [
-    grn_id, company_code, po_number, 
-    item.style_code, item.sku, item.lot_no || '',
-    itemData.ordered_qty, received_qty, 
-    Math.max(0, remaining_qty), itemStatus,
-    item.location_id || '', item.notes || ''
-];
+                    const itemSql = `INSERT INTO grn_items (
+                        grn_id, company_code, po_number, style_code, sku, lot_no,
+                        ordered_qty, received_qty, remaining_qty, status,
+                        location_id, notes, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+                    const itemValues = [
+                        grn_id, company_code, po_number, 
+                        item.style_code, item.sku, item.lot_no || '',
+                        itemData.ordered_qty, received_qty, 
+                        Math.max(0, remaining_qty), itemStatus,
+                        item.location_id || '', item.notes || ''
+                    ];
                     await new Promise((resolve, reject) => {
                         db.query(itemSql, itemValues, (err, result) => {
                             if (err) reject(err);
