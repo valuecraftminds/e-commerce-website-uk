@@ -80,7 +80,7 @@ export default function UserMenu({ profilePicture }) {
               <i className="bi bi-person me-2"></i>
               Profile
             </Dropdown.Item> */}
-            <Dropdown.Item onClick={() => handleNavigate('/orders')}>
+            <Dropdown.Item onClick={() => handleNavigate('/orders-history')}>
               <i className="bi bi-bag me-2"></i>
               My Orders
             </Dropdown.Item>
