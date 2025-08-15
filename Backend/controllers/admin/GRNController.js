@@ -183,10 +183,12 @@ static async searchPO(req, res) {
         }
     }
 
-    // Get all GRNs for a company
+    // Get all GRNs for a company or for a specific PO
     static async getGRNHistory(req, res) {
+        // Support both /grn-history/:po_number and /history
+        const po_number = req.params.po_number || null;
         const { company_code, page = 1, limit = 10, search = '' } = req.query;
-        
+
         if (!company_code) {
             return res.status(400).json({ success: false, message: 'Missing company_code' });
         }
@@ -194,7 +196,7 @@ static async searchPO(req, res) {
         try {
             // Calculate offset for pagination
             const offset = (page - 1) * limit;
-            
+
             // Base query
             let sql = `
                 SELECT gh.grn_id, gh.po_number, gh.supplier_id, gh.received_date, 
@@ -206,19 +208,24 @@ static async searchPO(req, res) {
                 LEFT JOIN suppliers s ON gh.supplier_id = s.supplier_id
                 WHERE gh.company_code = ?
             `;
-            
             const params = [company_code];
-            
+
+            // If po_number is provided as a param, filter by it
+            if (po_number) {
+                sql += ' AND gh.po_number = ?';
+                params.push(po_number);
+            }
+
             // Add search filter if provided
             if (search) {
                 sql += ` AND (gh.grn_id LIKE ? OR gh.po_number LIKE ? OR gh.batch_number LIKE ? OR s.supplier_name LIKE ?)`;
                 params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
             }
-            
+
             // Group and order
             sql += ` GROUP BY gh.grn_id ORDER BY gh.received_date DESC LIMIT ? OFFSET ?`;
             params.push(parseInt(limit), offset);
-            
+
             // Execute query
             const results = await new Promise((resolve, reject) => {
                 db.query(sql, params, (err, results) => {
@@ -226,23 +233,25 @@ static async searchPO(req, res) {
                     else resolve(results);
                 });
             });
-            
+
             // Get total count for pagination
             let countSql = `SELECT COUNT(*) as total FROM grn_headers WHERE company_code = ?`;
             const countParams = [company_code];
-            
+            if (po_number) {
+                countSql += ' AND po_number = ?';
+                countParams.push(po_number);
+            }
             if (search) {
                 countSql += ` AND (grn_id LIKE ? OR po_number LIKE ? OR batch_number LIKE ?)`;
                 countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
             }
-            
             const countResult = await new Promise((resolve, reject) => {
                 db.query(countSql, countParams, (err, results) => {
                     if (err) reject(err);
                     else resolve(results[0].total);
                 });
             });
-            
+
             res.json({
                 success: true,
                 grns: results,
@@ -495,14 +504,14 @@ static async searchPO(req, res) {
                     // Insert GRN item
                     const itemSql = `INSERT INTO grn_items (
                         grn_id, company_code, po_number, style_code, sku, lot_no,
-                        ordered_qty, received_qty, remaining_qty, status,
+                        ordered_qty, received_qty, remaining_qty,
                         location_id, notes, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW())`;
                     const itemValues = [
                         grn_id, company_code, po_number, 
                         item.style_code, item.sku, item.lot_no || '',
                         itemData.ordered_qty, received_qty, 
-                        Math.max(0, remaining_qty), itemStatus,
+                        Math.max(0, remaining_qty),
                         item.location_id || '', item.notes || ''
                     ];
                     await new Promise((resolve, reject) => {

@@ -6,7 +6,7 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 const StyleTable = ({ 

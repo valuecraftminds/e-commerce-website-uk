@@ -60,9 +60,7 @@ export default function ViewCompanies() {
     fetchCompanies();
   }, []);
 
-  const handleCreateAdmin = (companyCode) => {
-    navigate(`/vcm-admin/register-company-admins?company_code=${companyCode}`);
-  };    
+
 
   const handleViewAdmins = (companyCode) => {
     navigate(`/vcm-admin/view-company-admins/${companyCode}`);

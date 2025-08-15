@@ -6,7 +6,7 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Col, Form, Modal, Row } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import '../../styles/StyleModals.css';

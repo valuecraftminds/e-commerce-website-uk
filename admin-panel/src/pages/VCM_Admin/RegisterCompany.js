@@ -1,8 +1,8 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import Select from 'react-select';
-import { AuthContext } from '../../context/AuthContext';
+
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -26,7 +26,6 @@ export default function RegisterCompany() {
   const [logoPreview, setLogoPreview] = useState(null);
   const [currentLogo, setCurrentLogo] = useState(null);
 
-  const { userData } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Helper function to get auth headers
@@ -65,21 +64,8 @@ export default function RegisterCompany() {
     fetchCurrencies();
   }, []);
 
-  // Fetch company data for edit mode
-  useEffect(() => {
-    if (isEditMode && id) {
-      // Check if user is authenticated
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        setErrorMsg('Authentication required. Please log in.');
-        setIsLoadingData(false);
-        return;
-      }
-      fetchCompanyData();
-    }
-  }, [id, isEditMode]);
 
-  const fetchCompanyData = async () => {
+  const fetchCompanyData = useCallback(async () => {
     setIsLoadingData(true);
     setErrorMsg('');
     try {
@@ -121,7 +107,20 @@ export default function RegisterCompany() {
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEditMode && id) {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setErrorMsg('Authentication required. Please log in.');
+        setIsLoadingData(false);
+        return;
+      }
+      fetchCompanyData();
+    }
+  }, [id, isEditMode, fetchCompanyData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

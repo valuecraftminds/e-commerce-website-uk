@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
     Alert, Badge,
     Breadcrumb,
@@ -9,16 +9,16 @@ import {
     Spinner,
     Table
 } from 'react-bootstrap';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/WarehouseGRN.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
+
 export default function WarehouseGRN() {
     const navigate = useNavigate();
     const { po_number: poParam } = useParams();
-    const location = useLocation();
     const { userData } = useContext(AuthContext);
     
     const company_code = userData?.company_code;
@@ -44,12 +44,15 @@ export default function WarehouseGRN() {
 
     // State for GRN header status
     const [headerStatus, setHeaderStatus] = useState('partial');
+
+    // State for GRN header status from backend
+    const [grnHeaderStatus, setGrnHeaderStatus] = useState('');
     
     // State for GRN history
     const [grnHistory, setGrnHistory] = useState([]);
     const [historyPage, setHistoryPage] = useState(1);
     const [historyTotal, setHistoryTotal] = useState(0);
-    const [historySearch, setHistorySearch] = useState('');
+    const [historySearch] = useState('');
     
     // State for modal
     const [showModal, setShowModal] = useState(false);
@@ -59,7 +62,6 @@ export default function WarehouseGRN() {
         location_id: '',
         lot_no: '',
         notes: '',
-        status: 'pending'
     });
     const [modalError, setModalError] = useState('');
     const [modalLoading, setModalLoading] = useState(false);
@@ -68,12 +70,77 @@ export default function WarehouseGRN() {
     const [locations, setLocations] = useState([]);
     const [locationsLoading, setLocationsLoading] = useState(false);
 
+
+    // Select PO and fetch details (useCallback to avoid re-creation)
+    const handleSelectPO = useCallback(async (po_number) => {
+        setSelectedPO(po_number);
+        setError('');
+        setSuccess('');
+        setLoading(true);
+
+        try {
+            // Fetch PO details
+            const response = await fetch(`${BASE_URL}/api/admin/grn/details/${po_number}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                setPODetails(data);
+
+                // Fetch GRN header status for this PO (latest GRN for this PO and company)
+                let grnHeaderStatusFetched = '';
+                try {
+                    const grnHeaderResp = await fetch(`${BASE_URL}/api/admin/grn/grn-history/${po_number}?company_code=${company_code}&limit=1`);
+                    const grnHeaderData = await grnHeaderResp.json();
+                    if (grnHeaderData.success && Array.isArray(grnHeaderData.grns) && grnHeaderData.grns.length > 0) {
+                        grnHeaderStatusFetched = grnHeaderData.grns[0].status || '';
+                    }
+                } catch {}
+                setGrnHeaderStatus(grnHeaderStatusFetched);
+                console.log('Fetched GRN header status:', grnHeaderStatusFetched);
+
+                // Fetch remaining quantities for each item
+                const itemsWithRemaining = await Promise.all(
+                    data.items.map(async (item) => {
+                        try {
+                            const remainingResponse = await fetch(
+                                `${BASE_URL}/api/admin/grn/get-remaining-qty?po_number=${po_number}&sku=${item.sku}`
+                            );
+                            const remainingData = await remainingResponse.json();
+                            
+                            if (remainingData.success) {
+                                return {
+                                    ...item,
+                                    ordered_qty: remainingData.ordered_qty,
+                                    max_qty: remainingData.max_qty,
+                                    tolerance_limit: remainingData.tolerance_limit,
+                                    total_received: remainingData.total_received,
+                                    remaining_qty: remainingData.remaining_qty
+                                };
+                            }
+                            return item;
+                        } catch {
+                            return item;
+                        }
+                    })
+                );
+                
+                setPODetails(prev => ({ ...prev, items: itemsWithRemaining }));
+            } else {
+                setError(data.message || 'Failed to fetch PO details');
+            }
+        } catch (err) {
+            setError('Error fetching PO details');
+        } finally {
+            setLoading(false);
+        }
+    }, [company_code]);
+
     // Load PO details if poParam exists
     useEffect(() => {
         if (poParam) {
             handleSelectPO(poParam);
         }
-    }, [poParam]);
+    }, [poParam, handleSelectPO]);
 
     // Clear all states
     const clearAllStates = () => {
@@ -151,57 +218,6 @@ export default function WarehouseGRN() {
         return () => clearTimeout(timeout);
     }, [searchPO, company_code]);
 
-    // Select PO and fetch details
-    const handleSelectPO = async (po_number) => {
-        setSelectedPO(po_number);
-        setError('');
-        setSuccess('');
-        setLoading(true);
-
-        try {
-            // Fetch PO details
-            const response = await fetch(`${BASE_URL}/api/admin/grn/details/${po_number}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                setPODetails(data);
-                
-                // Fetch remaining quantities for each item
-                const itemsWithRemaining = await Promise.all(
-                    data.items.map(async (item) => {
-                        try {
-                            const remainingResponse = await fetch(
-                                `${BASE_URL}/api/admin/grn/get-remaining-qty?po_number=${po_number}&sku=${item.sku}`
-                            );
-                            const remainingData = await remainingResponse.json();
-                            
-                            if (remainingData.success) {
-                                return {
-                                    ...item,
-                                    ordered_qty: remainingData.ordered_qty,
-                                    max_qty: remainingData.max_qty,
-                                    tolerance_limit: remainingData.tolerance_limit,
-                                    total_received: remainingData.total_received,
-                                    remaining_qty: remainingData.remaining_qty
-                                };
-                            }
-                            return item;
-                        } catch {
-                            return item;
-                        }
-                    })
-                );
-                
-                setPODetails(prev => ({ ...prev, items: itemsWithRemaining }));
-            } else {
-                setError(data.message || 'Failed to fetch PO details');
-            }
-        } catch (err) {
-            setError('Error fetching PO details');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Load GRN history (for selected PO if available, else all)
     const loadGRNHistory = async (page = 1, search = '') => {
@@ -322,7 +338,6 @@ export default function WarehouseGRN() {
                     received_qty: newReceivedQty,
                     lot_no: lot_no || updatedItems[existingIndex].lot_no,
                     notes: modalForm.notes || updatedItems[existingIndex].notes,
-                    status: modalForm.status || 'pending'
                 };
                 setGRNItems(updatedItems);
             } else {
@@ -337,7 +352,6 @@ export default function WarehouseGRN() {
                     lot_no: lot_no,
                     notes: modalForm.notes || '',
                     tolerance_limit: selectedItem.tolerance_limit,
-                    status: modalForm.status || 'pending'
                 };
                 setGRNItems(prev => [...prev, newGRNItem]);
             }
@@ -371,7 +385,6 @@ export default function WarehouseGRN() {
             location_id: item.location_id,
             lot_no: item.lot_no || '',
             notes: item.notes,
-            status: item.status || 'pending'
         });
         // Remove the item from grnItems temporarily
         setGRNItems(prev => prev.filter((_, i) => i !== index));
@@ -423,7 +436,7 @@ export default function WarehouseGRN() {
             // Ensure lot_no and status are included in payload for each item
             const payload = {
                 po_number: selectedPO,
-                grn_items: grnItems.map(item => ({ ...item, lot_no: item.lot_no || '', status: item.status || 'pending' })),
+                grn_items: grnItems.map(item => ({ ...item, lot_no: item.lot_no || '', status: item.status })),
                 warehouse_user_id: warehouse_user_id,
                 company_code: company_code,
                 received_date: new Date().toISOString(),
@@ -671,12 +684,12 @@ useEffect(() => {
                                                 <th>Max Qty (with tolerance)</th>
                                                 <th>Total Received</th>
                                                 <th>Remaining Qty</th>
-                                                <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {poDetails.items.map((item) => {
-                                                const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved';
+                                                // Add GRN header status to canReceive logic if needed
+                                                const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' &&  (grnHeaderStatus !== 'completed');
                                                 return (
                                                     <tr 
                                                         key={item.sku}
@@ -699,15 +712,7 @@ useEffect(() => {
                                                                 {item.remaining_qty}
                                                             </Badge>
                                                         </td>
-                                                        <td>
-                                                            {item.remaining_qty === 0 ? (
-                                                                <Badge bg="success">Completed</Badge>
-                                                            ) : item.total_received > 0 ? (
-                                                                <Badge bg="warning">Partial</Badge>
-                                                            ) : (
-                                                                <Badge bg="secondary">Pending</Badge>
-                                                            )}
-                                                        </td>
+                                                       
                                                     </tr>
                                                 );
                                             })}
@@ -977,22 +982,7 @@ useEffect(() => {
                                     />
                                 </Form.Group>
 
-                                {/* Status selection */}
-                                <Row className="mb-3">
-                                    <Col md={4}>
-                                        <Form.Group>
-                                            <Form.Label>Status</Form.Label>
-                                            <Form.Select
-                                                value={modalForm.status}
-                                                onChange={e => handleModalFormChange('status', e.target.value)}
-                                                required
-                                            >
-                                                <option value="partial">Partial</option>
-                                                <option value="received">Received</option>
-                                            </Form.Select>
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
+                               
                             </Form>
                         </>
                     )}

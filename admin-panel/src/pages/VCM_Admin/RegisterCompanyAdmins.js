@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -8,7 +8,6 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 export default function RegisterCompanyAdmins() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
   const isUpdateMode = Boolean(id);
   const companyCodeFromParams = searchParams.get('company_code');
   
@@ -66,17 +65,9 @@ export default function RegisterCompanyAdmins() {
     fetchCompanies();
   }, [companyCodeFromParams]);
 
-  // Fetch admin data for update mode
-  useEffect(() => {
-    if (isUpdateMode && id) {
-      console.log('Update mode detected, ID:', id);
-      fetchAdminData();
-    } else {
-      console.log('Create mode or no ID provided');
-    }
-  }, [id, isUpdateMode]);
 
-  const fetchAdminData = async () => {
+  // Fetch admin data for update mode
+  const fetchAdminData = useCallback(async () => {
     setIsLoadingData(true);
     setErrorMsg('');
     try {
@@ -130,7 +121,16 @@ export default function RegisterCompanyAdmins() {
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [id, companies]);
+
+  useEffect(() => {
+    if (isUpdateMode && id) {
+      console.log('Update mode detected, ID:', id);
+      fetchAdminData();
+    } else {
+      console.log('Create mode or no ID provided');
+    }
+  }, [id, isUpdateMode, fetchAdminData]);
 
   const handleNameChange = (e) => {
     let value = e.target.value.replace(/[^a-zA-Z\s]/g, '');

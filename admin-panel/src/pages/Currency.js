@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import Select from 'react-select';
 import { AuthContext } from '../context/AuthContext';
@@ -19,17 +19,9 @@ const user_id = userData?.id;
 
 
 
-  useEffect(() => {
-    fetchCurrencies();
-    fetchCurrencyOptions();
-  }, []);
 
-  // For dropdown options from backend API
-  const [currencyOptions, setCurrencyOptions] = useState([
-    { value: 'GBP', label: 'GBP (£) - British Pound Sterling' }
-  ]);
-
-  const fetchCurrencyOptions = async () => {
+  // Fetch currency options from backend API
+  const fetchCurrencyOptions = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/admin/currencies/get-all-currency-symbols`);
       if (!res.ok) throw new Error('Currency API error');
@@ -47,9 +39,10 @@ const user_id = userData?.id;
         { value: 'AED', label: 'AED (د.إ) - UAE Dirham' }
       ]);
     }
-  };
+  }, []);
 
-  const fetchCurrencies = async () => {
+  // Fetch currencies for the company
+  const fetchCurrencies = useCallback(async () => {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/currencies/get-currencies?company_code=${company_code}`, {
         method: 'GET',
@@ -67,7 +60,17 @@ const user_id = userData?.id;
       console.error('Error:', error);
       alert('Failed to fetch currencies');
     }
-  };
+  }, [company_code]);
+
+  useEffect(() => {
+    fetchCurrencies();
+    fetchCurrencyOptions();
+  }, [fetchCurrencies, fetchCurrencyOptions]);
+
+  // For dropdown options from backend API
+  const [currencyOptions, setCurrencyOptions] = useState([
+    { value: 'GBP', label: 'GBP (£) - British Pound Sterling' }
+  ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

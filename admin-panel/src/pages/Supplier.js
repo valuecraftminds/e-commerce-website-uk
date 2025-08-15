@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
@@ -29,7 +29,7 @@ export default function Supplier() {
   });
   const [editingId, setEditingId] = useState(null);
 
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/admin/suppliers/get-suppliers`, {
         params: { company_code: userData?.company_code }
@@ -38,11 +38,11 @@ export default function Supplier() {
     } catch (error) {
       console.error('Error fetching suppliers:', error);
     }
-  };
+  }, [userData?.company_code]);
 
   useEffect(() => {
     fetchSuppliers();
-  }, [userData?.company_code]);
+  }, [fetchSuppliers, userData?.company_code]);
 
   const handleClose = () => {
     setShowModal(false);

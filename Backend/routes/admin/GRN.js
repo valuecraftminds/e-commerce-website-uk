@@ -17,5 +17,3 @@ router.get('/grn-history/:po_number', GRNController.getGRNHistory);
 
 module.exports = router;
 
-// Make sure to register these routes in your main app.js or server.js:
-// app.use('/api/admin/grn', grnRoutes);

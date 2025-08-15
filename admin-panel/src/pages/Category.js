@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Accordion, Alert, Badge, Button, Card, Container, Form, Modal, Spinner } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Category.css';

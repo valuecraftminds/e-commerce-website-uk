@@ -32,7 +32,7 @@ export default function PurchaseOrderForm() {
     status: 'Pending',
     tolerance_limit: 0
   });
-  const [skuOptions, setSkuOptions] = useState([]);
+  // Removed unused skuOptions state
   const [isLoading, setIsLoading] = useState(false);
   const [poDetails, setPoDetails] = useState(null);
 
@@ -126,7 +126,7 @@ export default function PurchaseOrderForm() {
         }));
 
         setDefaultSKUs(options);
-        setSkuOptions(options);
+        // Removed setSkuOptions as skuOptions is not used
       } catch (error) {
         console.error('Error loading initial SKUs:', error);
       }
@@ -162,7 +162,6 @@ export default function PurchaseOrderForm() {
         unit_price: parseFloat(v.unit_price) || 0
       }));
 
-      setSkuOptions(prev => [...prev, ...options]);
       return options;
     } catch (error) {
       console.error('Error loading SKUs:', error);

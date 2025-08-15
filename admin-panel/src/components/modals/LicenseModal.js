@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert, Button, Form, Modal, Spinner } from 'react-bootstrap';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';

@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-
+ 
 const Location = () => {
   const { userData } = useContext(AuthContext);
   const [locations, setLocations] = useState([]);
@@ -18,11 +18,7 @@ const Location = () => {
     description: ''
   });
 
-  const columns = [
-    { key: 'location_name', label: 'Location Name' },
-    { key: 'description', label: 'Description' }
-  ];
-
+ 
   const fetchlocations = useCallback(async () => {
     setLoading(true);
     try {
