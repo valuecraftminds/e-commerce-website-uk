@@ -53,6 +53,7 @@ const GRNRoutes = require('./routes/admin/GRN');
 const LocationRoutes = require('./routes/admin/Location');
 const AddressRoutes = require('./routes/customer/AddressRoutes');
 const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
+const wishlistRoutes = require('./routes/customer/WishlistRoutes');
 
 
 
@@ -67,6 +68,7 @@ app.use('/api/customer/user', ProfileRoutes);
 app.use('/api/customer/company', CompanyDetailsRoutes);
 app.use('/api/customer/address', AddressRoutes);
 app.use('/api/customer/payment-methods', PaymentMethodsRoutes);
+app.use('/api/customer/wishlist', wishlistRoutes);
 
 // Admin routes
 app.use('/api/admin/auth', adminAuthRoutes);

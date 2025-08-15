@@ -4,7 +4,7 @@ import '../styles/NotifyModal.css';
 export default function NotifyModal({ show, message, onClose }) {
   const handleGoToCart = () => {
     onClose();
-    window.location.href = '/cart'; // Redirect to cart page
+    window.location.href = '/cart';
   };
 
   return (
@@ -16,11 +16,11 @@ export default function NotifyModal({ show, message, onClose }) {
         className="success-msg-modal"
         dialogClassName="success-msg-modal-dialog"
       >
-        <Modal.Header className="success-msg-modal-header">
+        {/* <Modal.Header className="success-msg-modal-header">
           <Modal.Title className="success-msg-modal-title">
             Successfully Added to the Cart
           </Modal.Title>
-        </Modal.Header>
+        </Modal.Header> */}
         <Modal.Body className="success-msg-modal-body">
           {message}
         </Modal.Body>
