@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect, useState, createContext, useContext } from 'react';
+import './App.css';
 
 import DeleteAdmin from './components/DeleteAdmin';
 import Header from './components/Header';
@@ -34,61 +36,188 @@ import ApprovePO from './pages/ApprovePO';
 import GRNDetails from './components/GRNDetails';
 import Location from './pages/Location';
 
+// Create Sidebar Context for global sidebar state management
+export const SidebarContext = createContext();
+
+// Custom hook to manage body class, content, and header adjustment for sidebar
+const useSidebarEffects = (sidebarCollapsed, isAuthenticated) => {
+  useEffect(() => {
+    const body = document.body;
+    const mainContent = document.querySelector('.main-content');
+    const header = document.querySelector('.main-header');
+
+    // Helper to set left margin/width for header and main content
+    const adjustLayout = () => {
+      if (!isAuthenticated) {
+        body.classList.remove('sidebar-collapsed');
+        if (mainContent) mainContent.style.marginLeft = '0';
+        if (header) header.style.left = '0';
+        if (header) header.style.width = '100%';
+        return;
+      }
+      if (window.innerWidth >= 992) {
+        if (sidebarCollapsed) {
+          body.classList.add('sidebar-collapsed');
+          if (mainContent) mainContent.style.marginLeft = '80px';
+          if (header) {
+            header.style.left = '80px';
+            header.style.width = 'calc(100% - 80px)';
+          }
+        } else {
+          body.classList.remove('sidebar-collapsed');
+          if (mainContent) mainContent.style.marginLeft = '280px';
+          if (header) {
+            header.style.left = '280px';
+            header.style.width = 'calc(100% - 280px)';
+          }
+        }
+      } else {
+        body.classList.remove('sidebar-collapsed');
+        if (mainContent) mainContent.style.marginLeft = '0';
+        if (header) {
+          header.style.left = '0';
+          header.style.width = '100%';
+        }
+      }
+    };
+
+    adjustLayout();
+
+    return () => {
+      body.classList.remove('sidebar-collapsed');
+      if (mainContent) mainContent.style.marginLeft = '0';
+      if (header) header.style.left = '0';
+      if (header) header.style.width = '100%';
+    };
+  }, [sidebarCollapsed, isAuthenticated]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const body = document.body;
+      const mainContent = document.querySelector('.main-content');
+      const header = document.querySelector('.main-header');
+      if (!isAuthenticated) return;
+      if (window.innerWidth < 992) {
+        body.classList.remove('sidebar-collapsed');
+        if (mainContent) mainContent.style.marginLeft = '0';
+        if (header) {
+          header.style.left = '0';
+          header.style.width = '100%';
+        }
+      } else {
+        if (sidebarCollapsed) {
+          body.classList.add('sidebar-collapsed');
+          if (mainContent) mainContent.style.marginLeft = '80px';
+          if (header) {
+            header.style.left = '80px';
+            header.style.width = 'calc(100% - 80px)';
+          }
+        } else {
+          if (mainContent) mainContent.style.marginLeft = '280px';
+          if (header) {
+            header.style.left = '280px';
+            header.style.width = 'calc(100% - 280px)';
+          }
+        }
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarCollapsed, isAuthenticated]);
+};
+
+// Sidebar Context Provider Component
+export const SidebarProvider = ({ children }) => {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const location = useLocation();
+  const isAuthenticated = !['/', '/login'].includes(location.pathname);
+
+  // Use the sidebar effects hook
+  useSidebarEffects(sidebarCollapsed, isAuthenticated);
+  
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(prev => !prev);
+  };
+  
+  return (
+    <SidebarContext.Provider value={{
+      sidebarCollapsed,
+      setSidebarCollapsed,
+      toggleSidebarCollapse
+    }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+};
+
+// Custom hook to use sidebar context
+export const useSidebar = () => {
+  const context = useContext(SidebarContext);
+  if (!context) {
+    throw new Error('useSidebar must be used within a SidebarProvider');
+  }
+  return context;
+};
+
 function App() {
   const location = useLocation();
 
-  // hide header on specific routes
+  // Hide header on specific routes
   const hideHeaderRoutes = ['/', '/login'];
-  
   const hideHeader = hideHeaderRoutes.includes(location.pathname);
 
   return (
-    <>
-      {!hideHeader && <Header />}
-      <Routes>
-        <Route path='/' element={<LoginPage />} />
-        <Route path='/vcm-admin-dashboard' element={<VcmAdminDashboard />} />
-        <Route path='/vcm-admin/register-company-admins/*' element={<RegisterCompanyAdmins />} />
-        <Route path='/vcm-admin/edit-company-admins/:id' element={<RegisterCompanyAdmins />} />
-        <Route path='/vcm-admin/view-companies' element={<Companies />} />
-        <Route path='/vcm-admin/view-company-admins/:companyCode' element={<ViewCompanyAdmins />} />
-        <Route path='/vcm-admin/register-company' element={<RegisterCompany />} />
-        <Route path='/vcm-admin/edit-company/:id' element={<RegisterCompany />} />
+    <SidebarProvider>
+      {/* Add a class to the header for targeting in JS */}
+      {!hideHeader && <div className="main-header" style={{position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 1030}}><Header /></div>}
+      <div className={`main-content ${!hideHeader ? 'with-header' : ''}`} style={{paddingTop: !hideHeader ? 64 : 0}}>
+        <Routes>
+          {/* ...existing code... */}
+          <Route path='/' element={<LoginPage />} />
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/vcm-admin-dashboard' element={<VcmAdminDashboard />} />
+          <Route path='/vcm-admin/register-company-admins/*' element={<RegisterCompanyAdmins />} />
+          <Route path='/vcm-admin/edit-company-admins/:id' element={<RegisterCompanyAdmins />} />
+          <Route path='/vcm-admin/view-companies' element={<Companies />} />
+          <Route path='/vcm-admin/view-company-admins/:companyCode' element={<ViewCompanyAdmins />} />
+          <Route path='/vcm-admin/register-company' element={<RegisterCompany />} />
+          <Route path='/vcm-admin/edit-company/:id' element={<RegisterCompany />} />
 
-        <Route path='ViewAdmins' element={<ViewAdmins />} />
-        <Route path='register' element={<RegisterPage />} />
-        <Route path='EditAdmins/:id' element={<EditAdmin />} />
-        <Route path='DleteAdmin/:id' element={<DeleteAdmin />} />
-        <Route path='dashboard' element={<AdminDashboard />} />
-        <Route path='/OrderingDashboard/*' element={<OrderingDashboard />} />
-        <Route path='/PdcDashboard/*' element={<PdcDashboard />} />
-        <Route path='/WarehouseGRNDashboard/*' element={<WarehouseGRNDashboard />} />
-        <Route path='/WarehouseIssuingDashboard/*' element={<WarehouseIssuingDashboard />} />
-        <Route path="users" element={<ViewAdmins />} />
-        <Route path="category" element={<Category />} />
-        <Route path="style" element={<Style />} />
-         <Route path="/warehouse/grn" element={<WarehouseGRN />} />
-    <Route path="/warehouse/grn/:po_number" element={<WarehouseGRN />} />
-    <Route path="/warehouse/grn-details/:grn_id" element={<GRNDetails />} />
+          <Route path='ViewAdmins' element={<ViewAdmins />} />
+          <Route path='register' element={<RegisterPage />} />
+          <Route path='EditAdmins/:id' element={<EditAdmin />} />
+          <Route path='DleteAdmin/:id' element={<DeleteAdmin />} />
+          <Route path='dashboard' element={<AdminDashboard />} />
+          <Route path='/OrderingDashboard/*' element={<OrderingDashboard />} />
+          <Route path='/PdcDashboard/*' element={<PdcDashboard />} />
+          <Route path='/WarehouseGRNDashboard/*' element={<WarehouseGRNDashboard />} />
+          <Route path='/WarehouseIssuingDashboard/*' element={<WarehouseIssuingDashboard />} />
+          <Route path="users" element={<ViewAdmins />} />
+          <Route path="category" element={<Category />} />
+          <Route path="style" element={<Style />} />
+          <Route path="/warehouse/grn" element={<WarehouseGRN />} />
+          <Route path="/warehouse/grn/:po_number" element={<WarehouseGRN />} />
+          <Route path="/warehouse/grn-details/:grn_id" element={<GRNDetails />} />
+                    
+          <Route path='/settings/*' element={<Settings />} />
+          <Route path="/colors" element={<ColorManagement />} />
+          <Route path="/sizes" element={<SizeManagement />} />
+          <Route path="/materials" element={<MaterialManagement />} />
+          <Route path="/fits" element={<FitManagement />} />
 
-                  
-        <Route path='/settings/*' element={<Settings />} />
-        <Route path="/colors" element={<ColorManagement />} />
-        <Route path="/sizes" element={<SizeManagement />} />
-        <Route path="/materials" element={<MaterialManagement />} />
-        <Route path="/fits" element={<FitManagement />} />
+          <Route path="/finance/currency" element={<Currency />} />
+          <Route path="/finance/supplier" element={<Supplier />} />
+          <Route path="/finance/location" element={<Location />} />
+          <Route path="/merchandising/po" element={<PurchaseOrder />} />
+          <Route path="/merchandising/po/new" element={<PurchaseOrderForm />} />
+          <Route path="/merchandising/po/:po_number" element={<PurchaseOrderForm />} />
 
-        <Route path="/finance/currency" element={<Currency />} />
-        <Route path="/finance/supplier" element={<Supplier />} />
-        <Route path="/finance/location" element={<Location />} />
-        <Route path="/merchandising/po" element={<PurchaseOrder />} />
-        <Route path="/merchandising/po/new" element={<PurchaseOrderForm />} />
-        <Route path="/merchandising/po/:po_number" element={<PurchaseOrderForm />} />
-
-        <Route path="/company-settings" element={<CompanySettings />} />
-        <Route path="/approve-po" element={<ApprovePO />} />
-      </Routes>  
-    </>
+          <Route path="/company-settings" element={<CompanySettings />} />
+          <Route path="/approve-po" element={<ApprovePO />} />
+        </Routes>
+      </div>
+    </SidebarProvider>
   );
 }
 

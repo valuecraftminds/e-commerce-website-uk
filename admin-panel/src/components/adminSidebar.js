@@ -1,15 +1,15 @@
 import { useContext, useRef, useState } from 'react';
-import { Button, Nav } from 'react-bootstrap';
+import { Button, Nav, Offcanvas } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/AdminSidebar.css';
 
-export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
+export default function AdminSidebar({ sidebarOpen, toggleSidebar, sidebarCollapsed, toggleSidebarCollapse }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { userData, logout } = useContext(AuthContext);
 
-  const roleBasedMenuItems = {
+const roleBasedMenuItems = {
     VCM_Admin: [
       { label: 'Dashboard', path: '/vcm-admin-dashboard', icon: 'bi-speedometer2' },
       {
@@ -167,25 +167,19 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
   } else if (Array.isArray(sideBarOptions) && sideBarOptions.length > 0) {
     const dashboardItem = dashboardMap[role] || dashboardMap.default;
     
-    // Define dropdown parent keys
     const dropdownParents = ['warehouse', 'merchandising', 'finance', 'settings'];
     
-    // Build menu items
     const menuItems = [dashboardItem];
     
-    // Process each selected sidebar option
     sideBarOptions.forEach(optionValue => {
-      // Check if this is a dropdown parent
       if (dropdownParents.includes(optionValue)) {
         const dropdown = sidebarOptionsMap[optionValue];
         if (dropdown && dropdown.dropdown) {
-          // Find which sub-items are also selected
           const selectedSubItems = dropdown.items.filter(subItem => 
             sideBarOptions.includes(subItem.value)
           );
           
           if (selectedSubItems.length > 0) {
-            // Add dropdown with only selected sub-items
             menuItems.push({
               ...dropdown,
               items: selectedSubItems
@@ -193,10 +187,8 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
           }
         }
       } else {
-        // Check if this is a regular (non-dropdown) item
         const regularItem = sidebarOptionsMap[optionValue];
         if (regularItem && !regularItem.dropdown) {
-          // Make sure this isn't already covered by a dropdown
           const isSubItemOfDropdown = dropdownParents.some(parentKey => {
             const parent = sidebarOptionsMap[parentKey];
             return parent && parent.dropdown && 
@@ -210,7 +202,6 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
       }
     });
     
-    // Remove duplicates based on label
     const uniqueMenuItems = [];
     const seenLabels = new Set();
     
@@ -235,7 +226,14 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
   };
 
   const handleDropdownClick = (idx) => {
-    setOpenDropdown(openDropdown === idx ? null : idx);
+    if (sidebarCollapsed) {
+      toggleSidebarCollapse();
+      setTimeout(() => {
+        setOpenDropdown(openDropdown === idx ? null : idx);
+      }, 100);
+    } else {
+      setOpenDropdown(openDropdown === idx ? null : idx);
+    }
   };
 
   const handleNestedDropdownClick = (idx, e) => {
@@ -244,105 +242,155 @@ export default function AdminSidebar({ sidebarOpen, toggleSidebar }) {
     setOpenNestedDropdown(openNestedDropdown === idx ? null : idx);
   };
 
-  // Get the current user's role from context
-  console.log('Menus for current role:', menus);
-
   return (
     <>
-      <div
-        className={`sidebar-overlay ${sidebarOpen ? 'show' : ''}`}
+      {/* Mobile menu button in header */}
+      <Button
+        variant="none"
+        className="sidebar-toggle d-lg-none position-fixed"
         onClick={toggleSidebar}
-      />
-
-      <div
-        ref={sidebarRef}
-        className={`sidebar position-fixed top-0 start-0 ${sidebarOpen ? 'open' : ''}`}
+        aria-label="Toggle Sidebar"
+        title="Toggle Sidebar"
+        style={{
+          top: '10px',
+          left: '10px',
+          zIndex: 1040,
+          fontSize: '1.4rem',
+          borderRadius: '8px',
+          minWidth: '40px',
+          minHeight: '40px'
+        }}
       >
-        <div className="sidebar-header d-flex justify-content-between align-items-center">
-          <h5 className="sidebar-title">Admin Panel</h5>
-          <Button variant="none" className='sidebar-close' onClick={toggleSidebar}>
-            &times;
-          </Button>
+        &#9776;
+      </Button>
+
+      <Offcanvas
+        show={sidebarOpen}
+        onHide={toggleSidebar}
+        responsive="lg"
+        placement="start"
+        className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}
+        ref={sidebarRef}
+      >
+        <Offcanvas.Header closeButton className="d-lg-none">
+          <Offcanvas.Title>Admin Panel</Offcanvas.Title>
+        </Offcanvas.Header>
+        
+        <div className="sidebar-header d-flex flex-column align-items-stretch gap-2 position-relative d-none d-lg-block">
+          <div className="d-flex align-items-center justify-content-between w-100">
+            <h5 className="sidebar-title m-0">Admin Panel</h5>
+            <Button
+              variant="none"
+              className="sidebar-collapse-toggle"
+              onClick={toggleSidebarCollapse}
+              aria-label="Toggle Sidebar Collapse"
+              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              style={{ fontSize: '1.2rem', borderRadius: '8px', minWidth: '36px', minHeight: '36px' }}
+            >
+              {sidebarCollapsed ? '☰' : '⟨'}
+            </Button>
+          </div>
         </div>
 
-        <Nav defaultActiveKey='/dashboard' className="flex-column sidebar-nav">
-          {menus.map((item, idx) => {
-            if (item.dropdown) {
-              return (
-                <Nav.Item key={idx}>
-                  <Nav.Link
-                    onClick={() => handleDropdownClick(idx)}
-                    className={`nav-link dropdown-toggle ${openDropdown === idx ? 'show' : ''}`}
-                  >
-                    <i className={`bi ${item.icon} me-2`}></i>
-                    {item.label}
-                  </Nav.Link>
-                  <div className={`collapse ${openDropdown === idx ? 'show' : ''}`}>
-                    {item.items.map((subItem, subIdx) => (
-                      subItem.dropdown ? (
-                        <Nav.Item key={subIdx}>
+        <Offcanvas.Body>
+          <Nav defaultActiveKey='/dashboard' className="flex-column sidebar-nav">
+            {menus.map((item, idx) => {
+              if (item.dropdown) {
+                return (
+                  <Nav.Item key={idx}>
+                    <Nav.Link
+                      onClick={() => handleDropdownClick(idx)}
+                      className={`nav-link dropdown-toggle ${openDropdown === idx ? 'show' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
+                      title={sidebarCollapsed ? item.label : ''}
+                    >
+                      <i className={`bi ${item.icon} me-2`}></i>
+                      <span className={`nav-text ${sidebarCollapsed ? 'collapsed' : ''}`}>
+                        {item.label}
+                      </span>
+                    </Nav.Link>
+                    <div className={`collapse ${openDropdown === idx && !sidebarCollapsed ? 'show' : ''}`}>
+                      {item.items.map((subItem, subIdx) => (
+                        subItem.dropdown ? (
+                          <Nav.Item key={subIdx}>
+                            <Nav.Link
+                              className={`nav-link sub-nav-link dropdown-toggle ${openNestedDropdown === subIdx ? 'show' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
+                              onClick={(e) => handleNestedDropdownClick(subIdx, e)}
+                              title={sidebarCollapsed ? subItem.label : ''}
+                            >
+                              <i className={`bi ${subItem.icon} me-2`}></i>
+                              <span className={`nav-text ${sidebarCollapsed ? 'collapsed' : ''}`}>
+                                {subItem.label}
+                              </span>
+                            </Nav.Link>
+                            <div className={`collapse ${openNestedDropdown === subIdx && !sidebarCollapsed ? 'show' : ''}`}>
+                              {subItem.items.map((nestedItem, nestedIdx) => (
+                                <Nav.Link
+                                  key={nestedIdx}
+                                  as={Link}
+                                  to={nestedItem.path}
+                                  className={`nav-link nested-nav-link ${location.pathname === nestedItem.path ? 'active' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
+                                  onClick={toggleSidebar}
+                                  title={sidebarCollapsed ? nestedItem.label : ''}
+                                >
+                                  <i className={`bi ${nestedItem.icon} me-2`}></i>
+                                  <span className={`nav-text ${sidebarCollapsed ? 'collapsed' : ''}`}>
+                                    {nestedItem.label}
+                                  </span>
+                                </Nav.Link>
+                              ))}
+                            </div>
+                          </Nav.Item>
+                        ) : (
                           <Nav.Link
-                            className={`nav-link sub-nav-link dropdown-toggle ${openNestedDropdown === subIdx ? 'show' : ''}`}
-                            onClick={(e) => handleNestedDropdownClick(subIdx, e)}
+                            key={subIdx}
+                            as={Link}
+                            to={subItem.path}
+                            className={`nav-link sub-nav-link ${location.pathname === subItem.path ? 'active' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
+                            onClick={toggleSidebar}
+                            title={sidebarCollapsed ? subItem.label : ''}
                           >
                             <i className={`bi ${subItem.icon} me-2`}></i>
-                            {subItem.label}
+                            <span className={`nav-text ${sidebarCollapsed ? 'collapsed' : ''}`}>
+                              {subItem.label}
+                            </span>
                           </Nav.Link>
-                          <div className={`collapse ${openNestedDropdown === subIdx ? 'show' : ''}`}>
-                            {subItem.items.map((nestedItem, nestedIdx) => (
-                              <Nav.Link
-                                key={nestedIdx}
-                                as={Link}
-                                to={nestedItem.path}
-                                className={`nav-link nested-nav-link ${location.pathname === nestedItem.path ? 'active' : ''}`}
-                                onClick={toggleSidebar}
-                              >
-                                <i className={`bi ${nestedItem.icon} me-2`}></i>
-                                {nestedItem.label}
-                              </Nav.Link>
-                            ))}
-                          </div>
-                        </Nav.Item>
-                      ) : (
-                        <Nav.Link
-                          key={subIdx}
-                          as={Link}
-                          to={subItem.path}
-                          className={`nav-link sub-nav-link ${location.pathname === subItem.path ? 'active' : ''}`}
-                          onClick={toggleSidebar}
-                        >
-                          <i className={`bi ${subItem.icon} me-2`}></i>
-                          {subItem.label}
-                        </Nav.Link>
-                      )
-                    ))}
-                  </div>
-                </Nav.Item>
-              );
-            } else {
-              return (
-                <Nav.Link
-                  as={Link}
-                  to={item.path}
-                  key={idx}
-                  className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
-                  onClick={toggleSidebar}
-                >
-                  <i className={`bi ${item.icon} me-2`}></i>
-                  {item.label}
-                </Nav.Link>
-              );
-            }
-          })}
+                        )
+                      ))}
+                    </div>
+                  </Nav.Item>
+                );
+              } else {
+                return (
+                  <Nav.Link
+                    as={Link}
+                    to={item.path}
+                    key={idx}
+                    className={`nav-link ${location.pathname === item.path ? 'active' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
+                    onClick={toggleSidebar}
+                    title={sidebarCollapsed ? item.label : ''}
+                  >
+                    <i className={`bi ${item.icon} me-2`}></i>
+                    <span className={`nav-text ${sidebarCollapsed ? 'collapsed' : ''}`}>
+                      {item.label}
+                    </span>
+                  </Nav.Link>
+                );
+              }
+            })}
 
-          <hr className='my-2' />
-
-          <Button variant="link" className="text-start logout-btn" onClick={handleLogout}>
-            <i className="bi bi-box-arrow-right me-2"></i>
-            Logout
-          </Button>
-        </Nav>
-      </div>
+ <Nav.Link
+ 
+               onClick={handleLogout}
+>
+   <i className="bi bi-box-arrow-right me-2"></i>
+   <span className={`nav-text ${sidebarCollapsed ? 'collapsed' : ''}`}>
+     Logout
+   </span>
+ </Nav.Link>
+           
+          </Nav>
+        </Offcanvas.Body>
+      </Offcanvas>
     </>
   );
 }

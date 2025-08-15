@@ -1,6 +1,7 @@
 .dashboard-container {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #e9ecef 100%);
   min-height: 100vh;
+  
 }
 
 .dashboard-content {
@@ -11,6 +12,7 @@
   border-radius: 20px !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 6px 20px rgba(0, 0, 0, 0.06) !important;
   border: 1px solid #f1f3f4 !important;
+  margin-top: 10px;
   margin-bottom: 2rem;
   background: white !important;
   backdrop-filter: blur(10px);

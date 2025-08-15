@@ -36,3 +36,118 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* Add this to your main App.css or global CSS file */
+
+/* Main content area adjustments */
+.main-content {
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.main-content.with-header {
+  padding-top: 0; /* Header is sticky, no extra padding needed */
+}
+
+/* Body margin adjustments for desktop sidebar */
+@media (min-width: 992px) {
+  body:not(.sidebar-collapsed) {
+    margin-left: 300px;
+  }
+  
+  body.sidebar-collapsed {
+    margin-left: 80px;
+  }
+  
+  /* Smooth transition for body margin */
+  body {
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Mobile: No body margin adjustments */
+@media (max-width: 991px) {
+  body {
+    margin-left: 0 !important;
+  }
+}
+
+/* Page content padding to prevent overlap with header */
+.main-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+
+
+
+
+/* Fix for any potential z-index issues */
+.header {
+  z-index: 1040;
+}
+
+.sidebar {
+  z-index: 1045;
+}
+
+.sidebar-overlay {
+  z-index: 1044;
+}
+
+/* Ensure smooth animations for all interactive elements */
+* {
+  box-sizing: border-box;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus styles for better accessibility */
+.sidebar-toggle:focus,
+.sidebar-collapse-toggle:focus,
+.logout-btn:focus,
+.sidebar-close:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Loading state for smooth transitions */
+.page-loading {
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Animation for page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
