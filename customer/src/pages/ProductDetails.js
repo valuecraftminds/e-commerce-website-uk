@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
+import { GoHeart, GoHeartFill } from "react-icons/go";
 import axios from "axios";
 
 import NotifyModal from "../components/NotifyModal";
@@ -9,7 +10,7 @@ import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
 import "../styles/ProductDetails.css"; 
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function ProductDetails() {
@@ -32,9 +33,27 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  
+  // Single state for wishlist status
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
+
+  const getAxiosConfig = () => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    const config = {
+      params: { company_code: COMPANY_CODE }
+    };
+
+    if (token) {
+      config.headers = {
+        'Authorization': `Bearer ${token}`
+      };
+    }
+
+    return config;
+  };
 
   // Check if user is logged in
   const isUserLoggedIn = () => {
@@ -49,7 +68,6 @@ export default function ProductDetails() {
     }
     return product.colors_by_size[selectedSize] || [];
   };
-
 
   // Fetch exchange rates
   useEffect(() => {
@@ -106,6 +124,35 @@ export default function ProductDetails() {
     }
   };
 
+  // Check wishlist status when product loads
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!isUserLoggedIn()) {
+        setIsWishlisted(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${BASE_URL}/api/customer/wishlist/check-wishlist`, {
+          ...getAxiosConfig(),
+          params: {
+            company_code: COMPANY_CODE,
+            style_code: product.style_code
+          },
+        });
+        setIsWishlisted(res.data.in_wishlist);
+        console.log("Wishlist status checked:", res.data.in_wishlist);
+      } catch (err) {
+        console.error("Error checking wishlist:", err);
+        setIsWishlisted(false);
+      }
+    };
+
+    if (product?.style_code) {
+      checkWishlist();
+    }
+  }, [product?.style_code, COMPANY_CODE]);
+
   const formatPrice = (price) => {
     if (!price) return "Price not available";
     const symbol = currencySymbols[country] || '$';
@@ -150,24 +197,65 @@ export default function ProductDetails() {
     setShowCheckoutModal(true);
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <Container className="my-5 text-center">
-        <h3>Loading product details...</h3>
-      </Container>
-    );
-  }
+  const handleWishlistToggle = async (product) => {
+    if (!isUserLoggedIn()) {
+      alert("Please log in before adding to wishlist.");
+      navigate("/login");
+      return;
+    }
 
-  // Error state
-  if (error) {
-    return (
-      <Container className="my-5 text-center">
-        <h2>Error</h2>
-        <p>{error}</p>
-      </Container>
-    );
-  }
+    try {
+      console.log("Toggling wishlist for:", product.style_code);
+      if (isWishlisted) {
+        // Remove from wishlist
+        await axios.delete(
+                `${BASE_URL}/api/customer/wishlist/remove`,
+                {
+                    ...getAxiosConfig(),
+                    data: { style_code: product.style_code }
+                }
+        );
+        setIsWishlisted(false);
+        console.log("Removed from wishlist:", product.style_code);
+      } else {
+        // Add to wishlist
+        await axios.post(
+          `${BASE_URL}/api/customer/wishlist/set-wishlist`,
+          {
+            style_code: product.style_code,
+            name: product.name,
+            image: product.image
+          },
+          getAxiosConfig()
+        );
+        setIsWishlisted(true);
+        console.log("Added to wishlist:", product.style_code);
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+      setSuccessMessage("Error updating wishlist. Please try again.");
+      setShowModal(true);
+    }
+    };
+
+    // Loading state
+    if (loading) {
+      return (
+        <Container className="my-5 text-center">
+          <h3>Loading product details...</h3>
+        </Container>
+      );
+    }
+
+    // Error state
+    if (error) {
+      return (
+        <Container className="my-5 text-center">
+          <h2>Error</h2>
+          <p>{error}</p>
+        </Container>
+      );
+    }
 
   // Product not found
   if (!product) {
@@ -177,9 +265,6 @@ export default function ProductDetails() {
       </Container>
     );
   }
-
-  console.log('Available colors:', product.available_colors);
-  console.log('Available clr by size: ', product.colors_by_size);
 
   return (
     <div className="product-page">
@@ -193,7 +278,21 @@ export default function ProductDetails() {
               fluid 
             />
           </Col>
-          <Col md={6}>
+          <Col md={6} className="product-details">
+          
+          <button
+            className="wishlist-btn position-absolute"
+            style={{ top: "10px", right: "10px" }}
+            onClick={() => handleWishlistToggle(product)}
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          >
+            {isWishlisted ? (
+              <GoHeartFill size={30} color="red" />
+            ) : (
+              <GoHeart size={30} color="black" />
+            )}
+          </button>
+
             <h1>{product.name}</h1>
             <p>{product.description}</p>
             <h5 className="price">
@@ -288,6 +387,7 @@ export default function ProductDetails() {
               >
                 Buy Now
               </Button>
+              
               <CheckoutModal
                 show={showCheckoutModal}
                 onHide={() => setShowCheckoutModal(false)}
@@ -309,3 +409,4 @@ export default function ProductDetails() {
     </div>
   );
 }
+        

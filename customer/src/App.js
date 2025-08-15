@@ -15,7 +15,7 @@ import Cart from './components/Cart';
 import UserMenu from './components/UserMenu';
 import ProtectedRoute from './components/ProtectedRoute';
 import AccountSettings from './pages/AccountSettings';
-
+import Wishlist from './pages/Wishlist';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -60,6 +60,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/account-settings" element={<AccountSettings />} />
+              <Route path="/wishlist" element={<Wishlist />} />
 
               {/* Protected Routes */}
               <Route path="/usermenu" element={
