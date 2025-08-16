@@ -1,12 +1,12 @@
 const db = require('../../config/database');
 
 const OrdersHistoryController = {
-    // Get all orders
+    // Get all orders with items
     getAllOrders: async (req, res) => {
         const customerId = req.user?.id;
         const { company_code } = req.query;
         
-        const query = `
+        const ordersQuery = `
             SELECT 
                 order_id,
                 order_number,
@@ -26,8 +26,22 @@ const OrdersHistoryController = {
             WHERE customer_id = ? AND company_code = ?
             ORDER BY created_at DESC
         `;
+
+        const itemsQuery = `
+            SELECT 
+                oi.order_id,
+                oi.order_item_id,
+                s.name as product_name,
+                s.image as image_url,
+                oi.quantity
+            FROM order_items oi
+            INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
+            INNER JOIN styles s ON sv.style_code = s.style_code
+            WHERE oi.order_id IN (?) AND oi.company_code = ?
+            ORDER BY oi.order_item_id
+        `;
         
-        db.query(query, [customerId, company_code], (error, results) => {
+        db.query(ordersQuery, [customerId, company_code], (error, orderResults) => {
             if (error) {
                 console.error('Error fetching orders:', error);
                 return res.status(500).json({
@@ -36,21 +50,58 @@ const OrdersHistoryController = {
                     error: error.message
                 });
             }
-            if (results.length === 0) {
+            
+            if (orderResults.length === 0) {
                 return res.status(404).json({
                     success: false,
                     message: 'No orders found for this customer'
                 });
             }
-            res.json({
-                success: true,
-                data: results,
-                count: results.length
+
+            // Get order IDs for fetching items
+            const orderIds = orderResults.map(order => order.order_id);
+            
+            // Fetch items for all orders
+            db.query(itemsQuery, [orderIds, company_code], (itemError, itemResults) => {
+                if (itemError) {
+                    console.error('Error fetching order items:', itemError);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error',
+                        error: itemError.message
+                    });
+                }
+
+                // Group items by order_id
+                const itemsByOrder = {};
+                itemResults.forEach(item => {
+                    if (!itemsByOrder[item.order_id]) {
+                        itemsByOrder[item.order_id] = [];
+                    }
+                    itemsByOrder[item.order_id].push({
+                        order_item_id: item.order_item_id,
+                        product_name: item.product_name,
+                        image_url: item.image_url,
+                        quantity: item.quantity
+                    });
+                });
+
+                // Add items to each order
+                const ordersWithItems = orderResults.map(order => ({
+                    ...order,
+                    items: itemsByOrder[order.order_id] || []
+                }));
+
+                res.json({
+                    success: true,
+                    data: ordersWithItems,
+                    count: ordersWithItems.length
+                });
             });
         });
     },
 
-    // Get orders by status
+    // Get orders by status with items
     getOrdersByStatus: async (req, res) => {
         const customerId = req.user?.id;
         const { company_code } = req.query;
@@ -74,7 +125,7 @@ const OrdersHistoryController = {
         // Create placeholders for the IN clause
         const placeholders = statuses.map(() => '?').join(',');
 
-        const query = `
+        const ordersQuery = `
             SELECT 
                 order_id,
                 order_number,
@@ -97,10 +148,24 @@ const OrdersHistoryController = {
             ORDER BY created_at DESC
         `;
 
+        const itemsQuery = `
+            SELECT 
+                oi.order_id,
+                oi.order_item_id,
+                s.name as product_name,
+                s.image as image_url,
+                oi.quantity
+            FROM order_items oi
+            INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
+            INNER JOIN styles s ON sv.style_code = s.style_code
+            WHERE oi.order_id IN (?) AND oi.company_code = ?
+            ORDER BY oi.order_item_id
+        `;
+
         // Build the parameters array correctly
         const params = [customerId, company_code, ...statuses];
 
-        db.query(query, params, (error, results) => {
+        db.query(ordersQuery, params, (error, orderResults) => {
             if (error) {
                 console.error('Error fetching orders by status:', error);
                 return res.status(500).json({
@@ -110,7 +175,7 @@ const OrdersHistoryController = {
                 });
             }
             
-            if (results.length === 0) {
+            if (orderResults.length === 0) {
                 return res.status(200).json({
                     success: true,
                     message: 'No orders found for this customer with given status',
@@ -121,20 +186,220 @@ const OrdersHistoryController = {
                     }
                 });
             }
+
+            // Get order IDs for fetching items
+            const orderIds = orderResults.map(order => order.order_id);
             
-            res.json({
-                success: true,
-                data: results,
-                count: results.length,
-                filters: {
-                    statuses
+            // Fetch items for all orders
+            db.query(itemsQuery, [orderIds, company_code], (itemError, itemResults) => {
+                if (itemError) {
+                    console.error('Error fetching order items:', itemError);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error',
+                        error: itemError.message
+                    });
                 }
+
+                // Group items by order_id
+                const itemsByOrder = {};
+                itemResults.forEach(item => {
+                    if (!itemsByOrder[item.order_id]) {
+                        itemsByOrder[item.order_id] = [];
+                    }
+                    itemsByOrder[item.order_id].push({
+                        order_item_id: item.order_item_id,
+                        product_name: item.product_name,
+                        image_url: item.image_url,
+                        quantity: item.quantity
+                    });
+                });
+
+                // Add items to each order
+                const ordersWithItems = orderResults.map(order => ({
+                    ...order,
+                    items: itemsByOrder[order.order_id] || []
+                }));
+            
+                res.json({
+                    success: true,
+                    data: ordersWithItems,
+                    count: ordersWithItems.length,
+                    filters: {
+                        statuses
+                    }
+                });
             });
+        });
+    },
+
+    // Get specific order details
+    getOrderDetails: async (req, res) => {
+    const orderId = req.params.id;
+    const customerId = req.user?.id;
+    const { company_code } = req.query;
+
+    if (!orderId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Order ID is required'
         });
     }
 
+    if (!customerId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized access'
+        });
+    }
 
-    //
+    if (!company_code) {
+        return res.status(400).json({
+            success: false,
+            message: 'Company code is required'
+        });
+    }
+
+    // Get order details with shipping address
+    const orderQuery = `
+        SELECT 
+            o.order_id,
+            o.order_number,
+            o.order_status,
+            o.order_notes,
+            o.subtotal,
+            o.tax_amount,
+            o.shipping_fee,
+            o.total_amount,
+            o.total_items,
+            o.created_at,
+            o.address_id,
+            a.address_line_1,
+            a.address_line_2,
+            a.city,
+            a.state,
+            a.postal_code,
+            a.country,
+            a.phone,
+            CONCAT(a.first_name, ' ', a.last_name) as shipping_name
+        FROM orders o
+        LEFT JOIN address a ON o.address_id = a.address_id
+        WHERE o.order_id = ? AND o.customer_id = ? AND o.company_code = ?
+    `;
+
+    // Get order items with style details and images
+    const itemsQuery = `
+        SELECT 
+            oi.order_item_id,
+            oi.quantity,
+            oi.unit_price,
+            oi.total_price,
+            oi.variant_id,
+            sv.sku,
+            sv.price as variant_price,
+            sv.offer_price,
+            sv.style_code,
+            s.style_id,
+            s.name as style_name,
+            s.description as style_description,
+            s.image as style_image
+        FROM order_items oi
+        INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
+        INNER JOIN styles s ON sv.style_code = s.style_code
+        WHERE oi.order_id = ? AND oi.company_code = ?
+        ORDER BY oi.order_item_id
+    `;
+
+    try {
+        // Get order details
+        db.query(orderQuery, [orderId, customerId, company_code], (error, orderResults) => {
+            if (error) {
+                console.error('Error fetching specific order:', error);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Internal server error',
+                    error: error.message
+                });
+            }
+
+            if (orderResults.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Order not found for this customer'
+                });
+            }
+
+            // Get order items
+            db.query(itemsQuery, [orderId, company_code], (itemError, itemResults) => {
+                if (itemError) {
+                    console.error('Error fetching order items:', itemError);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error',
+                        error: itemError.message
+                    });
+                }
+
+                const orderResult = orderResults[0];
+                
+                const orderData = {
+                    order_id: orderResult.order_id,
+                    order_number: orderResult.order_number,
+                    order_status: orderResult.order_status,
+                    order_notes: orderResult.order_notes,
+                    subtotal: orderResult.subtotal,
+                    tax_amount: orderResult.tax_amount,
+                    shipping_fee: orderResult.shipping_fee,
+                    total_amount: orderResult.total_amount,
+                    total_items: orderResult.total_items,
+                    created_at: orderResult.created_at,
+                    address: orderResult.address_id ? {
+                        address_id: orderResult.address_id,
+                        full_name: orderResult.shipping_name,
+                        address_line_1: orderResult.address_line_1,
+                        address_line_2: orderResult.address_line_2,
+                        city: orderResult.city,
+                        state: orderResult.state,
+                        postal_code: orderResult.postal_code,
+                        country: orderResult.country,
+                        phone: orderResult.phone
+                    } : null,
+                    items: itemResults.map(item => ({
+                        order_item_id: item.order_item_id,
+                        quantity: item.quantity,
+                        unit_price: item.unit_price,
+                        total_price: item.total_price,
+                        variant: {
+                            variant_id: item.variant_id,
+                            sku: item.sku,
+                            price: item.variant_price,
+                            offer_price: item.offer_price,
+                        },
+                        style: {
+                            style_id: item.style_id,
+                            style_code: item.style_code,
+                            name: item.style_name,
+                            description: item.style_description,
+                            image: item.style_image
+                        }
+                    }))
+                };
+
+                res.json({
+                    success: true,
+                    data: orderData
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Unexpected error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+},
 };
 
 module.exports = OrdersHistoryController;

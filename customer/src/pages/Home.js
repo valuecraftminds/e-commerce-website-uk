@@ -129,7 +129,7 @@ export default function Home() {
               >
                 <div className="home-product-image-container">
                   <img 
-                    src={`${BASE_URL}/api/customer/styles/${product.image}`}
+                    src={`${BASE_URL}/uploads/styles/${product.image}`}
                     alt={product.name}
                     className="home-product-image"
                   />
@@ -148,7 +148,6 @@ export default function Home() {
                     }
                   </p>
                   <div className="home-product-price">
-                    {/* <span>{formatPrice(product.min_price)}</span> */}
                     {product.offer_price && product.offer_price !== 0 ? (
                       <>
                         <span className="me-2">

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { PiPackage, PiTruckFill, PiProhibitFill, PiArrowCounterClockwiseBold } from "react-icons/pi";
+
+import { PiPackage, PiTruckFill, PiArrowCounterClockwiseBold } from "react-icons/pi";
 import { AiOutlineClockCircle, AiOutlineCheckCircle, AiOutlineStar } from "react-icons/ai";
+import { useNavigate } from 'react-router-dom';
 
 import '../styles/OrdersHistory.css';
 
@@ -9,8 +11,10 @@ const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function OrdersHistory() {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('all');
     const [orders, setOrders] = useState([]);
+    const [, setSelectedOrderId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -43,7 +47,6 @@ export default function OrdersHistory() {
         { id: 'shipped', label: 'Shipped', icon: PiTruckFill },
         { id: 'delivered', label: 'Delivered', icon: AiOutlineCheckCircle },
         { id: 'reviewed', label: 'Reviewed', icon: AiOutlineStar },
-        // { id: 'cancelled', label: 'Cancelled', icon: PiProhibitFill},
         { id: 'returned', label: 'Returned', icon: PiArrowCounterClockwiseBold }
     ];
 
@@ -77,7 +80,6 @@ export default function OrdersHistory() {
             setLoading(true);
             setError(null);
 
-            // Convert array of statuses to comma-separated string
             const statusParam = Array.isArray(statuses) ? statuses.join(',') : statuses;
 
             const config = getAxiosConfig();
@@ -104,6 +106,11 @@ export default function OrdersHistory() {
         }
     };
 
+    // Handle order click
+    const handleOrderClick = (orderId) => {
+        navigate(`/orders/${orderId}`);
+    };
+
     // Map tab to order status
     const getStatusByTab = (tab) => {
         const statusMap = {
@@ -111,7 +118,6 @@ export default function OrdersHistory() {
             'shipped': ['shipped'],
             'delivered': ['delivered'],
             'reviewed': ['completed'],
-            // 'cancelled': ['cancelled'],
             'returned': ['returned'],
         };
         return statusMap[tab] || null;
@@ -130,15 +136,37 @@ export default function OrdersHistory() {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            day: 'numeric'
         });
+    };
+
+    // Get status display text
+    const getStatusDisplayText = (status) => {
+        const statusMap = {
+            'pending': 'Order placed',
+            'shipped': 'Shipped',
+            'delivered': 'Delivered',
+            'completed': 'Delivered',
+            'returned': 'Returned'
+        };
+        return statusMap[status] || status;
+    };
+
+    // Get image URL from item
+    const getItemImageUrl = (item) => {
+        // Try different possible image paths
+        const imagePath = item.style?.image || item.image_url || item.image;
+        if (imagePath) {
+            // Construct the full URL
+            return `${BASE_URL}/uploads/styles/${imagePath}`;
+        }
+        return '/placeholder-image.png';
     };
 
     // Handle tab change
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);
+        setSelectedOrderId(null);
         
         if (tabId === 'all') {
             fetchAllOrders();
@@ -154,49 +182,65 @@ export default function OrdersHistory() {
         fetchAllOrders();
     }, []);
 
-    // Render order item
-    const renderOrderItem = (order) => (
-        <div key={order.order_id} className="order-item mb-3 p-3 border rounded">
-            <div className="row">
-                <div className="col-md-8">
-                    <h6 className="mb-1">Order #{order.order_number}</h6>
-                    <p className="mb-1 text-muted">
-                        <small>Placed on {formatDate(order.created_at)}</small>
-                    </p>
-                    {order.order_notes && (
-                        <p className="mb-1 text-muted">
-                            <small>Notes: {order.order_notes}</small>
-                        </p>
-                    )}
-                    <span className={`badge ${getStatusBadgeClass(order.order_status)}`}>
-                        {order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
+    // Render order card
+    const renderOrderCard = (order) => (
+        <div key={order.order_id} className="order-card">
+            {/* Header */}
+            <div className="order-card-header">
+                <div className="order-status-info">
+                    <span className="order-status-text">
+                       Order placed on {formatDate(order.created_at)}
                     </span>
                 </div>
-                <div className="col-md-4 text-md-end">
-                    <h6 className="mb-1">{formatCurrency(order.total_amount)}</h6>
-                    <p className="mb-1 text-muted">
-                        <small>{order.total_items} item{order.total_items !== 1 ? 's' : ''}</small>
-                    </p>
-                    <p className="mb-0 text-muted">
-                        <small>Shipping: {formatCurrency(order.shipping_fee)}</small>
-                    </p>
+                <div className="order-details-link">
+                    <button 
+                        className="view-details-btn"
+                        onClick={() => handleOrderClick(order.order_id)}
+                    >
+                        View order details &gt;
+                    </button>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="order-card-content">
+                {/* Product Images */}
+                <div className="order-products">
+                    {order.items && order.items.slice(0, 3).map((item, index) => (
+                        <div key={index} className="oh-product-image-container">
+                            <img 
+                                src={getItemImageUrl(item)} 
+                                alt={item.product_name || 'Product'}
+                                className="oh-product-image"
+                                onError={(e) => {
+                                    e.target.src = '/placeholder-image.png';
+                                }}
+                            />
+                        </div>
+                    ))}
+                    {(!order.items || order.items.length === 0) && (
+                        // Fallback for orders without item details
+                        <div className="product-image-container">
+                            <div className="product-image-placeholder">
+                                <PiPackage size={40} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="order-card-footer">
+                <div className="order-summary">
+                    <span className="order-items-count">
+                        {order.total_items} item{order.total_items !== 1 ? 's' : ''}: 
+                    </span>
+                    <span className="order-total">{formatCurrency(order.total_amount)}</span>
+                    <span className="order-id">Order ID: {order.order_number}</span>
                 </div>
             </div>
         </div>
     );
-
-    // Get status badge class
-    const getStatusBadgeClass = (status) => {
-        const statusClasses = {
-            'pending': 'bg-warning',
-            'shipped': 'bg-primary',
-            'delivered': 'bg-success',
-            'reviewed': 'bg-success',
-            // 'cancelled': 'bg-danger',
-            'returned': 'bg-secondary'
-        };
-        return statusClasses[status] || 'bg-secondary';
-    };
 
     return (
         <div className='orders-history'>
@@ -204,9 +248,9 @@ export default function OrdersHistory() {
             <div className="nav-tabs-custom">
                 <ul className="nav nav-tabs border-0">
                     {sidebarItems.map((item) => (
-                        <li className="nav-item" key={item.id}>
+                        <li className="nav-item orders-history-header" key={item.id}>
                             <button
-                                className={`nav-link d-flex align-items-center ${activeTab === item.id ? 'active' : ''}`}
+                                className={`nav-link d-flex tab-title ${activeTab === item.id ? 'active' : ''}`}
                                 onClick={() => handleTabChange(item.id)}
                             >
                                 {item.icon && <item.icon size={18} className="me-2" />}
@@ -229,8 +273,12 @@ export default function OrdersHistory() {
                     )}
 
                     {error && (
-                        <div className="alert alert-danger" role="alert">
-                            {error}
+                        <div className="text-center py-5">
+                            <PiPackage size={48} className="text-muted mb-3" />
+                            <h5>No orders found</h5>
+                            <p className="text-muted">
+                                You haven't any orders yet.
+                            </p>
                         </div>
                     )}
 
@@ -238,13 +286,15 @@ export default function OrdersHistory() {
                         <div className="text-center py-5">
                             <PiPackage size={48} className="text-muted mb-3" />
                             <h5>No orders found</h5>
-                            <p className="text-muted">You haven't placed any orders yet.</p>
+                            <p className="text-muted">
+                                You haven't any {activeTab.toLowerCase()} orders yet.
+                            </p>
                         </div>
                     )}
 
                     {!loading && !error && orders.length > 0 && (
                         <div className="orders-list">
-                            {orders.map(renderOrderItem)}
+                            {orders.map(renderOrderCard)}
                         </div>
                     )}
                 </div>
