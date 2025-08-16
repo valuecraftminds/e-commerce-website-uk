@@ -88,7 +88,7 @@ const Wishlist = () => {
                        
                 >
                     <img
-                        src={`${BASE_URL}/api/customer/styles/${item.image}`}
+                        src={`${BASE_URL}/uploads/styles/${item.image}`}
                         alt={item.name}
                         onClick={() => handleRedirect(item.style_id)} 
                     />

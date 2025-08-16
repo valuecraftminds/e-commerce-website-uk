@@ -17,6 +17,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AccountSettings from './pages/AccountSettings';
 import Wishlist from './pages/Wishlist';
 import OrdersHistory from './pages/OrdersHistory';
+import OrderDetails from './pages/OrderDetails';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -63,6 +64,7 @@ function App() {
               <Route path="/account-settings" element={<AccountSettings />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/orders-history" element={<OrdersHistory />} />
+              <Route path="/orders/:orderId" element={<OrderDetails />} />
 
               {/* Protected Routes */}
               <Route path="/usermenu" element={

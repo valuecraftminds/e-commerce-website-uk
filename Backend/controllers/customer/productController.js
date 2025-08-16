@@ -295,30 +295,6 @@ const productController = {
     });
   },
 
-  // Get style image
-  getStyleImage: (req, res) => {
-    const { filename } = req.params;
-    const imagePath = path.join(__dirname, '../../uploads/styles', filename);
-
-    if (!fs.existsSync(imagePath)) {
-      return res.status(404).json({ error: 'Image not found' });
-    }
-
-    const ext = path.extname(filename).toLowerCase();
-    let contentType = 'image/jpeg';
-
-    switch (ext) {
-      case '.png': contentType = 'image/png'; break;
-      case '.jpg':
-      case '.jpeg': contentType = 'image/jpeg'; break;
-      case '.gif': contentType = 'image/gif'; break;
-      case '.webp': contentType = 'image/webp'; break;
-    }
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000');
-    res.sendFile(imagePath);
-  }
 };
 
 module.exports = productController;

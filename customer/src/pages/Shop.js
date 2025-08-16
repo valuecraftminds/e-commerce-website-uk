@@ -162,20 +162,6 @@ export default function Shop() {
     }
   };
 
-  // const formatPrice = (minPrice, maxPrice) => {
-  //   if (!minPrice && !maxPrice) return "Price not defined";
-  //   const symbol = currencySymbols[country] || '$';
-  //   const rate = getRate();
-  //   const convertedMinPrice = (minPrice * rate).toFixed(2);
-    
-  //   if (minPrice === maxPrice || !maxPrice) {
-  //     return `${symbol}${convertedMinPrice}`;
-  //   }
-    
-  //   const convertedMaxPrice = (maxPrice * rate).toFixed(2);
-  //   return `${symbol}${convertedMinPrice} - ${symbol}${convertedMaxPrice}`;
-  // };
-
    const formatPrice = (minPrice) => {
     if (!minPrice) return "Price not defined";
     const symbol = currencySymbols[country] || '$';
@@ -245,7 +231,7 @@ export default function Shop() {
               >
                 <div className="home-product-image-container">
                   <img 
-                    src={`${BASE_URL}/api/customer/styles/${product.image}`}
+                    src={`${BASE_URL}/uploads/styles/${product.image}`}
                     alt={product.name}
                     className="home-product-image"
                   />
@@ -264,7 +250,6 @@ export default function Shop() {
                     }
                   </p>
                   <div className="shop-product-price">
-                    {/* <span>{formatPrice(product.min_price)}</span> */}
                      {product.offer_price && product.offer_price !== 0 ? (
                       <>
                         <span className="me-2">

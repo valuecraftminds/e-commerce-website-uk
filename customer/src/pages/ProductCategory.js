@@ -139,30 +139,7 @@ const ProductCategory = () => {
     }
   };
 
-  // const formatPrice = (minPrice, maxPrice) => {
-  //   if (!minPrice && !maxPrice) return "Price on request";
-  //   const symbol = currencySymbols[country] || '$';
-  //   const rate = getRate();
-    
-  //   if (minPrice && maxPrice) {
-  //     if (minPrice === maxPrice) {
-  //       const convertedPrice = (minPrice * rate).toFixed(2);
-  //       return `${symbol}${convertedPrice}`;
-  //     } else {
-  //       const convertedMinPrice = (minPrice * rate).toFixed(2);
-  //       const convertedMaxPrice = (maxPrice * rate).toFixed(2);
-  //       return `${symbol}${convertedMinPrice} - ${symbol}${convertedMaxPrice}`;
-  //     }
-  //   } else if (minPrice) {
-  //     const convertedPrice = (minPrice * rate).toFixed(2);
-  //     return `${symbol}${convertedPrice}`;
-  //   }
-    
-  //   return "Price on request";
-  // };
-
-
-   const formatPrice = (minPrice) => {
+  const formatPrice = (minPrice) => {
     if (!minPrice) return "Price not defined";
     const symbol = currencySymbols[country] || '$';
     const rate = getRate();
@@ -330,7 +307,7 @@ const ProductCategory = () => {
               >
                 <div className="cat-product-image-container">
                   <img 
-                    src={`${BASE_URL}/api/customer/styles/${product.image}`}
+                   src={`${BASE_URL}/uploads/styles/${product.image}`}
                     alt={product.name}
                     className="cat-product-image"
                   />
@@ -349,7 +326,6 @@ const ProductCategory = () => {
                     }
                   </p>
                   <div className="product-price">
-                    {/* <span>{formatPrice(product.min_price)}</span> */}
                      {product.offer_price && product.offer_price !== 0 ? (
                       <>
                         <span className="me-2">
