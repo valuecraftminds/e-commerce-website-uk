@@ -1,11 +1,11 @@
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import DataFile from "../assets/DataFile";
-import "../styles/Home.css";
 import { CountryContext } from "../context/CountryContext";
+import "../styles/Home.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
