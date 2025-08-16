@@ -142,8 +142,13 @@ static async searchPO(req, res) {
         }
 
         try {
-            // Get GRN header
-            const headerSql = 'SELECT * FROM grn_headers WHERE grn_id = ? AND company_code = ?';
+            // Get GRN header with supplier name
+            const headerSql = `
+                SELECT gh.*, s.supplier_name
+                FROM grn_headers gh
+                LEFT JOIN suppliers s ON gh.supplier_id = s.supplier_id AND gh.company_code = s.company_code
+                WHERE gh.grn_id = ? AND gh.company_code = ?
+            `;
             const headerResult = await new Promise((resolve, reject) => {
                 db.query(headerSql, [grn_id, company_code], (err, results) => {
                     if (err) reject(err);
@@ -157,7 +162,7 @@ static async searchPO(req, res) {
 
             // Get GRN items with location info
             const itemsSql = `
-                SELECT gi.*, l.location_name, l.description as location_description
+                SELECT gi.*, l.location_name
                 FROM grn_items gi
                 LEFT JOIN locations l ON gi.location_id = l.location_id AND gi.company_code = l.company_code
                 WHERE gi.grn_id = ?
@@ -169,10 +174,17 @@ static async searchPO(req, res) {
                 });
             });
 
+            // Ensure notes and location_name are present for each item
+            const itemsWithNotes = itemsResult.map(item => ({
+                ...item,
+                notes: item.notes || '',
+                location: item.location_name || ''
+            }));
+
             res.json({
                 success: true,
                 header: headerResult,
-                items: itemsResult
+                items: itemsWithNotes
             });
         } catch (error) {
             res.status(500).json({ 
@@ -183,10 +195,8 @@ static async searchPO(req, res) {
         }
     }
 
-    // Get all GRNs for a company or for a specific PO
+    // Get all GRNs for a company (ignore PO param, always show all)
     static async getGRNHistory(req, res) {
-        // Support both /grn-history/:po_number and /history
-        const po_number = req.params.po_number || null;
         const { company_code, page = 1, limit = 10, search = '' } = req.query;
 
         if (!company_code) {
@@ -210,12 +220,6 @@ static async searchPO(req, res) {
             `;
             const params = [company_code];
 
-            // If po_number is provided as a param, filter by it
-            if (po_number) {
-                sql += ' AND gh.po_number = ?';
-                params.push(po_number);
-            }
-
             // Add search filter if provided
             if (search) {
                 sql += ` AND (gh.grn_id LIKE ? OR gh.po_number LIKE ? OR gh.batch_number LIKE ? OR s.supplier_name LIKE ?)`;
@@ -237,10 +241,6 @@ static async searchPO(req, res) {
             // Get total count for pagination
             let countSql = `SELECT COUNT(*) as total FROM grn_headers WHERE company_code = ?`;
             const countParams = [company_code];
-            if (po_number) {
-                countSql += ' AND po_number = ?';
-                countParams.push(po_number);
-            }
             if (search) {
                 countSql += ` AND (grn_id LIKE ? OR po_number LIKE ? OR batch_number LIKE ?)`;
                 countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);

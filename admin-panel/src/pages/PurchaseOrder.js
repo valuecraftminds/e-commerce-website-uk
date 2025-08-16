@@ -237,7 +237,6 @@ export default function PurchaseOrder() {
               <th>Total Cost</th>
               <th>Tolerance Limit (%)</th>
               <th>Status</th>
-              <th>GRN</th>
               <th>Date</th>
               <th>Actions</th>
             </tr>
@@ -264,11 +263,7 @@ export default function PurchaseOrder() {
                       {po.status || 'Pending'}
                     </span>
                   </td>
-                  <td>
-                    <span className='badge bg-warning text-dark'>
-                      {'Pending'}
-                    </span>
-                  </td>
+                  
                   <td>{new Date(po.created_at).toLocaleDateString()}</td>
                   <td>
                     <FaEye

@@ -19,7 +19,7 @@ export default function GRNDetails() {
         const fetchGRNDetails = async () => {
             try {
                 const response = await fetch(
-                    `${BASE_URL}/api/admin/grn/details/${grn_id}?company_code=${userData.company_code}`
+                    `${BASE_URL}/api/admin/grn/grn-details/${grn_id}?company_code=${userData.company_code}`
                 );
                 const data = await response.json();
                 

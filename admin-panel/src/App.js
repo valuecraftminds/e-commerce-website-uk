@@ -35,6 +35,7 @@ import CompanySettings from './pages/Company_Admin/CompanySettings';
 import ApprovePO from './pages/ApprovePO';
 import GRNDetails from './components/GRNDetails';
 import Location from './pages/Location';
+import AddGRN from './pages/AddGRN';
 
 // Create Sidebar Context for global sidebar state management
 export const SidebarContext = createContext();
@@ -197,7 +198,9 @@ function App() {
           <Route path="category" element={<Category />} />
           <Route path="style" element={<Style />} />
           <Route path="/warehouse/grn" element={<WarehouseGRN />} />
-          <Route path="/warehouse/grn/:po_number" element={<WarehouseGRN />} />
+          <Route path="/warehouse/add-grn" element={<AddGRN />} />
+
+          <Route path="/warehouse/add-grn/:po_number" element={<AddGRN />} />
           <Route path="/warehouse/grn-details/:grn_id" element={<GRNDetails />} />
                     
           <Route path='/settings/*' element={<Settings />} />

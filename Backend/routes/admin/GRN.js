@@ -7,13 +7,21 @@ const GRNController = require('../../controllers/admin/GRNController'); // Adjus
 
 // Existing routes...
 router.get('/search-po', GRNController.searchPO);
-router.get('/details/:po_number', GRNController.getPODetails);
+router.get('/po-details/:po_number', GRNController.getPODetails);
+
 router.get('/get-remaining-qty', GRNController.getRemainingQty);
 router.post('/create-grn', GRNController.createGRN);
 
 // New routes to add:
 router.post('/validate-item', GRNController.validateGRNItem);
+
+// Get all GRN history for a company
+router.get('/history', GRNController.getGRNHistory);
+
+// (Optional) Get GRN history for a specific PO
 router.get('/grn-history/:po_number', GRNController.getGRNHistory);
+router.get('/grn-details/:grn_id', GRNController.getGRNDetails);
+
 
 module.exports = router;
 

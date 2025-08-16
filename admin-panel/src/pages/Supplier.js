@@ -163,7 +163,6 @@ export default function Supplier() {
         <thead>
           <tr>
             <th>#</th>
-            <th>Supplier ID</th>
             <th>Name</th>
             <th>Phone</th>
             <th>Email</th>
@@ -179,7 +178,6 @@ export default function Supplier() {
           {filteredSuppliers.map((supplier, index) => (
             <tr key={supplier.supplier_id}>
               <td>{index + 1}</td>
-              <td>{supplier.supplier_id}</td>
               <td>{supplier.supplier_name}</td>
               <td>{supplier.phone}</td>
               <td>{supplier.email}</td>
