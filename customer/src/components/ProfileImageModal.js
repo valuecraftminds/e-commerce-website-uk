@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trash2, Upload } from 'react-feather';
+import { Upload } from 'react-feather';
 
-import '../styles/ProfileImage.css';
+import '../styles/ProfileImageModal.css';
 
 export default function ProfilePictureModal({
   show,
@@ -93,22 +93,23 @@ export default function ProfilePictureModal({
               </button>
             )}
             
-            {profileImageUrl && (
+            <div className="btn-container">
+              {profileImageUrl && (
+                <button 
+                  className="btn btn-outline-danger"
+                  onClick={handleDeleteProfilePicture}
+                >
+                  Delete Current Picture
+                </button>
+              )}
+              
               <button 
-                className="btn btn-outline-danger"
-                onClick={handleDeleteProfilePicture}
+                className="btn btn-outline-secondary ms-auto cancel-btn"
+                onClick={onClose}
               >
-                {/* <Trash2 size={16} className="me-1" /> */}
-                Delete Current Picture
+                Cancel
               </button>
-            )}
-            
-            <button 
-              className="btn btn-outline-secondary ms-auto"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
+            </div>
           </div>
         </div>
       </div>

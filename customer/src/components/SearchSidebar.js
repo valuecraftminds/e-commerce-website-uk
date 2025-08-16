@@ -132,15 +132,9 @@ export default function SearchSidebar({ show, onClose }) {
                   {item.image && (
                     <div className="flex-shrink-0 me-3">
                       <img 
-                        src={`${BASE_URL}/admin/uploads/styles/${item.image}`}
+                        src={`${BASE_URL}/uploads/styles/${item.image}`}
                         alt={item.name}
                         className="search-result-image"
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          objectFit: 'cover',
-                          borderRadius: '4px'
-                        }}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -151,9 +145,6 @@ export default function SearchSidebar({ show, onClose }) {
                   {/* Product details */}
                   <div className="flex-grow-1">
                     <h6 className="mb-1 fw-semibold">{item.name}</h6>
-                    {item.style_code && (
-                      <small className="text-muted d-block">Code: {item.style_code}</small>
-                    )}
                     {item.description && (
                       <p className="mb-0 small text-muted mt-1">
                         {item.description.length > 100 
