@@ -43,7 +43,9 @@
 }
 
 .search-result-image {
-  border: 1px solid #dee2e6;
+  width:100px;
+  height: 100px;
+  object-fit: cover;
 }
 
 .hover-bg-light:hover {
