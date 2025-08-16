@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 
 import { PiPackage, PiTruckFill, PiArrowCounterClockwiseBold } from "react-icons/pi";
@@ -6,6 +6,7 @@ import { AiOutlineClockCircle, AiOutlineCheckCircle, AiOutlineStar } from "react
 import { useNavigate } from 'react-router-dom';
 
 import '../styles/OrdersHistory.css';
+import { CountryContext } from "../context/CountryContext";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -17,6 +18,10 @@ export default function OrdersHistory() {
     const [, setSelectedOrderId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [exchangeRates, setExchangeRates] = useState({});
+
+    const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+    const { country } = useContext(CountryContext);
 
     // Get auth token from logged in user
     const getAuthToken = () => {
@@ -124,11 +129,45 @@ export default function OrdersHistory() {
     };
 
     // Format currency
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(amount);
+    // Fetch exchange rates
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`); 
+            if (response.data.success) {
+            setExchangeRates(response.data.rates);
+            }
+        } catch (error) {
+            console.error('Failed to fetch exchange rates:', error);
+            // Set default rates if API fails
+            setExchangeRates({
+            GBP: 0.75,
+            LKR: 320
+            });
+        }
+        };
+        fetchExchangeRates();
+    }, []);
+
+    const getRate = () => {
+        switch (country) {
+        case 'US':
+            return 1;
+        case 'UK':
+            return exchangeRates['GBP'] || 0.75;
+        case 'SL':
+            return exchangeRates['LKR'] || 320;
+        default:
+            return 1;
+        }
+    };
+
+    const formatPrice = (minPrice) => {
+        if (!minPrice) return "Price not defined";
+        const symbol = currencySymbols[country] || '$';
+        const rate = getRate();
+        const convertedPrice = (minPrice * rate).toFixed(2);
+        return `${symbol}${convertedPrice}`;
     };
 
     // Format date
@@ -235,7 +274,7 @@ export default function OrdersHistory() {
                     <span className="order-items-count">
                         {order.total_items} item{order.total_items !== 1 ? 's' : ''}: 
                     </span>
-                    <span className="order-total">{formatCurrency(order.total_amount)}</span>
+                    <span className="order-total">{formatPrice(order.total_amount)}</span>
                     <span className="order-id">Order ID: {order.order_number}</span>
                 </div>
             </div>

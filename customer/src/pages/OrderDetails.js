@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
 import { useParams, useNavigate } from 'react-router-dom';
 
 import '../styles/OrderDetails.css';
+import { CountryContext } from "../context/CountryContext";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -15,6 +16,10 @@ export default function OrderDetails() {
     const [orderDetails, setOrderDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [exchangeRates, setExchangeRates] = useState({});
+    
+    const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+    const { country } = useContext(CountryContext);
 
     // Get auth token from logged in user
     const getAuthToken = () => {
@@ -61,12 +66,45 @@ export default function OrderDetails() {
         }
     };
 
-    // Format currency
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(amount);
+    // Fetch exchange rates
+    useEffect(() => {
+        const fetchExchangeRates = async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`); 
+            if (response.data.success) {
+            setExchangeRates(response.data.rates);
+            }
+        } catch (error) {
+            console.error('Failed to fetch exchange rates:', error);
+            // Set default rates if API fails
+            setExchangeRates({
+            GBP: 0.75,
+            LKR: 320
+            });
+        }
+        };
+        fetchExchangeRates();
+    }, []);
+
+    const getRate = () => {
+        switch (country) {
+        case 'US':
+            return 1;
+        case 'UK':
+            return exchangeRates['GBP'] || 0.75;
+        case 'SL':
+            return exchangeRates['LKR'] || 320;
+        default:
+            return 1;
+        }
+    };
+
+    const formatPrice = (minPrice) => {
+        if (!minPrice) return "Price not defined";
+        const symbol = currencySymbols[country] || '$';
+        const rate = getRate();
+        const convertedPrice = (minPrice * rate).toFixed(2);
+        return `${symbol}${convertedPrice}`;
     };
 
     // Format date
@@ -267,17 +305,17 @@ export default function OrderDetails() {
                                                     </div>
                                                     <div className="pricing-row">
                                                         <span className="label">Unit:</span>
-                                                        <span className="value">{formatCurrency(item.unit_price)}</span>
+                                                        <span className="value">{formatPrice(item.unit_price)}</span>
                                                     </div>
                                                     {item.variant?.offer_price && item.variant.offer_price < item.variant.price && (
                                                         <div className="pricing-row offer">
                                                             <span className="label">Offer:</span>
-                                                            <span className="value">{formatCurrency(item.variant.offer_price)}</span>
+                                                            <span className="value">{formatPrice(item.variant.offer_price)}</span>
                                                         </div>
                                                     )}
                                                     <div className="pricing-row total">
                                                         <span className="label">Total:</span>
-                                                        <span className="value">{formatCurrency(item.total_price)}</span>
+                                                        <span className="value">{formatPrice(item.total_price)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -303,15 +341,15 @@ export default function OrderDetails() {
                         <div className="card-body">
                             <div className="summary-row">
                                 <span className="summary-label">Subtotal:</span>
-                                <span className="summary-value">{formatCurrency(orderDetails.subtotal || orderDetails.total_amount - (orderDetails.tax_amount || 0) - (orderDetails.shipping_fee || 0))}</span>
+                                <span className="summary-value">{formatPrice(orderDetails.subtotal || orderDetails.total_amount - (orderDetails.tax_amount || 0) - (orderDetails.shipping_fee || 0))}</span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Tax:</span>
-                                <span className="summary-value">{formatCurrency(orderDetails.tax_amount || 0)}</span>
+                                <span className="summary-value">{formatPrice(orderDetails.tax_amount || 0)}</span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Shipping:</span>
-                                <span className="summary-value">{formatCurrency(orderDetails.shipping_fee || 0)}</span>
+                                <span className="summary-value">{formatPrice(orderDetails.shipping_fee || 0)}</span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Total Items:</span>
@@ -320,7 +358,7 @@ export default function OrderDetails() {
                             <hr className="summary-divider" />
                             <div className="summary-row total">
                                 <span className="summary-label">Total Amount:</span>
-                                <span className="summary-value">{formatCurrency(orderDetails.total_amount)}</span>
+                                <span className="summary-value">{formatPrice(orderDetails.total_amount)}</span>
                             </div>
                         </div>
                     </div>
