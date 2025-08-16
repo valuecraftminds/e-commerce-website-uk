@@ -100,6 +100,11 @@ const Cart = () => {
     return formatPrice(price * quantity);
   };
 
+  // handle click on image
+  const handleRedirect = (styleId) => {
+    navigate(`/product/${styleId}`);
+  };
+
   if (loading) {
     return (
       <div className="cart-container">
@@ -166,6 +171,7 @@ return (
                                 src={`${BASE_URL}/uploads/styles/${item.image}`}
                                 alt={item.style_name}
                                 className="cart-item-square-image"
+                                onClick={() => handleRedirect(item.style_id)}
                               />
                             </div>
                           </Col> 
