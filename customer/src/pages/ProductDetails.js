@@ -294,7 +294,7 @@ export default function ProductDetails() {
             )}
           </button>
 
-            <h1>{product.name}</h1>
+            <h1 className="product-name-h1">{product.name}</h1>
             <p>{product.description}</p>
             <h5 className="price">
               {product.offer_price && product.offer_price !== 0 ? (
