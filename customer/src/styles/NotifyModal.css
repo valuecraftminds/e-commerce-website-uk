@@ -1,74 +1,67 @@
-.success-msg-modal-wrapper {
-  z-index: 10 !important;
+.notify-modal-wrapper {
+  z-index: 1055;
 }
 
-.success-msg-modal-dialog .modal-content {
-  border-radius: 15px !important;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
-  border: none !important;
-  min-height: 30vh !important;
-  max-height: 40px !important;
+/* Base modal styling */
+.notify-modal .modal-content {
+  border-radius: 1rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  border: none;
+  overflow: hidden;
+  height: auto !important;
 }
 
-/* Modal header styling */
-.success-msg-modal .modal-header,
-.success-msg-modal-header {
-  border-bottom: 2px solid #000000 !important;
-  padding: 1.5rem !important;
-  background: rgb(233, 233, 233);
+/* Header */
+.notify-modal-header {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.2rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #eaeaea;
 }
 
-/* Modal title styling */
-.success-msg-modal-title {
-  font-weight: 600 !important;
-  color: #000000 !important;
+.notify-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-/* Modal body styling */
-.success-msg-modal-body {
-  padding: 1.5rem !important;
-  font-size: 1rem !important;
-  color: #333333 !important;
-
+.notify-modal-title .modal-icon {
+  font-size: 1.5rem;
 }
 
-/* Modal footer styling */
-.success-msg-modal-footer {
+/* Body */
+.notify-modal-body {
+  padding: 1.2rem;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 400;
+}
+
+/* Footer */
+.notify-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.75rem 1.25rem;
   border-top: none !important;
-  padding: 1.5rem !important;
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 10px !important;
 }
 
-/* Button styling using both ID and class selectors for maximum specificity */
-.success-msg-modal #go-to-cart-btn,
-.success-msg-modal .go-to-cart-btn,
-.success-msg-modal .success-msg-btn {
-  background-color: #000000 !important;
-  border: none !important;
-  padding: 8px 16px !important;
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  color: white !important;
-  transition: background-color 0.3s ease !important;
-  min-width: 100px !important;
+/* Buttons */
+.notify-modal-footer .btn {
+  min-width: 100px;
+  font-weight: 500;
+  border-radius: 0.5rem;
 }
 
-/* Button hover states */
-.success-msg-modal #go-to-cart-btn:hover,
-.success-msg-modal .go-to-cart-btn:hover,
-.success-msg-modal .success-msg-btn:hover {
-  background-color: #000000 !important;
-  border: none !important;
+/* Close button */
+.notify-modal-close-btn {
+  background-color: #6c757d;
+  border: none;
+  transition: 0.2s;
 }
 
-/* Override Bootstrap's default button outline */
-.success-msg-modal .btn:focus {
-  outline: none !important;
-}
-
-/* Ensure modal backdrop doesn't interfere */
-.success-msg-modal .modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5) !important;
+.notify-modal-close-btn:hover {
+  background-color: #5c636a;
 }

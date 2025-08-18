@@ -254,8 +254,8 @@ export default function NavigationBar({ onSidebarStateChange }) {
                  onClick={() => navigate('/cart')}
               />
               <i
-                  className="bi bi-list d-lg-non hamburger-icon"
-                  style={{ fontSize: "1.6rem", cursor: "pointer" }}
+                  className="bi bi-list d-block d-lg-none hamburger-icon"
+                  style={{ fontSize: "1.6rem", cursor: "pointer", zIndex: 1050 }}
                   onClick={() => handleHamburgerClicked(true)}
               />
 

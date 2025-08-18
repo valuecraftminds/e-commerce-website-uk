@@ -6,6 +6,7 @@ import '../styles/AccountSettings.css';
 import ProfilePictureModal from '../components/ProfileImageModal';
 import AddNewAddress from '../components/AddNewAddress';
 import EditAddress from '../components/EditAddress';
+import { useNotifyModal } from "../context/NotifyModalProvider";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -26,6 +27,8 @@ export default function AccountSettings() {
   const [showAddNewAddress, setShowAddNewAddress] = useState(false);
   const [showEditAddress, setShowEditAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
+
+  const { showNotify } = useNotifyModal();
   
   const fileInputRef = useRef(null);
   const passwordInputRef = useRef(null);
@@ -192,11 +195,32 @@ useEffect(() => {
           }))
         );
         
-        alert('Default address updated successfully!');
+        showNotify({
+          title: "Done",
+          message: "Default address set successfully!",
+          type: "success",
+            customButtons: [
+                {
+                label: "OK",
+                onClick: () => {}
+                }
+            ]
+        })
+
       }
     } catch (error) {
-      console.error('Error setting default address:', error);
-      alert(error.response?.data?.message || 'Error setting default address');
+      console.error('Error setting default address:', error.response?.data?.message);
+      showNotify({
+        title: "Error",
+        message: 'Failed to set default address. Please try again later.',
+        type: "error",
+        customButtons: [
+          {
+            label: "OK",
+            onClick: () => {}
+          }
+        ]
+      })
     } finally {
       setLoadingDefault(null);
     }
@@ -205,28 +229,61 @@ useEffect(() => {
   //delete address
   const deleteAddress = async (addressId) => {  
     if (!addressId) return;
-    if (!window.confirm('Are you sure you want to delete this address?')) {
-      return;
-    }
-    console.log("delete");
-    try {
-      const config = getAxiosConfig();
-      const response = await axios.delete(
-        `${BASE_URL}/api/customer/address/delete-address`,
+
+    showNotify({
+        title: "Deleting Address",
+        message: "Are you sure you want to delete this address?",
+        type: "warning",
+      customButtons: [
         {
-          data: { address_id: addressId },
-          ...config
+            label: "Yes, Delete",
+          onClick: async() => {
+            try {
+              const config = getAxiosConfig();
+              const response = await axios.delete(
+                  `${BASE_URL}/api/customer/address/delete-address`,
+                  {
+                    data: { address_id: addressId },
+                    ...config
+                  }
+              );
+              if (response.status === 200) {
+                // Remove deleted address from state
+                setAddresses((prev) => prev.filter((addr) => addr.id !== addressId));
+                showNotify({
+                  title: "Done",
+                  message: "Address deleted successfully!",
+                  type: "success",
+                  customButtons: [
+                    {
+                      label: "OK",
+                      onClick: () => {}
+                    }
+                  ]
+                });
+              }
+            } catch (error) {
+              console.error('Error deleting address:', error.response?.data?.message );
+              showNotify({
+                title: "Error",
+                message: 'Failed to delete address. Please try again later.',
+                type: "error",
+                customButtons: [
+                  {
+                    label: "OK",
+                    onClick: () => {}
+                  }
+                ]
+              })
+            }
+          }
+        },
+        {
+          label: "No, Cancel",
+          onClick: () => {}
         }
-      );
-      if (response.status === 200) {
-        // Remove deleted address from state
-        setAddresses((prev) => prev.filter((addr) => addr.id !== addressId));
-        alert('Address deleted successfully!');
-      }
-    } catch (error) {
-      console.error('Error deleting address:', error);
-      alert(error.response?.data?.message || 'Error deleting address');
-    }
+        ]
+    });
   };
 
   // Get full profile image URL
@@ -242,16 +299,36 @@ useEffect(() => {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPEG, JPG or PNG)');
+        showNotify({
+            title: "Invalid File Type",
+            message: "Please select a valid image file (JPG, JPEG, PNG, WEBP).",
+            type: "error",
+            customButtons: [
+                {
+                    label: "OK",
+                    onClick: () => {}
+                }
+            ]
+        })
         return;
       }
 
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert('File size must be less than 5MB');
+        showNotify({
+            title: "File Size Exceeded",
+            message: "The selected file exceeds the maximum size of 5MB. Please choose a smaller file.",
+            type: "error",
+            customButtons: [
+                {
+                    label: "OK",
+                    onClick: () => {}
+                }
+            ]
+        })
         return;
       }
 
@@ -299,10 +376,20 @@ useEffect(() => {
       setPreviewUrl(null);
       setShowProfilePictureModal(false);
       
-      alert('Profile picture updated successfully!');
+      // alert('Profile picture updated successfully!');
     } catch (error) {
       console.error('Error uploading profile picture:', error);
-      alert('Failed to upload profile picture. Please try again.');
+      showNotify({
+        title: "Upload Failed",
+        message: 'Failed to upload profile picture. Please try again.',
+        type: "error",
+        customButtons: [
+          {
+            label: "OK",
+            onClick: () => {}
+          }
+        ]
+      })
     } finally {
       setIsUploading(false);
     }
@@ -312,26 +399,58 @@ useEffect(() => {
   const handleDeleteProfilePicture = async () => {
     if (!profileData.profilePicture) return;
 
-    if (!window.confirm('Are you sure you want to delete your profile picture?')) {
-      return;
-    }
+    showNotify({
+      title: "Removing Profile Picture",
+      message: "Are you sure you want to remove existing profile picture?",
+      type: "warning",
+      customButtons: [
+        {
+          label: "Yes, Remove",
+          onClick: async () => {
+            try {
+              const config = getAxiosConfig();
+              await axios.delete(`${BASE_URL}/api/customer/user/delete-profile-image`, config);
 
-    try {
-      const config = getAxiosConfig();
-      await axios.delete(`${BASE_URL}/api/customer/user/delete-profile-image`, config);
+              // Update profile data to remove profile picture
+              setProfileData(prev => ({
+                ...prev,
+                profilePicture: ''
+              }));
 
-      // Update profile data to remove profile picture
-      setProfileData(prev => ({
-        ...prev,
-        profilePicture: ''
-      }));
-
-      setShowProfilePictureModal(false);
-      alert('Profile picture deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting profile picture:', error);
-      alert('Failed to delete profile picture. Please try again.');
-    }
+              setShowProfilePictureModal(false);
+              showNotify({
+                title: "Done",
+                message: "Your profile picture has been removed successfully.",
+                type: "success",
+                customButtons: [
+                  {
+                    label: "OK",
+                    onClick: () => {}
+                  }
+                ]
+              })
+            } catch (error) {
+              console.error('Error deleting profile picture:', error);
+                showNotify({
+                  title: "Can not delete profile picture.",
+                  message: 'Failed to delete profile picture. Please try again.',
+                  type: "error",
+                  customButtons: [
+                    {
+                      label: "OK",
+                      onClick: () => {}
+                    }
+                  ]
+                })
+            }
+          }
+        },
+        {
+          label: "No, Cancel",
+          onClick: () => {}
+        }
+      ]
+    });
   };
 
   // Reset file selection
@@ -346,7 +465,17 @@ useEffect(() => {
   const handleUpdateProfileDetails = async () => {
     const { firstName, lastName, email, phone, password } = profileData;
     if (!firstName || !lastName || !email || !phone) {
-      alert('Please fill in all required fields');
+      showNotify({
+        title: "Missing Information",
+        message: "Please fill in all fields.",
+        type: "error",
+        customButtons: [
+          {
+            label: "OK",
+            onClick: () => {}
+          }
+        ]
+      })
       return;
     }
     try {
@@ -363,7 +492,17 @@ useEffect(() => {
         },
         config
       );
-      alert('Profile updated successfully!');
+      showNotify({
+        title: "Done",
+        message: "Update successfully"
+        , type: "success",
+        customButtons: [
+          {
+            label: "OK",
+            onClick: () => {}
+          }
+        ]
+      })
       // Refresh the profile data after update
       setProfileData(prev => ({
         ...prev,
@@ -376,7 +515,17 @@ useEffect(() => {
       }));
     } catch (error) {
       console.error('Error updating profile details:', error);
-      alert('Failed to update profile details. Please try again.');
+      showNotify({
+        title: "Update Failed",
+        message: 'Failed to update profile details. Please try again.',
+        type: "error",
+        customButtons: [
+          {
+            label: "OK",
+            onClick: () => {}
+          }
+        ]
+      })
     }
   };
 
@@ -901,7 +1050,7 @@ useEffect(() => {
           // Close the modal
           setShowAddNewAddress(false);
 
-          alert('Address added successfully!');
+            // alert('Address added successfully!');
         }}
       />
 
@@ -937,7 +1086,7 @@ useEffect(() => {
           setShowEditAddress(false);
           setSelectedAddress(null);
 
-          alert('Address updated successfully!');
+          // alert('Address updated successfully!');
         }}
       />
     </>

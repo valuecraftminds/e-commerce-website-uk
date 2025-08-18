@@ -4,10 +4,10 @@ import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import axios from "axios";
 
-import NotifyModal from "../components/NotifyModal";
 import CheckoutModal from "../components/CheckoutModal";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
+import { useNotifyModal } from "../context/NotifyModalProvider";
 import "../styles/ProductDetails.css"; 
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -18,6 +18,7 @@ export default function ProductDetails() {
   const { id } = useParams();
   const styleId = parseInt(id, 10);
   const { addToCart } = useCart();
+  const { showNotify } = useNotifyModal();
 
   // State for product data and loading
   const [product, setProduct] = useState(null);
@@ -31,7 +32,6 @@ export default function ProductDetails() {
   const [selectedColorName, setSelectedColorName] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [showModal, setShowModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   
   // Single state for wishlist status
@@ -179,20 +179,60 @@ export default function ProductDetails() {
                 : product.price
       });
 
-      const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColorName}`;
-      setSuccessMessage(message);
-      setShowModal(true);
+      showNotify({
+        title: "Success",
+        message: `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColorName}`,
+        type: "success",
+        customButtons: [
+            {
+                label: "Go to Cart",
+                onClick: () => {
+                    navigate('/cart');
+                }
+            },
+            {
+                label: "Continue Shopping",
+                onClick: () => {}
+            }
+            ]
+      })
     } catch (error) {
       console.error('Error adding to cart:', error);
-      setSuccessMessage("Error adding item to cart. Please try again.");
-      setShowModal(true);
+      showNotify({
+        title: "Error",
+        message: "Failed to add product to cart. Please try again.",
+        type: "error",
+        customButtons: [
+            {
+                label: "Ok",
+                onClick: () => {}
+            }
+        ]
+      })
     }
   };
 
   const handleBuyNow = (product) => {
     if (!isUserLoggedIn()) {
-      alert("Please log in to proceed with the purchase.");
-      navigate('/login');
+      showNotify({
+        title: "Login Required",
+        message: "Please log in to proceed with the purchase.",
+        type: "warning",
+        customButtons: [
+            {
+                label: "Login",
+                onClick: () => {
+                navigate('/login');
+                }
+            },
+            {
+                label: "Cancel",
+                onClick: () => {
+                setShowCheckoutModal(false);
+                }
+            }
+            ]
+      })
       return;
     }
     setShowCheckoutModal(true);
@@ -200,8 +240,25 @@ export default function ProductDetails() {
 
   const handleWishlistToggle = async (product) => {
     if (!isUserLoggedIn()) {
-      alert("Please log in before adding to wishlist.");
-      navigate("/login");
+      showNotify({
+        title: "Login Required",
+        message: "Please log in to manage your wishlist.",
+        type: "warning",
+        customButtons: [
+            {
+                label: "Login",
+                onClick: () => {
+                navigate('/login');
+                }
+            },
+            {
+                label: "Cancel",
+                onClick: () => {
+                  showNotify(false);
+                }
+            }
+            ]
+      })
       return;
     }
 
@@ -233,9 +290,18 @@ export default function ProductDetails() {
         console.log("Added to wishlist:", product.style_code);
       }
     } catch (error) {
-      console.error("Error updating wishlist:", error);
-      setSuccessMessage("Error updating wishlist. Please try again.");
-      setShowModal(true);
+      console.error("Error addmin to wishlist:", error);
+      showNotify({
+        title: "Error",
+        message: "Failed adding to wishlist. Please try again.",
+        type: "error",
+        customButtons: [
+            {
+                label: "Ok",
+                onClick: () => {}
+            }
+        ]
+      });
     }
     };
 
@@ -398,12 +464,6 @@ export default function ProductDetails() {
                 }}
               />
             </div>
-
-            <NotifyModal
-              show={showModal}
-              onClose={() => setShowModal(false)}
-              message={successMessage}
-            />
           </Col>
         </Row>
       </Container>

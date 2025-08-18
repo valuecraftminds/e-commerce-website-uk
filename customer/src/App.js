@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
+
 import Shop from './pages/Shop';
 import Home from './pages/Home';
 import ProductDetails from './pages/ProductDetails';
@@ -19,6 +20,7 @@ import OrderDetails from './pages/OrderDetails';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { NotifyModalProvider } from './context/NotifyModalProvider';
 
 import './App.css';
 
@@ -66,7 +68,7 @@ function App() {
             <CartProvider>
                 <div className="App">
                     <NavBar onSidebarStateChange={setSidebarOpen} />
-
+                    <NotifyModalProvider>
                     {/* Main Content Wrapper */}
                     <div className={`main-content-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
                         <main>
@@ -94,6 +96,7 @@ function App() {
                         </main>
                         <Footer />
                     </div>
+                    </NotifyModalProvider>
                 </div>
             </CartProvider>
         </AuthProvider>

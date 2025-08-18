@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import '../styles/Wishlist.css';
 import { CountryContext } from "../context/CountryContext";
+import { useNotifyModal } from "../context/NotifyModalProvider";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -12,6 +13,7 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 const Wishlist = () => {
     const navigate = useNavigate();
     const [exchangeRates, setExchangeRates] = useState({});
+    const { showNotify } = useNotifyModal();
 
     const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
     const { country } = useContext(CountryContext);
@@ -65,21 +67,38 @@ const Wishlist = () => {
 
     // Remove item from wishlist
     const handleRemove = async (style_code) => {
-        try {
-            const config = getAxiosConfig();
-            await axios.delete(
-                `${BASE_URL}/api/customer/wishlist/remove`,
+        showNotify({
+            title: "Removing Item",
+            message: "Are you sure you want to remove this item from the Wishlist?",
+            type: "warning",
+            customButtons: [
                 {
-                    ...config,
-                    data: { style_code: style_code }
+                    label: "Yes, Remove",
+                    onClick: async () => {
+                        try {
+                            const config = getAxiosConfig();
+                            await axios.delete(
+                                `${BASE_URL}/api/customer/wishlist/remove`,
+                                {
+                                    ...config,
+                                    data: {style_code: style_code}
+                                }
+                            );
+                            console.log('style_code:', style_code);
+                            setWishlistItems(prev => prev.filter(item => item.style_code !== style_code));
+                            console.log('Item removed from wishlist:', style_code);
+                        } catch (error) {
+                            console.error('Error removing wishlist item:', error);
+                        }
+
+                    }
+                },
+                {
+                    label: "No, Cancel",
+                    onClick: () => {}
                 }
-            );
-            console.log('style_code:', style_code);
-            setWishlistItems(prev => prev.filter(item => item.style_code !== style_code));
-            console.log('Item removed from wishlist:', style_code);
-        } catch (error) {
-            console.error('Error removing wishlist item:', error);
-        }
+            ]
+        });
     };
 
     // Fetch exchange rates
@@ -125,7 +144,7 @@ const Wishlist = () => {
     
     return (
         <div className="wishlist-page">
-            <h1>Your Wishlist</h1>
+            <h1>Wishlist</h1>
             <div className="wishlist-grid">
                 {wishlistItems.map((item) => (
                     <div 
@@ -145,11 +164,7 @@ const Wishlist = () => {
                             {/*<span className="wishlist-price">{formatPrice(item.price)}</span>*/}
                             <button
                                 className="remove-btn"
-                                onClick={() => {
-                                    if(window.confirm("Are you sure you want to remove this item from your wishlist?")) {
-                                        handleRemove(item.style_code);
-                                    }
-                                }}
+                                onClick={() => handleRemove(item.style_code)}
                             >
                                 <BsTrash3 className="wishlist-bin" />
                                 <h7 className="remove-text"> Remove from Wishlist </h7>
