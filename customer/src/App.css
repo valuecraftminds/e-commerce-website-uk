@@ -1,0 +1,23 @@
+.main-content-wrapper {
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* When sidebar is open, push content to the right */
+.main-content-wrapper.sidebar-open {
+    margin-left: 20%;
+}
+
+/* Ensure main content takes remaining space */
+.main-content-wrapper main {
+    flex: 1;
+}
+
+/* Mobile responsiveness - don't shift content on mobile */
+@media (max-width: 768px) {
+    .main-content-wrapper.sidebar-open {
+        margin-left: 0;
+    }
+}

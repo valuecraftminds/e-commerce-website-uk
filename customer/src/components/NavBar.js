@@ -1,19 +1,22 @@
+
 import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import logo from '../assets/logo.png';
-import '../styles/NavBar.css';
 import SearchSidebar from "./SearchSidebar";
 import Sidebar from './Sidebar';
 import UserMenu from "./UserMenu";
+
+import '../styles/NavBar.css';
+
 import { AuthContext } from '../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
-export default function NavigationBar() {
+export default function NavigationBar({ onSidebarStateChange }) {
   const navigate = useNavigate();
   const { isLoggedIn } = useContext(AuthContext);
 
@@ -47,11 +50,11 @@ export default function NavigationBar() {
         'Content-Type': 'application/json',
       }
     };
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   };
 
@@ -62,16 +65,16 @@ export default function NavigationBar() {
         company_code: COMPANY_CODE
       }
     })
-      .then((response) => {
-        setCategories(response.data);
-        setLoading(false);
-        console.log('Categories fetched:', response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching categories:', error);
-        setError('Failed to fetch categories');
-        setLoading(false);
-      });
+        .then((response) => {
+          setCategories(response.data);
+          setLoading(false);
+          console.log('Categories fetched:', response.data);
+        })
+        .catch((error) => {
+          console.error('Error fetching categories:', error);
+          setError('Failed to fetch categories');
+          setLoading(false);
+        });
   }, []);
 
   useEffect(() => {
@@ -87,6 +90,19 @@ export default function NavigationBar() {
     return () => clearTimeout(timeOutId);
   }, [isHoveringCategory, isHoveringSidebar]);
 
+  // Communicate sidebar state to parent App component
+  useEffect(() => {
+    if (onSidebarStateChange) {
+      onSidebarStateChange(sidebarOpen);
+    }
+
+    // Alternative method using custom events if needed
+    const event = new CustomEvent('sidebarStateChange', {
+      detail: { isOpen: sidebarOpen }
+    });
+    window.dispatchEvent(event);
+  }, [sidebarOpen, onSidebarStateChange]);
+
   useEffect(() => {
     localStorage.setItem("selectedCountry", country);
   }, [country]);
@@ -97,14 +113,14 @@ export default function NavigationBar() {
       params: { company_code: COMPANY_CODE },
       headers: { Authorization: `Bearer ${token}` }
     })
-    .then(res => {
-      const data = res.data;
-      setProfilePicture(data.profile_image ? `${BASE_URL}/uploads/profile_images/${data.profile_image}` : null);
-    })
-  .catch(err => {
-    console.error('Failed to load user profile:', err);
-  });
-}, []);
+        .then(res => {
+          const data = res.data;
+          setProfilePicture(data.profile_image ? `${BASE_URL}/uploads/profile_images/${data.profile_image}` : null);
+        })
+        .catch(err => {
+          console.error('Failed to load user profile:', err);
+        });
+  }, []);
 
   // Handlers for mouse enter and leave events
   const handleCategoryMouseEnter = (category) => {
@@ -148,7 +164,7 @@ export default function NavigationBar() {
     window.location.reload();
   };
 
-  
+
   // if loading or error state
   if (loading) {
     return <div>Loading categories...</div>;
@@ -156,94 +172,94 @@ export default function NavigationBar() {
   if (error) {
     return <div>Error: {error}</div>;
   }
-  
+
   return (
-    <>
-      <Navbar bg="light" expand="lg" className="shadow-sm sticky-top nav-bar">
-        <Container fluid className="d-flex justify-content-between align-items-center">
-          {/* Left side */}
-          <Navbar.Brand href="/">
-            <img
-              src={logo}
-              alt="Company logo"
-              style={{ height: "40px", objectFit: "contain" }}
-            />
-          </Navbar.Brand>
+      <>
+        <Navbar bg="light" expand="lg" className="shadow-sm sticky-top nav-bar">
+          <Container fluid className="d-flex justify-content-between align-items-center">
+            {/* Left side */}
+            <Navbar.Brand href="/">
+              <img
+                  src={logo}
+                  alt="Company logo"
+                  style={{ height: "40px", objectFit: "contain" }}
+              />
+            </Navbar.Brand>
 
-          {/* Categories  */}
-          <div className="d-none d-md-flex me-auto">
-            <Nav className="align-items-center flex-row">
-              {categories.map((category) => (
-                <Nav.Link
-                  key={category.category_id}
-                  role="button"
-                  onMouseEnter={() => handleCategoryMouseEnter(category.category_name)}
-                  onMouseLeave={handleCategoryMouseLeave}
-                  onClick={() => handleCategoryClick(category.category_name)}
-                  className="navbar-category-link"
-                >
-                  {category.category_name}
-                </Nav.Link>
-              ))}
-            </Nav>
-          </div>
+            {/* Categories  */}
+            <div className="d-none d-md-flex me-auto">
+              <Nav className="align-items-center flex-row">
+                {categories.map((category) => (
+                    <Nav.Link
+                        key={category.category_id}
+                        role="button"
+                        onMouseEnter={() => handleCategoryMouseEnter(category.category_name)}
+                        onMouseLeave={handleCategoryMouseLeave}
+                        onClick={() => handleCategoryClick(category.category_name)}
+                        className="navbar-category-link"
+                    >
+                      {category.category_name}
+                    </Nav.Link>
+                ))}
+              </Nav>
+            </div>
 
-          {/* Right side */}
-          <div className="d-flex align-items-center right-navbar">
-            {/* select country */}
-            <select className="form-select"
-              aria-label="Select country"
-              value={country}
-              onChange={handleCountryChange}
-            > 
-              <option value="UK">United Kingdom</option>
-              <option value="US">United States</option>
-              <option value="SL">Sri Lanka</option>
-            </select>
+            {/* Right side */}
+            <div className="d-flex align-items-center right-navbar">
+              {/* select country */}
+              <select className="form-select"
+                      aria-label="Select country"
+                      value={country}
+                      onChange={handleCountryChange}
+              >
+                <option value="UK">United Kingdom</option>
+                <option value="US">United States</option>
+                <option value="SL">Sri Lanka</option>
+              </select>
 
-            {/* Search icon */}
-            <i
-              className="bi bi-search"
-              style={{ fontSize: "1.4rem", cursor: "pointer" }}
-              onClick={() => setShowsearchSidebar(true)}
-            />
-        
-            {/* Cart icon */}
-            <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
-              onClick={() => navigate('/cart')}
-            />
-            <i
-              className="bi bi-list d-lg-none"
-              style={{ fontSize: "1.6rem", cursor: "pointer" }}
-              onClick={() => handleHamburgerClicked(true)}
-            />
+              {/* Search icon */}
+              <i
+                  className="bi bi-search"
+                  style={{ fontSize: "1.4rem", cursor: "pointer" }}
+                  onClick={() => setShowsearchSidebar(true)}
+              />
 
-             {/* User icons */}
-            <UserMenu profilePicture={profilePicture} />
+              {/* Cart icon */}
+              <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
+                 onClick={() => navigate('/cart')}
+              />
+              <i
+                  className="bi bi-list d-lg-none"
+                  style={{ fontSize: "1.6rem", cursor: "pointer" }}
+                  onClick={() => handleHamburgerClicked(true)}
+              />
 
-          </div>
-        </Container>
-      </Navbar>
+              {/* User icons */}
+              <UserMenu profilePicture={profilePicture} />
 
-      {/* Sidebar */}
-      <Sidebar
-        category={selectedCategory}
-        isOpen={sidebarOpen}
-        onClose={() => {
-          setSidebarOpen(false);
-          setSelectedCategory(null);
-        }}
-        onMouseEnter={handleSidebarMouseEnter}
-        onMouseLeave={handleSidebarMouseLeave}
-        categories={categories}
-        onCategoryClick={handleCategoryClickFromSidebar}
-      />
+            </div>
+          </Container>
+        </Navbar>
 
-      {/* Search Sidebar */}
-      <SearchSidebar
-        show={showsearchSidebar}
-        onClose={() => setShowsearchSidebar(false)}
-      />
-    </>
+        {/* Sidebar */}
+        <Sidebar
+            category={selectedCategory}
+            isOpen={sidebarOpen}
+            onClose={() => {
+              setSidebarOpen(false);
+              setSelectedCategory(null);
+            }}
+            onMouseEnter={handleSidebarMouseEnter}
+            onMouseLeave={handleSidebarMouseLeave}
+            categories={categories}
+            onCategoryClick={handleCategoryClickFromSidebar}
+        />
+
+        {/* Search Sidebar */}
+        <SearchSidebar
+            show={showsearchSidebar}
+            onClose={() => setShowsearchSidebar(false)}
+        />
+      </>
   );
 }

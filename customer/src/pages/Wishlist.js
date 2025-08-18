@@ -142,7 +142,7 @@ const Wishlist = () => {
                         <p className="wishlist-description">{item.description}</p>
 
                         <div className="wishlist-price-row">
-                            <span className="wishlist-price">{formatPrice(item.price)}</span>
+                            {/*<span className="wishlist-price">{formatPrice(item.price)}</span>*/}
                             <button
                                 className="remove-btn"
                                 onClick={() => {
