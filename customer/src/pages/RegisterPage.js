@@ -154,6 +154,7 @@ export default function RegisterPage() {
           country: ''
         });
         setPasswordError('');
+        navigate('/login'); // Redirect to login page after successful registration
       } else {
         setErrorMsg(data.message || 'Registration failed');
       }
