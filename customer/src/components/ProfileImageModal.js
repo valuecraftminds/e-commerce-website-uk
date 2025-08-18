@@ -85,7 +85,7 @@ export default function ProfilePictureModal({
           <div className="d-flex gap-2 w-100">
             {selectedFile && (
               <button 
-                className="btn btn-primary"
+                className="btn btn-primary upload-btn"
                 onClick={handleUploadProfilePicture}
                 disabled={isUploading}
               >
@@ -96,7 +96,7 @@ export default function ProfilePictureModal({
             <div className="btn-container">
               {profileImageUrl && (
                 <button 
-                  className="btn btn-outline-danger"
+                  className="btn btn-outline-danger delete-img-btn"
                   onClick={handleDeleteProfilePicture}
                 >
                   Delete Current Picture

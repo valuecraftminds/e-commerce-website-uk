@@ -141,7 +141,7 @@ const Wishlist = () => {
                         <h2>{item.name}</h2>
                         <p className="wishlist-description">{item.description}</p>
 
-                        <div className="wishlist-price-row">
+                        <div className="wishlist-footer-row">
                             {/*<span className="wishlist-price">{formatPrice(item.price)}</span>*/}
                             <button
                                 className="remove-btn"
@@ -152,6 +152,7 @@ const Wishlist = () => {
                                 }}
                             >
                                 <BsTrash3 className="wishlist-bin" />
+                                <h7 className="remove-text"> Remove from Wishlist </h7>
                             </button>
                         </div>
                     </div>

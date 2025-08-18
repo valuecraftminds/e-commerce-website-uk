@@ -9,7 +9,6 @@
 /* Product page container */
 .product-page .container {
   max-width: 900px;
-  height:60vh;
 }
 
 /* Override global btn-primary styles for product page */
@@ -157,10 +156,11 @@
 
 @media (max-width: 576px) {
     .product-page {
+        min-height:200% !important;
         padding: 10px;
     }
     
-    .product-page .product-btn-color,
+    .product-btn-color,
     .product-page .btn-size {
         min-width: 60px;
         font-size: 14px;

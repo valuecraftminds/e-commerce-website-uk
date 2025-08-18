@@ -58,6 +58,31 @@ export default function NavigationBar({ onSidebarStateChange }) {
     return config;
   };
 
+  // Fetch company logo
+  useEffect(() => {
+    if (!COMPANY_CODE) {
+      console.error('Company code not configured');
+      return;
+    }
+
+    axios.get(`${BASE_URL}/api/customer/company/get-company-logo`, {
+      params: {
+        company_code: COMPANY_CODE
+      }
+    })
+        .then((response) => {
+          console.log('Company logo fetched:', response.data);
+          if (response.data.company_logo) {
+            // Construct the full URL for the company logo
+            const logoUrl = `${BASE_URL}/uploads/company_logos/${response.data.company_logo}`;
+            setCompanyLogo(logoUrl);
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching company logo:', error);
+        });
+  }, []);
+
   // Fetch categories
   useEffect(() => {
     axios.get(`${BASE_URL}/api/customer/main-categories`, {
@@ -176,12 +201,12 @@ export default function NavigationBar({ onSidebarStateChange }) {
   return (
       <>
         <Navbar bg="light" expand="lg" className="shadow-sm sticky-top nav-bar">
-          <Container fluid className="d-flex justify-content-between align-items-center">
+          <Container fluid className="d-flex justify-content-between align-items-center navbar-content">
             {/* Left side */}
             <Navbar.Brand href="/">
               <img
-                  src={logo}
-                  alt="Company logo"
+                  src={companyLogo || logo}
+                  alt="Logo"
                   style={{ height: "40px", objectFit: "contain" }}
               />
             </Navbar.Brand>
@@ -219,17 +244,17 @@ export default function NavigationBar({ onSidebarStateChange }) {
 
               {/* Search icon */}
               <i
-                  className="bi bi-search"
+                  className="bi bi-search search-icon"
                   style={{ fontSize: "1.4rem", cursor: "pointer" }}
                   onClick={() => setShowsearchSidebar(true)}
               />
 
               {/* Cart icon */}
-              <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
+              <i className="bi bi-cart3 cart-icon" style={{ fontSize: "1.4rem" }}
                  onClick={() => navigate('/cart')}
               />
               <i
-                  className="bi bi-list d-lg-none"
+                  className="bi bi-list d-lg-non hamburger-icon"
                   style={{ fontSize: "1.6rem", cursor: "pointer" }}
                   onClick={() => handleHamburgerClicked(true)}
               />
