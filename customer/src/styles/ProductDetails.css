@@ -183,3 +183,7 @@
   transform: scale(1.1);
   transition: transform 0.2s;
 }
+.product-name-h1{
+    padding-right: 50px !important;
+    word-wrap: break-word !important;
+}
