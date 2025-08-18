@@ -62,15 +62,22 @@ export default function SearchSidebar({ show, onClose }) {
 
   const handleResultClick = (item) => {
     navigate(`/product/${item.style_id}`);
-    onClose();
+    handleClose();
     setSearchTerm("");
+  };
+
+  const handleClose = () => {
+    setSearchTerm("");
+    setResults([]);
+    setError("");
+    onClose();
   };
 
   return (
     <div className={`search-sidebar bg-white shadow position-fixed top-0 end-0 h-100 p-4 ${show ? "show" : ""}`}>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Type it. Find it. Love it</h5>
-        <button className="btn-close" onClick={onClose} />
+        <button className="btn-close" onClick={handleClose} />
       </div>
 
       <Form>
