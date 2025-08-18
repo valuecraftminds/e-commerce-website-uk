@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   z-index: 1000;
-  width: 500px;
+  width: 20% !important;
   background: rgb(255, 255, 255);
   box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
   transform: translateX(-100%);

@@ -23,10 +23,5 @@
 @media (max-width: 768px) {
   .right-navbar {
     margin-right: 0 !important;
-    gap: 1;
   }
-}
-
-.user-menu{
-  margin-left: 15px !important;
 }
