@@ -5,5 +5,6 @@ const { checkCompanyCode } = require('../../middleware/customer/CustomerValidati
 const router = express.Router();
 
 router.get('/get-company-details', checkCompanyCode, companyDetailsController.getCompanyDetails);
+router.get('/get-company-logo', checkCompanyCode, companyDetailsController.getCompanyLogo);
 
 module.exports = router;

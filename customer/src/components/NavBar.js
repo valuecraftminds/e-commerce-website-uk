@@ -4,7 +4,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import logo from '../assets/logo.png';
 import SearchSidebar from "./SearchSidebar";
 import Sidebar from './Sidebar';
 import UserMenu from "./UserMenu";
@@ -57,6 +56,31 @@ export default function NavigationBar({ onSidebarStateChange }) {
 
     return config;
   };
+
+  // Fetch company logo
+  useEffect(() => {
+    if (!COMPANY_CODE) {
+      console.error('Company code not configured');
+      return;
+    }
+
+    axios.get(`${BASE_URL}/api/customer/company/get-company-logo`, {
+      params: {
+        company_code: COMPANY_CODE
+      }
+    })
+        .then((response) => {
+          console.log('Company logo fetched:', response.data);
+          if (response.data.company_logo) {
+            // Construct the full URL for the company logo
+            const logoUrl = `${BASE_URL}/uploads/company_logos/${response.data.company_logo}`;
+            setCompanyLogo(logoUrl);
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching company logo:', error);
+        });
+  }, []);
 
   // Fetch categories
   useEffect(() => {
@@ -180,8 +204,8 @@ export default function NavigationBar({ onSidebarStateChange }) {
             {/* Left side */}
             <Navbar.Brand href="/">
               <img
-                  src={logo}
-                  alt="Company logo"
+                  src={companyLogo}
+                  alt="Logo"
                   style={{ height: "40px", objectFit: "contain" }}
               />
             </Navbar.Brand>
