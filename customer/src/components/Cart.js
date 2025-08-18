@@ -4,7 +4,9 @@ import { useCart } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
+
 import CheckoutModal from '../components/CheckoutModal';
+import { useNotifyModal} from "../context/NotifyModalProvider";
 import '../styles/Cart.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -28,6 +30,7 @@ const Cart = () => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [updatingItems, setUpdatingItems] = useState(new Set());
   const [removingItems, setRemovingItems] = useState(new Set());
+  const {showNotify} = useNotifyModal();
 
   const handleQuantityChange = async (cart_id, newQuantity) => {
     if (newQuantity < 1) return;
@@ -70,16 +73,47 @@ const Cart = () => {
   };
 
   const handleClearCart = async () => {
-    if (window.confirm('Are you sure you want to clear your entire cart?')) {
-      try {
-        const result = await clearCart();
-        if (!result.success) {
-          console.error('Failed to clear cart:', result.message);
-        }
-      } catch (error) {
-        console.error('Error clearing cart:', error);
-      }
-    }
+    showNotify({
+        title: 'Clear Cart',
+        message: 'Are you sure you want to clear your entire cart? This action cannot be undone.',
+        type: 'warning',
+        customButtons: [
+            {
+                label: 'Yes, Clear Cart',
+                variant: 'danger',
+                onClick: async () => {
+                    try {
+                        const result = await clearCart();
+                        if (result.success) {
+                            showNotify({
+                                title: 'Cart Cleared',
+                                message: 'Your cart has been successfully cleared.',
+                                type: 'success'
+                            });
+                        } else {
+                            showNotify({
+                                title: 'Error',
+                                message: result.message || 'Failed to clear cart.',
+                                type: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error clearing cart:', error);
+                        showNotify({
+                            title: 'Error',
+                            message: 'An unexpected error occurred while clearing the cart.',
+                            type: 'error'
+                        });
+                    }
+                }
+            },
+            {
+                label: 'Cancel',
+                variant: 'secondary',
+                onClick: () => {}
+            }
+        ],
+    })
   };
 
   const handleBuyNow = () => {
