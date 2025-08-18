@@ -174,8 +174,9 @@ export default function ProductDetails() {
         },
         image: product.image,
         quantity: quantity,
-        price: product.price,
-        Offer_price: product.offer_price
+        price: product.offer_price && product.offer_price !== "" 
+                ? product.offer_price 
+                : product.price
       });
 
       const message = `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColorName}`;
