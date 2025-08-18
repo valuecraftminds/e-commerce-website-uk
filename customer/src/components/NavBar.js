@@ -201,7 +201,7 @@ export default function NavigationBar({ onSidebarStateChange }) {
   return (
       <>
         <Navbar bg="light" expand="lg" className="shadow-sm sticky-top nav-bar">
-          <Container fluid className="d-flex justify-content-between align-items-center">
+          <Container fluid className="d-flex justify-content-between align-items-center navbar-content">
             {/* Left side */}
             <Navbar.Brand href="/">
               <img
@@ -244,17 +244,17 @@ export default function NavigationBar({ onSidebarStateChange }) {
 
               {/* Search icon */}
               <i
-                  className="bi bi-search"
+                  className="bi bi-search search-icon"
                   style={{ fontSize: "1.4rem", cursor: "pointer" }}
                   onClick={() => setShowsearchSidebar(true)}
               />
 
               {/* Cart icon */}
-              <i className="bi bi-cart3" style={{ fontSize: "1.4rem" }}
+              <i className="bi bi-cart3 cart-icon" style={{ fontSize: "1.4rem" }}
                  onClick={() => navigate('/cart')}
               />
               <i
-                  className="bi bi-list d-lg-none"
+                  className="bi bi-list d-lg-non hamburger-icon"
                   style={{ fontSize: "1.6rem", cursor: "pointer" }}
                   onClick={() => handleHamburgerClicked(true)}
               />
