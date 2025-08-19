@@ -3,22 +3,13 @@ import { Modal, Button } from 'react-bootstrap';
 import '../styles/NotifyModal.css';
 
 export default function NotifyModal({
-                                        show,
-                                        title,
-                                        message,
-                                        type = 'success',
-                                        customButtons = [],
-                                        onClose,
-                                        onGoToCart
-                                    }) {
-    const handleGoToCart = () => {
-        onClose();
-        if (onGoToCart) {
-            onGoToCart();
-        } else {
-            window.location.href = '/cart';
-        }
-    };
+    show,
+    title,
+    message,
+    type = 'success',
+    customButtons = [],
+    onClose,
+}) {
 
     const getTypeConfig = (type) => {
         const configs = {
