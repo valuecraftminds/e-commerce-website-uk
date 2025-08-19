@@ -295,6 +295,46 @@ const productController = {
     });
   },
 
+
+// Get all styles that have variants with offer_price
+  getStylesWithOfferPrice: (req, res) => {
+    const { company_code } = req.query || req.params;
+
+    if (!company_code) {
+      return res.status(400).json({ error: 'Company code is required' });
+    }
+
+    const sql = `
+    SELECT 
+      s.*,
+      c.category_name,
+      c.category_id,
+      parent_cat.category_name as parent_category_name,
+      sv.price,
+      sv.offer_price,
+      COUNT(DISTINCT sv.variant_id) as variant_count
+    FROM styles s
+    LEFT JOIN categories c ON s.category_id = c.category_id
+    LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+    INNER JOIN style_variants sv ON s.style_code = sv.style_code 
+    WHERE sv.is_active = 1 
+    AND sv.offer_price IS NOT NULL 
+    AND sv.offer_price > 0
+    AND s.approved = 'yes' 
+    AND s.company_code = ?
+    GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+    ORDER BY s.created_at DESC
+  `;
+
+    db.query(sql, [company_code], (err, results) => {
+      if (err) {
+        console.error('Error retrieving styles with offer price:', err);
+        return res.status(500).json({ error: 'Server error' });
+      }
+      res.status(200).json(results);
+    });
+  },
+
 };
 
 module.exports = productController;
