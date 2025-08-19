@@ -75,25 +75,19 @@ const Cart = () => {
   const handleClearCart = async () => {
     showNotify({
         title: 'Clear Cart',
-        message: 'Are you sure you want to clear your entire cart? This action cannot be undone.',
+        message: 'Are you sure you want to clear your entire cart?',
         type: 'warning',
         customButtons: [
             {
-                label: 'Yes, Clear Cart',
+                label: 'Yes',
                 variant: 'danger',
                 onClick: async () => {
                     try {
                         const result = await clearCart();
-                        if (result.success) {
-                            showNotify({
-                                title: 'Cart Cleared',
-                                message: 'Your cart has been successfully cleared.',
-                                type: 'success'
-                            });
-                        } else {
+                        if (!result.success) {
                             showNotify({
                                 title: 'Error',
-                                message: result.message || 'Failed to clear cart.',
+                                message: 'Failed to clear cart.',
                                 type: 'error'
                             });
                         }

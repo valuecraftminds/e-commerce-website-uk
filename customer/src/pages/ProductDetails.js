@@ -180,9 +180,15 @@ export default function ProductDetails() {
       });
 
       showNotify({
-        title: "Success",
-        message: `Added ${quantity} ${product.name}(s) to cart with size ${selectedSize} and color ${selectedColorName}`,
-        type: "success",
+        title: "Added to Cart",
+        message: (
+            <div>
+              <div style={{ fontWeight: 'bold' }}>{product.name}</div>
+              <div>Size: {selectedSize}</div>
+              <div>Color: {selectedColorName}</div>
+            </div>
+        ),
+      type: "success",
         customButtons: [
             {
                 label: "Go to Cart",
@@ -192,7 +198,9 @@ export default function ProductDetails() {
             },
             {
                 label: "Continue Shopping",
-                onClick: () => {}
+                onClick: () => {
+                  navigate('/');
+                }
             }
             ]
       })
