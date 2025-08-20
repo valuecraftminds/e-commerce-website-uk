@@ -1,0 +1,315 @@
+.offer-products-container {
+  max-width: 100%;
+  margin: 0 auto;
+  height: 100%;
+  min-height: 100vh !important;
+  background-color: white !important;
+}
+
+/* Section title */
+.offer-section-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 40px;
+  color: #dc3545;
+  letter-spacing: 2px;
+  position: relative;
+}
+
+/* Loading spinner for offers */
+.offer-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.offer-loading-spinner p {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+/* Grid layout for offer products */
+.offer-products-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 240px);
+  gap: 25px;
+  padding: 20px 0;
+}
+
+/* Individual offer product card */
+.offer-product-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  transform: translateY(0);
+}
+
+.offer-product-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Product image container */
+.offer-product-image-container {
+   position: relative;
+  overflow: hidden;
+  aspect-ratio: 3/4;
+  height: auto;
+}
+
+.offer-product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.offer-product-card:hover .offer-product-image {
+  transform: scale(1.05);
+}
+
+/* Discount badge */
+.discount-badge {
+   background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.discount-percentage {
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Product information section */
+.offer-product-info {
+  padding: 20px;
+}
+
+.offer-product-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+/* Price section */
+.offer-product-price {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.current-price {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #dc3545;
+}
+
+.original-price {
+  font-size: 1.1rem;
+  color: #105eac;
+  text-decoration: line-through;
+  position: relative;
+}
+
+/* Category badge */
+.offer-product-category {
+  margin-top: 10px;
+}
+
+.offer-category-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #e9ecef;
+  color: #495057;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Empty state styles */
+.text-center .fa-tag {
+  color: #dee2e6;
+  margin-bottom: 15px;
+}
+
+.text-muted {
+  font-size: 1.1rem;
+}
+
+/* Error state */
+.text-danger {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .offer-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+  }
+  
+  .offer-section-title {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .offer-products-container {
+    padding: 15px;
+  }
+  
+  .offer-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  
+  .offer-section-title {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+  }
+  
+  .offer-product-info {
+    padding: 20px;
+  }
+  
+  .offer-product-name {
+    font-size: 1.1rem;
+    height: 50px;
+  }
+  
+  .current-price {
+    font-size: 1.2rem;
+  }
+  
+  .original-price {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .offer-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+  }
+  
+  .offer-section-title {
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+  }
+  
+  .offer-product-image-container {
+    height: 200px;
+  }
+  
+  .offer-product-info {
+    padding: 15px;
+  }
+  
+  .offer-product-name {
+    font-size: 1rem;
+    height: 45px;
+  }
+  
+  .offer-product-price {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .current-price {
+    font-size: 1.1rem;
+  }
+  
+  .original-price {
+    font-size: 0.9rem;
+  }
+  
+  .discount-percentage {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+}
+
+/* Animation for card entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.offer-product-card {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Stagger animation delay for cards */
+.offer-product-card:nth-child(1) { animation-delay: 0.1s; }
+.offer-product-card:nth-child(2) { animation-delay: 0.2s; }
+.offer-product-card:nth-child(3) { animation-delay: 0.3s; }
+.offer-product-card:nth-child(4) { animation-delay: 0.4s; }
+.offer-product-card:nth-child(5) { animation-delay: 0.5s; }
+.offer-product-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Hover effects for better interactivity */
+.offer-product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(0, 123, 255, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.offer-product-card:hover::before {
+  opacity: 1;
+}
+
+/* Special styling for the fire icon in title */
+.offer-section-title .fa-fire {
+  animation: flicker 1.5s infinite alternate;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scale(1);
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    transform: scale(1.1);
+    filter: hue-rotate(10deg);
+  }
+}

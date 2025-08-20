@@ -1,7 +1,4 @@
-const db = require('../../config/database');
-const path = require('path');
-const fs = require('fs');
-const { off } = require('process');
+const db = require('../../config/database'); 
 
 const productController = {
   // GET main categories
@@ -53,8 +50,7 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        MIN(sv.price) as min_price,
-        MAX(sv.price) as max_price,
+        price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
@@ -312,7 +308,8 @@ const productController = {
       parent_cat.category_name as parent_category_name,
       sv.price,
       sv.offer_price,
-      COUNT(DISTINCT sv.variant_id) as variant_count
+      COUNT(DISTINCT sv.variant_id) as variant_count,
+      ROUND(((sv.price - sv.offer_price) / sv.price) * 100, 2) as discount_percentage
     FROM styles s
     LEFT JOIN categories c ON s.category_id = c.category_id
     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
@@ -323,7 +320,7 @@ const productController = {
     AND s.approved = 'yes' 
     AND s.company_code = ?
     GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
-    ORDER BY s.created_at DESC
+    ORDER BY discount_percentage DESC, s.created_at DESC
   `;
 
     db.query(sql, [company_code], (err, results) => {
@@ -333,7 +330,7 @@ const productController = {
       }
       res.status(200).json(results);
     });
-  },
+  }
 
 };
 
