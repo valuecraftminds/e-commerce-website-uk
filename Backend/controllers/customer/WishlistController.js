@@ -7,6 +7,7 @@ const wishlistController = {
         const customer_id = req.user?.id;
         const { company_code } = req.query || req.params;
         const { 
+            style_id,
             style_code, 
             image, 
             name
@@ -19,23 +20,24 @@ const wishlistController = {
         return res.status(400).json({ error: 'Company code is required' });
         }
         
-        if (!style_code) {
-        return res.status(400).json({ error: "Style code is required" });
+        if (!style_id) {
+        return res.status(400).json({ error: "Style ID is required" });
         }
 
         const sql = `
         INSERT INTO wishlist (
             company_code, 
-            customer_id, 
+            customer_id,
+            style_id,
             style_code, 
             name, 
             image,
             updated_at
-        ) VALUES (?, ?, ?, ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, NOW())
         ON DUPLICATE KEY UPDATE image = VALUES(image), updated_at = NOW()
         `;
 
-        db.query(sql, [company_code, customer_id, style_code, name, image], (err) => {
+        db.query(sql, [company_code, customer_id, style_id, style_code, name, image], (err) => {
         if (err) {
             console.error('Error adding to wishlist:', err);
             return res.status(500).json({ error: 'Server error' });
@@ -60,6 +62,7 @@ const wishlistController = {
         SELECT
             w.company_code, 
             w.customer_id, 
+            w.style_id,
             w.style_code, 
             w.name,
             w.image,
@@ -69,14 +72,15 @@ const wishlistController = {
             s.style_id
         FROM wishlist w
         JOIN styles s 
-            ON w.style_code = s.style_code
+            ON w.style_id = s.style_id
         JOIN style_variants sv
             ON sv.style_code = s.style_code
         WHERE w.customer_id = ?
         AND w.company_code = ?
         GROUP BY
              w.company_code, 
-            w.customer_id, 
+            w.customer_id,
+            w.style_id,
             w.style_code, 
             w.name, 
             w.image, 
@@ -97,25 +101,25 @@ const wishlistController = {
     // remove items from checklist
     removeFromWishlist: (req, res) => {
     const customer_id = req.user?.id;
-    const { style_code } = req.body;
+    const { style_id } = req.body;
     const { company_code } = req.query;
 
     if (!customer_id) {
         return res.status(400).json({ error: 'Customer ID is required' });
     }
-    if (!style_code) {
-        return res.status(400).json({ error: 'Style code is required' });
+    if (!style_id) {
+        return res.status(400).json({ error: 'Style ID is required' });
     }
 
     const sql = `
         DELETE FROM wishlist 
-        WHERE customer_id = ? AND style_code = ?
+        WHERE customer_id = ? AND style_id = ?
         ${company_code ? 'AND company_code = ?' : ''}
     `;
     
     const params = company_code ? 
-        [customer_id, style_code, company_code] : 
-        [customer_id, style_code];
+        [customer_id, style_id, company_code] : 
+        [customer_id, style_id];
 
     db.query(sql, params, (err, results) => {
         if (err) {
@@ -133,9 +137,9 @@ const wishlistController = {
     // Check if item is in wishlist
     checkWishlist: (req, res) => {
         const customer_id = req.user?.id;
-        const { company_code, style_code } = req.query || req.params;
+        const { company_code, style_id } = req.query || req.params;
 
-        if (!customer_id || !company_code || !style_code) {
+        if (!customer_id || !company_code || !style_id) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
 
@@ -145,11 +149,11 @@ const wishlistController = {
                 FROM wishlist
                 WHERE customer_id = ?
                 AND company_code = ?
-                AND style_code = ?
+                AND style_id = ?
             ) AS in_wishlist
         `;
 
-        db.query(sql, [customer_id, company_code, style_code], (err, results) => {
+        db.query(sql, [customer_id, company_code, style_id], (err, results) => {
             if (err) {
                 console.error('Error checking wishlist:', err);
                 return res.status(500).json({ error: 'Server error' });

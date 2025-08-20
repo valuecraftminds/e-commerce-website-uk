@@ -376,14 +376,14 @@ return (
                         <span>Items ({summary.total_items}):</span>
                         <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                       </div>
-                      <div className="d-flex justify-content-between mb-3">
+                      {/* <div className="d-flex justify-content-between mb-3">
                         <span>🚚 Shipping:</span>
                         <span className="fw-bold">0.00</span>
                       </div>
                       <div className="d-flex justify-content-between mb-3">
                         <span>🧾 Tax:</span>
                         <span className="fw-bold">0.00</span>
-                      </div>
+                      </div> */}
                       {isLoggedIn && (
                         <div className="d-flex justify-content-between mb-3">
                           <span>💸 Discount:</span>

@@ -66,7 +66,7 @@ const Wishlist = () => {
     }, []);
 
     // Remove item from wishlist
-    const handleRemove = async (style_code) => {
+    const handleRemove = async (style_id) => {
         showNotify({
             title: "Removing Item",
             message: "Are you sure you want to remove this item from the Wishlist?",
@@ -81,12 +81,12 @@ const Wishlist = () => {
                                 `${BASE_URL}/api/customer/wishlist/remove`,
                                 {
                                     ...config,
-                                    data: {style_code: style_code}
+                                    data: {style_id: style_id}
                                 }
                             );
-                            console.log('style_code:', style_code);
-                            setWishlistItems(prev => prev.filter(item => item.style_code !== style_code));
-                            console.log('Item removed from wishlist:', style_code);
+                            console.log('style_id:', style_id);
+                            setWishlistItems(prev => prev.filter(item => item.style_id !== style_id));
+                            console.log('Item removed from wishlist:', style_id);
                         } catch (error) {
                             console.error('Error removing wishlist item:', error);
                         }
@@ -164,7 +164,7 @@ const Wishlist = () => {
                             {/*<span className="wishlist-price">{formatPrice(item.price)}</span>*/}
                             <button
                                 className="remove-btn"
-                                onClick={() => handleRemove(item.style_code)}
+                                onClick={() => handleRemove(item.style_id)}
                             >
                                 <BsTrash3 className="wishlist-bin" />
                                 <h7 className="remove-text"> Remove from Wishlist </h7>
