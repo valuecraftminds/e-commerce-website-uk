@@ -467,27 +467,32 @@ export default function ProductDetails() {
               </h5>
 
               <div className="mb-3">
-                {/* Size selection */}
                 <div className="mb-3">
-                  <h4>Select Size:</h4>
-                  {product.available_sizes && product.available_sizes.length > 0 ? (
-                    product.available_sizes.map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => {
-                          setSelectedSize(size);
+                <h4>Select Size:</h4>
+                {product.all_sizes && product.all_sizes.length > 0 ? (
+                  product.all_sizes.map((sizeObj) => (
+                    <button
+                      key={sizeObj.size_id}
+                      onClick={() => {
+                        if (sizeObj.available) {
+                          setSelectedSize(sizeObj.size_name);
                           setSelectedColor('');
                           setSelectedColorName('');
-                        }}
-                        className={`me-2 mb-2 btn-size ${selectedSize === size ? 'selected' : ''}`}
-                      >
-                        {size}
-                      </button>
-                    ))
-                  ) : (
-                    <h5>Sizes not available</h5>
-                  )}
-                </div>
+                        }
+                      }}
+                      disabled={!sizeObj.available}
+                      className={`me-2 mb-2 btn-size ${
+                        selectedSize === sizeObj.size_name ? 'selected' : ''
+                      } ${!sizeObj.available ? 'unavailable' : ''}`}
+                      title={sizeObj.available ? `Select ${sizeObj.size_name}` : `${sizeObj.size_name} - Not available`}
+                    >
+                      {sizeObj.size_name}
+                    </button>
+                  ))
+                ) : (
+                  <h5>Sizes not available</h5>
+                )}
+              </div>
 
                 {/* Color selection */}
                 <div className="mb-3">
