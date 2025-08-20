@@ -42,6 +42,10 @@ export default function ProductDetails() {
   
   // Single state for wishlist status
   const [isWishlisted, setIsWishlisted] = useState(false);
+  
+  // State for expandable sections
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [showMaterial, setShowMaterial] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
@@ -547,11 +551,68 @@ export default function ProductDetails() {
                   Buy Now
                 </Button>
               </div>
+
+              {/* Size Guide Section */}
+              <div className="expandable-section size-guide">
+                <div 
+                  className="section-header"
+                  onClick={() => setShowSizeGuide(!showSizeGuide)}
+                >
+                  <h5>Size Guide</h5>
+                  <span className="toggle-icon">
+                    {showSizeGuide ? '−' : '+'}
+                  </span>
+                </div>
+                {showSizeGuide && (
+                  <div className="section-content">
+                    <div className="size-guide-image">
+                      <img 
+                        src={`${BASE_URL}/uploads/size-chart.png`}
+                        alt="Size Guide Chart" 
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/500x300/f8f9fa/6c757d?text=Size+Chart+Coming+Soon';
+                        }}
+                      />
+                      <p className="size-guide-instructions">
+                        <strong>How to measure:</strong> For the most accurate fit, measure your body wearing only undergarments. Keep the measuring tape level and snug but not tight.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Material Section */}
+              <div className="expandable-section material">
+                <div 
+                  className="section-header"
+                  onClick={() => setShowMaterial(!showMaterial)}
+                >
+                  <h5>Material </h5>
+                  <span className="toggle-icon">
+                    {showMaterial ? '−' : '+'}
+                  </span>
+                </div>
+                {showMaterial && (
+                  <div className="section-content">
+                    <div className="material-info">
+                      <div className="material-composition">
+                        <ul>
+                          <li className="material-name">{product?.material?.material_name || 'Material details will be available soon'}</li>
+                          {product?.material?.material_description && (
+                            <li className="material-description">{product.material.material_description}</li>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </Col>
 
           {/* Column 3: Reviews */}
           <Col lg={4} md={6} className="reviews-col">
+
             <div className="reviews-section">
               <h2 className="reviews-title">Customer Reviews</h2>
               
@@ -597,6 +658,10 @@ export default function ProductDetails() {
           </Col>
         </Row>
       </Container>
+      
+      {/* Spacer to prevent overlap when expandable sections are open */}
+      <div className="layout-spacer"></div>
+      
       {/* Similar Products Section */}
 <Container fluid className="my-5 similar-products-container">
   <h2 className="mb-4">You May Also Like</h2>

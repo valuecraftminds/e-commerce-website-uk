@@ -120,7 +120,7 @@ const productController = {
     const { style_id } = req.params;
     const { company_code } = req.query;
 
-    // First, get all sizes from the sizes table
+    // get all sizes from the sizes table
     const getAllSizesQuery = `
       SELECT size_id, size_name, size_order
       FROM sizes 
@@ -134,7 +134,7 @@ const productController = {
         return res.status(500).json({ error: 'Server error' });
       }
 
-      // Now get product details with available variants
+      // get product details with available variants
       const productDetailsQuery = `
         SELECT
           s.style_id,
@@ -145,16 +145,20 @@ const productController = {
           sv.sku,
           sv.price,
           sv.offer_price,
+          sv.material_id,
           sz.size_name,
           sz.size_id,
           sv.variant_id,
           c.color_name,
           c.color_code,
-          c.color_id
+          c.color_id,
+          m.material_name,
+          m.description AS material_description
         FROM styles s
         LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
         LEFT JOIN colors c ON sv.color_id = c.color_id
+        LEFT JOIN materials m ON sv.material_id = m.material_id
         WHERE s.style_id = ? 
         AND s.company_code = ?
         AND s.approved = 'yes'
@@ -217,6 +221,7 @@ const productController = {
 
         const product = results[0];
         const price = product.price;
+        const materialInfo = results.find(r => r.material_id || r.material_name || r.material_description);
 
         res.json({
           style_id: product.style_id,
@@ -228,17 +233,19 @@ const productController = {
           offer_price: product.offer_price,
           variant_id: product.variant_id,
           all_sizes: allSizesWithAvailability, // All sizes with availability status
-          available_sizes: availableSizes, // Only available sizes (for backward compatibility)
+          available_sizes: availableSizes, // Only available sizes
           available_colors: allColors, // All available colors
           colors_by_size: availableBySize, // Colors available for each size
-          image: product.image
+          image: product.image,
+          material: {
+            material_id: materialInfo.material_id,
+            material_name: materialInfo.material_name,
+            material_description: materialInfo.material_description
+          }
         });
       });
     });
-},
-  
-  
-  
+  },
   
   getProductListings: (req, res) => {
     const { company_code } = req.query;
