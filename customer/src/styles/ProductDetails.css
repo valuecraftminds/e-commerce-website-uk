@@ -15,7 +15,7 @@
     line-height: 1.6;
 }
 .product-page {
-    width: 100%;
+    width: 100% !important;
     height: 100% !important;
     min-height: 100vh;
     padding: 20px;
@@ -41,6 +41,7 @@
     display: flex;
     align-items: flex-start;
     padding: 20px;
+    position: relative !important;
 }
 
 .product-image-container {
@@ -52,6 +53,7 @@
     position: sticky;
     top: 20px;
     aspect-ratio: 3/4;
+    position: relative !important;
 }
 
 .main-product-image {
@@ -338,6 +340,7 @@
     transition: all 0.3s ease;
     margin-right: 8px;
     margin-bottom: 8px;
+    cursor: pointer
 }
 
 .product-page .btn-size.selected {
@@ -351,6 +354,46 @@
     color: white !important;
     border-color: #3c3c41 !important;
 }
+
+.btn-size.unavailable {
+  background-color: #f8f9fa;
+  color: #999;
+  border-color: #ddd;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-size:disabled {
+  cursor: not-allowed;
+}
+
+.btn-size.unavailable {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Create  diagonal line */
+.btn-size.unavailable::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.btn-size.unavailable::before {
+  background: linear-gradient(
+    45deg,
+    transparent 50%,
+    #3b3838 46%,
+    #3b3838 54%,
+    transparent 54%
+  );
+}
+
 
 /* Quantity input */
 .product-page .input-product-quantity {
@@ -460,6 +503,7 @@
 @media (max-width: 768px) {
     .product-page {
         padding: 15px;
+        width:100% !important;
     }
     
     .product-image-container {
@@ -497,6 +541,7 @@
     .product-page {
         min-height: 200% !important;
         padding: 10px;
+        width:100% !important;
     }
     
     .product-image-container {

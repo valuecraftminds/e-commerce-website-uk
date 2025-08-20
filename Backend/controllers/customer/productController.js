@@ -115,102 +115,131 @@ const productController = {
     });
   },
 
+  //get product details
   getProductDetails: (req, res) => {
     const { style_id } = req.params;
     const { company_code } = req.query;
 
-    const sql = `
-      SELECT
-        s.style_id,
-        s.style_code,
-        s.name,
-        s.description,
-        s.image,
-        sv.sku,
-        sv.price,
-        sv.offer_price,
-        sz.size_name,
-        sv.variant_id,
-        c.color_name,
-        c.color_code,
-        c.color_id
-      FROM styles s
-      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-      LEFT JOIN sizes sz ON sv.size_id = sz.size_id
-      LEFT JOIN colors c ON sv.color_id = c.color_id
-      WHERE s.style_id = ? 
-      AND s.company_code = ?
-      AND s.approved = 'yes'
+    // First, get all sizes from the sizes table
+    const getAllSizesQuery = `
+      SELECT size_id, size_name, size_order
+      FROM sizes 
+      WHERE company_code = ?
+      ORDER BY size_order ASC
     `;
 
-    db.query(sql, [style_id, company_code], (err, results) => {
+    db.query(getAllSizesQuery, [company_code], (err, allSizesResult) => {
       if (err) {
-        console.error('Error fetching product details:', err);
+        console.error('Error fetching all sizes:', err);
         return res.status(500).json({ error: 'Server error' });
       }
 
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
+      // Now get product details with available variants
+      const productDetailsQuery = `
+        SELECT
+          s.style_id,
+          s.style_code,
+          s.name,
+          s.description,
+          s.image,
+          sv.sku,
+          sv.price,
+          sv.offer_price,
+          sz.size_name,
+          sz.size_id,
+          sv.variant_id,
+          c.color_name,
+          c.color_code,
+          c.color_id
+        FROM styles s
+        LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+        LEFT JOIN sizes sz ON sv.size_id = sz.size_id
+        LEFT JOIN colors c ON sv.color_id = c.color_id
+        WHERE s.style_id = ? 
+        AND s.company_code = ?
+        AND s.approved = 'yes'
+      `;
 
-      // Get unique sizes
-      const sizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
-
-      // Create size-color mapping
-      const sizeColorMap = {};
-      const allColorsMap = new Map();
-
-      results.forEach(r => {
-        if (r.size_name && r.color_name && r.color_code) {
-          // Add to size-specific colors
-          if (!sizeColorMap[r.size_name]) {
-            sizeColorMap[r.size_name] = new Map();
-          }
-          sizeColorMap[r.size_name].set(r.color_code, {
-            name: r.color_name,
-            code: r.color_code,
-            color_id: r.color_id
-          });
-
-          // Add to all colors map
-          allColorsMap.set(r.color_code, {
-            name: r.color_name,
-            code: r.color_code,
-            color_id: r.color_id
-          });
+      db.query(productDetailsQuery, [style_id, company_code], (err, results) => {
+        if (err) {
+          console.error('Error fetching product details:', err);
+          return res.status(500).json({ error: 'Server error' });
         }
-      });
 
-      // Convert size-color map to the desired format
-      const availableBySize = {};
-      Object.keys(sizeColorMap).forEach(size => {
-        availableBySize[size] = Array.from(sizeColorMap[size].values());
-      });
+        if (results.length === 0) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
 
-      // Get all unique colors
-      const allColors = Array.from(allColorsMap.values());
+        // Get available sizes for this product
+        const availableSizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
+        const availableSizeIds = [...new Set(results.map(r => r.size_id).filter(Boolean))];
 
-      const product = results[0];
-      const price = product.price;
+        // Create all sizes array with availability status
+        const allSizesWithAvailability = allSizesResult.map(size => ({
+          size_id: size.size_id,
+          size_name: size.size_name,
+          available: availableSizeIds.includes(size.size_id)
+        }));
 
-      res.json({
-        style_id: product.style_id,
-        style_code: product.style_code,
-        name: product.name,
-        sku: product.sku,
-        description: product.description,
-        price,
-        offer_price: product.offer_price,
-        variant_id: product.variant_id,
-        available_sizes: sizes,
-        available_colors: allColors, // All available colors
-        colors_by_size: availableBySize, // Colors available for each size
-        image: product.image
+        // Create size-color mapping for available variants only
+        const sizeColorMap = {};
+        const allColorsMap = new Map();
+
+        results.forEach(r => {
+          if (r.size_name && r.color_name && r.color_code) {
+            // Add to size-specific colors
+            if (!sizeColorMap[r.size_name]) {
+              sizeColorMap[r.size_name] = new Map();
+            }
+            sizeColorMap[r.size_name].set(r.color_code, {
+              name: r.color_name,
+              code: r.color_code,
+              color_id: r.color_id
+            });
+
+            // Add to all colors map
+            allColorsMap.set(r.color_code, {
+              name: r.color_name,
+              code: r.color_code,
+              color_id: r.color_id
+            });
+          }
+        });
+
+        // Convert size-color map to the desired format
+        const availableBySize = {};
+        Object.keys(sizeColorMap).forEach(size => {
+          availableBySize[size] = Array.from(sizeColorMap[size].values());
+        });
+
+        // Get all unique colors
+        const allColors = Array.from(allColorsMap.values());
+
+        const product = results[0];
+        const price = product.price;
+
+        res.json({
+          style_id: product.style_id,
+          style_code: product.style_code,
+          name: product.name,
+          sku: product.sku,
+          description: product.description,
+          price,
+          offer_price: product.offer_price,
+          variant_id: product.variant_id,
+          all_sizes: allSizesWithAvailability, // All sizes with availability status
+          available_sizes: availableSizes, // Only available sizes (for backward compatibility)
+          available_colors: allColors, // All available colors
+          colors_by_size: availableBySize, // Colors available for each size
+          image: product.image
+        });
       });
     });
-  },
-
-  // GET product listings
+},
+  
+  
+  
+  
   getProductListings: (req, res) => {
     const { company_code } = req.query;
 
