@@ -743,6 +743,7 @@ export default function ProductDetails() {
 
       <CheckoutModal
         show={showCheckoutModal}
+        value={product}
         onHide={() => setShowCheckoutModal(false)}
         onSubmit={(data) => {
           console.log('Checkout data:', data);
