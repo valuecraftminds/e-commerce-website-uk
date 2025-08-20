@@ -330,7 +330,73 @@ const productController = {
       }
       res.status(200).json(results);
     });
+  },
+
+
+  // GET similar products by category (exclude current product)
+getSimilarProducts: (req, res) => {
+  const { style_id } = req.params;
+  const { company_code } = req.query;
+
+  if (!company_code) {
+    return res.status(400).json({ error: 'Company code is required' });
   }
+
+  // First, get the category of the current product
+  const getCategoryQuery = `
+    SELECT category_id 
+    FROM styles 
+    WHERE style_id = ? AND company_code = ?
+  `;
+
+  db.query(getCategoryQuery, [style_id, company_code], (err, categoryResult) => {
+    if (err) {
+      console.error('Error getting product category:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    if (categoryResult.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const categoryId = categoryResult[0].category_id;
+
+    // Get similar products from the same category
+    const similarProductsQuery = `
+      SELECT 
+        s.style_id,
+        s.style_code,
+        s.name,
+        s.description,
+        s.image,
+        c.category_name,
+        c.category_id,
+        parent_cat.category_name as parent_category_name,
+        sv.price,
+        sv.offer_price,
+        COUNT(DISTINCT sv.variant_id) as variant_count
+      FROM styles s
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+      WHERE s.category_id = ? 
+      AND s.style_id != ?
+      AND s.approved = 'yes' 
+      AND s.company_code = ?
+      GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+      ORDER BY s.created_at DESC
+      LIMIT 8
+    `;
+
+    db.query(similarProductsQuery, [categoryId, style_id, company_code], (err, results) => {
+      if (err) {
+        console.error('Error retrieving similar products:', err);
+        return res.status(500).json({ error: 'Server error' });
+      }
+      res.status(200).json(results);
+    });
+  });
+},
 
 };
 

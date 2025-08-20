@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Image, Button } from "react-bootstrap";
+import { Container, Row, Col, Image, Button, Card } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import axios from "axios";
 
@@ -25,6 +25,12 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [exchangeRates, setExchangeRates] = useState({});
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewStats, setReviewStats] = useState({ average: 0, total: 0 });
+  const [similarProducts, setSimilarProducts] = useState([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+
 
   // State for user selections
   const [selectedSize, setSelectedSize] = useState(null);
@@ -88,6 +94,40 @@ export default function ProductDetails() {
     fetchExchangeRates();
   }, []);
 
+  // Fetch product reviews
+  const fetchProductReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const response = await axios.get(`${BASE_URL}/api/customer/reviews/${styleId}`, {
+        params: { company_code: COMPANY_CODE }
+      });
+      setReviews(response.data.reviews || []);
+      setReviewStats(response.data.stats || { average: 0, total: 0 });
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+      setReviews([]);
+      setReviewStats({ average: 0, total: 0 });
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  // Fetch similar products
+  const fetchSimilarProducts = async () => {
+    try {
+      setLoadingSimilar(true);
+      const response = await axios.get(`${BASE_URL}/api/customer/similar-products/${styleId}`, {
+        params: { company_code: COMPANY_CODE }
+      });
+      setSimilarProducts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch similar products:', error);
+      setSimilarProducts([]);
+    } finally {
+      setLoadingSimilar(false);
+    }
+  };
+
   // Fetch product details from backend
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -98,6 +138,12 @@ export default function ProductDetails() {
         });
         setProduct(response.data);
         setError(null);
+        
+        // Fetch reviews for this product
+        fetchProductReviews();
+        
+        // Fetch similar products - ADD THIS LINE
+        fetchSimilarProducts();
       } catch (err) {
         console.error('Error fetching product details:', err);
         setError('Failed to load product details');
@@ -137,7 +183,7 @@ export default function ProductDetails() {
           ...getAxiosConfig(),
           params: {
             company_code: COMPANY_CODE,
-            style_code: product.style_code
+            style_id: product.style_id
           },
         });
         setIsWishlisted(res.data.in_wishlist);
@@ -148,10 +194,11 @@ export default function ProductDetails() {
       }
     };
 
-    if (product?.style_code) {
+    if (product?.style_id) {
       checkWishlist();
     }
-  }, [product?.style_code, COMPANY_CODE]);
+  }, [product?.style_id, COMPANY_CODE]);
+
 
   const formatPrice = (price) => {
     if (!price) return "Price not available";
@@ -166,6 +213,7 @@ export default function ProductDetails() {
       const result = await addToCart({
         name: product.name,
         sku: product.sku,
+        style_id: product.style_id,
         style_code: product.style_code,
         size: selectedSize,
         color: {
@@ -271,23 +319,24 @@ export default function ProductDetails() {
     }
 
     try {
-      console.log("Toggling wishlist for:", product.style_code);
+      console.log("Toggling wishlist for:", product.style_id);
       if (isWishlisted) {
         // Remove from wishlist
         await axios.delete(
                 `${BASE_URL}/api/customer/wishlist/remove`,
                 {
                     ...getAxiosConfig(),
-                    data: { style_code: product.style_code }
+                    data: { style_id: product.style_id }
                 }
         );
         setIsWishlisted(false);
-        console.log("Removed from wishlist:", product.style_code);
+        console.log("Removed from wishlist:", product.style_id);
       } else {
         // Add to wishlist
         await axios.post(
           `${BASE_URL}/api/customer/wishlist/set-wishlist`,
           {
+            style_id: product.style_id,
             style_code: product.style_code,
             name: product.name,
             image: product.image
@@ -298,7 +347,7 @@ export default function ProductDetails() {
         console.log("Added to wishlist:", product.style_code);
       }
     } catch (error) {
-      console.error("Error addmin to wishlist:", error);
+      console.error("Error adding to wishlist:", error);
       showNotify({
         title: "Error",
         message: "Failed adding to wishlist. Please try again.",
@@ -311,26 +360,41 @@ export default function ProductDetails() {
         ]
       });
     }
-    };
+  };
 
-    // Loading state
-    if (loading) {
-      return (
-        <Container className="my-5 text-center">
-          <h3>Loading product details...</h3>
-        </Container>
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span
+          key={i}
+          className={`star ${i <= rating ? 'filled' : ''}`}
+        >
+          ★
+        </span>
       );
     }
+    return <div className="stars-container">{stars}</div>;
+  };
 
-    // Error state
-    if (error) {
-      return (
-        <Container className="my-5 text-center">
-          <h2>Error</h2>
-          <p>{error}</p>
-        </Container>
-      );
-    }
+  // Loading state
+  if (loading) {
+    return (
+      <Container className="my-5 text-center">
+        <h3>Loading product details...</h3>
+      </Container>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Container className="my-5 text-center">
+        <h2>Error</h2>
+        <p>{error}</p>
+      </Container>
+    );
+  }
 
   // Product not found
   if (!product) {
@@ -343,139 +407,278 @@ export default function ProductDetails() {
 
   return (
     <div className="product-page">
-      <Container className="my-5 container">
-        <Row>
-          <Col className="img-col" md={6}>
-            <Image 
-              className="product-image" 
-              src={`${BASE_URL}/uploads/styles/${product.image}`}
-              alt={product.name} 
-              fluid 
-            />
+      <Container fluid className="my-5 product-page-container">
+        {/* Three Column Layout */}
+        <Row className="main-product-row">
+          {/* Column 1: Product Image */}
+          <Col lg={4} md={12} className="product-image-col">
+            <div className="product-image-container">
+              <Image 
+                className="main-product-image" 
+                src={`${BASE_URL}/uploads/styles/${product.image}`}
+                alt={product.name} 
+                fluid 
+              />
+            </div>
           </Col>
-          <Col md={6} className="product-details">
-          
-          <button
-            className="wishlist-btn position-absolute"
-            style={{ top: "10px", right: "10px" }}
-            onClick={() => handleWishlistToggle(product)}
-            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-          >
-            {isWishlisted ? (
-              <GoHeartFill size={30} color="red" />
-            ) : (
-              <GoHeart size={30} color="black" />
-            )}
-          </button>
 
-            <h1 className="product-name-h1">{product.name}</h1>
-            <p>{product.description}</p>
-            <h5 className="price">
-              {product.offer_price && product.offer_price !== 0 ? (
-                <>
-                  <span className="me-2 offer-price">
-                    {formatPrice(product.offer_price)}
-                  </span>
-                  <span className="text-muted text-decoration-line-through small">
-                    {formatPrice(product.price)}
-                  </span>
-                </>
-              ) : (
-                <span>{formatPrice(product.price)}</span>
-              )}
-            </h5>
-
-            <div className="mb-3">
-              {/* Size selection first */}
-              <div className="mb-3">
-                <h4>Select Size:</h4>
-                {product.available_sizes && product.available_sizes.length > 0 ? (
-                  product.available_sizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => {
-                        setSelectedSize(size);
-                        // Reset color selection when size changes
-                        setSelectedColor('');
-                        setSelectedColorName('');
-                      }}
-                      className={`me-2 mb-2 btn-size ${selectedSize === size ? 'selected' : ''}`}
-                    >
-                      {size}
-                    </button>
-                  ))
+          {/* Column 2: Product Description & Details */}
+          <Col lg={4} md={6} className="product-details-col">
+            <div className="product-details">
+              <button
+                className="wishlist-btn position-absolute"
+                style={{ top: "10px", right: "10px" }}
+                onClick={() => handleWishlistToggle(product)}
+                title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              >
+                {isWishlisted ? (
+                  <GoHeartFill size={30} color="red" />
                 ) : (
-                  // display all colors until size is selected
-                  <h5>Sizes not available</h5>
+                  <GoHeart size={30} color="black" />
                 )}
-              </div>
+              </button>
 
-              {/* Color selection based on selected size */}
+              <h1 className="product-name-h1">{product.name}</h1>
+              <p className="product-description">{product.description}</p>
+              
+              {/* Rating Display */}
+              {reviewStats.total > 0 && (
+                <div className="product-rating mb-3">
+                  {renderStars(Math.round(reviewStats.average))}
+                  <span className="rating-text">
+                    {reviewStats.average.toFixed(1)} ({reviewStats.total} reviews)
+                  </span>
+                </div>
+              )}
+
+              <h5 className="price">
+                {product.offer_price && product.offer_price !== 0 ? (
+                  <>
+                    <span className="me-2 offer-price">
+                      {formatPrice(product.offer_price)}
+                    </span>
+                    <span className="text-muted text-decoration-line-through small">
+                      {formatPrice(product.price)}
+                    </span>
+                  </>
+                ) : (
+                  <span>{formatPrice(product.price)}</span>
+                )}
+              </h5>
+
               <div className="mb-3">
-                <h4>Select Color:</h4>
-                {selectedSize ? (
-                  getAvailableColors().length > 0 ? (
-                    getAvailableColors().map((color) => (
+                {/* Size selection */}
+                <div className="mb-3">
+                  <h4>Select Size:</h4>
+                  {product.available_sizes && product.available_sizes.length > 0 ? (
+                    product.available_sizes.map((size) => (
                       <button
-                        key={color.code}
+                        key={size}
                         onClick={() => {
-                          setSelectedColor(color.code);
-                          setSelectedColorName(color.name);
+                          setSelectedSize(size);
+                          setSelectedColor('');
+                          setSelectedColorName('');
                         }}
-                        className={`color-circle ${selectedColor === color.code ? 'selected' : ''}`}
-                        style={{ backgroundColor: color.code }}
-                        title={color.name}
-                      />
+                        className={`me-2 mb-2 btn-size ${selectedSize === size ? 'selected' : ''}`}
+                      >
+                        {size}
+                      </button>
                     ))
                   ) : (
-                    <p>No colors available for this size</p>
-                  )
-                ) : (
-                  <h6>Please select a size first</h6>
-                )}
+                    <h5>Sizes not available</h5>
+                  )}
+                </div>
+
+                {/* Color selection */}
+                <div className="mb-3">
+                  <h4>Select Color:</h4>
+                  {selectedSize ? (
+                    getAvailableColors().length > 0 ? (
+                      getAvailableColors().map((color) => (
+                        <button
+                          key={color.code}
+                          onClick={() => {
+                            setSelectedColor(color.code);
+                            setSelectedColorName(color.name);
+                          }}
+                          className={`color-circle ${selectedColor === color.code ? 'selected' : ''}`}
+                          style={{ backgroundColor: color.code }}
+                          title={color.name}
+                        />
+                      ))
+                    ) : (
+                      <p>No colors available for this size</p>
+                    )
+                  ) : (
+                    <h6>Please select a size first</h6>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mb-3">
+                <h5>Quantity:</h5>
+                <input
+                  type="number"
+                  min="1"
+                  className="form-control w-25 input-product-quantity"
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                  value={quantity}
+                />
+              </div>
+
+              <div className="btns">
+                <Button 
+                  className="btn-custom-primary me-2" 
+                  disabled={!selectedSize || !selectedColor || quantity < 1} 
+                  onClick={handleAddToCart}
+                >
+                  Add to Cart
+                </Button>
+                <Button 
+                  className="btn-custom-primary" 
+                  disabled={!selectedSize || !selectedColor || quantity < 1} 
+                  onClick={() => handleBuyNow(product)}
+                >
+                  Buy Now
+                </Button>
               </div>
             </div>
-            
-            <div className="mb-3">
-              <h5>Quantity:</h5>
-              <input
-                type="number"
-                min="1"
-                className="form-control w-25 input-product-quantity"
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                value={quantity}
-              />
-            </div>
+          </Col>
 
-            <div className="btns">
-              <Button 
-                className="btn-custom-primary me-2" 
-                disabled={!selectedSize || !selectedColor || quantity < 1} 
-                onClick={handleAddToCart}
-              >
-                Add to Cart
-              </Button>
-              <Button 
-                className="btn-custom-primary" 
-                disabled={!selectedSize || !selectedColor || quantity < 1} 
-                onClick={() => handleBuyNow(product)}
-              >
-                Buy Now
-              </Button>
+          {/* Column 3: Reviews */}
+          <Col lg={4} md={6} className="reviews-col">
+            <div className="reviews-section">
+              <h2 className="reviews-title">Customer Reviews</h2>
               
-              <CheckoutModal
-                show={showCheckoutModal}
-                onHide={() => setShowCheckoutModal(false)}
-                onSubmit={(data) => {
-                  console.log('Checkout data:', data);
-                  setShowCheckoutModal(false);
-                }}
-              />
+              {/* Review Summary */}
+              {reviewStats.total > 0 && (
+                <div className="review-summary">
+                  <div className="average-rating">
+                    <span className="rating-number">{reviewStats.average.toFixed(1)}</span>
+                    {renderStars(Math.round(reviewStats.average))}
+                    <span className="total-reviews">Based on {reviewStats.total} reviews</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews List */}
+              <div className="reviews-list">
+                {loadingReviews ? (
+                  <div className="text-center py-3">
+                    <p>Loading reviews...</p>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review, index) => (
+                    <div key={index} className="review-item">
+                      <div className="review-header">
+                        <div className="reviewer-name">{review.user_name || 'Anonymous'}</div>
+                        <div className="review-rating">
+                          {renderStars(review.rating)}
+                        </div>
+                      </div>
+                      <div className="review-date">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </div>
+                      <div className="review-comment">{review.comment}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <p>No reviews yet for this product.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </Col>
         </Row>
       </Container>
+      {/* Similar Products Section */}
+<Container fluid className="my-5 similar-products-container">
+  <h2 className="mb-4">You May Also Like</h2>
+
+  {loadingSimilar ? (
+    <div className="text-center my-5">
+      <div className="home-loading-spinner">
+        <div className="home-spinner"></div>
+        <p>Loading similar products...</p>
+      </div>
+    </div>
+  ) : error ? (
+    <div className="text-center my-5">
+      <h5 className="text-danger">Failed to load similar products</h5>
+    </div>
+  ) : similarProducts.length === 0 ? (
+    <div className="home-no-products">
+      <div className="home-no-products-content">
+        <i className="fas fa-search fa-3x"></i>
+        <h3>No similar products found</h3>
+        <p>No similar products available at the moment.</p>
+      </div>
+    </div>
+  ) : (
+    <div className="home-products-grid">
+      {similarProducts.map((similarProduct) => (
+        <div
+          key={similarProduct.style_id}
+          className="home-product-card"
+          onClick={() => navigate(`/product/${similarProduct.style_id}`)}
+        >
+          <div className="home-product-image-container">
+            <img
+              src={`${BASE_URL}/uploads/styles/${similarProduct.image}`}
+              alt={similarProduct.name}
+              className="home-product-image"
+            />
+
+            <div className="home-product-overlay">
+              <h5>Quick View</h5>
+            </div>
+          </div>
+
+          <div className="home-product-info">
+            <h3 className="home-product-name">{similarProduct.name}</h3>
+            <p className="home-product-description">
+              {similarProduct.description && similarProduct.description.length > 100
+                ? `${similarProduct.description.substring(0, 100)}...`
+                : similarProduct.description
+              }
+            </p>
+            <div className="home-product-price">
+              {similarProduct.offer_price && similarProduct.offer_price !== 0 ? (
+                <>
+                  <span className="me-2">
+                    {formatPrice(similarProduct.offer_price)}
+                  </span>
+                  <span className="text-muted text-decoration-line-through small">
+                    {formatPrice(similarProduct.price)}
+                  </span>
+                </>
+              ) : (
+                <span>{formatPrice(similarProduct.price)}</span>
+              )}
+            </div>
+            {similarProduct.category_name && (
+              <div className="home-product-category">
+                <span className="home-category-badge">
+                  {similarProduct.category_name}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</Container>
+
+      <CheckoutModal
+        show={showCheckoutModal}
+        onHide={() => setShowCheckoutModal(false)}
+        onSubmit={(data) => {
+          console.log('Checkout data:', data);
+          setShowCheckoutModal(false);
+        }}
+      />
     </div>
   );
 }
-        
