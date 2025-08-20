@@ -3,23 +3,19 @@ import { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import DataFile from "../assets/DataFile";
 import { CountryContext } from "../context/CountryContext";
-import "../styles/Home.css";
+
+import "../styles/OfferPage.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
-export default function Home() {
+export default function OfferPage() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [exchangeRates, setExchangeRates] = useState({});
   const [offerProducts, setOfferProducts] = useState([]);
   const [offerLoading, setOfferLoading] = useState(false);
   const [offerError, setOfferError] = useState(null);
-  const [displayLimit, setDisplayLimit] = useState(7);
 
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
@@ -28,27 +24,6 @@ export default function Home() {
   const getProductDetails = (id) => {
     navigate(`/product/${id}`);
   };
-
-  // Fetch product listings from the backend
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/customer/all-styles`, {
-          params: { company_code: COMPANY_CODE }
-        });
-        setProducts(response.data);
-        console.log('Fetched products:', response.data);
-      } catch (error) {
-        console.error('Error fetching product listings:', error);
-        setError('Failed to load products');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
 
 // fetch items with offer_price
   useEffect(() => {
@@ -71,8 +46,6 @@ export default function Home() {
     };
     fetchOfferProducts();
   }, []);
-
-   const displayedProducts = offerProducts.slice(0, displayLimit);
 
   // Fetch exchange rates
   useEffect(() => {
@@ -117,31 +90,11 @@ export default function Home() {
 
   return (
       <>
-        {/* Banner Section */}
-        <div className="home-banner mb-4">
-          <img
-              src={DataFile.banner[3].image}
-              className="home-banner-img"
-              alt={`${DataFile.banner[3].category} banner`}
-          />
-        </div>
-
-        {/* Offer Products Section */}
-        <Container fluid className="my-5 homepage-offer-products-container">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="offer-section-title">
+        <Container fluid className="my-5 offer-products-container">
+          <h2 className="offer-section-title">
               <i className="fas fa-fire text-danger me-2"></i>
-              Hot Deals & Offers
+              Hot Deals & Offers 🔥
             </h2>
-            <button
-                className="btn btn-outline-primary btn-sm"
-                onClick={() => {
-                  navigate('/offers');
-                }}
-            >
-              View All Offers <i className="fas fa-arrow-right ms-1"></i>
-            </button>
-          </div>
 
           {offerLoading ? (
               <div className="text-center my-3">
@@ -163,7 +116,7 @@ export default function Home() {
               </div>
           ) : (
               <div className="offer-products-grid">
-                {displayedProducts.map((product) => (
+                {offerProducts.map((product) => (
                     <div
                         key={product.style_id}
                         className="offer-product-card"
@@ -194,6 +147,7 @@ export default function Home() {
                               : product.description
                           }
                         </p>
+
                         <div className="offer-product-price">
                   <span className="current-price">
                     {formatPrice(product.offer_price)}
@@ -216,85 +170,6 @@ export default function Home() {
               </div>
           )}
         </Container>
-
-        {/* Main Products Section */}
-        <Container fluid className="my-5 home-products-container">
-          <h2 className="mb-4">Explore Your Fashion</h2>
-
-          {loading ? (
-              <div className="text-center my-5">
-                <div className="home-loading-spinner">
-                  <div className="home-spinner"></div>
-                  <p>Loading products...</p>
-                </div>
-              </div>
-          ) : error ? (
-              <div className="text-center my-5">
-                <h5 className="text-danger">{error}</h5>
-              </div>
-          ) : products.length === 0 ? (
-              <div className="home-no-products">
-                <div className="home-no-products-content">
-                  <i className="fas fa-search fa-3x"></i>
-                  <h3>No products found</h3>
-                  <p>No products available at the moment.</p>
-                </div>
-              </div>
-          ) : (
-              <div className="home-products-grid">
-                {products.map((product) => (
-                    <div
-                        key={product.style_id}
-                        className="home-product-card"
-                        onClick={() => getProductDetails(product.style_id)}
-                    >
-                      <div className="home-product-image-container">
-                        <img
-                            src={`${BASE_URL}/uploads/styles/${product.image}`}
-                            alt={product.name}
-                            className="home-product-image"
-                        />
-
-                        <div className="home-product-overlay">
-                          <h5>Quick View</h5>
-                        </div>
-                      </div>
-
-                      <div className="home-product-info">
-                        <h3 className="home-product-name">{product.name}</h3>
-                        <p className="home-product-description">
-                          {product.description && product.description.length > 100
-                              ? `${product.description.substring(0, 100)}...`
-                              : product.description
-                          }
-                        </p>
-                        <div className="home-product-price">
-                          {product.offer_price && product.offer_price !== 0 ? (
-                              <>
-                        <span className="me-2">
-                          {formatPrice(product.offer_price)}
-                        </span>
-                                <span className="text-muted text-decoration-line-through small">
-                          {formatPrice(product.min_price)}
-                        </span>
-                              </>
-                          ) : (
-                              <span>{formatPrice(product.min_price)}</span>
-                          )}
-                        </div>
-                        {product.category_name && (
-                            <div className="home-product-category">
-                      <span className="home-category-badge">
-                        {product.category_name}
-                      </span>
-                            </div>
-                        )}
-                      </div>
-                    </div>
-                ))}
-              </div>
-          )}
-        </Container>
-      </>
+     </>
   );
 }
