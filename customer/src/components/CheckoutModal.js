@@ -24,7 +24,6 @@ const createAxios = () => {
   return instance;
 };
 
-
 // prevent adding symbols or letters
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
 
@@ -57,10 +56,9 @@ const isExpiryInFuture = ({ month, year }) => {
   return year > thisYear || (year === thisYear && month >= thisMonth);
 };
 
-const CheckoutModal = ({ show, onHide, onSubmit }) => {
+const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
   const api = useMemo(() => createAxios(), []);
 
- 
   const [step, setStep] = useState('address');
 
   const [shippingData, setShippingData] = useState({
@@ -286,9 +284,8 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
         addressId = await saveAddress();
         // ALWAYS use the newly created address as the selected shipping address
         setSelectedAddressId(addressId);
-        
+
         // Refresh the addresses list to include the new address
-        // but keep the newly created address as selected
         const currentSelectedId = addressId;
         await fetchAddresses();
         // Restore the selection to the newly created address
@@ -323,7 +320,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
 
   // 1. Calculate shipping fee function
   const calculateShippingFee = () => {
-    return 10.00; //fixed shipping fee
+    return 10.00; // fixed shipping fee
   };
 
   // 2. Calculate tax function
@@ -343,15 +340,48 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
       setError('No shipping address selected.');
       return;
     }
-    
-    // Get cart items and totals from cart context
-    const cartItems = cart;
-    const subtotal = parseFloat(summary.original_amount || summary.total_amount); // Get original amount before currency conversion
-    
-    // Validate cart has items
-    if (!cartItems || cartItems.length === 0) {
-      setError('Your cart is empty.');
+
+    // Normalize cart array
+    const itemsFromCart = Array.isArray(cart) ? cart : [];
+
+    // If cart is empty/null, fallback to the single product passed via prop
+    let cartItems = [];
+    if (itemsFromCart.length > 0) {
+      cartItems = itemsFromCart;
+    } else if (product) {
+      const qty = Number(product.quantity ?? 1);
+      const unit = Number(product.price) || 0;
+      cartItems = [{
+        variant_id: product.variant_id ?? product.id,
+        sku: product.sku ?? product.code,
+        quantity: qty,
+        unit_price: unit,
+        total_price: unit * qty
+      }];
+    } else {
+      setError('Your cart is empty and no product was provided.');
       return;
+    }
+
+    // Compute subtotal:
+    // - If we’re using cart, prefer summary values, fallback to recompute.
+    // - If we’re using single product, compute from cartItems.
+    let subtotal = 0;
+    if (itemsFromCart.length > 0) {
+      const s = summary?.original_amount ?? summary?.total_amount;
+      const parsed = parseFloat(s ?? 0);
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        subtotal = parsed;
+      } else {
+        subtotal = itemsFromCart.reduce((acc, it) => {
+          const unit = Number(it.unit_price ?? it.price ?? 0);
+          const qty = Number(it.quantity ?? 0);
+          const total = Number(it.total_price ?? unit * qty);
+          return acc + total;
+        }, 0);
+      }
+    } else {
+      subtotal = cartItems.reduce((acc, it) => acc + Number(it.total_price || 0), 0);
     }
 
     const shippingFee = calculateShippingFee();
@@ -368,29 +398,32 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
 
     try {
       setIsLoading(true);
+
       const payload = {
         address_id: selectedAddressId,
         payment_method,
-        // Add order-related data
         order_items: cartItems.map(item => ({
           variant_id: item.variant_id,
+          sku: item.sku,
           quantity: item.quantity,
-          unit_price: item.price, 
-          total_price: item.total_price
+          unit_price: item.unit_price ?? item.price,   // tolerate both shapes
+          total_price: item.total_price ?? (Number(item.unit_price ?? item.price) * Number(item.quantity))
         })),
         subtotal,
         shipping_fee: shippingFee,
         tax_amount: tax,
         total_amount: totalAmount,
-        total_items: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        total_items: cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
         order_notes: shippingData.order_notes || null
       };
 
       const { data, status } = await api.post(`${BASE_URL}/api/customer/checkout/submit-checkout`, payload);
 
       if (status === 200 || status === 201) {
-        // Clear cart after successful order
-        clearCart();
+        // Clear cart only if we actually used it
+        if (itemsFromCart.length > 0) {
+          clearCart();
+        }
         onSubmit?.(data);
         onHide?.();
       } else {
@@ -403,6 +436,7 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
         setError(message);
       } else if (err.request) {
         setError('Network error. Please check your connection.');
+        console.log('Request error:', err.request);
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
@@ -760,6 +794,19 @@ const CheckoutModal = ({ show, onHide, onSubmit }) => {
                     </div>
                   </Col>
                 </Row>
+
+                {/* Optional: show product summary when cart is empty but product was provided */}
+                {(!Array.isArray(cart) || cart.length === 0) && product && (
+                  <Row className="mb-3">
+                    <Col>
+                      <div className="alert alert-secondary">
+                        <strong>Item:</strong> {product.name ?? product.title ?? 'Selected Product'} ·
+                        <strong> Qty:</strong> {product.quantity ?? 1} ·
+                        <strong> Price:</strong> {Number(product.price || 0).toFixed(2)}
+                      </div>
+                    </Col>
+                  </Row>
+                )}
 
                 <Row className="mb-3 payment-method-inline">
                   <Col md={12}>
