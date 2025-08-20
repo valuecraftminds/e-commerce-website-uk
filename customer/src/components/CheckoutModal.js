@@ -24,7 +24,7 @@ const createAxios = () => {
   return instance;
 };
 
-// helpers
+
 // prevent adding symbols or letters
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
 
