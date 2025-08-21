@@ -2,6 +2,8 @@ import { useContext, useEffect, useState } from 'react';
 import { Alert, Button, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { FaPlus } from 'react-icons/fa';
+
 
 import DeleteAdmin from '../../components/DeleteAdmin';
 import '../../styles/ViewAdmins.css';
@@ -49,8 +51,11 @@ export default function ViewAdmins() {
   return (
     <div className="admin-container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3 className="admin-title m-0">Admin Users</h3>
-        <button className="btn-custom-primary" onClick={() => navigate('/register')}>Add Admin</button>
+        <h3 className="admin-title m-0">Company Users</h3>
+        <button className="btn-custom-primary" onClick={() => navigate('/register')}>
+                      <FaPlus size={14} style={{ marginRight: '8px' }} />
+          
+          Add User</button>
       </div>
 
       {errorMsg && <Alert variant="danger" className="mt-3">{errorMsg}</Alert>}

@@ -21,15 +21,14 @@ const roleBasedMenuItems = {
     Company_Admin: [
       { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' },
       { label: 'User Management', path: '/users', icon: 'bi-people' },
-      { label: 'Categories', path: '/category', icon: 'bi-tags' },
-      { label: 'Styles', path: '/style', icon: 'bi-palette' },
-      {
-        label: 'Warehouse',
-        icon: 'bi-building',
+     
+       {
+        label: 'Product Management',
+        icon: 'bi-box-seam',
         dropdown: true,
         items: [
-          { label: 'GRN', path: '/warehouse/grn', icon: 'bi-box-seam' },
-          { label: 'Issuing', path: '/warehouse/issuing', icon: 'bi-box-arrow-up' }
+          { label: 'Categories', path: '/category', icon: 'bi-tags' },
+          { label: 'Styles', path: '/style', icon: 'bi-palette' },
         ]
       },
       {
@@ -40,6 +39,16 @@ const roleBasedMenuItems = {
           { label: 'Create PO', path: '/merchandising/po', icon: 'bi-box-seam' },
         ]
       },
+      {
+        label: 'Warehouse',
+        icon: 'bi-building',
+        dropdown: true,
+        items: [
+          { label: 'GRN', path: '/warehouse/grn', icon: 'bi-box-seam' },
+          { label: 'Issuing', path: '/warehouse/issuing', icon: 'bi-box-arrow-up' }
+        ]
+      },
+      
       {
         label: 'Finance',
         icon: 'bi-currency-dollar',

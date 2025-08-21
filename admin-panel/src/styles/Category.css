@@ -1,11 +1,118 @@
-/* Import Bootstrap Icons */
+
+/* Main category bar */
+.main-category-bar {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  background: #fff;
+  padding: 16px 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow-x: auto;
+}
+/* Main category item - no background, color like subcategory */
+/* Main category item - unified style */
+.main-category-item {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  padding: 6px 18px;
+  border-radius: 8px;
+  transition: color 0.2s;
+  white-space: nowrap;
+  background: none !important;
+}
+.main-category-item.active {
+  color: #764ba2;
+  border-bottom: 3px solid #5a6fd8 !important;
+  background: none !important;
+}
+
+.main-category-actions .category-action-icon {
+  margin-left: 8px;
+  width: 22px;
+  height: 22px;
+  color: #888;
+  transition: color 0.2s;
+}
+.main-category-actions .category-action-icon:hover {
+  color: #6c3fc5;
+}
+.add-category-btn {
+  font-size: 1.1rem;
+  color: #6c3fc5;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0 8px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* Subcategories container */
+.subcategories-container {
+  min-height: 200px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 24px 20px 20px 32px;
+  max-width: 320px;
+  animation: slideDown 0.3s ease-out;
+}
+.subcategory-item {
+  font-size: 1.08rem;
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 0;
+  transition: color 0.2s;
+}
+.subcategory-item:hover {
+  color: #6c3fc5;
+}
+.subcategory-actions-inline .category-action-icon {
+  margin-left: 8px;
+  width: 22px;
+  height: 22px;
+  color: #888;
+  transition: color 0.2s;
+}
+.subcategory-actions-inline .category-action-icon:hover {
+  color: #6c3fc5;
+}
+.add-subcategory-btn-row {
+  margin-top: 16px;
+}
+.add-subcategory-btn {
+  min-width: 120px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-main-layout {
+  display: flex;
+  flex-direction: column;
+  margin-top: 32px;
+}
+
+.no-subcategories-vertical, .no-main-category-selected {
+  color: #888;
+  font-size: 1rem;
+  margin-top: 32px;
+  padding-left: 8px;
+}
+
 @import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css');
 
 .category-container {
   padding: 16px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-  max-width: 1000px;
+  max-width: auto;
   margin: 0 auto;
 }
 
@@ -352,8 +459,11 @@
   padding: 8px 12px;
   background-color: #f8f9fa;
   border-radius: 4px;
-  border-left: 3px solid #3498db;
+   border-left: none !important;
 }
+ .subcategory-item::before {
+   display: none;
+ }
 
 .subcategory-list .bg-light {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
@@ -634,11 +744,7 @@
     align-items: stretch;
   }
   
-  .subcategory-item {
-    flex-direction: column;
-    gap: 8px;
-    align-items: stretch;
-  }
+
   
   .modal {
     margin: 20px;
@@ -1049,19 +1155,10 @@
   background-color: #f8fafc;
 }
 
-.main-category-item {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-bottom: 2px solid #5a6fd8 !important;
-}
 
-.main-category-item:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-}
 
 .subcategory-item {
   background: #f8fafc;
-  margin-left: 40px;
   border-left: 4px solid #667eea;
   position: relative;
 }
@@ -1098,23 +1195,36 @@
   color: inherit;
 }
 
-.subcategory-name {
-  font-size: 1.1rem;
-  color: #2d3748;
-  margin-left: 20px;
-}
 
-.category-badges {
+/* Subcategory item - unified style */
+.subcategory-item {
+  font-size: 1.08rem;
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 18px;
   display: flex;
-  gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  padding-left: 0;
+  transition: color 0.2s;
+  background: #f8f9fa;
+  border-left: 4px solid #667eea;
+  position: relative;
 }
-
-.main-category-item .category-name-text {
-  color: white;
+.subcategory-item:hover {
+  color: #6c3fc5;
+  background-color: #e2e8f0;
+  transform: translateX(4px);
 }
-
+.subcategory-item::before {
+  content: '';
+  position: absolute;
+  left: -44px;
+  top: 50%;
+  width: 20px;
+  height: 1px;
+  background: #cbd5e0;
+}
 .main-category-item .badge {
   background: rgba(255, 255, 255, 0.2) !important;
   color: white !important;

@@ -326,7 +326,7 @@ export default function RegisterPage() {
           </Button>
 
           <Card.Body>
-            <h2 className="register-title">{id ? 'Edit Admin' : 'Add New Admin'}</h2>
+            <h2 className="register-title">{id ? 'Edit User' : 'Add New User'}</h2>
             
             {successMsg && (
               <div className="mb-3 text-success text-center fw-semibold">
@@ -553,7 +553,7 @@ export default function RegisterPage() {
                       {id ? 'Updating...' : 'Registering...'}
                     </>
                   ) : (
-                    id ? 'Update Admin' : 'Register Admin'
+                    id ? 'Update User' : 'Register User'
                   )}
                 </Button>
               </div>

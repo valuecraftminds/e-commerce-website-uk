@@ -1,7 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Button, ButtonGroup } from 'react-bootstrap';
-import { FaPlus, FaCog } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { StyleFormModal, VariantFormModal } from '../../components/modals/StyleModals';
 import StyleTable from '../../components/StyleTable';
