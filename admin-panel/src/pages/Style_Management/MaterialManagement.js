@@ -5,7 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const MaterialManagement = () => {
+const MaterialManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,6 @@ const MaterialManagement = () => {
       const url = isEditing 
         ? `${BASE_URL}/api/admin/materials/update-materials/${editingId}`
         : `${BASE_URL}/api/admin/materials/add-materials`;
-      
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
@@ -58,16 +57,43 @@ const MaterialManagement = () => {
         },
         body: JSON.stringify({
           ...formData,
-          company_code: userData.company_code
+          company_code: companyCode || userData.company_code
         }),
       });
-
       const data = await response.json();
-      
+      console.log('Material add API response:', data);
       if (data.success) {
         setSuccess(isEditing ? 'Material updated successfully' : 'Material added successfully');
         fetchMaterials();
+        if (!isEditing && embedded && styleCode && companyCode) {
+          // Assign to style
+          let materialId = null;
+          if (data.material && (data.material.material_id || data.material.id)) {
+            materialId = data.material.material_id || data.material.id;
+          } else if (data.id) {
+            materialId = data.id;
+          } else if (data.material_id) {
+            materialId = data.material_id;
+          }
+          if (materialId) {
+            const assignRes = await fetch(`${BASE_URL}/api/admin/styles/add-style-attributes`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                style_code: styleCode,
+                company_code: companyCode,
+                type: 'materials',
+                attribute_ids: [materialId]
+              })
+            });
+            const assignData = await assignRes.json();
+            console.log('Assign material to style response:', assignData);
+          } else {
+            console.warn('Could not determine new material ID from response:', data);
+          }
+        }
         resetForm();
+        if (onSuccess) onSuccess();
       } else {
         setError(data.message);
       }
@@ -127,6 +153,7 @@ const MaterialManagement = () => {
         error={error}
         success={success}
         onCancel={resetForm}
+        embedded={embedded}
       />
     </Container>
   );

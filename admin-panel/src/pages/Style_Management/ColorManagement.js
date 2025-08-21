@@ -5,7 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const ColorManagement = () => {
+const ColorManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,6 @@ const ColorManagement = () => {
       const url = isEditing 
         ? `${BASE_URL}/api/admin/colors/update-colors/${editingId}`
         : `${BASE_URL}/api/admin/colors/add-colors`;
-      
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
@@ -58,16 +57,43 @@ const ColorManagement = () => {
         },
         body: JSON.stringify({
           ...formData,
-          company_code: userData.company_code
+          company_code: companyCode || userData.company_code
         }),
       });
-
       const data = await response.json();
-      
+      console.log('Color add API response:', data);
       if (data.success) {
         setSuccess(isEditing ? 'Color updated successfully' : 'Color added successfully');
         fetchColors();
+        if (!isEditing && embedded && styleCode && companyCode) {
+          // Assign to style
+          let colorId = null;
+          if (data.color && (data.color.color_id || data.color.id)) {
+            colorId = data.color.color_id || data.color.id;
+          } else if (data.id) {
+            colorId = data.id;
+          } else if (data.color_id) {
+            colorId = data.color_id;
+          }
+          if (colorId) {
+            const assignRes = await fetch(`${BASE_URL}/api/admin/styles/add-style-attributes`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                style_code: styleCode,
+                company_code: companyCode,
+                type: 'colors',
+                attribute_ids: [colorId]
+              })
+            });
+            const assignData = await assignRes.json();
+            console.log('Assign color to style response:', assignData);
+          } else {
+            console.warn('Could not determine new color ID from response:', data);
+          }
+        }
         resetForm();
+        if (onSuccess) onSuccess();
       } else {
         setError(data.message);
       }
@@ -132,6 +158,7 @@ const ColorManagement = () => {
         error={error}
         success={success}
         onCancel={resetForm}
+        embedded={embedded}
       />
     </Container>
   );

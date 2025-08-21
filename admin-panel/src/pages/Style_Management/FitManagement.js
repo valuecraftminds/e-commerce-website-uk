@@ -5,7 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const FitManagement = () => {
+const FitManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [fits, setFits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,6 @@ const FitManagement = () => {
       const url = isEditing 
         ? `${BASE_URL}/api/admin/fits/update-fits/${editingId}`
         : `${BASE_URL}/api/admin/fits/add-fits`;
-      
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
@@ -58,16 +57,43 @@ const FitManagement = () => {
         },
         body: JSON.stringify({
           ...formData,
-          company_code: userData.company_code
+          company_code: companyCode || userData.company_code
         }),
       });
-
       const data = await response.json();
-      
+      console.log('Fit add API response:', data);
       if (data.success) {
         setSuccess(isEditing ? 'Fit updated successfully' : 'Fit added successfully');
         fetchFits();
+        if (!isEditing && embedded && styleCode && companyCode) {
+          // Assign to style
+          let fitId = null;
+          if (data.fit && (data.fit.fit_id || data.fit.id)) {
+            fitId = data.fit.fit_id || data.fit.id;
+          } else if (data.id) {
+            fitId = data.id;
+          } else if (data.fit_id) {
+            fitId = data.fit_id;
+          }
+          if (fitId) {
+            const assignRes = await fetch(`${BASE_URL}/api/admin/styles/add-style-attributes`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                style_code: styleCode,
+                company_code: companyCode,
+                type: 'fits',
+                attribute_ids: [fitId]
+              })
+            });
+            const assignData = await assignRes.json();
+            console.log('Assign fit to style response:', assignData);
+          } else {
+            console.warn('Could not determine new fit ID from response:', data);
+          }
+        }
         resetForm();
+        if (onSuccess) onSuccess();
       } else {
         setError(data.message);
       }
@@ -127,6 +153,7 @@ const FitManagement = () => {
         error={error}
         success={success}
         onCancel={resetForm}
+        embedded={embedded}
       />
     </Container>
   );

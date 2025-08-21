@@ -1,12 +1,12 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaCog } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { StyleFormModal, VariantFormModal } from '../components/modals/StyleModals';
-import StyleTable from '../components/StyleTable';
-import { AuthContext } from '../context/AuthContext';
-import '../styles/Style.css';
+import { StyleFormModal, VariantFormModal } from '../../components/modals/StyleModals';
+import StyleTable from '../../components/StyleTable';
+import { AuthContext } from '../../context/AuthContext';
+import '../../styles/Style.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -227,8 +227,11 @@ export default function Style() {
           setError('Error deleting style');
         }
       }
+    },
+    handleManageAttributes: (style) => {
+      navigate(`/styles/${style.style_code}/attributes`);
     }
-  }), [company_code, subCategories, fetchStyles]);
+  }), [company_code, subCategories, fetchStyles, navigate]);
 
   const handleSaveStyle = async () => {
     setLoading(true);
@@ -402,22 +405,7 @@ export default function Style() {
       <div className="style-header">
         <h1>Style Management</h1>
         
-        <div className="header-buttons">
-          <ButtonGroup className="variant-buttons">
-            <Button onClick={() => navigate('/colors')} variant="outline-primary">
-              Manage Colors
-            </Button>
-            <Button onClick={() => navigate('/sizes')} variant="outline-primary">
-              Manage Sizes
-            </Button>
-            <Button onClick={() => navigate('/materials')} variant="outline-primary">
-              Manage Materials
-            </Button>
-            <Button onClick={() => navigate('/fits')} variant="outline-primary">
-              Manage Fits
-            </Button>
-          </ButtonGroup>
-
+        <div>
           <button className="add-style-btn" onClick={handleAddStyle}>
             <FaPlus size={14} style={{ marginRight: '8px' }} />
             Add New Style

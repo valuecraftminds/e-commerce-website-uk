@@ -4,7 +4,7 @@ const SizeController = {
   getSizes(req, res) {
     const { company_code } = req.query;
     db.query(
-      'SELECT * FROM sizes WHERE company_code = ? ORDER BY size_order',
+      'SELECT * FROM sizes WHERE company_code = ?',
       [company_code],
       (err, results) => {
         if (err) {
@@ -17,10 +17,10 @@ const SizeController = {
   },
 
   addSize(req, res) {
-    const { company_code, size_name, size_order } = req.body;
+    const { company_code, size_name } = req.body;
     db.query(
-      'INSERT INTO sizes (company_code, size_name, size_order) VALUES (?, ?, ?)',
-      [company_code, size_name, size_order],
+      'INSERT INTO sizes (company_code, size_name) VALUES (?, ?, ?)',
+      [company_code, size_name],
       (err, result) => {
         if (err) {
           res.status(500).json({ success: false, message: 'Error adding size' });
@@ -33,10 +33,10 @@ const SizeController = {
 
   updateSize(req, res) {
     const { size_id } = req.params;
-    const { size_name, size_order } = req.body;
+    const { size_name } = req.body;
     db.query(
-      'UPDATE sizes SET size_name = ?, size_order = ?, updated_at = NOW() WHERE size_id = ?',
-      [size_name, size_order, size_id],
+      'UPDATE sizes SET size_name = ?, updated_at = NOW() WHERE size_id = ?',
+      [size_name, size_id],
       (err, result) => {
         if (err) {
           res.status(500).json({ success: false, message: 'Error updating size' });

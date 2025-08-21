@@ -1,5 +1,6 @@
 const express = require('express');
 const StyleController = require('../../controllers/admin/StyleController');
+const StyleAttributesController = require('../../controllers/admin/StyleAttributesController');
 const router = express.Router();
 const { uploadStyles } = require('../../middleware/upload');
 
@@ -17,6 +18,11 @@ router.put('/update-style-variants/:variant_id', StyleController.updateVariant);
 router.delete('/delete-style-variants/:variant_id', StyleController.deleteVariant);
 router.get('/get-style-variants-by-sku/:sku', StyleController.getStyleVariantsBySKU);
 router.get('/search-variants', StyleController.searchVariants);
+
+router.get('/get-style/:style_code', StyleAttributesController.getStyle);
+router.get('/get-style-attributes/:style_code', StyleAttributesController.getStyleAttributes);
+router.post('/add-style-attributes', StyleAttributesController.addStyleAttributes);
+router.delete('/remove-style-attribute', StyleAttributesController.removeStyleAttribute);
 
 
 module.exports = router;

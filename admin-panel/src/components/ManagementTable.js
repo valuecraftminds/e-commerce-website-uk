@@ -20,18 +20,16 @@ const ManagementTable = ({
 
   return (
     <div className="management-container">
-      <Button variant="secondary" className='mb-4' onClick={() => window.history.back()}>
-            Back
-          </Button>
+ 
       <Card className="mb-4">
         <Card.Header>
-          <h3>{isEditing ? `Edit ${title}` : `Add New ${title}`}</h3>
+          <h4>{isEditing ? `Edit ${title}` : `Add New ${title}`}</h4>
         </Card.Header>
         <Card.Body>
           <Form onSubmit={handleSubmit}>
             <div className="row">
               {Object.keys(formData).map(field => (
-                <div className="col-md-6 mb-3" key={field}>
+                <div className="col-md-6 mb-3" key={field}> 
                   <Form.Group>
                     <Form.Label>{field.replace('_', ' ').toUpperCase()}</Form.Label>
                     <Form.Control
@@ -39,7 +37,7 @@ const ManagementTable = ({
                       value={formData[field]}
                       onChange={(e) => setFormData({
                         ...formData,
-                        [field]: e.target.value
+                        [field]: e.target.value.toUpperCase()
                       })}
                       required
                     />

@@ -17,7 +17,7 @@ import OrderingDashboard from './pages/OrderingDashboard';
 import PdcDashboard from './pages/PdcDashboard';
 import PurchaseOrder from './pages/PurchaseOrder';
 import PurchaseOrderForm from './pages/PurchaseOrderForm';
-import Style from './pages/Style';
+import Style from './pages/Style_Management/Style';
 import ColorManagement from './pages/Style_Management/ColorManagement';
 import FitManagement from './pages/Style_Management/FitManagement';
 import MaterialManagement from './pages/Style_Management/MaterialManagement';
@@ -36,6 +36,7 @@ import ApprovePO from './pages/ApprovePO';
 import GRNDetails from './components/GRNDetails';
 import Location from './pages/Location';
 import AddGRN from './pages/AddGRN';
+import StyleAttributes from './pages/Style_Management/StyleAttributes';
 
 // Create Sidebar Context for global sidebar state management
 export const SidebarContext = createContext();
@@ -197,6 +198,8 @@ function App() {
           <Route path="users" element={<ViewAdmins />} />
           <Route path="category" element={<Category />} />
           <Route path="style" element={<Style />} />
+                  <Route path="/styles/:styleCode/attributes" element={<StyleAttributes />} />
+
           <Route path="/warehouse/grn" element={<WarehouseGRN />} />
           <Route path="/warehouse/add-grn" element={<AddGRN />} />
 

@@ -7,7 +7,7 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import { useMemo } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCogs } from 'react-icons/fa'; // Add FaCogs
 
 const StyleTable = ({ 
   styles, 
@@ -27,7 +27,8 @@ const StyleTable = ({
             {getValue() && getValue().split(',').map((img, idx) => (
               <img
                 key={idx}
-                src={`${BASE_URL}/uploads/styles/${img.trim()}`}                alt={`Style ${idx + 1}`}
+                src={`${BASE_URL}/uploads/styles/${img.trim()}`}                
+                alt={`Style ${idx + 1}`}
                 className="table-thumbnail"
                 title={`Click to view larger image ${idx + 1}`}
               />
@@ -77,7 +78,7 @@ const StyleTable = ({
       },
       {
         header: 'Actions',
-        maxWidth: 100,
+        maxWidth: 150,
         cell: ({ row }) => (
           <div className="table-actions">
             <button
@@ -99,6 +100,17 @@ const StyleTable = ({
               title="Delete"
             >
               <FaTrash size={14} />
+            </button>
+            <button
+              className="action-btn"
+              style={{ backgroundColor: '#34495e', color: 'white' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                tableActions.handleManageAttributes(row.original);
+              }}
+              title="Manage Attributes"
+            >
+              <FaCogs size={14} />
             </button>
           </div>
         )
