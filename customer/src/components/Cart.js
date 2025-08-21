@@ -412,6 +412,7 @@ return (
                         </Button>
                         <CheckoutModal 
                           show={showCheckoutModal} 
+                          isDirectBuy={false}
                           onHide={() => setShowCheckoutModal(false)}  
                         />
 
