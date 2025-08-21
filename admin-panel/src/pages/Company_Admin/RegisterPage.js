@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import '../../styles/RegisterPage.css';
@@ -197,21 +199,11 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, name: value }));
   };
 
-  // prevent entering letters and symbols and limit to 10 digits starting with 07
-  const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    value = value.slice(0, 15);
-    
+  // Use react-phone-input-2 for phone number input
+  const handlePhoneChange = (value, country) => {
     setFormData((prev) => ({ ...prev, phone: value }));
-  
     if (!value) {
       setPhoneError('Phone number is required');
-    } else if (value.length < 8) {
-      setPhoneError('Phone number must be at least 8 digits');
-    } else if (value.length > 15) {
-      setPhoneError('Phone number must be 15 digits or less');
-    } else if (/^0/.test(value)) {
-      setPhoneError('Please use country code without 0 (e.g., 254 instead of 07)');
     } else {
       setPhoneError('');
     }
@@ -374,42 +366,42 @@ export default function RegisterPage() {
 
               <Row>
                 <Col md={6}>
-                  <Form.Group className="mb-3">
+                  <Form.Group className="mb-3 phone-input-group">
                     <Form.Label htmlFor="phone">Phone Number</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="phone"
+                    <PhoneInput
+                      country={'gb'}
                       value={formData.phone}
                       onChange={handlePhoneChange}
-                      isInvalid={!!phoneError}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength="15"
-                      placeholder="Enter phone number with country code"
-                      required
+                      inputProps={{
+                        name: 'phone',
+                        required: true,
+                        className: `form-control${phoneError ? ' is-invalid' : ''}`,
+                        style: { width: '100%', height: '48px', fontSize: '1rem', borderRadius: '12px', backgroundColor: '#f7fafc', border: '2px solid #e2e8f0', paddingLeft: '48px' }
+                      }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
+                      dropdownStyle={{ fontSize: '1rem', zIndex: 9999 }}
+                      buttonStyle={{ borderRadius: '12px 0 0 12px', border: '2px solid #e2e8f0', height: '48px', background: '#f7fafc' }}
+                      searchStyle={{ fontSize: '1rem' }}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {phoneError}
-                    </Form.Control.Feedback>
+                    {phoneError && (
+                      <div className="invalid-feedback d-block">{phoneError}</div>
+                    )}
                   </Form.Group>
                 </Col>
 
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label htmlFor="role">Role</Form.Label>
-                    <Form.Select
+                    <Form.Control
+                      type="text"
                       id="role"
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
                       required
-                    >
-                      <option value="">Select Role</option>
-                      <option value="PDC">PDC</option>
-                      <option value="Warehouse_GRN">Warehouse GRN</option>
-                      <option value="Warehouse_Issuing">Warehouse Issuing</option>
-                      <option value="order">Ordering</option>
-                    </Form.Select>
+                      placeholder="Enter role"
+                    />
                   </Form.Group>
                 </Col>
               </Row>

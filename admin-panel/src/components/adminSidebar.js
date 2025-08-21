@@ -162,24 +162,24 @@ const roleBasedMenuItems = {
   const role = userData?.role || '';
   const sideBarOptions = userData?.side_bar_options || [];
 
+  // Dashboard path mapping based on role
   const dashboardMap = {
-    PDC: { label: 'Dashboard', path: '/pdcDashboard', icon: 'bi-speedometer2' },
-    Warehouse_GRN: { label: 'Dashboard', path: '/warehouseGRNDashboard', icon: 'bi-speedometer2' },
-    Warehouse_Issuing: { label: 'Dashboard', path: '/warehouseIssuingDashboard', icon: 'bi-speedometer2' },
-    order: { label: 'Dashboard', path: '/orderingDashboard', icon: 'bi-speedometer2' },
-    default: { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' }
+    VCM_Admin: { label: 'Dashboard', path: '/vcm-admin-dashboard', icon: 'bi-speedometer2' },
+    Company_Admin: { label: 'Dashboard', path: '/dashboard', icon: 'bi-speedometer2' },
+    // Add more mappings as needed
   };
 
   let menus = [];
   if (role === 'VCM_Admin' || role === 'Company_Admin') {
     menus = roleBasedMenuItems[role] || [];
   } else if (Array.isArray(sideBarOptions) && sideBarOptions.length > 0) {
-    const dashboardItem = dashboardMap[role] || dashboardMap.default;
-    
+    // Use dashboardMap if available, else fallback to a generic dashboard
+    const dashboardItem = dashboardMap[role] || { label: 'Dashboard', path: `/${role}`, icon: 'bi-speedometer2' };
+
     const dropdownParents = ['warehouse', 'merchandising', 'finance', 'settings'];
-    
+
     const menuItems = [dashboardItem];
-    
+
     sideBarOptions.forEach(optionValue => {
       if (dropdownParents.includes(optionValue)) {
         const dropdown = sidebarOptionsMap[optionValue];
@@ -187,7 +187,6 @@ const roleBasedMenuItems = {
           const selectedSubItems = dropdown.items.filter(subItem => 
             sideBarOptions.includes(subItem.value)
           );
-          
           if (selectedSubItems.length > 0) {
             menuItems.push({
               ...dropdown,
@@ -203,24 +202,23 @@ const roleBasedMenuItems = {
             return parent && parent.dropdown && 
                    parent.items.some(subItem => subItem.value === optionValue);
           });
-          
           if (!isSubItemOfDropdown) {
             menuItems.push(regularItem);
           }
         }
       }
     });
-    
+
     const uniqueMenuItems = [];
     const seenLabels = new Set();
-    
+
     menuItems.forEach(item => {
       if (!seenLabels.has(item.label)) {
         seenLabels.add(item.label);
         uniqueMenuItems.push(item);
       }
     });
-    
+
     menus = uniqueMenuItems;
   }
 

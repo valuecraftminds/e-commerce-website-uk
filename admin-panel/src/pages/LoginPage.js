@@ -47,28 +47,21 @@ export default function LoginPage() {
         const role = data.user.role;
 
         // Navigate based on role
-        switch (role) {
-          case 'VCM_Admin':
-            navigate('/vcm-admin-dashboard');
-            break;
-          case 'Company_Admin':
-            navigate('/dashboard');
-            break;
-          case 'PDC':
-            navigate('/pdcDashboard');
-            break;
-          case 'Warehouse_GRN':
-            navigate('/warehouseGRNDashboard');
-            break;
-          case 'Warehouse_Issuing':
-            navigate('/warehouseIssuingDashboard');
-            break;
-          case 'order':
-            navigate('/orderingDashboard');
-            break;
-          default:
-            setErrorMsg('Unknown user role. Please contact administrator.');
-            break;
+        // Map role to dashboard path
+        const dashboardMap = {
+          VCM_Admin: '/vcm-admin-dashboard',
+          Company_Admin: '/dashboard',
+          // Add more mappings as needed
+        };
+        if (dashboardMap[role]) {
+          navigate(dashboardMap[role]);
+        } else if (role && role.toLowerCase().includes('dashboard')) {
+          // If role is a dashboard path, use it directly
+          navigate(`/${role}`);
+        } else if (role && role !== 'VCM_Admin' && role !== 'Company_Admin') {
+           navigate(`/dashboard`);
+        } else {
+          setErrorMsg('Unknown user role. Please contact administrator.');
         }
       } else {
         setErrorMsg(data.message || "Login failed");

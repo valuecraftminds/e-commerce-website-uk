@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Tabs, Tab } from 'react-bootstrap';
 import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
 import { AuthContext } from '../../context/AuthContext';
+import '../../styles/Style.css';
+
 
 import ColorManagement from './ColorManagement';
 import SizeManagement from './SizeManagement';
@@ -12,7 +14,7 @@ import FitManagement from './FitManagement';
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 
-export default function StyleAttributes() {
+export default function StyleAttributes() { 
  const { styleCode } = useParams();
   const navigate = useNavigate();
   const { userData } = useContext(AuthContext);
@@ -234,7 +236,7 @@ export default function StyleAttributes() {
     <Row className="mb-4">
       {/* Left: Add New */}
       <Col md={6}>
-        <Card>
+        
           
           <Card.Body>
             {type === 'colors' && (
@@ -274,7 +276,6 @@ export default function StyleAttributes() {
               />
             )}
           </Card.Body>
-        </Card>
       </Col>
       {/* Right: Add Existing */}
       <Col md={6}>
@@ -283,6 +284,7 @@ export default function StyleAttributes() {
             <h5 className="mb-0">{title} Assigned</h5>
             <Button 
               variant="primary" 
+              className='add-style-btn'
               size="sm" 
               onClick={() => handleOpenModal(type)}
             >
@@ -294,32 +296,34 @@ export default function StyleAttributes() {
             {items.length === 0 ? (
               <p className="text-muted text-center">No {title.toLowerCase()} added yet.</p>
             ) : (
-              <Table responsive striped>
+              <Table responsive striped size="sm" className="table-organized">
                 <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    {type === 'colors' && <th>Code</th>}
-                    {(type === 'materials' || type === 'fits') && <th>Description</th>}
-                    <th>Action</th>
+                  <tr style={{ verticalAlign: 'middle' }}>
+                    <th style={{ width: '40px' }}>#</th>
+                    <th style={{ minWidth: '120px' }}>Name</th>
+                    {type === 'colors' && <th style={{ minWidth: '80px' }}>Code</th>}
+                    {(type === 'materials' || type === 'fits') && <th style={{ minWidth: '120px' }}>Description</th>}
+                    <th style={{ width: '70px' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, index) => (
-                    <tr key={index}>
+                    <tr key={index} style={{ verticalAlign: 'middle', height: '36px' }}>
                       <td>{index + 1}</td>
-                      <td>
+                      <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {type === 'colors' ? item.color_name :
                          type === 'sizes' ? item.size_name :
                          type === 'materials' ? item.material_name :
                          item.fit_name}
                       </td>
-                      {type === 'colors' && <td>{item.color_code}</td>}
+                      {type === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
                       {(type === 'materials' || type === 'fits') && <td>{item.description || '-'}</td>}
                       <td>
                         <Button
                           variant="danger"
                           size="sm"
+                          className="py-0 px-2"
+                          style={{ fontSize: '0.9rem', lineHeight: 1 }}
                           onClick={() => handleRemoveAttribute(type, 
                             type === 'colors' ? item.color_id :
                             type === 'sizes' ? item.size_id :
@@ -406,14 +410,14 @@ export default function StyleAttributes() {
           ) : (
             <div>
               <p>Select {modalType} to add to this style:</p>
-              <Table responsive striped>
+              <Table responsive striped size="sm" className="table-organized">
                 <thead>
-                  <tr>
-                    <th>Select</th>
-                    <th>Name</th>
-                    {modalType === 'colors' && <th>Code</th>}
-                    {modalType === 'sizes' && <th>Order</th>}
-                    {(modalType === 'materials' || modalType === 'fits') && <th>Description</th>}
+                  <tr style={{ verticalAlign: 'middle' }}>
+                    <th style={{ width: '60px' }}>Select</th>
+                    <th style={{ minWidth: '120px' }}>Name</th>
+                    {modalType === 'colors' && <th style={{ minWidth: '80px' }}>Code</th>}
+                    {modalType === 'sizes' && <th style={{ minWidth: '60px' }}>Order</th>}
+                    {(modalType === 'materials' || modalType === 'fits') && <th style={{ minWidth: '120px' }}>Description</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -423,21 +427,23 @@ export default function StyleAttributes() {
                                   modalType === 'materials' ? item.material_id :
                                   item.fit_id;
                     return (
-                      <tr key={itemId}>
+                      <tr key={itemId} style={{ verticalAlign: 'middle', height: '34px' }}>
                         <td>
                           <Form.Check
                             type="checkbox"
                             checked={selectedItems.includes(itemId)}
                             onChange={() => handleAttributeToggle(itemId)}
+                            style={{ marginTop: 0, marginBottom: 0 }}
                           />
                         </td>
-                        <td>
+                        <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {modalType === 'colors' ? item.color_name :
                            modalType === 'sizes' ? item.size_name :
                            modalType === 'materials' ? item.material_name :
                            item.fit_name}
                         </td>
-                        {modalType === 'colors' && <td>{item.color_code}</td>}
+                        {modalType === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
+                        {modalType === 'sizes' && <td>{item.order || '-'}</td>}
                         {(modalType === 'materials' || modalType === 'fits') && <td>{item.description || '-'}</td>}
                       </tr>
                     );
