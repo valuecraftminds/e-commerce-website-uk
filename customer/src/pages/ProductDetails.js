@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Image, Button, Card } from "react-bootstrap";
+import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import axios from "axios";
 
@@ -36,7 +36,6 @@ export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedColorName, setSelectedColorName] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   
