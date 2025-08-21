@@ -12,4 +12,7 @@ router.get('/product/:style_id', checkCompanyCode, productController.getProductD
 router.get('/product-listings', checkCompanyCode, productController.getProductListings);
 router.get('/search', checkCompanyCode, productController.searchProducts);
 
+router.get('/offers', checkCompanyCode, productController.getStylesWithOfferPrice);
+router.get('/similar-products/:style_id', checkCompanyCode, productController.getSimilarProducts);
+
 module.exports = router;

@@ -223,6 +223,7 @@ const CheckoutController = {
                 order_id, 
                 customer_id,
                 variant_id, 
+                sku,
                 quantity, 
                 unit_price, 
                 total_price, 
@@ -236,6 +237,7 @@ const CheckoutController = {
               orderId, 
               customer_id,
               item.variant_id, 
+              item.sku,
               item.quantity,
               item.unit_price, 
               item.total_price, 
@@ -254,24 +256,56 @@ const CheckoutController = {
                 });
               }
 
-              // Commit transaction
-              db.commit((commitErr) => {
-                if (commitErr) {
+              // Insert bookings
+              const bookingQuery = `
+                INSERT INTO booking (
+                  company_code,
+                  variant_id,
+                  sku,
+                  quantity,
+                  created_at
+                ) VALUES ?
+              `;
+
+              const bookingValues = order_items.map(item => [
+                company_code,
+                item.variant_id,
+                item.sku,
+                item.quantity,
+                new Date()
+              ]);
+
+              db.query(bookingQuery, [bookingValues], (bookingErr, bookingResult) => {
+                if (bookingErr) {
                   return db.rollback(() => {
-                    console.error('Transaction commit error:', commitErr);
-                    res.status(500).json({ error: 'Failed to complete order' });
+                    console.error('Error inserting booking:', bookingErr);
+                    res.status(500).json({ 
+                      error: 'Failed to create booking',
+                      details: bookingErr.message 
+                    });
                   });
                 }
 
-                // Success response
-                res.status(201).json({ 
-                  message: 'Order created successfully',
-                  order_id: orderId,
-                  order_number: orderNumber,
-                  address_id: finalAddressId,
-                  payment_method_id: paymentMethodId,
-                  total_amount: total_amount,
-                  order_status: 'pending'
+                // Commit transaction 
+                db.commit((commitErr) => {
+                  if (commitErr) {
+                    return db.rollback(() => {
+                      console.error('Transaction commit error:', commitErr);
+                      res.status(500).json({ error: 'Failed to complete order' });
+                    });
+                  }
+
+                  // Success response
+                  res.status(201).json({ 
+                    message: 'Order created successfully',
+                    order_id: orderId,
+                    order_number: orderNumber,
+                    address_id: finalAddressId,
+                    payment_method_id: paymentMethodId,
+                    total_amount: total_amount,
+                    order_status: 'pending',
+                    booking_count: bookingResult.affectedRows
+                  });
                 });
               });
             });

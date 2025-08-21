@@ -75,25 +75,19 @@ const Cart = () => {
   const handleClearCart = async () => {
     showNotify({
         title: 'Clear Cart',
-        message: 'Are you sure you want to clear your entire cart? This action cannot be undone.',
+        message: 'Are you sure you want to clear your entire cart?',
         type: 'warning',
         customButtons: [
             {
-                label: 'Yes, Clear Cart',
+                label: 'Yes',
                 variant: 'danger',
                 onClick: async () => {
                     try {
                         const result = await clearCart();
-                        if (result.success) {
-                            showNotify({
-                                title: 'Cart Cleared',
-                                message: 'Your cart has been successfully cleared.',
-                                type: 'success'
-                            });
-                        } else {
+                        if (!result.success) {
                             showNotify({
                                 title: 'Error',
-                                message: result.message || 'Failed to clear cart.',
+                                message: 'Failed to clear cart.',
                                 type: 'error'
                             });
                         }
@@ -382,14 +376,14 @@ return (
                         <span>Items ({summary.total_items}):</span>
                         <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                       </div>
-                      <div className="d-flex justify-content-between mb-3">
+                      {/* <div className="d-flex justify-content-between mb-3">
                         <span>🚚 Shipping:</span>
                         <span className="fw-bold">0.00</span>
                       </div>
                       <div className="d-flex justify-content-between mb-3">
                         <span>🧾 Tax:</span>
                         <span className="fw-bold">0.00</span>
-                      </div>
+                      </div> */}
                       {isLoggedIn && (
                         <div className="d-flex justify-content-between mb-3">
                           <span>💸 Discount:</span>

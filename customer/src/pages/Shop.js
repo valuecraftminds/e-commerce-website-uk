@@ -201,6 +201,7 @@ export default function Shop() {
 
   return (
     <>
+      {/* banner */}
       {currentCategory && (
         <div className="shop-banner mb-4">
           {DataFile.banner
@@ -215,7 +216,8 @@ export default function Shop() {
             ))}
         </div>
       )}
-
+      
+      {/* product grid */}
       <Container fluid className="my-5 shop-product-container">
         <h2 className="mb-4 text-capitalize">
           {currentCategory ? `${currentCategory} Collection` : 'All Products'}

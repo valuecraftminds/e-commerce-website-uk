@@ -1,7 +1,4 @@
-const db = require('../../config/database');
-const path = require('path');
-const fs = require('fs');
-const { off } = require('process');
+const db = require('../../config/database'); 
 
 const productController = {
   // GET main categories
@@ -53,8 +50,7 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        MIN(sv.price) as min_price,
-        MAX(sv.price) as max_price,
+        price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
@@ -119,102 +115,138 @@ const productController = {
     });
   },
 
+  //get product details
   getProductDetails: (req, res) => {
     const { style_id } = req.params;
     const { company_code } = req.query;
 
-    const sql = `
-      SELECT
-        s.style_id,
-        s.style_code,
-        s.name,
-        s.description,
-        s.image,
-        sv.sku,
-        sv.price,
-        sv.offer_price,
-        sz.size_name,
-        sv.variant_id,
-        c.color_name,
-        c.color_code,
-        c.color_id
-      FROM styles s
-      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
-      LEFT JOIN sizes sz ON sv.size_id = sz.size_id
-      LEFT JOIN colors c ON sv.color_id = c.color_id
-      WHERE s.style_id = ? 
-      AND s.company_code = ?
-      AND s.approved = 'yes'
+    // get all sizes from the sizes table
+    const getAllSizesQuery = `
+      SELECT size_id, size_name, size_order
+      FROM sizes 
+      WHERE company_code = ?
+      ORDER BY size_order ASC
     `;
 
-    db.query(sql, [style_id, company_code], (err, results) => {
+    db.query(getAllSizesQuery, [company_code], (err, allSizesResult) => {
       if (err) {
-        console.error('Error fetching product details:', err);
+        console.error('Error fetching all sizes:', err);
         return res.status(500).json({ error: 'Server error' });
       }
 
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
+      // get product details with available variants
+      const productDetailsQuery = `
+        SELECT
+          s.style_id,
+          s.style_code,
+          s.name,
+          s.description,
+          s.image,
+          sv.sku,
+          sv.price,
+          sv.offer_price,
+          sv.material_id,
+          sz.size_name,
+          sz.size_id,
+          sv.variant_id,
+          c.color_name,
+          c.color_code,
+          c.color_id,
+          m.material_name,
+          m.description AS material_description
+        FROM styles s
+        LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+        LEFT JOIN sizes sz ON sv.size_id = sz.size_id
+        LEFT JOIN colors c ON sv.color_id = c.color_id
+        LEFT JOIN materials m ON sv.material_id = m.material_id
+        WHERE s.style_id = ? 
+        AND s.company_code = ?
+        AND s.approved = 'yes'
+      `;
 
-      // Get unique sizes
-      const sizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
-
-      // Create size-color mapping
-      const sizeColorMap = {};
-      const allColorsMap = new Map();
-
-      results.forEach(r => {
-        if (r.size_name && r.color_name && r.color_code) {
-          // Add to size-specific colors
-          if (!sizeColorMap[r.size_name]) {
-            sizeColorMap[r.size_name] = new Map();
-          }
-          sizeColorMap[r.size_name].set(r.color_code, {
-            name: r.color_name,
-            code: r.color_code,
-            color_id: r.color_id
-          });
-
-          // Add to all colors map
-          allColorsMap.set(r.color_code, {
-            name: r.color_name,
-            code: r.color_code,
-            color_id: r.color_id
-          });
+      db.query(productDetailsQuery, [style_id, company_code], (err, results) => {
+        if (err) {
+          console.error('Error fetching product details:', err);
+          return res.status(500).json({ error: 'Server error' });
         }
-      });
 
-      // Convert size-color map to the desired format
-      const availableBySize = {};
-      Object.keys(sizeColorMap).forEach(size => {
-        availableBySize[size] = Array.from(sizeColorMap[size].values());
-      });
+        if (results.length === 0) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
 
-      // Get all unique colors
-      const allColors = Array.from(allColorsMap.values());
+        // Get available sizes for this product
+        const availableSizes = [...new Set(results.map(r => r.size_name).filter(Boolean))];
+        const availableSizeIds = [...new Set(results.map(r => r.size_id).filter(Boolean))];
 
-      const product = results[0];
-      const price = product.price;
+        // Create all sizes array with availability status
+        const allSizesWithAvailability = allSizesResult.map(size => ({
+          size_id: size.size_id,
+          size_name: size.size_name,
+          available: availableSizeIds.includes(size.size_id)
+        }));
 
-      res.json({
-        style_id: product.style_id,
-        style_code: product.style_code,
-        name: product.name,
-        sku: product.sku,
-        description: product.description,
-        price,
-        offer_price: product.offer_price,
-        variant_id: product.variant_id,
-        available_sizes: sizes,
-        available_colors: allColors, // All available colors
-        colors_by_size: availableBySize, // Colors available for each size
-        image: product.image
+        // Create size-color mapping for available variants only
+        const sizeColorMap = {};
+        const allColorsMap = new Map();
+
+        results.forEach(r => {
+          if (r.size_name && r.color_name && r.color_code) {
+            // Add to size-specific colors
+            if (!sizeColorMap[r.size_name]) {
+              sizeColorMap[r.size_name] = new Map();
+            }
+            sizeColorMap[r.size_name].set(r.color_code, {
+              name: r.color_name,
+              code: r.color_code,
+              color_id: r.color_id
+            });
+
+            // Add to all colors map
+            allColorsMap.set(r.color_code, {
+              name: r.color_name,
+              code: r.color_code,
+              color_id: r.color_id
+            });
+          }
+        });
+
+        // Convert size-color map to the desired format
+        const availableBySize = {};
+        Object.keys(sizeColorMap).forEach(size => {
+          availableBySize[size] = Array.from(sizeColorMap[size].values());
+        });
+
+        // Get all unique colors
+        const allColors = Array.from(allColorsMap.values());
+
+        const product = results[0];
+        const price = product.price;
+        const materialInfo = results.find(r => r.material_id || r.material_name || r.material_description);
+
+        res.json({
+          style_id: product.style_id,
+          style_code: product.style_code,
+          name: product.name,
+          sku: product.sku,
+          description: product.description,
+          price,
+          offer_price: product.offer_price,
+          variant_id: product.variant_id,
+          all_sizes: allSizesWithAvailability, // All sizes with availability status
+          available_sizes: availableSizes, // Only available sizes
+          available_colors: allColors, // All available colors
+          colors_by_size: availableBySize, // Colors available for each size
+          image: product.image,
+          material: {
+            material_id: materialInfo.material_id,
+            material_name: materialInfo.material_name,
+            material_description: materialInfo.material_description
+          }
+        });
       });
     });
   },
-
-  // GET product listings
+  
   getProductListings: (req, res) => {
     const { company_code } = req.query;
 
@@ -294,6 +326,113 @@ const productController = {
       res.status(200).json(transformedResults);
     });
   },
+
+
+// Get all styles that have variants with offer_price
+  getStylesWithOfferPrice: (req, res) => {
+    const { company_code } = req.query || req.params;
+
+    if (!company_code) {
+      return res.status(400).json({ error: 'Company code is required' });
+    }
+
+    const sql = `
+    SELECT 
+      s.*,
+      c.category_name,
+      c.category_id,
+      parent_cat.category_name as parent_category_name,
+      sv.price,
+      sv.offer_price,
+      COUNT(DISTINCT sv.variant_id) as variant_count,
+      ROUND(((sv.price - sv.offer_price) / sv.price) * 100, 2) as discount_percentage
+    FROM styles s
+    LEFT JOIN categories c ON s.category_id = c.category_id
+    LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+    INNER JOIN style_variants sv ON s.style_code = sv.style_code 
+    WHERE sv.is_active = 1 
+    AND sv.offer_price IS NOT NULL 
+    AND sv.offer_price > 0
+    AND s.approved = 'yes' 
+    AND s.company_code = ?
+    GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+    ORDER BY discount_percentage DESC, s.created_at DESC
+  `;
+
+    db.query(sql, [company_code], (err, results) => {
+      if (err) {
+        console.error('Error retrieving styles with offer price:', err);
+        return res.status(500).json({ error: 'Server error' });
+      }
+      res.status(200).json(results);
+    });
+  },
+
+
+  // GET similar products by category (exclude current product)
+getSimilarProducts: (req, res) => {
+  const { style_id } = req.params;
+  const { company_code } = req.query;
+
+  if (!company_code) {
+    return res.status(400).json({ error: 'Company code is required' });
+  }
+
+  // First, get the category of the current product
+  const getCategoryQuery = `
+    SELECT category_id 
+    FROM styles 
+    WHERE style_id = ? AND company_code = ?
+  `;
+
+  db.query(getCategoryQuery, [style_id, company_code], (err, categoryResult) => {
+    if (err) {
+      console.error('Error getting product category:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    if (categoryResult.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const categoryId = categoryResult[0].category_id;
+
+    // Get similar products from the same category
+    const similarProductsQuery = `
+      SELECT 
+        s.style_id,
+        s.style_code,
+        s.name,
+        s.description,
+        s.image,
+        c.category_name,
+        c.category_id,
+        parent_cat.category_name as parent_category_name,
+        sv.price,
+        sv.offer_price,
+        COUNT(DISTINCT sv.variant_id) as variant_count
+      FROM styles s
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+      WHERE s.category_id = ? 
+      AND s.style_id != ?
+      AND s.approved = 'yes' 
+      AND s.company_code = ?
+      GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+      ORDER BY s.created_at DESC
+      LIMIT 8
+    `;
+
+    db.query(similarProductsQuery, [categoryId, style_id, company_code], (err, results) => {
+      if (err) {
+        console.error('Error retrieving similar products:', err);
+        return res.status(500).json({ error: 'Server error' });
+      }
+      res.status(200).json(results);
+    });
+  });
+},
 
 };
 
