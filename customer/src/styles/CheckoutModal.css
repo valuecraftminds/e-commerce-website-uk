@@ -140,11 +140,10 @@
 
 /* Footer buttons */
 .checkout-modal .modal-footer .btn {
-  padding: 12px 24px;
+  /* padding: 12px 24px; */
   font-weight: 500;
   border-radius: 8px;
   transition: all 0.3s ease;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.9rem;
 }
@@ -171,17 +170,17 @@
   transform: translateY(-1px);
 }
 
-/* Payment Method (inline radio) */
+/* Payment Method  */
 .checkout-modal .payment-method-inline {
   display: flex;
-  gap: 0px;              /* keep sizes */
-  align-items: flex-start; /* fixed invalid value 'left' */
+  gap: 0px;             
+  align-items: flex-start; 
 }
 
 .checkout-modal .payment-method-inline .form-check {
   margin: 0;
   padding: 0;
-  min-width: 150px;     /* keep size */
+  min-width: 150px;
   display: flex;
   justify-content: center;
 }

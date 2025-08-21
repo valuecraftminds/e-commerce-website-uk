@@ -56,7 +56,7 @@ const isExpiryInFuture = ({ month, year }) => {
   return year > thisYear || (year === thisYear && month >= thisMonth);
 };
 
-const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
+const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) => {
   const api = useMemo(() => createAxios(), []);
 
   const [step, setStep] = useState('address');
@@ -67,7 +67,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
     city: '', state: '', country: '', postal_code: '',
     phone: '',
 
-    payment_method: '',
+    // payment_method: '',
     card_number: '', card_expiry_date: '', card_cvv: '',
   });
 
@@ -206,9 +206,9 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
 
   const validatePayment = () => {
     const fe = {};
-    if (shippingData.payment_method !== 'card') {
-      fe.payment_method = 'Choose a payment method';
-    } else {
+    // if (shippingData.payment_method !== 'card') {
+    //   fe.payment_method = 'Choose a payment method';
+    // } else {
       if (!shippingData.card_number || !luhnValid(shippingData.card_number)) {
         fe.card_number = 'Card number looks invalid';
       }
@@ -218,7 +218,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
       if (!shippingData.card_cvv || shippingData.card_cvv.length < 3) {
         fe.card_cvv = 'CVV should be 3–4 digits';
       }
-    }
+    // }
     setFieldErrors(fe);
     return Object.keys(fe).length === 0;
   };
@@ -344,11 +344,10 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
     // Normalize cart array
     const itemsFromCart = Array.isArray(cart) ? cart : [];
 
-    // If cart is empty/null, fallback to the single product passed via prop
     let cartItems = [];
-    if (itemsFromCart.length > 0) {
-      cartItems = itemsFromCart;
-    } else if (product) {
+
+    if (isDirectBuy && product) {
+      // Direct Buy: ignore cart, checkout only this product
       const qty = Number(product.quantity ?? 1);
       const unit = Number(product.price) || 0;
       cartItems = [{
@@ -358,14 +357,17 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
         unit_price: unit,
         total_price: unit * qty
       }];
-    } else {
+    } else if (itemsFromCart && itemsFromCart.length > 0) {
+      // Normal cart checkout
+      cartItems = itemsFromCart;
+    }  else {
       setError('Your cart is empty and no product was provided.');
       return;
     }
 
-    // Compute subtotal:
-    // - If we’re using cart, prefer summary values, fallback to recompute.
-    // - If we’re using single product, compute from cartItems.
+
+    // - when checkout from cart, prefer summary values, fallback to recompute.
+    // - when directly checkout from product details page, compute from cartItems.
     let subtotal = 0;
     if (itemsFromCart.length > 0) {
       const s = summary?.original_amount ?? summary?.total_amount;
@@ -420,8 +422,8 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
       const { data, status } = await api.post(`${BASE_URL}/api/customer/checkout/submit-checkout`, payload);
 
       if (status === 200 || status === 201) {
-        // Clear cart only if we actually used it
-        if (itemsFromCart.length > 0) {
+        // Clear cart only when user is checking out from cart
+        if (!isDirectBuy && itemsFromCart.length > 0) {
           clearCart();
         }
         onSubmit?.(data);
@@ -429,6 +431,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
       } else {
         setError(`Checkout failed with status: ${status}`);
       }
+
     } catch (err) {
       console.error('Payment step error:', err);
       if (err.response) {
@@ -807,32 +810,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
                     </Col>
                   </Row>
                 )}
-
-                <Row className="mb-3 payment-method-inline">
-                  <Col md={12}>
-                    <Form.Group controlId="paymentMethod" className="mt-3">
-                      <Form.Label>Payment Method</Form.Label>
-                      <div className="payment-method-inline">
-                        <Form.Check
-                          type="radio"
-                          id="card"
-                          label="Add Card Details"
-                          name="payment_method"
-                          value="card"
-                          checked={shippingData.payment_method === 'card'}
-                          onChange={handleChange}
-                          isInvalid={!!fieldErrors.payment_method}
-                          disabled={disabled}
-                        />
-                      </div>
-                      <Form.Control.Feedback type="invalid">
-                        {fieldErrors.payment_method}
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                {shippingData.payment_method === 'card' && (
                   <Row className="mb-3">
                     <Col md={4}>
                       <Form.Group controlId="cardNumber">
@@ -899,7 +876,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit }) => {
                       </Form.Group>
                     </Col>
                   </Row>
-                )}
               </>
             )}
           </Container>
