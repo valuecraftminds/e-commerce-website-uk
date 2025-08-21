@@ -201,6 +201,36 @@ const ProfileController = {
                 });
             });
         });
+    },
+
+    deleteAccount: (req, res) => {
+        const customer_id = req.user?.id;
+        const { company_code } = req.query;
+
+        if (!company_code) {
+            return res.status(400).json({ error: 'Company code required' });
+        }
+
+        if (!customer_id) {
+            return res.status(400).json({ error: 'Customer ID required' });
+        }
+
+        // Delete customer account
+        const deleteSql = `
+            DELETE FROM customers 
+            WHERE customer_id = ? AND company_code = ?
+        `;
+
+        db.query(deleteSql, [customer_id, company_code], (deleteErr) => {
+            if (deleteErr) {
+                console.error('Error deleting account:', deleteErr);
+                return res.status(500).json({ error: 'Server error' });
+            }
+
+            res.status(200).json({
+                message: 'Account deleted successfully'
+            });
+        });
     }
 };
 

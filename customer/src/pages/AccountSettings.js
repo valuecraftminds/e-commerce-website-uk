@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, MapPin, Plus, Eye, EyeOff, Mail, Phone, Lock, Camera } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 import '../styles/AccountSettings.css';
 import ProfilePictureModal from '../components/ProfileImageModal';
 import AddNewAddress from '../components/AddNewAddress';
 import EditAddress from '../components/EditAddress';
 import { useNotifyModal } from "../context/NotifyModalProvider";
+import { Button } from 'react-bootstrap';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -32,6 +35,8 @@ export default function AccountSettings() {
   
   const fileInputRef = useRef(null);
   const passwordInputRef = useRef(null);
+
+    const navigate = useNavigate();
 
   const passwordRules = {
   length: newPassword.length >= 8 && newPassword.length <= 12,
@@ -462,6 +467,59 @@ useEffect(() => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const { company_code } = profileData;
+
+    showNotify({
+      title: "Deleting Account",
+      message: "Are you sure you want to delete your account?",
+      type: "warning",
+      customButtons: [
+        {
+          label: "Yes, Delete",
+          onClick: async () => {
+            try {
+              const config = getAxiosConfig();
+              await axios.delete(`${BASE_URL}/api/customer/user/delete-account`, config);
+
+              showNotify({
+                title: "Done",
+                message: "Your account has been deleted successfully.",
+                type: "success",
+                customButtons: [
+                  {
+                    label: "OK",
+                    onClick: () => {}
+                  }
+                ]
+              });
+            } catch (error) {
+              console.error('Error deleting account:', error);
+              showNotify({
+                title: "Delete Failed",
+                message: 'Failed to delete account. Please try again.',
+                type: "error",
+                customButtons: [
+                  {
+                    label: "OK",
+                    onClick: () => {
+                      // Navigate to home
+                      navigate('/');
+                    }
+                  }
+                ]
+              });
+            }
+          }
+        },
+        {
+          label: "No, Cancel",
+          onClick: () => {}
+        }
+      ]
+    });
+  };
+
   const handleUpdateProfileDetails = async () => {
     const { firstName, lastName, email, phone, password } = profileData;
     if (!firstName || !lastName || !email || !phone) {
@@ -768,7 +826,18 @@ useEffect(() => {
                   Cancel
                 </button>
               </div>
+              <div className="p-3 mt-4 border border-danger rounded bg-light">
+                <h5 className="text-danger">Delete Account</h5>
+                <p className="mb-3">
+                  Deleting your account is permanent and cannot be undone. 
+                  Please proceed with caution.
+                </p>
+                <Button onClick={handleDeleteAccount} variant="danger">
+                  Delete Account
+                </Button>
+              </div>
             </div>
+          
           )}
 
           {/* Addresses Tab */}
