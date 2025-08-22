@@ -663,88 +663,89 @@ export default function ProductDetails() {
       <div className="layout-spacer"></div>
       
       {/* Similar Products Section */}
-<Container fluid className="my-5 similar-products-container">
-  <h2 className="mb-4">You May Also Like</h2>
+    <Container fluid className="similar-products-container">
+      <h2 className="mb-4">You May Also Like</h2>
 
-  {loadingSimilar ? (
-    <div className="text-center my-5">
-      <div className="home-loading-spinner">
-        <div className="home-spinner"></div>
-        <p>Loading similar products...</p>
-      </div>
-    </div>
-  ) : error ? (
-    <div className="text-center my-5">
-      <h5 className="text-danger">Failed to load similar products</h5>
-    </div>
-  ) : similarProducts.length === 0 ? (
-    <div className="home-no-products">
-      <div className="home-no-products-content">
-        <i className="fas fa-search fa-3x"></i>
-        <h3>No similar products found</h3>
-        <p>No similar products available at the moment.</p>
-      </div>
-    </div>
-  ) : (
-    <div className="home-products-grid">
-      {similarProducts.map((similarProduct) => (
-        <div
-          key={similarProduct.style_id}
-          className="home-product-card"
-          onClick={() => navigate(`/product/${similarProduct.style_id}`)}
-        >
-          <div className="home-product-image-container">
-            <img
-              src={`${BASE_URL}/uploads/styles/${similarProduct.image}`}
-              alt={similarProduct.name}
-              className="home-product-image"
-            />
-
-            <div className="home-product-overlay">
-              <h5>Quick View</h5>
-            </div>
-          </div>
-
-          <div className="home-product-info">
-            <h3 className="home-product-name">{similarProduct.name}</h3>
-            <p className="home-product-description">
-              {similarProduct.description && similarProduct.description.length > 100
-                ? `${similarProduct.description.substring(0, 100)}...`
-                : similarProduct.description
-              }
-            </p>
-            <div className="home-product-price">
-              {similarProduct.offer_price && similarProduct.offer_price !== 0 ? (
-                <>
-                  <span className="me-2">
-                    {formatPrice(similarProduct.offer_price)}
-                  </span>
-                  <span className="text-muted text-decoration-line-through small">
-                    {formatPrice(similarProduct.price)}
-                  </span>
-                </>
-              ) : (
-                <span>{formatPrice(similarProduct.price)}</span>
-              )}
-            </div>
-            {similarProduct.category_name && (
-              <div className="home-product-category">
-                <span className="home-category-badge">
-                  {similarProduct.category_name}
-                </span>
-              </div>
-            )}
+      {loadingSimilar ? (
+        <div className="text-center my-5">
+          <div className="home-loading-spinner">
+            <div className="home-spinner"></div>
+            <p>Loading similar products...</p>
           </div>
         </div>
-      ))}
-    </div>
-  )}
-</Container>
+      ) : error ? (
+        <div className="text-center my-5">
+          <h5 className="text-danger">Failed to load similar products</h5>
+        </div>
+      ) : similarProducts.length === 0 ? (
+        <div className="home-no-products">
+          <div className="home-no-products-content">
+            <i className="fas fa-search fa-3x"></i>
+            <h3>No similar products found</h3>
+            <p>No similar products available at the moment.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="home-products-grid">
+          {similarProducts.map((similarProduct) => (
+            <div
+              key={similarProduct.style_id}
+              className="home-product-card"
+              onClick={() => navigate(`/product/${similarProduct.style_id}`)}
+            >
+              <div className="home-product-image-container">
+                <img
+                  src={`${BASE_URL}/uploads/styles/${similarProduct.image}`}
+                  alt={similarProduct.name}
+                  className="home-product-image"
+                />
+
+                <div className="home-product-overlay">
+                  <h5>Quick View</h5>
+                </div>
+              </div>
+
+              <div className="home-product-info">
+                <h3 className="home-product-name">{similarProduct.name}</h3>
+                <p className="home-product-description">
+                  {similarProduct.description && similarProduct.description.length > 100
+                    ? `${similarProduct.description.substring(0, 100)}...`
+                    : similarProduct.description
+                  }
+                </p>
+                    <div className="home-product-price">
+                      {similarProduct.offer_price && similarProduct.offer_price !== 0 ? (
+                        <>
+                          <span className="me-2">
+                        {formatPrice(similarProduct.offer_price)}
+                      </span>
+                      <span className="text-muted text-decoration-line-through small">
+                        {formatPrice(similarProduct.price)}
+                      </span>
+                    </>
+                  ) : (
+                    <span>{formatPrice(similarProduct.price)}</span>
+                  )}
+                </div>
+                {similarProduct.category_name && (
+                  <div className="home-product-category">
+                    <span className="home-category-badge">
+                      {similarProduct.category_name}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Container>
 
       <CheckoutModal
         show={showCheckoutModal}
         value={product}
         onHide={() => setShowCheckoutModal(false)}
+        isDirectBuy={true}
         onSubmit={(data) => {
           console.log('Checkout data:', data);
           setShowCheckoutModal(false);

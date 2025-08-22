@@ -24,16 +24,14 @@
 /* Product page container */
 .product-page-container {
     width: 100%;
-    margin: 0 auto;
-    padding: 0 15px;
     max-height: 70vh !important;
     min-height: 70vh !important;
 }
 
 /* Three Column Layout */
 .main-product-row {
-    min-height: 80vh;
-    margin-bottom: 40px;
+    /* min-height: 70vh; */
+    overflow: hidden;
 }
 
 /* Column 1: Product Image */
@@ -48,7 +46,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f8f9fa;
     overflow: hidden;
     position: sticky;
     top: 20px;
@@ -59,7 +56,7 @@
 .main-product-image {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 15px;
     transition: transform 0.3s ease;
 }
@@ -426,11 +423,11 @@
     transition: transform 0.2s;
 }
 
-/* Similar Products Section */
-.similar-products-section {
-    border-top: 2px solid #eee;
-    padding-top: 40px;
-    margin-top: 60px;
+/* Similar Products Container */
+.similar-products-container {
+    margin-top: 5% !important;
+    padding-top: 1px;
+    overflow: hidden;
 }
 
 .similar-products-title {
@@ -695,7 +692,6 @@
 /* Layout Spacer */
 .layout-spacer {
     min-height: 50px;
-    margin-bottom: 40px;
 }
 
 /* Responsive adjustments for expandable sections */
