@@ -15,8 +15,10 @@ import FitManagement from './FitManagement';
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 
-export default function StyleAttributes() { 
- const { styleNumber } = useParams();
+export default function StyleAttributes() {
+  const params = useParams();
+  const styleNumber = Object.values(params)[0];
+
   const navigate = useNavigate();
   const { userData } = useContext(AuthContext);
 
