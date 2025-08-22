@@ -170,7 +170,7 @@ const StyleController = {
 
         db.query('DELETE FROM styles WHERE style_id = ?', [style_id], (err) => {
           if (err) {
-            return res.status(500).json({ success: false, message: 'Error deleting style' });
+            return res.status(500).json({ success: false, message: 'Error deleting style', error: err.message });
           }
           res.json({ success: true, message: 'Style and variants deleted' });
         });
@@ -239,8 +239,8 @@ const StyleController = {
 
   // Add variant
   addVariant(req, res) {
-    const { company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, price } = req.body;
-    if (!company_code || !style_number || !color_id || !size_id || !fit_id || !material_id || unit_price === undefined || !price) {
+    const { company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, sale_price } = req.body;
+    if (!company_code || !style_number || !color_id || !size_id || !fit_id || !material_id || unit_price === undefined || !sale_price) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
@@ -270,13 +270,13 @@ const StyleController = {
         const sku = `${style_number}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
         const insertSql = `
           INSERT INTO style_variants 
-          (company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, price, sku, is_active, created_at, updated_at)
+          (company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, sale_price, sku, is_active, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
         `;
         
         // Parse unit_price and price as floats
         const parsedUnitPrice = parseFloat(unit_price) || 0;
-        const parsedPrice = parseFloat(price) || 0;
+        const parsedPrice = parseFloat(sale_price) || 0;
         
         db.query(insertSql, [
           company_code, style_number, color_id, size_id, fit_id, material_id, 
@@ -295,7 +295,7 @@ const StyleController = {
             message: 'Variant added', 
             sku,
             unit_price: parsedUnitPrice,
-            price: parsedPrice
+           sale_price: parsedPrice
           });
         });
       });
@@ -305,7 +305,7 @@ const StyleController = {
   // Update variant
   updateVariant(req, res) {
     const { variant_id } = req.params;
-    const { color_id, size_id, fit_id, material_id, unit_price, price } = req.body;
+    const { color_id, size_id, fit_id, material_id, unit_price, sale_price } = req.body;
 
     if (unit_price === undefined) {
       return res.status(400).json({ success: false, message: 'Unit price is required' });
@@ -342,7 +342,7 @@ const StyleController = {
         
         // Parse unit_price and price as floats
         const parsedUnitPrice = parseFloat(unit_price) || 0;
-        const parsedPrice = parseFloat(price) || 0;
+        const parsedPrice = parseFloat(sale_price) || 0;
 
         const updateSql = `
           UPDATE style_variants 
@@ -351,7 +351,7 @@ const StyleController = {
               fit_id = ?, 
               material_id = ?, 
               unit_price = ?, 
-              price = ?, 
+              sale_price = ?, 
               sku = ?, 
               updated_at = NOW()
           WHERE variant_id = ?
@@ -374,7 +374,7 @@ const StyleController = {
             message: 'Variant updated', 
             sku,
             unit_price: parsedUnitPrice,
-            price: parsedPrice
+            sale_price: parsedPrice
           });
         });
       });

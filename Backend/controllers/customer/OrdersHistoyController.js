@@ -296,7 +296,7 @@ const OrdersHistoryController = {
             oi.total_price,
             oi.variant_id,
             sv.sku,
-            sv.price as variant_price,
+            sv.sale_price as variant_price,
             sv.offer_price,
             sv.style_number,
             s.style_id,
@@ -372,7 +372,7 @@ const OrdersHistoryController = {
                         variant: {
                             variant_id: item.variant_id,
                             sku: item.sku,
-                            price: item.variant_price,
+                            sale_price: item.variant_sale_price,
                             offer_price: item.offer_price,
                         },
                         style: {

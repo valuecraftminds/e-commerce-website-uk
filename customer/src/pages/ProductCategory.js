@@ -139,11 +139,11 @@ const ProductCategory = () => {
     }
   };
 
-  const formatPrice = (minPrice) => {
-    if (!minPrice) return "Price not defined";
+  const formatPrice = (min_sale_price) => {
+    if (!min_sale_price) return "Price not defined";
     const symbol = currencySymbols[country] || '$';
     const rate = getRate();
-    const convertedPrice = (minPrice * rate).toFixed(2);
+    const convertedPrice = (min_sale_price * rate).toFixed(2);
     return `${symbol}${convertedPrice}`;
   };
 
@@ -332,11 +332,11 @@ const ProductCategory = () => {
                           {formatPrice(product.offer_price)}
                         </span>
                         <span className="text-muted text-decoration-line-through small">
-                          {formatPrice(product.min_price)}
+                          {formatPrice(product.min_sale_price)}
                         </span>
                       </>
                     ) : (
-                      <span>{formatPrice(product.min_price)}</span>
+                      <span>{formatPrice(product.min_sale_price)}</span>
                     )}
                   </div>
                   

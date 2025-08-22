@@ -199,7 +199,7 @@ export default function Home() {
                     {formatPrice(product.offer_price)}
                   </span>
                           <span className="original-price">
-                    {formatPrice(product.price)}
+                    {formatPrice(product.sale_price)}
                   </span>
                         </div>
 
@@ -275,11 +275,11 @@ export default function Home() {
                           {formatPrice(product.offer_price)}
                         </span>
                                 <span className="text-muted text-decoration-line-through small">
-                          {formatPrice(product.min_price)}
+                          {formatPrice(product.min_sale_price)}
                         </span>
                               </>
                           ) : (
-                              <span>{formatPrice(product.min_price)}</span>
+                              <span>{formatPrice(product.min_sale_price)}</span>
                           )}
                         </div>
                         {product.category_name && (

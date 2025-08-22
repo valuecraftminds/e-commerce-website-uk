@@ -571,7 +571,7 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
       const results = await Promise.all(combinations.map(async (combo, idx) => {
         const [color, size, fit, material] = combo;
         const input = variantInputs[idx] || {};
-        if (!input.unit_price || !input.price) return null;
+        if (!input.unit_price || !input.sale_price) return null;
         const res = await fetch(`${BASE_URL}/api/admin/styles/add-style-variants`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -583,7 +583,7 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
             fit_id: fit.fit_id,
             material_id: material.material_id,
             unit_price: input.unit_price,
-            price: input.price
+            sale_price: input.sale_price
           })
         });
         return res.json();
@@ -648,8 +648,8 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
                       <Form.Control
                         type="number"
                         min="0"
-                        value={input.price || ''}
-                        onChange={e => handleInputChange(idx, 'price', e.target.value)}
+                        value={input.sale_price || ''}
+                        onChange={e => handleInputChange(idx, 'sale_price', e.target.value)}
                         size="sm"
                         style={{ width: 90 }}
                       />

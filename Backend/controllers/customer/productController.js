@@ -50,7 +50,8 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        price,
+        MIN(sv.sale_price) as min_sale_price,
+        MAX(sv.sale_price) as max_sale_price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
@@ -91,8 +92,8 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        MIN(sv.price) as min_price,
-        MAX(sv.price) as max_price,
+        MIN(sv.sale_price) as min_sale_price,
+        MAX(sv.sale_price) as max_sale_price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
@@ -143,7 +144,7 @@ const productController = {
           s.description,
           s.image,
           sv.sku,
-          sv.price,
+          sv.sale_price,
           sv.offer_price,
           sv.material_id,
           sz.size_name,
@@ -220,7 +221,7 @@ const productController = {
         const allColors = Array.from(allColorsMap.values());
 
         const product = results[0];
-        const price = product.price;
+        const sale_price = product.sale_price;
         const materialInfo = results.find(r => r.material_id || r.material_name || r.material_description);
 
         res.json({
@@ -229,7 +230,7 @@ const productController = {
           name: product.name,
           sku: product.sku,
           description: product.description,
-          price,
+          sale_price,
           offer_price: product.offer_price,
           variant_id: product.variant_id,
           all_sizes: allSizesWithAvailability, // All sizes with availability status
@@ -342,10 +343,10 @@ const productController = {
       c.category_name,
       c.category_id,
       parent_cat.category_name as parent_category_name,
-      sv.price,
+      sv.sale_price,
       sv.offer_price,
       COUNT(DISTINCT sv.variant_id) as variant_count,
-      ROUND(((sv.price - sv.offer_price) / sv.price) * 100, 2) as discount_percentage
+      ROUND(((sv.sale_price - sv.offer_price) / sv.sale_price) * 100, 2) as discount_percentage
     FROM styles s
     LEFT JOIN categories c ON s.category_id = c.category_id
     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
@@ -408,7 +409,7 @@ getSimilarProducts: (req, res) => {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        sv.price,
+        sv.sale_price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s

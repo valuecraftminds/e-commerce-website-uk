@@ -204,11 +204,11 @@ export default function ProductDetails() {
   }, [product?.style_id, COMPANY_CODE]);
 
 
-  const formatPrice = (price) => {
-    if (!price) return "Price not available";
+  const formatPrice = (sale_price) => {
+    if (!sale_price) return "Price not available";
     const symbol = currencySymbols[country] || '$';
     const rate = getRate();
-    const convertedPrice = (price * rate).toFixed(2);
+    const convertedPrice = (sale_price * rate).toFixed(2);
     return `${symbol}${convertedPrice}`;
   };
 
@@ -226,9 +226,9 @@ export default function ProductDetails() {
         },
         image: product.image,
         quantity: quantity,
-        price: product.offer_price && product.offer_price !== "" 
+        sale_price: product.offer_price && product.offer_price !== "" 
                 ? product.offer_price 
-                : product.price
+                : product.sale_price
       });
 
       showNotify({
@@ -486,11 +486,11 @@ export default function ProductDetails() {
                       {formatPrice(product.offer_price)}
                     </span>
                     <span className="text-muted text-decoration-line-through small">
-                      {formatPrice(product.price)}
+                      {formatPrice(product.sale_price)}
                     </span>
                   </>
                 ) : (
-                  <span>{formatPrice(product.price)}</span>
+                  <span>{formatPrice(product.sale_price)}</span>
                 )}
               </h5>
 
@@ -744,11 +744,11 @@ export default function ProductDetails() {
                         {formatPrice(similarProduct.offer_price)}
                       </span>
                       <span className="text-muted text-decoration-line-through small">
-                        {formatPrice(similarProduct.price)}
+                        {formatPrice(similarProduct.sale_price)}
                       </span>
                     </>
                   ) : (
-                    <span>{formatPrice(similarProduct.price)}</span>
+                    <span>{formatPrice(similarProduct.sale_price)}</span>
                   )}
                 </div>
                 {similarProduct.category_name && (

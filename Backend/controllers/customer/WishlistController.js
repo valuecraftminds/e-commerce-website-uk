@@ -67,7 +67,7 @@ const wishlistController = {
             w.name,
             w.image,
             w.updated_at,
-            sv.price,
+            sv.sale_price,
             s.description,
             s.style_id
         FROM wishlist w
