@@ -390,7 +390,7 @@ return (
                           <span className="fw-bold">
                             {summary.discount_amount > 0 ? 
                               `-${summary.currency_symbol}${summary.discount_amount.toFixed(2)}` : 
-                              'None'}
+                              '00.00'}
                           </span>
                         </div>
                       )}

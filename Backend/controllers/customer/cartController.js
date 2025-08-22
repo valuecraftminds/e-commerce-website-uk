@@ -207,7 +207,7 @@ const cartController = {
           s.name AS style_name, 
           s.description AS style_description, 
           s.image AS style_image,
-          sv.price AS variant_price, 
+          sv.sale_price AS variant_price, 
           sv.stock_quantity, 
           sv.sku AS variant_sku,
           col.color_name AS variant_color, 

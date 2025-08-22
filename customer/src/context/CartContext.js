@@ -55,7 +55,7 @@ const cartReducer = (state, action) => {
         const updatedItems = [...state.items];
         updatedItems[existingItemIndex].quantity += action.payload.quantity;
         updatedItems[existingItemIndex].total_price = 
-          updatedItems[existingItemIndex].price * updatedItems[existingItemIndex].quantity;
+          updatedItems[existingItemIndex].sale_price * updatedItems[existingItemIndex].quantity;
         
         return { 
           ...state, 
@@ -77,7 +77,7 @@ const cartReducer = (state, action) => {
           ? { 
               ...item, 
               quantity: action.payload.quantity,
-              total_price: item.price * action.payload.quantity
+              total_price: item.sale_price * action.payload.quantity
             }
           : item
       );
@@ -183,10 +183,10 @@ export const CartProvider = ({ children }) => {
   }, [country, exchangeRates, state.items]);
 
   // Format price with current currency
-  const formatPrice = (price) => {
-    if (!price) return "0.00";
+  const formatPrice = (sale_price) => {
+    if (!sale_price) return "0.00";
     const { rate, symbol } = getCurrentCurrency();
-    const convertedPrice = (price * rate).toFixed(2);
+    const convertedPrice = (sale_price * rate).toFixed(2);
     return `${symbol}${convertedPrice}`;
   };
   
@@ -303,7 +303,7 @@ export const CartProvider = ({ children }) => {
       // Convert guest cart format to match backend format
       const formattedCart = guestCart.map(item => ({
         ...item,
-        total_price: item.price * item.quantity
+        total_price: item.sale_price * item.quantity
       }));
       
       const { rate, symbol } = getCurrentCurrency();
@@ -342,7 +342,7 @@ export const CartProvider = ({ children }) => {
         const response = await axios.post(`${BASE_URL}/api/customer/cart/add`, {
           style_number: item.style_number,
           quantity: item.quantity || 1,
-          price: item.price,
+          price: item.sale_price,
           product_name: item.name,
           sku: item.sku,
           color_name: item.color?.name,
@@ -376,7 +376,7 @@ export const CartProvider = ({ children }) => {
           product_name: item.name,
           description: item.description,
           image: item.image,
-          price: item.price,
+          price: item.sale_price,
           stock_quantity: item.stock_quantity,
           sku: item.sku,
           color_name: item.color?.name,
@@ -384,7 +384,7 @@ export const CartProvider = ({ children }) => {
           size_name: item.size,
           material_name: item.material_name,
           fit_name: item.fit_name,
-          total_price: item.price * (item.quantity || 1),
+          total_price: item.sale_price * (item.quantity || 1),
           exchangeRate: rate,
           currencySymbol: symbol,
           variant_id: item.variant_id,
@@ -395,7 +395,7 @@ export const CartProvider = ({ children }) => {
         if (existingItemIndex >= 0) {
           guestCart[existingItemIndex].quantity += (item.quantity || 1);
           guestCart[existingItemIndex].total_price = 
-            guestCart[existingItemIndex].price * guestCart[existingItemIndex].quantity;
+            guestCart[existingItemIndex].sale_price * guestCart[existingItemIndex].quantity;
         } else {
           guestCart.push(cartItem);
         }
@@ -444,7 +444,7 @@ export const CartProvider = ({ children }) => {
         
         if (itemIndex >= 0) {
           guestCart[itemIndex].quantity = quantity;
-          guestCart[itemIndex].total_price = guestCart[itemIndex].price * quantity;
+          guestCart[itemIndex].total_price = guestCart[itemIndex].sale_price * quantity;
           setGuestCart(guestCart);
           dispatch({ 
             type: 'UPDATE_QUANTITY', 
@@ -554,7 +554,7 @@ export const CartProvider = ({ children }) => {
       style_number: item.style_number,
       variant_id: item.variant_id,
       quantity: item.quantity,
-      price: item.price,
+      price: item.sale_price,
       product_name: item.name,
       color_name: item.color_name || null,
       image: item.image || null,

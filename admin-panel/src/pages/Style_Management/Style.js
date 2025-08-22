@@ -49,7 +49,7 @@ export default function Style() {
     fit_id: '',
     material_id: '',
     unit_price: '',
-    price: '',
+    sale_price: '',
 
   });
 
@@ -303,7 +303,7 @@ export default function Style() {
           fit_id: '',
           material_id: '',
           unit_price: '',
-          price: '',
+          sale_price: '',
         });
       } else {
         setError(data.message);
@@ -336,7 +336,7 @@ export default function Style() {
           fit_id: '',
           material_id: '',
           unit_price: '',
-          price: '',
+          sale_price: '',
         });
         setIsEditingVariant(false);
         setEditingVariantId(null);
