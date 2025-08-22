@@ -38,9 +38,9 @@ BASE_URL
           <input
             type="text"
             className="form-input"
-            value={styleForm.number}
-            onChange={(e) => setStyleForm({...styleForm, number: e.target.value})}
-            disabled={!!editingStyle}
+            value={styleForm.style_number}
+            onChange={(e) => setStyleForm({...styleForm, style_number: e.target.value})}
+            // disabled={!!editingStyle}
           />
         </div>
         <div className="form-group col-md-6">
