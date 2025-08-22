@@ -423,6 +423,26 @@
     transition: transform 0.2s;
 }
 
+.share-btn{
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+.share-btn:hover svg {
+    transform: scale(1.2);
+    transition: transform 0.2s;
+
+
+.share-btn:hover svg {
+    transform: scale(1.2);
+    transition: transform 0.2s;
+}
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
 /* Similar Products Container */
 .similar-products-container {
     margin-top: 5% !important;

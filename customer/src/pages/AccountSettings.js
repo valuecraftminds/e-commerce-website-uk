@@ -468,8 +468,6 @@ useEffect(() => {
   };
 
   const handleDeleteAccount = async () => {
-    const { company_code } = profileData;
-
     showNotify({
       title: "Deleting Account",
       message: "Are you sure you want to delete your account?",
