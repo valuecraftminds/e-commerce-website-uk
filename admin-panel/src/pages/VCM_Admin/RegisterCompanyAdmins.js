@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -460,22 +462,24 @@ export default function RegisterCompanyAdmins() {
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Phone Number</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="phone"
+                    <PhoneInput
+                      country={'gb'}
                       value={formData.phone}
-                      onChange={handlePhoneChange}
-                      isInvalid={!!phoneError}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength="15"
-                      placeholder="Enter phone number with country code"
-                      required
+                      onChange={(value) => setFormData((prev) => ({ ...prev, phone: value }))}
+                      inputProps={{
+                        name: 'phone',
+                        required: true,
+                        className: phoneError ? 'form-control is-invalid' : 'form-control',
+                        style: { width: '100%', height: '48px', fontSize: '1rem', borderRadius: '12px', backgroundColor: '#f7fafc', border: '2px solid #e2e8f0', paddingLeft: '48px' }
+                      }}
+                      enableSearch={true}
+                      countryCodeEditable={false}
+                      dropdownStyle={{ fontSize: '1rem', zIndex: 9999 }}
+                      buttonStyle={{ borderRadius: '12px 0 0 12px', border: '2px solid #e2e8f0', height: '48px', background: '#f7fafc', width: 'fit-content', minWidth: '48px' }}
+                      searchStyle={{ fontSize: '1rem' }}
                     />
                     {phoneError && (
-                      <Form.Control.Feedback type="invalid">
-                        {phoneError}
-                      </Form.Control.Feedback>
+                      <div className="invalid-feedback d-block">{phoneError}</div>
                     )}
                   </Form.Group>
                 </Col>

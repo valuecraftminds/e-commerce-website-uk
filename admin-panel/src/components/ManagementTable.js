@@ -23,7 +23,7 @@ const ManagementTable = ({
  
       <Card className="mb-4">
         <Card.Header>
-          <h4>{isEditing ? `Edit ${title}` : `Add New ${title}`}</h4>
+          <h5>{isEditing ? `Edit ${title}` : `Add New ${title}`}</h5>
         </Card.Header>
         <Card.Body>
           <Form onSubmit={handleSubmit}>
@@ -46,7 +46,7 @@ const ManagementTable = ({
               ))}
             </div>
             <div className="d-flex gap-2">
-              <Button type="submit" variant="primary" disabled={loading}>
+              <Button type="submit" variant="primary" disabled={loading} className='add-style-btn'>
                 {loading ? 'Saving...' : isEditing ? 'Update' : 'Add'}
               </Button>
               {isEditing && (
@@ -64,30 +64,31 @@ const ManagementTable = ({
 
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
-          <h3>{title} List</h3>
-          
+          <h5>{title} List</h5>
         </Card.Header>
         <Card.Body>
-          <Table responsive striped bordered hover>
+          <Table responsive striped bordered hover size="sm" className="table-organized">
             <thead>
-              <tr>
+              <tr style={{ verticalAlign: 'middle' }}>
                 {columns.map(column => (
-                  <th key={column.key}>{column.label}</th>
+                  <th key={column.key} style={{ minWidth: '100px' }}>{column.label}</th>
                 ))}
-                <th>Actions</th>
+                <th style={{ width: '90px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {items.map(item => (
-                <tr key={item.id}>
+                <tr key={item.id} style={{ verticalAlign: 'middle', height: '34px' }}>
                   {columns.map(column => (
-                    <td key={column.key}>{item[column.key]}</td>
+                    <td key={column.key} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item[column.key]}</td>
                   ))}
                   <td>
                     <div className="d-flex gap-2">
                       <Button 
                         variant="info" 
                         size="sm"
+                        className="py-0 px-2"
+                        style={{ fontSize: '0.9rem', lineHeight: 1 }}
                         onClick={() => handleEdit(item)}
                       >
                         <FaEdit />
@@ -95,6 +96,8 @@ const ManagementTable = ({
                       <Button 
                         variant="danger" 
                         size="sm"
+                        className="py-0 px-2"
+                        style={{ fontSize: '0.9rem', lineHeight: 1 }}
                         onClick={() => {
                           // Get the correct ID based on the type of item
                           const itemId = item.color_id || item.size_id || item.material_id || item.fit_id;
