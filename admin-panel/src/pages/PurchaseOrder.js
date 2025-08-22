@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useContext, useEffect, useCallback, useState } from 'react';
 import { Alert, Button, Col, Form, Row, Table } from 'react-bootstrap';
+import DeleteModal from '../components/modals/DeleteModal';
 import { FaDownload, FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -21,6 +22,8 @@ export default function PurchaseOrder() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  // Delete modal state
+  const [deleteModalInfo, setDeleteModalInfo] = useState({ po_number: null });
 
   // Debug logging
   const logDebug = (message, data = null) => {
@@ -112,29 +115,16 @@ export default function PurchaseOrder() {
     }
   };
 
-  const handleDelete = async (po_number) => {
-    if (!window.confirm('Are you sure you want to delete this purchase order?')) return;
+  // Open DeleteModal for PO
+  const handleDelete = (po_number) => {
+    setDeleteModalInfo({ po_number });
+  };
 
-    logDebug('Deleting PO', po_number);
-    setIsLoading(true);
-    
-    try {
-      const response = await axios.delete(`${BASE_URL}/api/admin/po/delete-purchase-orders/${po_number}`);
-      logDebug('Delete response', response.data);
-      
-      if (response.data.success) {
-        alert('Purchase order deleted successfully');
-        fetchPurchaseOrders();
-      } else {
-        alert(`Delete failed: ${response.data.message}`);
-      }
-    } catch (error) {
-      logDebug('Delete error', error);
-      const errorMessage = error.response?.data?.message || error.message;
-      alert(`Error deleting purchase order: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
-    }
+  // Called after successful delete from DeleteModal
+  const handleDeleteConfirmed = () => {
+    setDeleteModalInfo({ po_number: null });
+    fetchPurchaseOrders();
+    setError('');
   };
 
   return (
@@ -263,7 +253,6 @@ export default function PurchaseOrder() {
                       {po.status || 'Pending'}
                     </span>
                   </td>
-                  
                   <td>{new Date(po.created_at).toLocaleDateString()}</td>
                   <td>
                     <FaEye
@@ -297,6 +286,18 @@ export default function PurchaseOrder() {
           </tbody>
         </Table>
       </div>
+
+      {/* DeleteModal for PO */}
+      <DeleteModal
+        id={deleteModalInfo.po_number}
+        show={!!deleteModalInfo.po_number}
+        onHide={() => setDeleteModalInfo({ po_number: null })}
+        deleteUrl={id => id ? `/api/admin/po/delete-purchase-orders/${id}` : ''}
+        entityLabel="purchase order"
+        modalTitle="Delete Purchase Order"
+        confirmMessage="Are you sure you want to delete this purchase order? This action cannot be undone."
+        onDeleteSuccess={handleDeleteConfirmed}
+      />
     </div>
   );
 }

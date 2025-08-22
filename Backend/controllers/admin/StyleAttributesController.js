@@ -1,14 +1,14 @@
 const db = require('../../config/database');
 
 const StyleAttributesController = {
-  // Get a specific style by style_code
+  // Get a specific style by style_number
   getStyle(req, res) {
-    const { style_code } = req.params;
+    const { style_number } = req.params;
     const { company_code } = req.query;
 
     db.query(
-      'SELECT * FROM styles WHERE style_code = ? AND company_code = ?',
-      [style_code, company_code],
+      'SELECT * FROM styles WHERE style_number = ? AND company_code = ?',
+      [style_number, company_code],
       (err, results) => {
         if (err) {
           res.status(500).json({ success: false, message: 'Error fetching style' });
@@ -24,45 +24,45 @@ const StyleAttributesController = {
 
   // Get all attributes for a specific style
   getStyleAttributes(req, res) {
-    const { style_code } = req.params;
+    const { style_number } = req.params;
     const { company_code } = req.query;
 
     const queries = {
       colors: `SELECT c.* FROM colors c 
                INNER JOIN style_colors sc ON c.color_id = sc.color_id 
-               WHERE sc.style_code = ? AND sc.company_code = ?`,
+               WHERE sc.style_number = ? AND sc.company_code = ?`,
       sizes: `SELECT s.* FROM sizes s 
               INNER JOIN style_sizes ss ON s.size_id = ss.size_id 
-              WHERE ss.style_code = ? AND ss.company_code = ?`,
+              WHERE ss.style_number = ? AND ss.company_code = ?`,
       materials: `SELECT m.* FROM materials m 
                   INNER JOIN style_materials sm ON m.material_id = sm.material_id 
-                  WHERE sm.style_code = ? AND sm.company_code = ?`,
+                  WHERE sm.style_number = ? AND sm.company_code = ?`,
       fits: `SELECT f.* FROM fits f 
              INNER JOIN style_fits sf ON f.fit_id = sf.fit_id 
-             WHERE sf.style_code = ? AND sf.company_code = ?`
+             WHERE sf.style_number = ? AND sf.company_code = ?`
     };
 
     Promise.all([
       new Promise((resolve, reject) => {
-        db.query(queries.colors, [style_code, company_code], (err, results) => {
+        db.query(queries.colors, [style_number, company_code], (err, results) => {
           if (err) reject(err);
           else resolve(results);
         });
       }),
       new Promise((resolve, reject) => {
-        db.query(queries.sizes, [style_code, company_code], (err, results) => {
+        db.query(queries.sizes, [style_number, company_code], (err, results) => {
           if (err) reject(err);
           else resolve(results);
         });
       }),
       new Promise((resolve, reject) => {
-        db.query(queries.materials, [style_code, company_code], (err, results) => {
+        db.query(queries.materials, [style_number, company_code], (err, results) => {
           if (err) reject(err);
           else resolve(results);
         });
       }),
       new Promise((resolve, reject) => {
-        db.query(queries.fits, [style_code, company_code], (err, results) => {
+        db.query(queries.fits, [style_number, company_code], (err, results) => {
           if (err) reject(err);
           else resolve(results);
         });
@@ -85,9 +85,9 @@ const StyleAttributesController = {
 
   // Add attributes to a style
   addStyleAttributes(req, res) {
-    const { style_code, company_code, type, attribute_ids } = req.body;
+    const { style_number, company_code, type, attribute_ids } = req.body;
 
-    if (!style_code || !company_code || !type || !attribute_ids || attribute_ids.length === 0) {
+    if (!style_number || !company_code || !type || !attribute_ids || attribute_ids.length === 0) {
       return res.status(400).json({ 
         success: false, 
         message: 'Missing required fields' 
@@ -109,11 +109,11 @@ const StyleAttributesController = {
       });
     }
 
-    const values = attribute_ids.map(id => [style_code, company_code, id]);
+    const values = attribute_ids.map(id => [style_number, company_code, id]);
     const placeholders = values.map(() => '(?, ?, ?)').join(', ');
     const flatValues = values.flat();
 
-    const query = `INSERT INTO ${config.table} (style_code, company_code, ${config.column}) VALUES ${placeholders}`;
+    const query = `INSERT INTO ${config.table} (style_number, company_code, ${config.column}) VALUES ${placeholders}`;
 
     db.query(query, flatValues, (err, result) => {
       if (err) {
@@ -140,9 +140,9 @@ const StyleAttributesController = {
 
   // Remove attribute from a style
   removeStyleAttribute(req, res) {
-    const { style_code, company_code, type, attribute_id } = req.body;
+    const { style_number, company_code, type, attribute_id } = req.body;
 
-    if (!style_code || !company_code || !type || !attribute_id) {
+    if (!style_number || !company_code || !type || !attribute_id) {
       return res.status(400).json({ 
         success: false, 
         message: 'Missing required fields' 
@@ -164,9 +164,9 @@ const StyleAttributesController = {
       });
     }
 
-    const query = `DELETE FROM ${config.table} WHERE style_code = ? AND company_code = ? AND ${config.column} = ?`;
+    const query = `DELETE FROM ${config.table} WHERE style_number = ? AND company_code = ? AND ${config.column} = ?`;
 
-    db.query(query, [style_code, company_code, attribute_id], (err, result) => {
+    db.query(query, [style_number, company_code, attribute_id], (err, result) => {
       if (err) {
         console.error('Error removing style attribute:', err);
         res.status(500).json({ 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Table } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import DeleteAdmin from '../../components/DeleteAdmin';
+import DeleteModal from '../../components/modals/DeleteModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -10,6 +10,8 @@ export default function ViewCompanyAdmins() {
   const [companyDetails, setCompanyDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const [deleteModalId, setDeleteModalId] = useState(null);
 
   const { companyCode } = useParams();
   const navigate = useNavigate();
@@ -86,8 +88,10 @@ export default function ViewCompanyAdmins() {
     navigate(`/vcm-admin/register-company-admins?company_code=${companyCode}`);
   };
 
-  const handleDeleteAdmin = (deletedAdminId) => {
+  // Handler for delete success
+  const handleDeleteSuccess = (deletedAdminId) => {
     setCompanyAdmins(prev => prev.filter(admin => admin.user_id !== deletedAdminId));
+    setDeleteModalId(null);
   };
 
   const handleBackToCompanies = () => {
@@ -207,11 +211,13 @@ export default function ViewCompanyAdmins() {
                       >
                         <i className="bi-pencil"></i>
                       </Button>
-                      <DeleteAdmin 
-                        adminId={admin.user_id} 
-                        onDeleteSuccess={() => handleDeleteAdmin(admin.user_id)}
+                      <Button 
+                        variant="danger"
                         size="sm"
-                      />
+                        onClick={() => setDeleteModalId(admin.user_id)}
+                      >
+                        <i className="bi-trash"></i>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -233,6 +239,15 @@ export default function ViewCompanyAdmins() {
           )}
         </div>
       )}
+      {/* Delete Modal (single instance, controlled by state) */}
+      <DeleteModal
+        id={deleteModalId}
+        show={!!deleteModalId}
+        onHide={() => setDeleteModalId(null)}
+        deleteUrl={id => id ? `/api/admin/auth/delete-admin/${id}` : ''}
+        entityLabel="admin"
+        onDeleteSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 }

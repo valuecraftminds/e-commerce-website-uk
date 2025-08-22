@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Button, Card, Form, Table } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 
-const ManagementTable = ({ 
+const StyleAttributeTable = ({ 
   title,
   items,
   columns,
@@ -17,6 +18,18 @@ const ManagementTable = ({
   success,
   onCancel
 }) => {
+  const [deleteModalId, setDeleteModalId] = useState(null);
+
+  // Find the item to delete (for label, etc.)
+  const itemToDelete = items.find(item => {
+    const itemId = item.color_id || item.size_id || item.material_id || item.fit_id || item.id;
+    return itemId === deleteModalId;
+  });
+
+  const handleDeleteSuccess = (deletedId) => {
+    handleDelete(deletedId);
+    setDeleteModalId(null);
+  };
 
   return (
     <div className="management-container">
@@ -64,7 +77,7 @@ const ManagementTable = ({
 
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
-          <h5>{title} List</h5>
+          <h5>General {title} List</h5>
         </Card.Header>
         <Card.Body>
           <Table responsive striped bordered hover size="sm" className="table-organized">
@@ -93,19 +106,20 @@ const ManagementTable = ({
                       >
                         <FaEdit />
                       </Button>
+                      {/*
                       <Button 
                         variant="danger" 
                         size="sm"
                         className="py-0 px-2"
                         style={{ fontSize: '0.9rem', lineHeight: 1 }}
                         onClick={() => {
-                          // Get the correct ID based on the type of item
-                          const itemId = item.color_id || item.size_id || item.material_id || item.fit_id;
-                          handleDelete(itemId);
+                          const itemId = item.color_id || item.size_id || item.material_id || item.fit_id || item.id;
+                          setDeleteModalId(itemId);
                         }}
                       >
                         <FaTrash />
                       </Button>
+                      */}
                     </div>
                   </td>
                 </tr>
@@ -114,8 +128,32 @@ const ManagementTable = ({
           </Table>
         </Card.Body>
       </Card>
+
+      {/*
+      Delete Modal (single instance, controlled by state)
+      <DeleteModal
+        id={deleteModalId}
+        show={!!deleteModalId}
+        onHide={() => setDeleteModalId(null)}
+        deleteUrl={(id) => {
+          if (itemToDelete && itemToDelete.deleteUrl) {
+            if (typeof itemToDelete.deleteUrl === 'function') return itemToDelete.deleteUrl(id);
+            if (typeof itemToDelete.deleteUrl === 'string' && itemToDelete.deleteUrl.includes(':id')) return itemToDelete.deleteUrl.replace(':id', id);
+            return itemToDelete.deleteUrl;
+          }
+          // fallback: try to infer entity type
+          if (itemToDelete && itemToDelete.color_id) return `/api/admin/colors/delete-colors/${id}`;
+          if (itemToDelete && itemToDelete.size_id) return `/api/admin/sizes/delete-sizes/${id}`;
+          if (itemToDelete && itemToDelete.material_id) return `/api/admin/materials/delete-materials/${id}`;
+          if (itemToDelete && itemToDelete.fit_id) return `/api/admin/fits/delete-fits/${id}`;
+          return `/api/admin/auth/delete-admin/${id}`;
+        }}
+        entityLabel={title.toLowerCase()}
+        onDeleteSuccess={handleDeleteSuccess}
+      />
+      */}
     </div>
   );
 };
 
-export default ManagementTable;
+export default StyleAttributeTable;

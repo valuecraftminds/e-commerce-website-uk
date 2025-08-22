@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import ManagementTable from '../../components/ManagementTable';
+import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const ColorManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
+const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,7 @@ const ColorManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel
       if (data.success) {
         setSuccess(isEditing ? 'Color updated successfully' : 'Color added successfully');
         fetchColors();
-        if (!isEditing && embedded && styleCode && companyCode) {
+        if (!isEditing && embedded && styleNumber && companyCode) {
           // Assign to style
           let colorId = null;
           if (data.color && (data.color.color_id || data.color.id)) {
@@ -80,7 +80,7 @@ const ColorManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                style_code: styleCode,
+                style_number: styleNumber,
                 company_code: companyCode,
                 type: 'colors',
                 attribute_ids: [colorId]
@@ -144,7 +144,7 @@ const ColorManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel
 
   return (
     <Container>
-      <ManagementTable 
+      <StyleAttributeTable 
         title="Colors"
         items={colors}
         columns={columns}

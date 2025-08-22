@@ -12,15 +12,15 @@ router.put('/update-styles/:style_id', uploadStyles.array('images', 5), StyleCon
 router.delete('/delete-styles/:style_id', StyleController.deleteStyle);
 
 // Style Variants
-router.get('/get-style-variants/:style_code', StyleController.getStyleVariants);
+router.get('/get-style-variants/:style_number', StyleController.getStyleVariants);
 router.post('/add-style-variants', StyleController.addVariant);
 router.put('/update-style-variants/:variant_id', StyleController.updateVariant);
 router.delete('/delete-style-variants/:variant_id', StyleController.deleteVariant);
 router.get('/get-style-variants-by-sku/:sku', StyleController.getStyleVariantsBySKU);
 router.get('/search-variants', StyleController.searchVariants);
 
-router.get('/get-style/:style_code', StyleAttributesController.getStyle);
-router.get('/get-style-attributes/:style_code', StyleAttributesController.getStyleAttributes);
+router.get('/get-style/:style_number', StyleAttributesController.getStyle);
+router.get('/get-style-attributes/:style_number', StyleAttributesController.getStyleAttributes);
 router.post('/add-style-attributes', StyleAttributesController.addStyleAttributes);
 router.delete('/remove-style-attribute', StyleAttributesController.removeStyleAttribute);
 

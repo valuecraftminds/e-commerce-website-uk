@@ -8,7 +8,7 @@ const wishlistController = {
         const { company_code } = req.query || req.params;
         const { 
             style_id,
-            style_code, 
+            style_number, 
             image, 
             name
         } = req.body;
@@ -29,7 +29,7 @@ const wishlistController = {
             company_code, 
             customer_id,
             style_id,
-            style_code, 
+            style_number, 
             name, 
             image,
             updated_at
@@ -37,7 +37,7 @@ const wishlistController = {
         ON DUPLICATE KEY UPDATE image = VALUES(image), updated_at = NOW()
         `;
 
-        db.query(sql, [company_code, customer_id, style_id, style_code, name, image], (err) => {
+        db.query(sql, [company_code, customer_id, style_id, style_number, name, image], (err) => {
         if (err) {
             console.error('Error adding to wishlist:', err);
             return res.status(500).json({ error: 'Server error' });
@@ -63,7 +63,7 @@ const wishlistController = {
             w.company_code, 
             w.customer_id, 
             w.style_id,
-            w.style_code, 
+            w.style_number, 
             w.name,
             w.image,
             w.updated_at,
@@ -74,14 +74,14 @@ const wishlistController = {
         JOIN styles s 
             ON w.style_id = s.style_id
         JOIN style_variants sv
-            ON sv.style_code = s.style_code
+            ON sv.style_number = s.style_number
         WHERE w.customer_id = ?
         AND w.company_code = ?
         GROUP BY
              w.company_code, 
             w.customer_id,
             w.style_id,
-            w.style_code, 
+            w.style_number, 
             w.name, 
             w.image, 
             w.updated_at, 

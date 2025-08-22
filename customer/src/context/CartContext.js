@@ -340,7 +340,7 @@ export const CartProvider = ({ children }) => {
       if (token) {
         // User is logged in, add to backend
         const response = await axios.post(`${BASE_URL}/api/customer/cart/add`, {
-          style_code: item.style_code,
+          style_number: item.style_number,
           quantity: item.quantity || 1,
           price: item.price,
           product_name: item.name,
@@ -370,7 +370,7 @@ export const CartProvider = ({ children }) => {
         
         const cartItem = {
           cart_id: `guest_${Date.now()}`,
-          style_code: item.style_code,
+          style_number: item.style_number,
           quantity: item.quantity || 1,
           style_id: item.style_id,
           product_name: item.name,
@@ -551,7 +551,7 @@ export const CartProvider = ({ children }) => {
 
     // Send full data to support server-side bulk insertion
     const guestCartData = guestCart.map(item => ({
-      style_code: item.style_code,
+      style_number: item.style_number,
       variant_id: item.variant_id,
       quantity: item.quantity,
       price: item.price,

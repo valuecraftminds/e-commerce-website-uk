@@ -1,6 +1,5 @@
 .modal-dialog {
-    max-width: 75%;
-    width: 1400px;
+    width: auto;
   }
 
   .table-responsive {

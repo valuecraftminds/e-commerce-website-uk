@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import ManagementTable from '../../components/ManagementTable';
+import ManagementTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const MaterialManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
+const MaterialManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,7 @@ const MaterialManagement = ({ embedded, styleCode, companyCode, onSuccess, onCan
       if (data.success) {
         setSuccess(isEditing ? 'Material updated successfully' : 'Material added successfully');
         fetchMaterials();
-        if (!isEditing && embedded && styleCode && companyCode) {
+        if (!isEditing && embedded && styleNumber && companyCode) {
           // Assign to style
           let materialId = null;
           if (data.material && (data.material.material_id || data.material.id)) {
@@ -80,7 +80,7 @@ const MaterialManagement = ({ embedded, styleCode, companyCode, onSuccess, onCan
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                style_code: styleCode,
+                style_number: styleNumber,
                 company_code: companyCode,
                 type: 'materials',
                 attribute_ids: [materialId]

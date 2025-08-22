@@ -61,45 +61,31 @@ const StyleController = {
 
   // Add new style
   addStyle(req, res) {
-    const { company_code, name, description, category_id, approved } = req.body;
+    const { company_code, style_number, name, description, category_id, approved } = req.body;
     const imagePaths = req.files ? req.files.map(file => file.filename).join(',') : null;
 
-    if (!company_code || !name || !category_id) {
-      return res.status(400).json({ success: false, message: 'Company code, name, and category are required' });
+    if (!company_code || !style_number || !name || !category_id) {
+      return res.status(400).json({ success: false, message: 'Company code, style number, name, and category are required' });
     }
 
-    const generateStyleCode = (baseName, attempt = 0, callback) => {
-      let code = baseName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
-      if (attempt > 0) code += attempt;
-
-      db.query(
-        'SELECT style_id FROM styles WHERE company_code = ? AND style_code = ?',
-        [company_code, code],
-        (err, results) => {
-          if (err) return callback(err);
-          if (results.length > 0) {
-            generateStyleCode(baseName, attempt + 1, callback);
-          } else {
-            callback(null, code);
-          }
-        }
-      );
-    };
-
-    generateStyleCode(name, 0, (err, styleCode) => {
+    // Check for duplicate style_number (style_number)
+    db.query('SELECT style_id FROM styles WHERE company_code = ? AND style_number = ?', [company_code, style_number], (err, results) => {
       if (err) {
-        return res.status(500).json({ success: false, message: 'Error generating style code' });
+        return res.status(500).json({ success: false, message: 'Error checking style number' });
+      }
+      if (results.length > 0) {
+        return res.status(409).json({ success: false, message: 'Style number already exists' });
       }
 
       const sql = `
         INSERT INTO styles (
-          company_code, style_code, name, description, category_id, 
+          company_code, style_number, name, description, category_id, 
           image, approved, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 
       db.query(sql, 
-        [company_code, styleCode, name, description, category_id, imagePaths, approved || 'no'],
+        [company_code, style_number, name, description, category_id, imagePaths, approved || 'no'],
         (err, results) => {
           if (err) {
             return res.status(500).json({ success: false, message: 'Error adding style' });
@@ -107,7 +93,7 @@ const StyleController = {
           res.json({ 
             success: true, 
             style_id: results.insertId, 
-            style_code: styleCode, 
+            style_number: style_number, 
             image: imagePaths 
           });
         }
@@ -166,7 +152,7 @@ const StyleController = {
   deleteStyle(req, res) {
     const { style_id } = req.params;
 
-    const getSql = 'SELECT style_code FROM styles WHERE style_id = ?';
+    const getSql = 'SELECT style_number FROM styles WHERE style_id = ?';
     db.query(getSql, [style_id], (err, result) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error fetching style code' });
@@ -175,9 +161,9 @@ const StyleController = {
         return res.status(404).json({ success: false, message: 'Style not found' });
       }
 
-      const styleCode = result[0].style_code;
+      const styleNumber = result[0].style_number;
 
-      db.query('DELETE FROM style_variants WHERE style_code = ?', [styleCode], (err) => {
+      db.query('DELETE FROM style_variants WHERE style_number = ?', [styleNumber], (err) => {
         if (err) {
           return res.status(500).json({ success: false, message: 'Error deleting style variants' });
         }
@@ -201,10 +187,10 @@ const StyleController = {
       LEFT JOIN sizes s ON sv.size_id = s.size_id
       LEFT JOIN fits f ON sv.fit_id = f.fit_id
       LEFT JOIN materials m ON sv.material_id = m.material_id
-      WHERE sv.style_code = ?
+      WHERE sv.style_number = ?
       ORDER BY sv.created_at DESC
     `;
-    db.query(sql, [req.params.style_code], (err, results) => {
+    db.query(sql, [req.params.style_number], (err, results) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error fetching variants' });
       }
@@ -222,13 +208,13 @@ const StyleController = {
         f.fit_name,
         m.material_name,
         st.name as style_name,
-        st.style_code
+        st.style_number
       FROM style_variants sv
       LEFT JOIN colors c ON sv.color_id = c.color_id
       LEFT JOIN sizes s ON sv.size_id = s.size_id
       LEFT JOIN fits f ON sv.fit_id = f.fit_id
       LEFT JOIN materials m ON sv.material_id = m.material_id
-      LEFT JOIN styles st ON sv.style_code = st.style_code
+      LEFT JOIN styles st ON sv.style_number = st.style_number
       WHERE sv.sku = ?
       LIMIT 1
     `;
@@ -253,16 +239,16 @@ const StyleController = {
 
   // Add variant
   addVariant(req, res) {
-    const { company_code, style_code, color_id, size_id, fit_id, material_id, unit_price, price } = req.body;
-    if (!company_code || !style_code || !color_id || !size_id || !fit_id || !material_id || unit_price === undefined || !price) {
+    const { company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, price } = req.body;
+    if (!company_code || !style_number || !color_id || !size_id || !fit_id || !material_id || unit_price === undefined || !price) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
     const checkSql = `
       SELECT variant_id FROM style_variants 
-      WHERE style_code = ? AND color_id = ? AND size_id = ? AND fit_id = ?
+      WHERE style_number = ? AND color_id = ? AND size_id = ? AND fit_id = ?
     `;
-    db.query(checkSql, [style_code, color_id, size_id, fit_id], (err, results) => {
+    db.query(checkSql, [style_number, color_id, size_id, fit_id], (err, results) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error checking variant' });
       }
@@ -281,10 +267,10 @@ const StyleController = {
         }
 
         const d = result[0];
-        const sku = `${style_code}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
+        const sku = `${style_number}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
         const insertSql = `
           INSERT INTO style_variants 
-          (company_code, style_code, color_id, size_id, fit_id, material_id, unit_price, price, sku, is_active, created_at, updated_at)
+          (company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, price, sku, is_active, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
         `;
         
@@ -293,7 +279,7 @@ const StyleController = {
         const parsedPrice = parseFloat(price) || 0;
         
         db.query(insertSql, [
-          company_code, style_code, color_id, size_id, fit_id, material_id, 
+          company_code, style_number, color_id, size_id, fit_id, material_id, 
           parsedUnitPrice, parsedPrice, sku
         ], (err) => {
           if (err) {
@@ -338,9 +324,9 @@ const StyleController = {
       }
 
       const detailsSql = `
-        SELECT s.style_code, c.color_name, s2.size_name, f.fit_name 
+        SELECT s.style_number, c.color_name, s2.size_name, f.fit_name 
         FROM style_variants sv
-        JOIN styles s ON sv.style_code = s.style_code
+        JOIN styles s ON sv.style_number = s.style_number
         JOIN colors c ON c.color_id = ?
         JOIN sizes s2 ON s2.size_id = ?
         JOIN fits f ON f.fit_id = ?
@@ -352,7 +338,7 @@ const StyleController = {
         }
 
         const d = result[0];
-        const sku = `${d.style_code}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
+        const sku = `${d.style_number}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
         
         // Parse unit_price and price as floats
         const parsedUnitPrice = parseFloat(unit_price) || 0;
@@ -421,13 +407,13 @@ const StyleController = {
             f.fit_name,
             m.material_name,
             st.name as style_name,
-            st.style_code
+            st.style_number
         FROM style_variants sv
         LEFT JOIN colors c ON sv.color_id = c.color_id
         LEFT JOIN sizes s ON sv.size_id = s.size_id
         LEFT JOIN fits f ON sv.fit_id = f.fit_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
-        LEFT JOIN styles st ON sv.style_code = st.style_code
+        LEFT JOIN styles st ON sv.style_number = st.style_number
         WHERE sv.company_code = ?
         AND (sv.sku LIKE ? OR st.name LIKE ?)
         LIMIT 20

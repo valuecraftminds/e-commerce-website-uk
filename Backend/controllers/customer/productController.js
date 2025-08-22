@@ -56,11 +56,11 @@ const productController = {
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+      LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       WHERE (c.parent_id = ? OR c.category_id = ?) 
       AND s.approved = 'yes' 
       AND s.company_code = ?
-      GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+      GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
       ORDER BY s.created_at DESC
     `;
 
@@ -98,10 +98,10 @@ const productController = {
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+      LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       WHERE s.approved = 'yes' 
       AND s.company_code = ?
-      GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+      GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
       ORDER BY s.created_at DESC
     `;
 
@@ -138,7 +138,7 @@ const productController = {
       const productDetailsQuery = `
         SELECT
           s.style_id,
-          s.style_code,
+          s.style_number,
           s.name,
           s.description,
           s.image,
@@ -155,7 +155,7 @@ const productController = {
           m.material_name,
           m.description AS material_description
         FROM styles s
-        LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+        LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
         LEFT JOIN colors c ON sv.color_id = c.color_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
@@ -225,7 +225,7 @@ const productController = {
 
         res.json({
           style_id: product.style_id,
-          style_code: product.style_code,
+          style_number: product.style_number,
           name: product.name,
           sku: product.sku,
           description: product.description,
@@ -255,7 +255,7 @@ const productController = {
     }
 
     const sql = `
-      SELECT style_id, style_code, name, description, image 
+      SELECT style_id, style_number, name, description, image 
       FROM styles 
       WHERE approved = 'yes' 
       AND company_code = ?
@@ -283,18 +283,18 @@ const productController = {
     const sql = `
       SELECT
         s.style_id,
-        s.style_code,
+        s.style_number,
         s.name,
         s.description,
         s.image
       FROM styles s
-      WHERE (s.name LIKE ? OR s.description LIKE ? OR s.style_code LIKE ?)
+      WHERE (s.name LIKE ? OR s.description LIKE ? OR s.style_number LIKE ?)
       AND s.approved = 'yes'
       AND s.company_code = ?
       ORDER BY 
         CASE 
           WHEN s.name LIKE ? THEN 1
-          WHEN s.style_code LIKE ? THEN 2
+          WHEN s.style_number LIKE ? THEN 2
           WHEN s.description LIKE ? THEN 3
           ELSE 4
         END,
@@ -317,7 +317,7 @@ const productController = {
 
       const transformedResults = results.map(item => ({
         style_id: item.style_id,
-        style_code: item.style_code,
+        style_number: item.style_number,
         name: item.name,
         description: item.description || '',
         image: item.image || null
@@ -349,13 +349,13 @@ const productController = {
     FROM styles s
     LEFT JOIN categories c ON s.category_id = c.category_id
     LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-    INNER JOIN style_variants sv ON s.style_code = sv.style_code 
+    INNER JOIN style_variants sv ON s.style_number = sv.style_number 
     WHERE sv.is_active = 1 
     AND sv.offer_price IS NOT NULL 
     AND sv.offer_price > 0
     AND s.approved = 'yes' 
     AND s.company_code = ?
-    GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+    GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
     ORDER BY discount_percentage DESC, s.created_at DESC
   `;
 
@@ -401,7 +401,7 @@ getSimilarProducts: (req, res) => {
     const similarProductsQuery = `
       SELECT 
         s.style_id,
-        s.style_code,
+        s.style_number,
         s.name,
         s.description,
         s.image,
@@ -414,12 +414,12 @@ getSimilarProducts: (req, res) => {
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-      LEFT JOIN style_variants sv ON s.style_code = sv.style_code AND sv.is_active = 1
+      LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       WHERE s.category_id = ? 
       AND s.style_id != ?
       AND s.approved = 'yes' 
       AND s.company_code = ?
-      GROUP BY s.style_id, s.style_code, s.name, s.description, s.category_id, s.image
+      GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
       ORDER BY s.created_at DESC
       LIMIT 8
     `;

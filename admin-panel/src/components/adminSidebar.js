@@ -65,7 +65,7 @@ const roleBasedMenuItems = {
       },
       { label: 'Accounting', path: '/accounting', icon: 'bi-calculator' },
      {
-        label: 'Approvements',
+        label: 'Approvals',
         icon: 'bi bi-patch-check me-2',
         dropdown: true,
         items: [

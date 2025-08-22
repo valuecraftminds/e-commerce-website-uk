@@ -36,7 +36,7 @@ const OrdersHistoryController = {
                 oi.quantity
             FROM order_items oi
             INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
-            INNER JOIN styles s ON sv.style_code = s.style_code
+            INNER JOIN styles s ON sv.style_number = s.style_number
             WHERE oi.order_id IN (?) AND oi.company_code = ?
             ORDER BY oi.order_item_id
         `;
@@ -157,7 +157,7 @@ const OrdersHistoryController = {
                 oi.quantity
             FROM order_items oi
             INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
-            INNER JOIN styles s ON sv.style_code = s.style_code
+            INNER JOIN styles s ON sv.style_number = s.style_number
             WHERE oi.order_id IN (?) AND oi.company_code = ?
             ORDER BY oi.order_item_id
         `;
@@ -298,14 +298,14 @@ const OrdersHistoryController = {
             sv.sku,
             sv.price as variant_price,
             sv.offer_price,
-            sv.style_code,
+            sv.style_number,
             s.style_id,
             s.name as style_name,
             s.description as style_description,
             s.image as style_image
         FROM order_items oi
         INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
-        INNER JOIN styles s ON sv.style_code = s.style_code
+        INNER JOIN styles s ON sv.style_number = s.style_number
         WHERE oi.order_id = ? AND oi.company_code = ?
         ORDER BY oi.order_item_id
     `;
@@ -377,7 +377,7 @@ const OrdersHistoryController = {
                         },
                         style: {
                             style_id: item.style_id,
-                            style_code: item.style_code,
+                            style_number: item.style_number,
                             name: item.style_name,
                             description: item.style_description,
                             image: item.style_image
