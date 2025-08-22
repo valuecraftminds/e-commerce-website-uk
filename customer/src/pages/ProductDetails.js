@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
+import { FaShare } from "react-icons/fa";
 import axios from "axios";
 
 import CheckoutModal from "../components/CheckoutModal";
@@ -365,6 +366,21 @@ export default function ProductDetails() {
     }
   };
 
+  const ShareBtn = (product) => {
+    const productURL = `${window.location.origin}/product/${product.style_id}`;
+
+    const handleShare = async () => {
+      navigator.clipboard.writeText(productURL);
+      console.log("Product link copied to clipboard");
+      showNotify({
+        title: "Link Copied",
+        message: "Product link has been copied to clipboard.",
+        type: "success"
+      });
+    }
+    handleShare();
+   };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -440,6 +456,15 @@ export default function ProductDetails() {
                   <GoHeart size={30} color="black" />
                 )}
               </button>
+
+                <button
+                  className="share-btn position-absolute"
+                  style={{ top: "10px", right: "50px" }}
+                  onClick={() => ShareBtn(product)}
+                  title="Copy link to the product"
+                >
+                  <FaShare size={26} color="black" />
+                </button>
 
               <h1 className="product-name-h1">{product.name}</h1>
               <p className="product-description">{product.description}</p>
