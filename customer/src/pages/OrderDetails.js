@@ -291,8 +291,8 @@ export default function OrderDetails() {
                                                         {item.variant?.sku && (
                                                             <span className="meta-item">SKU: {item.variant.sku}</span>
                                                         )}
-                                                        {item.style?.style_code && (
-                                                            <span className="meta-item">Style: {item.style.style_code}</span>
+                                                        {item.style?.style_number && (
+                                                            <span className="meta-item">Style: {item.style.style_number}</span>
                                                         )}
                                                     </div>
                                                 </div>

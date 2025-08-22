@@ -1,0 +1,22 @@
+
+.delete-modal-sm .modal-dialog {
+  max-width: 320px;
+  width: 80vw;
+}
+
+
+@media (max-width: 500px) {
+  .delete-modal-sm .modal-dialog {
+    max-width: 98vw;
+    width: 98vw;
+  }
+}
+
+.delete-modal-sm .modal-content {
+  border-radius: 16px;
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+}
+
+.delete-modal-sm .modal-body {
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+}

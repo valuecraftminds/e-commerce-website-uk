@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import ManagementTable from '../../components/ManagementTable';
+import ManagementTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const SizeManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
+const SizeManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [sizes, setSizes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -63,7 +63,7 @@ const SizeManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel 
       if (data.success) {
         setSuccess(isEditing ? 'Size updated successfully' : 'Size added successfully');
         fetchSizes();
-        if (!isEditing && embedded && styleCode && companyCode) {
+        if (!isEditing && embedded && styleNumber && companyCode) {
           // Assign to style
           let sizeId = null;
           if (data.size && (data.size.size_id || data.size.id)) {
@@ -78,7 +78,7 @@ const SizeManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel 
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                style_code: styleCode,
+                style_number: styleNumber,
                 company_code: companyCode,
                 type: 'sizes',
                 attribute_ids: [sizeId]

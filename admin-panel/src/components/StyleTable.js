@@ -6,7 +6,8 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import DeleteModal from './modals/DeleteModal';
 import { FaEdit, FaTrash, FaCogs } from 'react-icons/fa'; // Add FaCogs
 
 const StyleTable = ({ 
@@ -14,8 +15,11 @@ const StyleTable = ({
   loading, 
   tableActions, 
   handleRowClick,
-  BASE_URL 
+  BASE_URL,
+  onAfterDelete
 }) => {
+  const [deleteModalId, setDeleteModalId] = useState(null);
+
   const columns = useMemo(
     () => [
       {
@@ -37,8 +41,8 @@ const StyleTable = ({
         )
       },
       {
-        header: 'Code',
-        accessorKey: 'style_code',
+        header: 'Style number',
+        accessorKey: 'style_number',
         maxWidth: 80,
       },
       {
@@ -95,7 +99,7 @@ const StyleTable = ({
               className="action-btn delete-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                tableActions.handleDeleteStyle(row.original.style_id);
+                setDeleteModalId(row.original.style_id);
               }}
               title="Delete"
             >
@@ -131,6 +135,14 @@ const StyleTable = ({
     }
   });
 
+  const handleDeleteSuccess = (deletedId) => {
+    tableActions.handleDeleteStyle(deletedId);
+    setDeleteModalId(null);
+    if (typeof onAfterDelete === 'function') {
+      onAfterDelete();
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading styles...</div>;
   }
@@ -141,7 +153,7 @@ const StyleTable = ({
 
   return (
     <>
-      <div className="table-controls">
+  <div className="table-controls">
         <input
           type="text"
           placeholder="Search styles..."
@@ -150,7 +162,7 @@ const StyleTable = ({
         />
       </div>
 
-      <table className="styles-table">
+  <table className="styles-table">
         <thead>
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
@@ -195,7 +207,7 @@ const StyleTable = ({
         </tbody>
       </table>
 
-      <div className="pagination">
+  <div className="pagination">
         <button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
@@ -216,6 +228,14 @@ const StyleTable = ({
           Next
         </button>
       </div>
+      <DeleteModal
+        id={deleteModalId}
+        show={!!deleteModalId}
+        onHide={() => setDeleteModalId(null)}
+        deleteUrl={id => id ? `/api/admin/styles/delete-styles/${id}` : ''}
+        entityLabel="style"
+        onDeleteSuccess={handleDeleteSuccess}
+      />
     </>
   );
 };

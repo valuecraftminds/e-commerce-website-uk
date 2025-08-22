@@ -4,6 +4,7 @@ import { PencilSquare, Trash } from 'react-bootstrap-icons';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Category.css';
 import { FaPlus } from 'react-icons/fa';
+import DeleteModal from '../components/modals/DeleteModal';
 
 
     
@@ -26,6 +27,8 @@ export default function Category() {
   const { userData } = useContext(AuthContext);
   const [license, setLicense] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  // Delete modal state
+  const [deleteModalInfo, setDeleteModalInfo] = useState({ id: null, confirmMessage: '' });
   
 
   const company_code = userData?.company_code;
@@ -250,35 +253,20 @@ export default function Category() {
     setShowModal(true);
   };
 
-  const handleDelete = async (categoryId) => {
+  const handleDelete = (categoryId) => {
     const category = findCategoryById(categoryId);
     const hasSubcategories = category && category.subcategories && category.subcategories.length > 0;
-    
     const confirmMessage = hasSubcategories
       ? `This category has ${category.subcategories.length} subcategories. Are you sure you want to delete it? All subcategories will also be deleted.`
       : 'Are you sure you want to delete this category?';
+    setDeleteModalInfo({ id: categoryId, confirmMessage });
+  };
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${BASE_URL}/api/admin/categories/delete-categories/${categoryId}?company_code=${company_code}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showMessage('success', data.message);
-        fetchCategories();
-      } else {
-        showMessage('error', data.message);
-      }
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      showMessage('error', 'Error deleting category');
-    }
+  // Called after successful delete from DeleteModal
+  const handleDeleteConfirmed = (categoryId) => {
+    setDeleteModalInfo({ id: null, confirmMessage: '' });
+    showMessage('success', 'Category deleted successfully');
+    fetchCategories();
   };
 
   const resetForm = () => {
@@ -506,7 +494,7 @@ export default function Category() {
         </div>
       )}
 
-  <Modal show={showModal} onHide={resetForm} centered size="sm">
+  <Modal show={showModal} onHide={resetForm} centered size="md">
         <Modal.Header closeButton>
           <Modal.Title>
             {editingCategory
@@ -606,6 +594,7 @@ export default function Category() {
             <Button 
               type="submit" 
               variant="primary" 
+              className='category-btn'
               disabled={loading}
             >
               {loading ? (
@@ -624,6 +613,15 @@ export default function Category() {
           </Modal.Footer>
         </Form>
       </Modal>
+      <DeleteModal
+        id={deleteModalInfo.id}
+        show={!!deleteModalInfo.id}
+        onHide={() => setDeleteModalInfo({ id: null, confirmMessage: '' })}
+        deleteUrl={(id) => id ? `/api/admin/categories/delete-categories/${id}?company_code=${company_code}` : ''}
+        entityLabel="category"
+        confirmMessage={deleteModalInfo.confirmMessage}
+        onDeleteSuccess={handleDeleteConfirmed}
+      />
     </Container>
   );
 }

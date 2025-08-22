@@ -33,6 +33,7 @@ export default function Style() {
 
   // Form states updated for multiple images
   const [styleForm, setStyleForm] = useState({
+    style_number: '', // Style Number (used as style_number)
     name: '',
     description: '',
     category_id: '',
@@ -104,9 +105,9 @@ export default function Style() {
     }
   }, [company_code]);
 
-  const fetchVariants = useCallback(async (styleCode) => {
+  const fetchVariants = useCallback(async (styleNumber) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleCode}`);
+      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`);
       const data = await response.json();
       if (data.success) {
         setVariants(data.variants);
@@ -178,6 +179,7 @@ export default function Style() {
     setEditingStyle(null);
     setSelectedMainCategory('');
     setStyleForm({
+      style_number: '',
       name: '',
       description: '',
       category_id: '',
@@ -196,6 +198,7 @@ export default function Style() {
       const mainCategoryId = subcategory?.parent_id || '';
       setSelectedMainCategory(mainCategoryId.toString());
       setStyleForm({
+        style_number: style.style_number || '',
         name: style.name,
         description: style.description || '',
         category_id: style.category_id.toString(),
@@ -207,28 +210,27 @@ export default function Style() {
       setShowStyleModal(true);
     },
     handleDeleteStyle: async (styleId) => {
-      if (window.confirm('Are you sure you want to delete this style?')) {
-        try {
-          const response = await fetch(`${BASE_URL}/api/admin/styles/delete-styles/${styleId}`, {
-            method: 'DELETE'
-          });
+      // Deletion confirmation is now handled by DeleteModal in StyleTable
+      try {
+        const response = await fetch(`${BASE_URL}/api/admin/styles/delete-styles/${styleId}`, {
+          method: 'DELETE'
+        });
 
-          const data = await response.json();
-          
-          if (data.success) {
-            setSuccess('Style deleted successfully!');
-            fetchStyles();
-            setTimeout(() => setSuccess(''), 3000);
-          } else {
-            setError(data.message || 'Failed to delete style');
-          }
-        } catch (err) {
-          setError('Error deleting style');
+        const data = await response.json();
+        
+        if (data.success) {
+          setSuccess('Style deleted successfully!');
+          fetchStyles();
+          setTimeout(() => setSuccess(''), 3000);
+        } else {
+          setError(data.message || 'Failed to delete style');
         }
+      } catch (err) {
+        setError('Error deleting style');
       }
     },
     handleManageAttributes: (style) => {
-      navigate(`/styles/${style.style_code}/attributes`);
+      navigate(`/styles/${style.style_number}/attributes`);
     }
   }), [company_code, subCategories, fetchStyles, navigate]);
 
@@ -238,11 +240,14 @@ export default function Style() {
     
     try {
       const formData = new FormData();
+
       Object.keys(styleForm).forEach(key => {
         if (key === 'images') {
           styleForm.images.forEach(image => {
             formData.append('images', image);
           });
+        } else if (key === 'style_number') {
+          formData.append('style_number', styleForm.style_number); // send as style_number
         } else {
           formData.append(key, styleForm[key]);
         }
@@ -251,7 +256,6 @@ export default function Style() {
       const url = editingStyle 
         ? `${BASE_URL}/api/admin/styles/update-styles/${editingStyle.style_id}`
         : `${BASE_URL}/api/admin/styles/add-styles`;
-      
       const method = editingStyle ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
@@ -285,14 +289,14 @@ export default function Style() {
         body: JSON.stringify({
           ...variantForm,
           company_code,
-          style_code: selectedStyle.style_code
+          style_number: selectedStyle.style_number
         })
       });
 
       const data = await response.json();
       if (data.success) {
         setSuccess('Variant added successfully');
-        fetchVariants(selectedStyle.style_code);
+        fetchVariants(selectedStyle.style_number);
         setVariantForm({
           color_id: '',
           size_id: '',
@@ -325,7 +329,7 @@ export default function Style() {
       const data = await response.json();
       if (data.success) {
         setSuccess('Variant updated successfully');
-        fetchVariants(selectedStyle.style_code);
+        fetchVariants(selectedStyle.style_number);
         setVariantForm({
           color_id: '',
           size_id: '',
@@ -345,22 +349,21 @@ export default function Style() {
   };
 
   const handleDeleteVariant = async (variantId) => {
-    if (window.confirm('Are you sure you want to delete this variant?')) {
-      try {
-        const response = await fetch(`${BASE_URL}/api/admin/styles/delete-style-variants/${variantId}`, {
-          method: 'DELETE'
-        });
+    // Deletion confirmation is now handled by DeleteModal in StyleTable (if implemented for variants)
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/styles/delete-style-variants/${variantId}`, {
+        method: 'DELETE'
+      });
 
-        const data = await response.json();
-        if (data.success) {
-          setSuccess('Variant deleted successfully');
-          fetchVariants(selectedStyle.style_code);
-        } else {
-          setError(data.message);
-        }
-      } catch (err) {
-        setError('Error deleting variant');
+      const data = await response.json();
+      if (data.success) {
+        setSuccess('Variant deleted successfully');
+        fetchVariants(selectedStyle.style_number);
+      } else {
+        setError(data.message);
       }
+    } catch (err) {
+      setError('Error deleting variant');
     }
   };
 
@@ -394,7 +397,7 @@ export default function Style() {
   // Add row click handler
   const handleRowClick = useCallback((style) => {
     setSelectedStyle(style);
-    fetchVariants(style.style_code);
+    fetchVariants(style.style_number);
     setShowVariantModal(true);
   }, [fetchVariants]);
 
@@ -433,6 +436,7 @@ export default function Style() {
             tableActions={tableActions}
             handleRowClick={handleRowClick}
             BASE_URL={BASE_URL}
+            onAfterDelete={fetchStyles}
           />
         )}
       </div>

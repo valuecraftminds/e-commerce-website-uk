@@ -3,7 +3,6 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState, createContext, useContext } from 'react';
 import './App.css';
 
-import DeleteAdmin from './components/DeleteAdmin';
 import Header from './components/Header';
 import Settings from './components/Setting';
 import AdminDashboard from './pages/AdminDashboard';
@@ -189,7 +188,6 @@ function App() {
           <Route path='ViewAdmins' element={<ViewAdmins />} />
           <Route path='register' element={<RegisterPage />} />
           <Route path='EditAdmins/:id' element={<EditAdmin />} />
-          <Route path='DleteAdmin/:id' element={<DeleteAdmin />} />
           <Route path='dashboard' element={<AdminDashboard />} />
           <Route path='/OrderingDashboard/*' element={<OrderingDashboard />} />
           <Route path='/PdcDashboard/*' element={<PdcDashboard />} />
@@ -198,7 +196,7 @@ function App() {
           <Route path="users" element={<ViewAdmins />} />
           <Route path="category" element={<Category />} />
           <Route path="style" element={<Style />} />
-                  <Route path="/styles/:styleCode/attributes" element={<StyleAttributes />} />
+                  <Route path="/styles/:style_number/attributes" element={<StyleAttributes />} />
 
           <Route path="/warehouse/grn" element={<WarehouseGRN />} />
           <Route path="/warehouse/add-grn" element={<AddGRN />} />

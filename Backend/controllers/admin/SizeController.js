@@ -19,7 +19,7 @@ const SizeController = {
   addSize(req, res) {
     const { company_code, size_name } = req.body;
     db.query(
-      'INSERT INTO sizes (company_code, size_name) VALUES (?, ?, ?)',
+      'INSERT INTO sizes (company_code, size_name) VALUES (?, ?)',
       [company_code, size_name],
       (err, result) => {
         if (err) {

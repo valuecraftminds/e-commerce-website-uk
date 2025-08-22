@@ -218,7 +218,7 @@ export default function ProductDetails() {
         name: product.name,
         sku: product.sku,
         style_id: product.style_id,
-        style_code: product.style_code,
+        style_number: product.style_number,
         size: selectedSize,
         color: {
           code: selectedColor,
@@ -341,14 +341,14 @@ export default function ProductDetails() {
           `${BASE_URL}/api/customer/wishlist/set-wishlist`,
           {
             style_id: product.style_id,
-            style_code: product.style_code,
+            style_number: product.style_number,
             name: product.name,
             image: product.image
           },
           getAxiosConfig()
         );
         setIsWishlisted(true);
-        console.log("Added to wishlist:", product.style_code);
+        console.log("Added to wishlist:", product.style_number);
       }
     } catch (error) {
       console.error("Error adding to wishlist:", error);

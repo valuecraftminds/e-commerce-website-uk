@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Tabs, Tab } from 'react-bootstrap';
 import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
 import { AuthContext } from '../../context/AuthContext';
+import DeleteModal from '../../components/modals/DeleteModal';
 import '../../styles/Style.css';
 
 
@@ -15,7 +16,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 
 export default function StyleAttributes() { 
- const { styleCode } = useParams();
+ const { styleNumber } = useParams();
   const navigate = useNavigate();
   const { userData } = useContext(AuthContext);
 
@@ -38,6 +39,9 @@ export default function StyleAttributes() {
   const [modalType, setModalType] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
 
+  // Delete modal state for each attribute type
+  const [deleteModalInfo, setDeleteModalInfo] = useState({ type: '', id: null });
+
   // New: Show management form states
   const [showColorForm, setShowColorForm] = useState(false);
   const [showSizeForm, setShowSizeForm] = useState(false);
@@ -50,7 +54,7 @@ export default function StyleAttributes() {
   // Fetch style details
   const fetchStyleDetails = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style/${styleCode}?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style/${styleNumber}?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setStyle(data.style);
@@ -60,7 +64,7 @@ export default function StyleAttributes() {
     } catch (err) {
       setError('Error fetching style details');
     }
-  }, [styleCode, company_code]);
+  }, [styleNumber, company_code]);
 
   // Fetch all available attributes
   const fetchAllAttributes = useCallback(async () => {
@@ -91,7 +95,7 @@ export default function StyleAttributes() {
   // Fetch style-specific attributes
   const fetchStyleAttributes = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-attributes/${styleCode}?company_code=${company_code}`);
+      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-attributes/${styleNumber}?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setStyleColors(data.colors || []);
@@ -102,7 +106,7 @@ export default function StyleAttributes() {
     } catch (err) {
       setError('Error fetching style attributes');
     }
-  }, [styleCode, company_code]);
+  }, [styleNumber, company_code]);
 
   useEffect(() => {
     fetchStyleDetails();
@@ -135,7 +139,7 @@ export default function StyleAttributes() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          style_code: styleCode,
+          style_number: styleNumber,
           company_code,
           type: modalType,
           attribute_ids: selectedItems
@@ -157,34 +161,10 @@ export default function StyleAttributes() {
     setLoading(false);
   };
 
-  const handleRemoveAttribute = async (type, attributeId) => {
-    if (window.confirm(`Are you sure you want to remove this ${type.slice(0, -1)}?`)) {
-      try {
-        const response = await fetch(`${BASE_URL}/api/admin/styles/remove-style-attribute`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            style_code: styleCode,
-            company_code,
-            type,
-            attribute_id: attributeId
-          })
-        });
 
-        const data = await response.json();
-        if (data.success) {
-          setSuccess(`${type.slice(0, -1)} removed successfully!`);
-          fetchStyleAttributes();
-          setTimeout(() => setSuccess(''), 3000);
-        } else {
-          setError(data.message || `Error removing ${type.slice(0, -1)}`);
-        }
-      } catch (err) {
-        setError(`Error removing ${type.slice(0, -1)}`);
-      }
-    }
+  // Use DeleteModal for all attribute types
+  const handleRemoveAttribute = (type, attributeId) => {
+    setDeleteModalInfo({ type, id: attributeId });
   };
 
   const getAvailableItems = () => {
@@ -236,52 +216,50 @@ export default function StyleAttributes() {
     <Row className="mb-4">
       {/* Left: Add New */}
       <Col md={6}>
-        
-          
-          <Card.Body>
-            {type === 'colors' && (
-              <ColorManagement
-                embedded
-                styleCode={styleCode}
-                companyCode={company_code}
-                onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
-                onCancel={() => {}}
-              />
-            )}
-            {type === 'sizes' && (
-              <SizeManagement
-                embedded
-                styleCode={styleCode}
-                companyCode={company_code}
-                onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
-                onCancel={() => {}}
-              />
-            )}
-            {type === 'materials' && (
-              <MaterialManagement
-                embedded
-                styleCode={styleCode}
-                companyCode={company_code}
-                onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
-                onCancel={() => {}}
-              />
-            )}
-            {type === 'fits' && (
-              <FitManagement
-                embedded
-                styleCode={styleCode}
-                companyCode={company_code}
-                onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
-                onCancel={() => {}}
-              />
-            )}
-          </Card.Body>
+        <Card.Body>
+          {type === 'colors' && (
+            <ColorManagement
+              embedded
+              styleNumber={styleNumber}
+              companyCode={company_code}
+              onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
+              onCancel={() => {}}
+            />
+          )}
+          {type === 'sizes' && (
+            <SizeManagement
+              embedded
+              styleNumber={styleNumber}
+              companyCode={company_code}
+              onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
+              onCancel={() => {}}
+            />
+          )}
+          {type === 'materials' && (
+            <MaterialManagement
+              embedded
+              styleNumber={styleNumber}
+              companyCode={company_code}
+              onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
+              onCancel={() => {}}
+            />
+          )}
+          {type === 'fits' && (
+            <FitManagement
+              embedded
+              styleNumber={styleNumber}
+              companyCode={company_code}
+              onSuccess={() => { fetchAllAttributes(); fetchStyleAttributes(); }}
+              onCancel={() => {}}
+            />
+          )}
+        </Card.Body>
       </Col>
       {/* Right: Add Existing */}
       <Col md={6}>
         <Card>
           <Card.Header className="d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">{title} Assigned</h5>
+            <h5 className="mb-0">Assigned {title}</h5>
             <Button 
               variant="primary" 
               className='add-style-btn'
@@ -319,20 +297,31 @@ export default function StyleAttributes() {
                       {type === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
                       {(type === 'materials' || type === 'fits') && <td>{item.description || '-'}</td>}
                       <td>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="py-0 px-2"
-                          style={{ fontSize: '0.9rem', lineHeight: 1 }}
-                          onClick={() => handleRemoveAttribute(type, 
-                            type === 'colors' ? item.color_id :
-                            type === 'sizes' ? item.size_id :
-                            type === 'materials' ? item.material_id :
-                            item.fit_id
-                          )}
-                        >
-                          <FaTrash />
-                        </Button>
+                        {type === 'colors' ? (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            className="py-0 px-2"
+                            style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                            onClick={() => handleRemoveAttribute(type, item.color_id)}
+                          >
+                            <FaTrash />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            className="py-0 px-2"
+                            style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                            onClick={() => handleRemoveAttribute(type, 
+                              type === 'sizes' ? item.size_id :
+                              type === 'materials' ? item.material_id :
+                              item.fit_id
+                            )}
+                          >
+                            <FaTrash />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -345,8 +334,57 @@ export default function StyleAttributes() {
     </Row>
   );
 
+
   return (
     <Container fluid>
+      {/* DeleteModal for all attribute types (must be outside renderAttributeSection) */}
+      <DeleteModal
+        id={deleteModalInfo.id}
+        show={!!deleteModalInfo.id}
+        onHide={() => setDeleteModalInfo({ type: '', id: null })}
+        deleteUrl={() => `${BASE_URL}/api/admin/styles/remove-style-attribute`}
+        entityLabel={
+          deleteModalInfo.type === 'colors' ? 'color from style' :
+          deleteModalInfo.type === 'sizes' ? 'size from style' :
+          deleteModalInfo.type === 'materials' ? 'material from style' :
+          deleteModalInfo.type === 'fits' ? 'fit from style' :
+          'attribute from style'
+        }
+        modalTitle={
+          deleteModalInfo.type === 'colors' ? 'Remove Color from Style' :
+          deleteModalInfo.type === 'sizes' ? 'Remove Size from Style' :
+          deleteModalInfo.type === 'materials' ? 'Remove Material from Style' :
+          deleteModalInfo.type === 'fits' ? 'Remove Fit from Style' :
+          'Remove Attribute from Style'
+        }
+        confirmMessage={
+          deleteModalInfo.type === 'colors' ? 'Are you sure you want to remove this color from the style?' :
+          deleteModalInfo.type === 'sizes' ? 'Are you sure you want to remove this size from the style?' :
+          deleteModalInfo.type === 'materials' ? 'Are you sure you want to remove this material from the style?' :
+          deleteModalInfo.type === 'fits' ? 'Are you sure you want to remove this fit from the style?' :
+          'Are you sure you want to remove this attribute from the style?'
+        }
+        requestOptions={{
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            style_number: styleNumber,
+            company_code,
+            type: deleteModalInfo.type,
+            attribute_id: deleteModalInfo.id
+          })
+        }}
+        onDeleteSuccess={() => {
+          setSuccess(
+            deleteModalInfo.type === 'colors' ? 'Color removed successfully!' :
+            deleteModalInfo.type === 'sizes' ? 'Size removed successfully!' :
+            deleteModalInfo.type === 'materials' ? 'Material removed successfully!' :
+            deleteModalInfo.type === 'fits' ? 'Fit removed successfully!' :
+            'Attribute removed successfully!'
+          );
+          fetchStyleAttributes();
+          setTimeout(() => setSuccess(''), 3000);
+        }}
+      />
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-2 p-4">
         <div>
@@ -364,7 +402,7 @@ export default function StyleAttributes() {
         </div>
         {style && (
           <Badge bg="info" className="fs-6">
-            Style Code: {style.style_code}
+            Style Code: {style.style_number}
           </Badge>
         )}
       </div>
@@ -393,7 +431,25 @@ export default function StyleAttributes() {
         <Tab eventKey="fits" title="Fits">
           {renderAttributeSection('Fits', styleFits, 'fits')}
         </Tab>
-      </Tabs>
+<Tab eventKey="sku" title="SKU">
+  {/* SKU Tab: Generate all possible combinations of assigned attributes */}
+  <SkuVariantGenerator
+    style={style}
+    styleColors={styleColors}
+    styleSizes={styleSizes}
+    styleMaterials={styleMaterials}
+    styleFits={styleFits}
+    company_code={company_code}
+    styleNumber={styleNumber}
+    BASE_URL={BASE_URL}
+    onSuccess={() => {
+      setSuccess('Variants added successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    }}
+    onError={setError}
+  />
+</Tab>
+</Tabs>
 
       {/* Selection Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
@@ -468,6 +524,151 @@ export default function StyleAttributes() {
       </Modal>
     </Container>
   );
-};
+}
+
+// Helper to generate cartesian product of arrays
+function cartesianProduct(arrays) {
+  return arrays.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]]);
+}
+
+function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, styleFits, company_code, styleNumber, BASE_URL, onSuccess, onError }) {
+  const [variantInputs, setVariantInputs] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+
+  // Generate all combinations
+  const combinations = React.useMemo(() => {
+    if (!styleColors.length || !styleSizes.length || !styleMaterials.length || !styleFits.length) return [];
+    return cartesianProduct([
+      styleColors,
+      styleSizes,
+      styleFits,
+      styleMaterials
+    ]);
+  }, [styleColors, styleSizes, styleMaterials, styleFits]);
+
+  // Generate SKU string (same as backend logic, now includes material)
+  function generateSku(style_number, color, size, fit, material) {
+    return `${style_number}-${(color.color_name||'').substring(0,3).toUpperCase()}-${size.size_name}-${(fit.fit_name||'').substring(0,3).toUpperCase()}-${(material.material_name||'').substring(0,3).toUpperCase()}`;
+  }
+
+  // Handle input change
+  const handleInputChange = (idx, field, value) => {
+    setVariantInputs(inputs => ({
+      ...inputs,
+      [idx]: {
+        ...inputs[idx],
+        [field]: value
+      }
+    }));
+  };
+
+  // Save all variants
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      const results = await Promise.all(combinations.map(async (combo, idx) => {
+        const [color, size, fit, material] = combo;
+        const input = variantInputs[idx] || {};
+        if (!input.unit_price || !input.price) return null;
+        const res = await fetch(`${BASE_URL}/api/admin/styles/add-style-variants`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company_code,
+            style_number: styleNumber,
+            color_id: color.color_id,
+            size_id: size.size_id,
+            fit_id: fit.fit_id,
+            material_id: material.material_id,
+            unit_price: input.unit_price,
+            price: input.price
+          })
+        });
+        return res.json();
+      }));
+      if (results.some(r => r && !r.success)) {
+        onError('Some variants failed to save.');
+      } else {
+        onSuccess();
+      }
+    } catch (err) {
+      onError('Error saving variants');
+    }
+    setSaving(false);
+  };
+
+  if (!style) return <div className="p-4">Loading style...</div>;
+
+  return (
+    <div className="p-3">
+      <h5>Generate All Possible Variants (SKU)</h5>
+      {(!styleColors.length || !styleSizes.length || !styleMaterials.length || !styleFits.length) ? (
+        <div className="alert alert-warning mt-3">Assign at least one color, size, fit, and material to generate variants.</div>
+      ) : (
+        <>
+          <Table responsive bordered size="sm" className="variants-table mt-3">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>SKU</th>
+                <th>Color</th>
+                <th>Size</th>
+                <th>Fit</th>
+                <th>Material</th>
+                <th>Unit Price</th>
+                <th>Sale Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {combinations.map((combo, idx) => {
+                const [color, size, fit, material] = combo;
+                const sku = generateSku(style.style_number, color, size, fit, material);
+                const input = variantInputs[idx] || {};
+                return (
+                  <tr key={sku}>
+                    <td>{idx + 1}</td>
+                    <td>{sku}</td>
+                    <td>{color.color_name}</td>
+                    <td>{size.size_name}</td>
+                    <td>{fit.fit_name}</td>
+                    <td>{material.material_name}</td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        min="0"
+                        value={input.unit_price || ''}
+                        onChange={e => handleInputChange(idx, 'unit_price', e.target.value)}
+                        size="sm"
+                        style={{ width: 90 }}
+                      />
+                    </td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        min="0"
+                        value={input.price || ''}
+                        onChange={e => handleInputChange(idx, 'price', e.target.value)}
+                        size="sm"
+                        style={{ width: 90 }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+          <Button
+            variant="primary"
+            className="mt-2"
+            onClick={handleSaveAll}
+            disabled={saving || combinations.length === 0}
+          >
+            {saving ? 'Saving...' : 'Save All Variants'}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
 
 

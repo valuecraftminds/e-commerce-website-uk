@@ -319,7 +319,7 @@ export default function AddGRN() {
             } else {
                 // Add new item
                 const newGRNItem = {
-                    style_code: selectedItem.style_code,
+                    style_number: selectedItem.style_number,
                     sku: selectedItem.sku,
                     ordered_qty: selectedItem.ordered_qty,
                     max_qty: selectedItem.max_qty,
@@ -666,7 +666,7 @@ useEffect(() => {
                                                         onClick={() => canReceive && handleItemClick(item)}
                                                         style={{ cursor: canReceive ? 'pointer' : 'not-allowed' }}
                                                     >
-                                                        <td>{item.style_code}</td>
+                                                        <td>{item.style_number}</td>
                                                         <td>{item.sku}</td>
                                                         <td>{item.ordered_qty}</td>
                                                         <td>
@@ -713,7 +713,7 @@ useEffect(() => {
                                             <tbody>
                                                 {grnItems.map((item, index) => (
                                                     <tr key={`${item.sku}-${item.lot_no || ''}-${index}`}>
-                                                        <td>{item.style_code}</td>
+                                                        <td>{item.style_number}</td>
                                                         <td>{item.sku}</td>
                                                         <td>{item.ordered_qty}</td>
                                                         <td><Badge bg="primary">{item.received_qty}</Badge></td>
@@ -796,7 +796,7 @@ useEffect(() => {
                         <>
                             <Row className="mb-3">
                                 <Col md={6}>
-                                    <p><strong>Style Code:</strong> {selectedItem.style_code}</p>
+                                    <p><strong>Style Code:</strong> {selectedItem.style_number}</p>
                                     <p><strong>SKU:</strong> {selectedItem.sku}</p>
                                     <p><strong>Ordered Quantity:</strong> {selectedItem.ordered_qty}</p>
                                 </Col>

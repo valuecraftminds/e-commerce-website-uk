@@ -3,7 +3,7 @@ const db = require('../../config/database');
 
 async function getVariantIdByStyleColorSize({
   company_code,
-  style_code,
+  style_number,
   color_name,
   size_name
 }) {
@@ -17,7 +17,7 @@ async function getVariantIdByStyleColorSize({
     ON s.size_id = sv.size_id
    AND s.company_code = sv.company_code
   WHERE sv.company_code = ?
-    AND sv.style_code   = ?
+    AND sv.style_number   = ?
     AND c.color_name    = ?
     AND s.size_name     = ?
     AND sv.is_active    = 1
@@ -25,7 +25,7 @@ async function getVariantIdByStyleColorSize({
 `;
 
 
-  const params = [company_code, style_code, color_name, size_name];
+  const params = [company_code, style_number, color_name, size_name];
 
   return new Promise((resolve, reject) => {
     db.query(sql, params, (err, rows) => {
@@ -41,7 +41,7 @@ const cartController = {
   addToCart: async (req, res) => {
     const {
       customer_id = req.user?.id,
-      style_code,
+      style_number,
       variant_id: bodyVariantId, 
       quantity = 1,
       price,
@@ -59,16 +59,16 @@ const cartController = {
       let variant_id = bodyVariantId;
 
       if (!variant_id) {
-        if (!company_code || !style_code || !color_name || !size_name) {
+        if (!company_code || !style_number || !color_name || !size_name) {
           return res.status(400).json({
             success: false,
-            message: 'Missing required fields to find variant: company_code, style_code, color_name, size_name'
+            message: 'Missing required fields to find variant: company_code, style_number, color_name, size_name'
           });
         }
 
         variant_id = await getVariantIdByStyleColorSize({
           company_code,
-          style_code,
+          style_number,
           color_name,
           size_name
         });
@@ -203,7 +203,7 @@ const cartController = {
         SELECT 
           c.*, 
           s.style_id, 
-          s.style_code, 
+          s.style_number, 
           s.name AS style_name, 
           s.description AS style_description, 
           s.image AS style_image,
@@ -216,7 +216,7 @@ const cartController = {
           f.fit_name
         FROM cart c
         JOIN style_variants sv ON c.variant_id = sv.variant_id
-        JOIN styles s ON s.style_code = sv.style_code
+        JOIN styles s ON s.style_number = sv.style_number
         LEFT JOIN colors col ON sv.color_id = col.color_id
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
@@ -404,9 +404,9 @@ const cartController = {
       }
 
       const item = guest_cart[index];
-      const { style_code, variant_id, quantity } = item;
+      const { style_number, variant_id, quantity } = item;
 
-      if (!style_code || !variant_id || !quantity) {
+      if (!style_number || !variant_id || !quantity) {
         errors.push(`Missing fields for variant_id: ${variant_id}`);
         return processNextItem(index + 1);
       }
@@ -461,7 +461,7 @@ const cartController = {
             item.tax || 0.00,
             item.shipping_fee || 0.00,
             item.is_available !== undefined ? item.is_available : true,
-            style_code
+            style_number
           ]);
 
           mergedItems.push({

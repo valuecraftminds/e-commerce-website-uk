@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import ManagementTable from '../../components/ManagementTable';
+import ManagementTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-const FitManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }) => {
+const FitManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCancel }) => {
   const { userData } = useContext(AuthContext);
   const [fits, setFits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,7 @@ const FitManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }
       if (data.success) {
         setSuccess(isEditing ? 'Fit updated successfully' : 'Fit added successfully');
         fetchFits();
-        if (!isEditing && embedded && styleCode && companyCode) {
+        if (!isEditing && embedded && styleNumber && companyCode) {
           // Assign to style
           let fitId = null;
           if (data.fit && (data.fit.fit_id || data.fit.id)) {
@@ -80,7 +80,7 @@ const FitManagement = ({ embedded, styleCode, companyCode, onSuccess, onCancel }
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                style_code: styleCode,
+                style_number: styleNumber,
                 company_code: companyCode,
                 type: 'fits',
                 attribute_ids: [fitId]

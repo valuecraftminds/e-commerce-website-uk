@@ -373,10 +373,10 @@ static async searchPO(req, res) {
         // Validate all items before processing
         for (let idx = 0; idx < grn_items.length; idx++) {
             const item = grn_items[idx];
-            if (!item.sku || !item.style_code || isNaN(parseInt(item.received_qty)) || parseInt(item.received_qty) <= 0 || !item.location_id) {
+            if (!item.sku || !item.style_number || isNaN(parseInt(item.received_qty)) || parseInt(item.received_qty) <= 0 || !item.location_id) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: `Invalid GRN item at index ${idx}. Check SKU, style_code, received_qty, and location_id` 
+                    message: `Invalid GRN item at index ${idx}. Check SKU, style_number, received_qty, and location_id` 
                 });
             }
         }
@@ -503,13 +503,13 @@ static async searchPO(req, res) {
                     let itemStatus = item.status || 'pending';
                     // Insert GRN item
                     const itemSql = `INSERT INTO grn_items (
-                        grn_id, company_code, po_number, style_code, sku, lot_no,
+                        grn_id, company_code, po_number, style_number, sku, lot_no,
                         ordered_qty, received_qty, remaining_qty,
                         location_id, notes, created_at, updated_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW())`;
                     const itemValues = [
                         grn_id, company_code, po_number, 
-                        item.style_code, item.sku, item.lot_no || '',
+                        item.style_number, item.sku, item.lot_no || '',
                         itemData.ordered_qty, received_qty, 
                         Math.max(0, remaining_qty),
                         item.location_id || '', item.notes || ''

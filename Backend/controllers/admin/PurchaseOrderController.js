@@ -529,7 +529,7 @@ const PurchaseOrderController = {
                    poi.unit_price,
                    poi.total_price,
                    sv.unit_price as catalog_price,
-                   st.style_code,
+                   st.style_number,
                    st.name as style_name,
                    c.color_name,
                    sz.size_name,
@@ -540,7 +540,7 @@ const PurchaseOrderController = {
             LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id
             LEFT JOIN purchase_order_items poi ON poh.po_number = poi.po_number
             LEFT JOIN style_variants sv ON poi.sku = sv.sku
-            LEFT JOIN styles st ON sv.style_code = st.style_code
+            LEFT JOIN styles st ON sv.style_number = st.style_number
             LEFT JOIN colors c ON sv.color_id = c.color_id
             LEFT JOIN sizes sz ON sv.size_id = sz.size_id
             LEFT JOIN fits f ON sv.fit_id = f.fit_id
@@ -596,7 +596,7 @@ const PurchaseOrderController = {
                     unit_price: row.unit_price,
                     total_price: row.total_price,
                     catalog_price: row.catalog_price,
-                    style_code: row.style_code,
+                    style_number: row.style_number,
                     style_name: row.style_name,
                     color_name: row.color_name,
                     size_name: row.size_name,
@@ -671,11 +671,11 @@ const PurchaseOrderController = {
             const itemsSql = `
                 SELECT poi.id as item_id, poi.sku, poi.quantity, poi.unit_price, poi.total_price,
                        sv.unit_price as catalog_price,
-                       st.style_code, st.name as style_name,
+                       st.style_number, st.name as style_name,
                        c.color_name, sz.size_name, f.fit_name, m.material_name
                 FROM purchase_order_items poi
                 LEFT JOIN style_variants sv ON poi.sku = sv.sku AND sv.company_code = poi.company_code
-                LEFT JOIN styles st ON sv.style_code = st.style_code AND st.company_code = sv.company_code
+                LEFT JOIN styles st ON sv.style_number = st.style_number AND st.company_code = sv.company_code
                 LEFT JOIN colors c ON sv.color_id = c.color_id AND c.company_code = sv.company_code
                 LEFT JOIN sizes sz ON sv.size_id = sz.size_id AND sz.company_code = sv.company_code
                 LEFT JOIN fits f ON sv.fit_id = f.fit_id AND f.company_code = sv.company_code
@@ -730,7 +730,7 @@ const PurchaseOrderController = {
                     unit_price: row.unit_price,
                     total_price: row.total_price,
                     catalog_price: row.catalog_price,
-                    style_code: row.style_code,
+                    style_number: row.style_number,
                     style_name: row.style_name,
                     color_name: row.color_name,
                     size_name: row.size_name,

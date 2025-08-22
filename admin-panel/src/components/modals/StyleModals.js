@@ -33,18 +33,16 @@ BASE_URL
   </Modal.Header>
   <Modal.Body>
     <Row>
-        {editingStyle && (
-          <div className="form-group col-md-6">
-            <label className="form-label">Style Code</label>
-            <input
-              type="text"
-              className="form-input"
-              value={editingStyle.style_code}
-              disabled
-            />
-          </div>
-        )}
-
+        <div className="form-group col-md-6">
+          <label className="form-label">Style Number *</label>
+          <input
+            type="text"
+            className="form-input"
+            value={styleForm.number}
+            onChange={(e) => setStyleForm({...styleForm, number: e.target.value})}
+            disabled={!!editingStyle}
+          />
+        </div>
         <div className="form-group col-md-6">
           <label className="form-label">Name *</label>
           <input
@@ -279,7 +277,7 @@ return (
   <Modal show={show} onHide={onHide} size="xl">
     <Modal.Header closeButton>
       <Modal.Title>
-        {selectedStyle && `Variants for ${selectedStyle.style_code}`}
+        {selectedStyle && `Variants for ${selectedStyle.style_number}`}
       </Modal.Title>
     </Modal.Header>
     <Modal.Body>

@@ -123,7 +123,7 @@ export default function GRNDetails() {
                         <tbody>
                             {grnDetails.items.map((item) => (
                                 <tr key={item.id}>
-                                    <td>{item.style_code}</td>
+                                    <td>{item.style_number}</td>
                                     <td>{item.sku}</td>
                                     <td>{item.ordered_qty}</td>
                                     <td>{item.received_qty}</td>
