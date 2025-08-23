@@ -31,17 +31,18 @@ const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
 // no symbols or digits in name
 const isValidName = (name) => /^[a-zA-Z\s]+$/.test(name.trim());
 
-const luhnValid = (num) => {
-  const s = onlyDigits(num);
-  if (!s) return false;
-  let sum = 0, dbl = false;
-  for (let i = s.length - 1; i >= 0; i--) {
-    let d = parseInt(s[i], 10);
-    if (dbl) { d *= 2; if (d > 9) d -= 9; }
-    sum += d; dbl = !dbl;
-  }
-  return sum % 10 === 0;
-};
+// const luhnValid = (num) => {
+//   const s = onlyDigits(num);
+//   if (!s) return false;
+//   let sum = 0, dbl = false;
+//   for (let i = s.length - 1; i >= 0; i--) {
+//     let d = parseInt(s[i], 10);
+//     if (dbl) { d *= 2; if (d > 9) d -= 9; }
+//     sum += d; dbl = !dbl;
+//   }
+//   return sum % 10 === 0;
+// };
+
 const parseExpiry = (val) => {
   const cleaned = onlyDigits(val);
   if (cleaned.length < 3) return null;
@@ -253,9 +254,12 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
     // if (shippingData.payment_method !== 'card') {
     //   fe.payment_method = 'Choose a payment method';
     // } else {
-      if (!shippingData.card_number || !luhnValid(shippingData.card_number)) {
-        fe.card_number = 'Card number looks invalid';
-      }
+      // if (!shippingData.card_number || !luhnValid(shippingData.card_number)) {
+      //   fe.card_number = 'Card number looks invalid';
+      // }
+    if (!shippingData.card_number || !/^\d{13,19}$/.test(shippingData.card_number)) {
+      fe.card_number = 'Card number looks invalid';
+    }
       const exp = parseExpiry(shippingData.card_expiry_date);
       if (!exp) fe.card_expiry_date = 'Use MM/YY';
       else if (!isExpiryInFuture(exp)) fe.card_expiry_date = 'Card is expired';
@@ -350,7 +354,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
       if (err.response) {
         setError(err.response.data?.message || `Server error: ${err.response.status}`);
       } else if (err.request) {
-        setError('Network error. Please check your connection.');
+        setError('Network error. Please check your connection.', err.request);
       } else {
         setError(err.message || 'An unexpected error occurred. Please try again.');
       }
