@@ -19,7 +19,7 @@ export default function Home() {
   const [offerProducts, setOfferProducts] = useState([]);
   const [offerLoading, setOfferLoading] = useState(false);
   const [offerError, setOfferError] = useState(null);
-  const [displayLimit, setDisplayLimit] = useState(7);
+  const [displayLimit, ] = useState(7);
 
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
