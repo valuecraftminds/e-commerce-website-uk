@@ -1,6 +1,6 @@
 
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -11,14 +11,11 @@ import UserMenu from "./UserMenu";
 
 import '../styles/NavBar.css';
 
-import { AuthContext } from '../context/AuthContext';
-
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function NavigationBar({ onSidebarStateChange }) {
   const navigate = useNavigate();
-  const { isLoggedIn } = useContext(AuthContext);
 
   const [companyLogo, setCompanyLogo] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -42,21 +39,21 @@ export default function NavigationBar({ onSidebarStateChange }) {
   };
 
   // Get axios config with auth token
-  const getAxiosConfig = () => {
-    const token = getAuthToken();
-    const config = {
-      params: { company_code: COMPANY_CODE },
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    };
+  // const getAxiosConfig = () => {
+  //   const token = getAuthToken();
+  //   const config = {
+  //     params: { company_code: COMPANY_CODE },
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     }
+  //   };
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  //   if (token) {
+  //     config.headers.Authorization = `Bearer ${token}`;
+  //   }
 
-    return config;
-  };
+  //   return config;
+  // };
 
   // Fetch company logo
   useEffect(() => {
@@ -261,7 +258,6 @@ export default function NavigationBar({ onSidebarStateChange }) {
 
               {/* User icons */}
               <UserMenu profilePicture={profilePicture} />
-
             </div>
           </Container>
         </Navbar>

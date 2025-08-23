@@ -134,14 +134,6 @@ const Wishlist = () => {
         }
     };
 
-    const formatPrice = (minPrice) => {
-        if (!minPrice) return "Price not defined";
-        const symbol = currencySymbols[country] || '$';
-        const rate = getRate();
-        const convertedPrice = (minPrice * rate).toFixed(2);
-        return `${symbol}${convertedPrice}`;
-    };
-    
     return (
         <div className="wishlist-page">
             <h1>Wishlist</h1>
@@ -161,7 +153,6 @@ const Wishlist = () => {
                         <p className="wishlist-description">{item.description}</p>
 
                         <div className="wishlist-footer-row">
-                            {/*<span className="wishlist-price">{formatPrice(item.price)}</span>*/}
                             <button
                                 className="remove-btn"
                                 onClick={() => handleRemove(item.style_id)}
