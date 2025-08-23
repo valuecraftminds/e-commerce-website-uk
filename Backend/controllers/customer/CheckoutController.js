@@ -286,6 +286,45 @@ const CheckoutController = {
                   });
                 }
 
+                // insert into payment
+                const paymentQuery = `
+  INSERT INTO payment (
+    company_code,
+    customer_id,
+    order_id,
+    payment_method_id,
+    subtotal,
+    tax,
+    shipping_fee,
+    total,
+    payment_date
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+const paymentValues = [
+  company_code,
+  customer_id,
+  orderId,
+  paymentMethodId,
+  subtotal || 0,
+  tax_amount || 0,        // ← Fixed: use tax_amount instead of tax
+  shipping_fee || 0,
+  total_amount || 0,      // ← Fixed: use total_amount instead of total
+  new Date()
+];
+
+db.query(paymentQuery, paymentValues, (paymentErr, paymentResult) => {
+  if (paymentErr) {
+    return db.rollback(() => {
+      console.error('Error inserting payment:', paymentErr);
+      res.status(500).json({
+        error: 'Failed to create payment',
+        details: paymentErr.message
+      });
+    });
+  }
+  
+
                 // Commit transaction 
                 db.commit((commitErr) => {
                   if (commitErr) {
@@ -304,7 +343,8 @@ const CheckoutController = {
                     payment_method_id: paymentMethodId,
                     total_amount: total_amount,
                     order_status: 'pending',
-                    booking_count: bookingResult.affectedRows
+                    booking_count: bookingResult.affectedRows,
+                    payment_date: new Date(),
                   });
                 });
               });
@@ -313,6 +353,7 @@ const CheckoutController = {
         });
       });
     });
+  });
   }
 };
 
