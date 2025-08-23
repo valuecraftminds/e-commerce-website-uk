@@ -211,7 +211,7 @@ const EditAddress = ({ show, address, onHide, onSubmit }) => {
       };
 
       // Update the address via API
-      const { data } = await api.put(`/api/customer/address/update-address`, payload);
+      await api.put(`/api/customer/address/update-address`, payload);
       
       // Call the parent's onSubmit with the result 
       onSubmit?.({
