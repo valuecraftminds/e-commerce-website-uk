@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import CheckoutModal from '../components/CheckoutModal';
 import { useNotifyModal} from "../context/NotifyModalProvider";
+
 import '../styles/Cart.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -206,16 +207,10 @@ return (
                           
                           {/* Product Details */}
                           <Col md={5} className="d-flex flex-column justify-content-center">
-                            <h6 className="mb-2">
-                              <Link 
-                                to={`/product/${item.product_id}`}
-                                className="text-decoration-none product-link"
-                              >
-                                {item.product_name}
-                              </Link>
-                            </h6>
+                            <h5 className="mb-2">{item.product_name}</h5>
+
                             <div className="product-details">
-                              <small className="text-muted d-block mb-1">
+                              <small className="text-muted d-block mb-1 product-color-name">
                                 {item.color_name && ( 
                                   <span className="me-3">
                                     <strong>Color:</strong> {item.color_name}
@@ -228,12 +223,12 @@ return (
                                 )}
                               </small>
                               {item.sku && (
-                                <small className="text-muted d-block mb-1">
+                                <small className="text-muted d-block mb-1 product-sku">
                                   <strong>SKU:</strong> {item.sku}
                                 </small>
                               )}
                               {item.material_name && (
-                                <small className="text-muted d-block">
+                                <small className="text-muted d-block product-material">
                                   <strong>Material:</strong> {item.material_name}
                                 </small>
                               )}
@@ -397,7 +392,7 @@ return (
                       
                       <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
                       <div className="d-flex justify-content-between mb-4">
-                        <strong style={{fontSize: '1.3rem'}}>💰 Total:</strong>
+                        <strong style={{fontSize: '1.3rem'}}>💰 Subtotal:</strong>
                         <strong style={{fontSize: '1.3rem'}}>{summary.currency_symbol}{summary.total_amount}</strong>
                       </div>
                       

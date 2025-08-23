@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Modal, Form, Row, Col, Button, Container, Spinner } from 'react-bootstrap';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { Modal, Form, Row, Col, Button, Container, Spinner, Card } from 'react-bootstrap';
 import axios from 'axios';
 
 import { useCart } from '../context/CartContext';
+import { CountryContext } from "../context/CountryContext";
 import '../styles/CheckoutModal.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -58,8 +59,10 @@ const isExpiryInFuture = ({ month, year }) => {
 
 const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) => {
   const api = useMemo(() => createAxios(), []);
-
+  const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
+  const { country } = useContext(CountryContext);
   const [step, setStep] = useState('address');
+  const [exchangeRates, setExchangeRates] = useState({});
 
   const [shippingData, setShippingData] = useState({
     first_name: '', last_name: '', house: '',
@@ -133,6 +136,47 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
       postal_code: addr.postal_code || '',
       phone: addr.phone || '',
     }));
+  };
+
+  // Fetch exchange rates
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/customer/currency/rates`);
+        if (response.data.success) {
+          setExchangeRates(response.data.rates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+        // Set default rates if API fails
+        setExchangeRates({
+          GBP: 0.75,
+          LKR: 320
+        });
+      }
+    };
+    fetchExchangeRates();
+  }, []);
+
+  const getRate = () => {
+    switch (country) {
+      case 'US':
+        return 1;
+      case 'UK':
+        return exchangeRates['GBP'] || 0.75;
+      case 'SL':
+        return exchangeRates['LKR'] || 320;
+      default:
+        return 1;
+    }
+  };
+
+  const formatPrice = (amount) => {
+    if (!amount) return "Price not defined";
+    const symbol = currencySymbols[country] || '$';
+    const rate = getRate();
+    const convertedPrice = (amount * rate).toFixed(2);
+    return `${symbol}${convertedPrice}`;
   };
 
   // reset on open + fetch addresses
@@ -450,7 +494,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
 
   const disabled = isLoading;
 
-  return (
+return (
     <Modal show={show} onHide={onHide} size="lg" centered className="checkout-modal">
       <Modal.Header closeButton>
         <Modal.Title>
@@ -786,7 +830,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
                 <Row className="mb-3">
                   <Col>
                     <div className="alert alert-info">
-                      <strong>Shipping address selected:</strong>{' '}
+                      <strong>Shipping To:</strong>{' '}
                       {(() => {
                         const a = addresses.find(x => String(x.address_id ?? x.id) === String(selectedAddressId));
                         if (!a) return 'Address on file';
@@ -798,84 +842,153 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
                   </Col>
                 </Row>
 
-                {/* Optional: show product summary when cart is empty but product was provided */}
+                {/* show product summary when cart is empty but product was provided */}
                 {(!Array.isArray(cart) || cart.length === 0) && product && (
                   <Row className="mb-3">
                     <Col>
                       <div className="alert alert-secondary">
                         <strong>Item:</strong> {product.name ?? product.title ?? 'Selected Product'} ·
                         <strong> Qty:</strong> {product.quantity ?? 1} ·
-                        <strong> Price:</strong> {Number(product.price || 0).toFixed(2)}
+                        <strong> Price:</strong> ${Number(product.price || 0).toFixed(2)}
                       </div>
                     </Col>
                   </Row>
                 )}
-                  <Row className="mb-3">
-                    <Col md={4}>
-                      <Form.Group controlId="cardNumber">
-                        <Form.Label>Card Number</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="card_number"
-                          inputMode="numeric"
-                          autoComplete="cc-number"
-                          placeholder="•••• •••• •••• ••••"
-                          value={shippingData.card_number}
-                          onChange={handleChange}
-                          isInvalid={!!fieldErrors.card_number}
-                          minLength={16}
-                          maxLength={19}
-                          disabled={disabled}
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {fieldErrors.card_number}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="cardExpiryDate">
-                        <Form.Label>Expiry Date</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="card_expiry_date"
-                          inputMode="numeric"
-                          autoComplete="cc-exp"
-                          placeholder="MM/YY"
-                          value={shippingData.card_expiry_date}
-                          onChange={handleChange}
-                          isInvalid={!!fieldErrors.card_expiry_date}
-                          maxLength={5}
-                          disabled={disabled}
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {fieldErrors.card_expiry_date}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="cardCvv">
-                        <Form.Label>CVV</Form.Label>
-                        <Form.Control
-                          type="password"
-                          name="card_cvv"
-                          inputMode="numeric"
-                          autoComplete="cc-csc"
-                          placeholder="CVV"
-                          value={shippingData.card_cvv}
-                          onChange={handleChange}
-                          isInvalid={!!fieldErrors.card_cvv}
-                          maxLength={4}
-                          disabled={disabled}
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {fieldErrors.card_cvv}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                  </Row>
+
+                {/* Order Summary */}
+                <Row className="mb-4">
+                  <Col>
+                    {(() => {
+                      // Calculate totals based on cart or product
+                      let subtotal = 0;
+                      
+                      if (Array.isArray(cart) && cart.length > 0) {
+                        subtotal = cart.reduce((sum, item) => {
+                          const price = Number(item.price || 0);
+                          const quantity = Number(item.quantity || 1);
+                          return sum + (price * quantity);
+                        }, 0);
+                      } else if (product) {
+                        const price = Number(product.price || 0);
+                        const quantity = Number(product.quantity || 1);
+                        subtotal = price * quantity;
+                      }
+
+                      const shippingCost = calculateShippingFee(subtotal);
+                      const tax = calculateTax(subtotal);
+                      const total = subtotal + shippingCost + tax;
+
+                      return (
+                        <Card className="cart-summary">
+                          <Card.Header>
+                            <h5 className="mb-0">📋 Order Summary</h5>
+                          </Card.Header>
+                          <Card.Body>
+                            <div className="d-flex justify-content-between mb-3">
+                              <span>💰 Subtotal:</span>
+                              <span className="fw-bold">{formatPrice(subtotal)}</span>
+                            </div>
+                            <div className="d-flex justify-content-between mb-3">
+                              <span>🚚 Shipping:</span>
+                              <span className="fw-bold">
+                                {shippingCost === 0 ? (
+                                  <span className="text-success">FREE</span>
+                                ) : (
+                                  formatPrice(shippingCost)
+                                )}
+                              </span>
+                            </div>
+                            <div className="d-flex justify-content-between mb-3">
+                              <span>🧾 Tax:</span>
+                              <span className="fw-bold">{formatPrice(tax)}</span>
+                            </div>
+                            
+                            <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
+                                
+                            <div className="d-flex justify-content-between mb-4">
+                              <strong style={{fontSize: '1.3rem'}}>💎 Total:</strong>
+                              <strong style={{fontSize: '1.3rem'}}>{formatPrice(total)}</strong>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      );
+                    })()}
+                  </Col>
+                </Row>
+
+                {/* Payment Information */}
+                <Row className="mb-3">
+                  <Col>
+                    <h5 className="mb-3">Payment Information</h5>
+                  </Col>
+                </Row>
+
+                <Row className="mb-3">
+                  <Col md={4}>
+                    <Form.Group controlId="cardNumber">
+                      <Form.Label>Card Number</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="card_number"
+                        inputMode="numeric"
+                        autoComplete="cc-number"
+                        placeholder="•••• •••• •••• ••••"
+                        value={shippingData.card_number}
+                        onChange={handleChange}
+                        isInvalid={!!fieldErrors.card_number}
+                        minLength={16}
+                        maxLength={19}
+                        disabled={disabled}
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {fieldErrors.card_number}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group controlId="cardExpiryDate">
+                      <Form.Label>Expiry Date</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="card_expiry_date"
+                        inputMode="numeric"
+                        autoComplete="cc-exp"
+                        placeholder="MM/YY"
+                        value={shippingData.card_expiry_date}
+                        onChange={handleChange}
+                        isInvalid={!!fieldErrors.card_expiry_date}
+                        maxLength={5}
+                        disabled={disabled}
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {fieldErrors.card_expiry_date}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group controlId="cardCvv">
+                      <Form.Label>CVV</Form.Label>
+                      <Form.Control
+                        type="password"
+                        name="card_cvv"
+                        inputMode="numeric"
+                        autoComplete="cc-csc"
+                        placeholder="CVV"
+                        value={shippingData.card_cvv}
+                        onChange={handleChange}
+                        isInvalid={!!fieldErrors.card_cvv}
+                        maxLength={4}
+                        disabled={disabled}
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {fieldErrors.card_cvv}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
               </>
             )}
           </Container>
