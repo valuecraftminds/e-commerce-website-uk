@@ -65,7 +65,7 @@ export default function Footer() {
               ) : (
                 categories.map((category) => (
                   <li key={category.category_id}>
-                    <Link to={`/shop/${category.category_name}`} className="text-white text-decoration-none">
+                    <Link to={`/shop/${category.category_name.toLowerCase()}`} className="text-white text-decoration-none">
                       {category.category_name}
                     </Link>
                   </li>
