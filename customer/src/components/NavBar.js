@@ -247,7 +247,8 @@ export default function NavigationBar({ onSidebarStateChange }) {
               />
 
               {/* Cart icon */}
-              <i className="bi bi-cart3 cart-icon" style={{ fontSize: "1.4rem" }}
+              <i className="bi bi-cart3 cart-icon"
+                  style={{ fontSize: "1.4rem", cursor: "pointer" }}
                  onClick={() => navigate('/cart')}
               />
               <i

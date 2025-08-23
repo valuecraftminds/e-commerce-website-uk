@@ -89,7 +89,6 @@ const cartController = {
       }
       const currency = 'USD';
       const is_available = true;
-      const product_url = null;
       const tax = 0.00;
       const shipping_fee = 0.00;
       const sku = bodySku?? null;
@@ -147,12 +146,11 @@ const cartController = {
               price, 
               image, 
               currency, 
-              product_url, 
               tax,
               shipping_fee, 
               is_available, 
               sku
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
           const insertParams = [
             company_code, 
@@ -164,7 +162,6 @@ const cartController = {
             price, 
             image, 
             currency, 
-            product_url, 
             tax, 
             shipping_fee, 
             is_available, 
@@ -386,7 +383,7 @@ const cartController = {
           const insertSql = `
             INSERT INTO cart (
               company_code, customer_id, product_name, variant_id, quantity,
-              color_name, price, image, currency, product_url, tax,
+              color_name, price, image, currency, tax,
               shipping_fee, is_available, sku
             ) VALUES ?
           `;
@@ -457,7 +454,6 @@ const cartController = {
             item.price || 0.00,
             item.image || null,
             item.currency || 'USD',
-            item.product_url || null,
             item.tax || 0.00,
             item.shipping_fee || 0.00,
             item.is_available !== undefined ? item.is_available : true,
