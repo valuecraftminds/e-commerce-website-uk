@@ -39,8 +39,7 @@
 
 /* Container styling */
 .checkout-modal .details-container {
-  max-height: 70vh;
-  overflow-y: hidden !important;
+  max-height: auto;
   overflow-x: hidden !important;
 }
 
@@ -56,26 +55,6 @@
 
 .checkout-modal .details-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
-}
-
-/* Section headers */
-.checkout-modal .details-container h5 {
-  color: #495057;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e9ecef;
-  position: relative;
-}
-
-.checkout-modal .details-container h5::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 40px;
-  height: 2px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 /* Form styling */
@@ -140,7 +119,6 @@
 
 /* Footer buttons */
 .checkout-modal .modal-footer .btn {
-  /* padding: 12px 24px; */
   font-weight: 500;
   border-radius: 8px;
   transition: all 0.3s ease;
@@ -311,10 +289,5 @@
   .checkout-modal .payment-method-inline .form-check-label {
     font-size: 0.9rem;
   }
-}
-
-.order-summary .d-flex {
-  /* flex-direction: column;
-  align-items: flex-start; */
 }
 

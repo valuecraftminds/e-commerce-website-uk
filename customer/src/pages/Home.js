@@ -127,95 +127,79 @@ export default function Home() {
         </div>
 
         {/* Offer Products Section */}
-        <Container fluid className="my-5 homepage-offer-products-container">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="offer-section-title">
-              <i className="fas fa-fire text-danger me-2"></i>
-              Hot Deals & Offers
-            </h2>
-            <button
-                className="btn btn-outline-primary btn-sm"
-                onClick={() => {
-                  navigate('/offers');
-                }}
-            >
-              View All Offers <i className="fas fa-arrow-right ms-1"></i>
-            </button>
+        {/* Offer Products Section - Only show if there are offer products */}
+{!offerLoading && !offerError && offerProducts.length > 0 && (
+  <Container fluid className="my-5 homepage-offer-products-container">
+    <div className="d-flex justify-content-between align-items-center mb-4">
+      <h2 className="offer-section-title">
+        <i className="fas fa-fire text-danger me-2"></i>
+        Hot Deals & Offers
+      </h2>
+      <button
+        className="btn btn-outline-primary btn-sm"
+        onClick={() => {
+          navigate('/offers');
+        }}
+      >
+        View All Offers <i className="fas fa-arrow-right ms-1"></i>
+      </button>
+    </div>
+
+    <div className="offer-products-grid">
+      {displayedProducts.map((product) => (
+        <div
+          key={product.style_id}
+          className="offer-product-card"
+          onClick={() => getProductDetails(product.style_id)}
+        >
+          <div className="offer-product-image-container">
+            {/* Discount Badge */}
+            <div className="discount-badge">
+              {product.discount_percentage > 0 && (
+                <span className="discount-percentage">
+                  -{product.discount_percentage}%
+                </span>
+              )}
+            </div>
+
+            <img
+              src={`${BASE_URL}/uploads/styles/${product.image}`}
+              alt={product.name}
+              className="offer-product-image"
+            />
           </div>
 
-          {offerLoading ? (
-              <div className="text-center my-3">
-                <div className="offer-loading-spinner">
-                  <div className="spinner-border text-danger" role="status">
-                    <span className="visually-hidden">Loading offers...</span>
-                  </div>
-                  <p className="mt-2">Loading hot deals...</p>
-                </div>
+          <div className="offer-product-info">
+            <h4 className="offer-product-name">{product.name}</h4>
+            <p className="home-product-description">
+              {product.description && product.description.length > 100
+                ? `${product.description.substring(0, 100)}...`
+                : product.description
+              }
+            </p>
+           
+            <div className="offer-product-price">
+              <span className="current-price">
+                {formatPrice(product.offer_price)}
+              </span>
+              <span className="original-price">
+                {formatPrice(product.sale_price)}
+              </span>
+            </div>
+            
+            {product.category_name && (
+              <div className="offer-product-category">
+                <span className="offer-category-badge">
+                  {product.category_name}
+                </span>
               </div>
-          ) : offerError ? (
-              <div className="text-center my-3">
-                <h6 className="text-danger">{offerError}</h6>
-              </div>
-          ) : offerProducts.length === 0 ? (
-              <div className="text-center my-3">
-                <i className="fas fa-tag fa-2x text-muted"></i>
-                <p className="text-muted mt-2">No special offers available right now.</p>
-              </div>
-          ) : (
-              <div className="offer-products-grid">
-                {displayedProducts.map((product) => (
-                    <div
-                        key={product.style_id}
-                        className="offer-product-card"
-                        onClick={() => getProductDetails(product.style_id)}
-                    >
-                      <div className="offer-product-image-container">
-                        {/* Discount Badge */}
-                        <div className="discount-badge">
-                          {product.discount_percentage > 0 && (
-                              <span className="discount-percentage">
-                                -{product.discount_percentage}%
-                              </span>
-                          )}
-                        </div>
-
-                        <img
-                            src={`${BASE_URL}/uploads/styles/${product.image}`}
-                            alt={product.name}
-                            className="offer-product-image"
-                        />
-                      </div>
-
-                      <div className="offer-product-info">
-                        <h4 className="offer-product-name">{product.name}</h4>
-                        <p className="home-product-description">
-                          {product.description && product.description.length > 100
-                              ? `${product.description.substring(0, 100)}...`
-                              : product.description
-                          }
-                        </p>
-                        <div className="offer-product-price">
-                  <span className="current-price">
-                    {formatPrice(product.offer_price)}
-                  </span>
-                          <span className="original-price">
-                    {formatPrice(product.sale_price)}
-                  </span>
-                        </div>
-
-                        {product.category_name && (
-                            <div className="offer-product-category">
-                    <span className="offer-category-badge">
-                      {product.category_name}
-                    </span>
-                            </div>
-                        )}
-                      </div>
-                    </div>
-                ))}
-              </div>
-          )}
-        </Container>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </Container>
+)}
 
         {/* Main Products Section */}
         <Container fluid className="my-5 home-products-container">
