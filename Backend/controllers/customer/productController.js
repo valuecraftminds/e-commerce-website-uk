@@ -435,39 +435,43 @@ getSimilarProducts: (req, res) => {
   });
 },
 
-// Get variant info based on style, color, and size
+// Get variant info based on style, color_id, and size_id
 getVariantInfo: (req, res) => {
-  const { company_code, style_number, color_name, size_name } = req.query;
-
-  if (!company_code || !style_number || !color_name || !size_name) {
-    return res.status(400).json({ 
-      error: 'Missing required parameters: company_code, style_number, color_name, size_name' 
+  const { company_code, style_number, color_id, size_id } = req.query;
+  
+  if (!company_code || !style_number || !color_id || !size_id) {
+    return res.status(400).json({
+      error: 'Missing required parameters: company_code, style_number, color_id, size_id'
     });
   }
-
+  
   const sql = `
-    SELECT sv.variant_id, sv.sku, sv.sale_price, sv.offer_price
+    SELECT 
+      sv.variant_id,
+      sv.sku,
+      sv.sale_price,
+      sv.offer_price,
+      ss.stock_qty
     FROM style_variants sv
-    INNER JOIN colors c ON c.color_id = sv.color_id AND c.company_code = sv.company_code
-    INNER JOIN sizes s ON s.size_id = sv.size_id AND s.company_code = sv.company_code
+    LEFT JOIN stock_summary ss ON ss.sku = sv.sku
     WHERE sv.company_code = ?
       AND sv.style_number = ?
-      AND c.color_name = ?
-      AND s.size_name = ?
+      AND sv.color_id = ?
+      AND sv.size_id = ?
       AND sv.is_active = 1
     LIMIT 1
   `;
-
-  db.query(sql, [company_code, style_number, color_name, size_name], (err, results) => {
+  
+  db.query(sql, [company_code, style_number, color_id, size_id], (err, results) => {
     if (err) {
       console.error('Error fetching variant info:', err);
       return res.status(500).json({ error: 'Server error' });
     }
-
+    
     if (results.length === 0) {
       return res.status(404).json({ error: 'Variant not found' });
     }
-
+    
     res.status(200).json(results[0]);
   });
 }
