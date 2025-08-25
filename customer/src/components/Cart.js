@@ -264,7 +264,7 @@ return (
                                 <Form.Control 
                                   readOnly
                                   min="1"
-                                  max={item.stock_quantity}
+                                  max={item.stock_qty}
                                   value={item.quantity}
                                   className="quantity-input-vertical"
                                   disabled={
@@ -324,19 +324,19 @@ return (
                        
                         
                         {/* Stock warnings */}
-                        {item.stock_quantity < 5 && item.stock_quantity > 0 && (
+                        {item.stock_qty < 6 && item.stock_qty > 0 && (
                           <Row className="mt-3">
                             <Col>
                               <Alert variant="warning" className="mb-0 py-2">
                                 <small>
-                                  ⚠️ Only {item.stock_quantity} items left in stock!
+                                  ⚠️ Only {item.stock_qty} items left in stock!
                                 </small>
                               </Alert>
                             </Col>
                           </Row>
                         )}
                         
-                        {item.stock_quantity === 0 && (
+                        {item.stock_qty === 0 && (
                           <Row className="mt-3">
                             <Col>
                               <Alert variant="danger" className="mb-0 py-2">

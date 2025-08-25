@@ -24,7 +24,7 @@ const withSyncedTotals = (item) => {
   const price = getUnitPrice(item);
   const cart_key = item?.cart_key ?? buildCartKey(item);
 
-  const stockQty = Number(item?.stock_quantity ?? 0);
+  const stockQty = Number(item?.quantity ?? 0);
   const total_price = stockQty > 0 ? price * qty : 0;
   return { ...item, total_price, cart_key };
 };
@@ -32,13 +32,13 @@ const withSyncedTotals = (item) => {
 const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
   // Only include items with stock > 0 for total_items
   const total_items = items.reduce((sum, item) => {
-    const stockQty = Number(item?.stock_quantity ?? 0);
+    const stockQty = Number(item?.quantity ?? 0);
     return stockQty > 0 ? sum + Number(item.quantity || 0) : sum;
   }, 0);
   
   // Only include items with stock > 0 in the price calculation
   const base = items.reduce((s, it) => {
-    const stockQty = Number(it?.stock_quantity ?? 0);
+    const stockQty = Number(it?.quantity ?? 0);
     if (stockQty > 0) {
       return s + getUnitPrice(it) * Number(it.quantity || 0);
     }
@@ -47,13 +47,13 @@ const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
   
   // Count items that are in stock
   const available_items = items.reduce((s, it) => {
-    const stockQty = Number(it?.stock_quantity ?? 0);
+    const stockQty = Number(it?.quantity ?? 0);
     return stockQty > 0 ? s + Number(it.quantity || 0) : s;
   }, 0);
   
   // Count items that are out of stock
   const out_of_stock_items = items.reduce((s, it) => {
-    const stockQty = Number(it?.stock_quantity ?? 0);
+    const stockQty = Number(it?.quantity ?? 0);
     return stockQty === 0 ? s + Number(it.quantity || 0) : s;
   }, 0);
   
@@ -321,7 +321,6 @@ export const CartProvider = ({ children }) => {
               color_name: item.color_name || item.color?.name || null,
               image: item.image || null,
               currency: item.currency || 'USD',
-              product_url: item.product_url || null,
               tax: item.tax || 0.0,
               shipping_fee: item.shipping_fee || 0.0,
               is_available: item.is_available !== undefined ? item.is_available : true,
@@ -422,7 +421,7 @@ export const CartProvider = ({ children }) => {
         price: unitPrice,
         unit_price: unitPrice,
         quantity: item.quantity || 1,
-        stock_quantity: item.stock_quantity,
+        stock_qty: item.stock_qty,
         sku: item.sku,
         color_name: item.color?.name,
         color_code: item.color?.code,
