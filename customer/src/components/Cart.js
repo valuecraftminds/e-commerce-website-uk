@@ -254,7 +254,7 @@ return (
                                   size="sm"
                                   onClick={() => handleQuantityChange(item.cart_id, item.quantity - 1)}
                                   disabled={
-                                    item.quantity <= 1 || 
+                                    item.quantity >= item.stock_qty ||
                                     updatingItems.has(item.cart_id) ||
                                     removingItems.has(item.cart_id)
                                   }
@@ -335,8 +335,7 @@ return (
                             </Col>
                           </Row>
                         )}
-                        
-                        {item.stock_qty === 0 && (
+                        {(item.stock_qty === 0 || item.stock_qty === null) && (
                           <Row className="mt-3">
                             <Col>
                               <Alert variant="danger" className="mb-0 py-2">
@@ -368,7 +367,7 @@ return (
                     </Card.Header>
                     <Card.Body>
                       <div className="d-flex justify-content-between mb-3">
-                        <span>Items ({summary.total_items}):</span>
+                        <span> Available Items ({summary.total_items}):</span>
                         <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                       </div>
                       {isLoggedIn && (
@@ -412,6 +411,9 @@ return (
                       </div>
                     </Card.Body>
                   </Card>
+                   <div>
+                      <span className='d-flex text-danger text-muted mt-3' > {summary.out_of_stock_items} items are unavailable at the moment. </span>
+                    </div>
                 </Col>
               </Row>
             </>
