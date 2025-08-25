@@ -29,13 +29,6 @@ const withSyncedTotals = (item) => {
   return { ...item, total_price, cart_key };
 };
 
-// const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
-//   const total_items = items.reduce((s, it) => s + Number(it.quantity || 0), 0);
-//   const base = items.reduce((s, it) => s + getUnitPrice(it) * Number(it.quantity || 0), 0);
-//   return { total_items, total_amount: (base * exchangeRate).toFixed(2), currency_symbol: currencySymbol, original_amount: base.toFixed(2) };
-// };
-
-
 const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
   // Only include items with stock > 0 for total_items
   const total_items = items.reduce((sum, item) => {
@@ -390,9 +383,6 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (item) => {
     try {
       if (!item.size || !item.color) throw new Error('Please select size and color');
-
-      const stockQty = Number(item?.stock_quantity ?? 0);
-      if (stockQty <= 0) throw new Error('Item is out of stock');
 
       const t = localStorage.getItem('authToken');
       const { rate, symbol } = getCurrentCurrency();
