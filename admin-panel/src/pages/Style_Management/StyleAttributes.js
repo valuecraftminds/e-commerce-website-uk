@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Tabs, Tab } from 'react-bootstrap';
-import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaArrowLeft, FaPlus, FaTrash, FaSave } from 'react-icons/fa';
 import { AuthContext } from '../../context/AuthContext';
 import DeleteModal from '../../components/modals/DeleteModal';
 import '../../styles/Style.css';
@@ -404,7 +404,7 @@ export default function StyleAttributes() {
         </div>
         {style && (
           <Badge bg="info" className="fs-6">
-            Style Code: {style.style_number}
+            Style Number: {style.style_number}
           </Badge>
         )}
       </div>
@@ -534,10 +534,43 @@ function cartesianProduct(arrays) {
 }
 
 function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, styleFits, company_code, styleNumber, BASE_URL, onSuccess, onError }) {
+  const [existingVariants, setExistingVariants] = React.useState([]);
   const [variantInputs, setVariantInputs] = React.useState({});
+  const [editInputs, setEditInputs] = React.useState({});
   const [saving, setSaving] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
 
-  // Generate all combinations
+  // Fetch existing variants on mount or when styleNumber changes
+  React.useEffect(() => {
+    if (!styleNumber) return;
+    setLoading(true);
+    fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setExistingVariants(data.variants || []);
+          // Initialize editInputs with current prices
+          const editObj = {};
+          (data.variants || []).forEach(v => {
+            editObj[v.variant_id] = {
+              unit_price: v.unit_price,
+              sale_price: v.sale_price
+            };
+          });
+          setEditInputs(editObj);
+        } else {
+          setError(data.message || 'Failed to fetch variants');
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to fetch variants');
+        setLoading(false);
+      });
+  }, [BASE_URL, styleNumber]);
+
+  // Generate all possible combinations
   const combinations = React.useMemo(() => {
     if (!styleColors.length || !styleSizes.length || !styleMaterials.length || !styleFits.length) return [];
     return cartesianProduct([
@@ -553,7 +586,22 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
     return `${style_number}-${(color.color_name||'').substring(0,3).toUpperCase()}-${size.size_name}-${(fit.fit_name||'').substring(0,3).toUpperCase()}-${(material.material_name||'').substring(0,3).toUpperCase()}`;
   }
 
-  // Handle input change
+  // Map of existing SKUs for quick lookup
+  const existingSkuMap = React.useMemo(() => {
+    const map = {};
+    existingVariants.forEach(v => { map[v.sku] = v; });
+    return map;
+  }, [existingVariants]);
+
+  // Only show new combinations (not already in DB) for adding
+  const newCombinations = React.useMemo(() => {
+    return combinations.filter(combo => {
+      const sku = generateSku(style.style_number, combo[0], combo[1], combo[2], combo[3]);
+      return !existingSkuMap[sku];
+    });
+  }, [combinations, existingSkuMap, style]);
+
+  // Handle input change for new variants
   const handleInputChange = (idx, field, value) => {
     setVariantInputs(inputs => ({
       ...inputs,
@@ -564,110 +612,342 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
     }));
   };
 
-  // Save all variants
+  // Save all new variants
   const handleSaveAll = async () => {
     setSaving(true);
+    setError('');
     try {
-      const results = await Promise.all(combinations.map(async (combo, idx) => {
+      // Prepare payloads for new variants
+      const payloads = newCombinations.map((combo, idx) => {
         const [color, size, fit, material] = combo;
         const input = variantInputs[idx] || {};
-        if (!input.unit_price || !input.sale_price) return null;
+        return {
+          company_code,
+          style_number: style.style_number,
+          sku: generateSku(style.style_number, color, size, fit, material),
+          color_id: color.color_id,
+          size_id: size.size_id,
+          fit_id: fit.fit_id,
+          material_id: material.material_id,
+          unit_price: input.unit_price || '',
+          sale_price: input.sale_price || ''
+        };
+      });
+      // Save each variant (could be optimized to batch if backend supports)
+      for (let i = 0; i < payloads.length; i++) {
+        // If not provided, save as zero
+        if (!payloads[i].unit_price) payloads[i].unit_price = 0;
+        if (!payloads[i].sale_price) payloads[i].sale_price = 0;
         const res = await fetch(`${BASE_URL}/api/admin/styles/add-style-variants`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            company_code,
-            style_number: styleNumber,
-            color_id: color.color_id,
-            size_id: size.size_id,
-            fit_id: fit.fit_id,
-            material_id: material.material_id,
-            unit_price: input.unit_price,
-            sale_price: input.sale_price
-          })
+          body: JSON.stringify(payloads[i])
         });
-        return res.json();
-      }));
-      if (results.some(r => r && !r.success)) {
-        onError('Some variants failed to save.');
-      } else {
-        onSuccess();
+        const data = await res.json();
+        if (!data.success) {
+          if (data.message && data.message.toLowerCase().includes('variant already exists')) {
+            setError('One or more variants already exist. Please refresh the page.');
+          } else {
+            setError(data.message || 'Failed to add variant');
+          }
+          setSaving(false);
+          return;
+        }
       }
+      setVariantInputs({});
+      if (onSuccess) onSuccess();
+      // Refetch variants
+      setLoading(true);
+      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setExistingVariants(data.variants || []);
+            // Update editInputs as well
+            const editObj = {};
+            (data.variants || []).forEach(v => {
+              editObj[v.variant_id] = {
+                unit_price: v.unit_price,
+                sale_price: v.sale_price
+              };
+            });
+            setEditInputs(editObj);
+          }
+          setLoading(false);
+        });
     } catch (err) {
-      onError('Error saving variants');
+      setError('Failed to save variants');
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
+  };
+
+  // Save a single new variant by index
+  const handleSaveSingle = async (idx) => {
+    setSaving(true);
+    setError('');
+    try {
+      const combo = newCombinations[idx];
+      const [color, size, fit, material] = combo;
+      const input = variantInputs[idx] || {};
+      const payload = {
+        company_code,
+        style_number: style.style_number,
+        sku: generateSku(style.style_number, color, size, fit, material),
+        color_id: color.color_id,
+        size_id: size.size_id,
+        fit_id: fit.fit_id,
+        material_id: material.material_id,
+        unit_price: input.unit_price || 0,
+        sale_price: input.sale_price || 0
+      };
+      const res = await fetch(`${BASE_URL}/api/admin/styles/add-style-variants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.success) {
+        if (data.message && data.message.toLowerCase().includes('variant already exists')) {
+          setError('Variant already exists. Please refresh the page.');
+        } else {
+          setError(data.message || 'Failed to add variant');
+        }
+        setSaving(false);
+        return;
+      }
+      // Remove the input for this row
+      setVariantInputs(inputs => {
+        const newInputs = { ...inputs };
+        delete newInputs[idx];
+        return newInputs;
+      });
+      if (onSuccess) onSuccess();
+      // Refetch variants
+      setLoading(true);
+      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setExistingVariants(data.variants || []);
+            // Update editInputs as well
+            const editObj = {};
+            (data.variants || []).forEach(v => {
+              editObj[v.variant_id] = {
+                unit_price: v.unit_price,
+                sale_price: v.sale_price
+              };
+            });
+            setEditInputs(editObj);
+          }
+          setLoading(false);
+        });
+    } catch (err) {
+      setError('Failed to save variant');
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
+  };
+
+  // Handle input change for existing variants
+  const handleEditInputChange = (variant_id, field, value) => {
+    setEditInputs(inputs => ({
+      ...inputs,
+      [variant_id]: {
+        ...inputs[variant_id],
+        [field]: value
+      }
+    }));
+  };
+
+  // Save price update for a single existing variant
+  const handleSaveEdit = async (variant) => {
+    setSaving(true);
+    setError('');
+    try {
+      const input = editInputs[variant.variant_id] || {};
+      const payload = {
+        color_id: variant.color_id,
+        size_id: variant.size_id,
+        fit_id: variant.fit_id,
+        material_id: variant.material_id,
+        unit_price: input.unit_price,
+        sale_price: input.sale_price,
+        sku: variant.sku
+      };
+      const res = await fetch(`${BASE_URL}/api/admin/styles/update-style-variants/${variant.variant_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || 'Failed to update variant');
+        setSaving(false);
+        return;
+      }
+      if (onSuccess) onSuccess();
+      // Refetch variants
+      setLoading(true);
+      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setExistingVariants(data.variants || []);
+            // Update editInputs as well
+            const editObj = {};
+            (data.variants || []).forEach(v => {
+              editObj[v.variant_id] = {
+                unit_price: v.unit_price,
+                sale_price: v.sale_price
+              };
+            });
+            setEditInputs(editObj);
+          }
+          setLoading(false);
+        });
+    } catch (err) {
+      setError('Failed to update variant');
+      setSaving(false);
+      return;
     }
     setSaving(false);
   };
 
   if (!style) return <div className="p-4">Loading style...</div>;
+  if (loading) return <div className="p-4">Loading variants...</div>;
 
   return (
     <div className="p-3">
-      <h5>Generate All Possible Variants (SKU)</h5>
-      {(!styleColors.length || !styleSizes.length || !styleMaterials.length || !styleFits.length) ? (
-        <div className="alert alert-warning mt-3">Assign at least one color, size, fit, and material to generate variants.</div>
-      ) : (
-        <>
-          <Table responsive bordered size="sm" className="variants-table mt-3">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>SKU</th>
-                <th>Color</th>
-                <th>Size</th>
-                <th>Fit</th>
-                <th>Material</th>
-                <th>Unit Price</th>
-                <th>Sale Price</th>
+      <h5>Style Variants (SKU)</h5>
+      {error && <div className="alert alert-danger">{error}</div>}
+      <Table responsive bordered size="sm" className="variants-table mt-3">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>SKU</th>
+            <th>Color</th>
+            <th>Size</th>
+            <th>Fit</th>
+            <th>Material</th>
+            <th>Unit Price</th>
+            <th>Sale Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Existing variants */}
+          {existingVariants.map((variant, idx) => {
+            const input = editInputs[variant.variant_id] || {};
+            return (
+              <tr key={variant.variant_id || variant.sku} style={{ background: '#f8f9fa' }}>
+                <td>{idx + 1}</td>
+                <td>{variant.sku}</td>
+                <td>{variant.color_name}</td>
+                <td>{variant.size_name}</td>
+                <td>{variant.fit_name}</td>
+                <td>{variant.material_name}</td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control form-control-sm"
+                    value={input.unit_price ?? ''}
+                    onChange={e => handleEditInputChange(variant.variant_id, 'unit_price', e.target.value)}
+                    placeholder="Unit Price"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control form-control-sm"
+                    value={input.sale_price ?? ''}
+                    onChange={e => handleEditInputChange(variant.variant_id, 'sale_price', e.target.value)}
+                    placeholder="Sale Price"
+                  />
+                </td>
+                <td>
+                  <Button
+                    variant="success"
+                    size="sm"
+                    className="px-2 py-0"
+                    style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                    onClick={() => handleSaveEdit(variant)}
+                    disabled={saving}
+                  >
+                    <FaSave className=" m-1" />
+                  </Button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {combinations.map((combo, idx) => {
-                const [color, size, fit, material] = combo;
-                const sku = generateSku(style.style_number, color, size, fit, material);
-                const input = variantInputs[idx] || {};
-                return (
-                  <tr key={sku}>
-                    <td>{idx + 1}</td>
-                    <td>{sku}</td>
-                    <td>{color.color_name}</td>
-                    <td>{size.size_name}</td>
-                    <td>{fit.fit_name}</td>
-                    <td>{material.material_name}</td>
-                    <td>
-                      <Form.Control
-                        type="number"
-                        min="0"
-                        value={input.unit_price || ''}
-                        onChange={e => handleInputChange(idx, 'unit_price', e.target.value)}
-                        size="sm"
-                        style={{ width: 90 }}
-                      />
-                    </td>
-                    <td>
-                      <Form.Control
-                        type="number"
-                        min="0"
-                        value={input.sale_price || ''}
-                        onChange={e => handleInputChange(idx, 'sale_price', e.target.value)}
-                        size="sm"
-                        style={{ width: 90 }}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-          <Button
-            variant="primary"
-            className="mt-2"
-            onClick={handleSaveAll}
-            disabled={saving || combinations.length === 0}
-          >
-            {saving ? 'Saving...' : 'Save All Variants'}
-          </Button>
-        </>
+            );
+          })}
+          {/* New variants to be added */}
+          {newCombinations.length > 0 && <tr><td colSpan={9} className="table-secondary text-center">Add New Variants</td></tr>}
+          {newCombinations.map((combo, idx) => {
+            const [color, size, fit, material] = combo;
+            const sku = generateSku(style.style_number, color, size, fit, material);
+            const input = variantInputs[idx] || {};
+            return (
+              <tr key={sku} style={{ background: '#fffbe6' }}>
+                <td>{existingVariants.length + idx + 1}</td>
+                <td>{sku}</td>
+                <td>{color.color_name}</td>
+                <td>{size.size_name}</td>
+                <td>{fit.fit_name}</td>
+                <td>{material.material_name}</td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control form-control-sm"
+                    value={input.unit_price || ''}
+                    onChange={e => handleInputChange(idx, 'unit_price', e.target.value)}
+                    placeholder="Unit Price"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control form-control-sm"
+                    value={input.sale_price || ''}
+                    onChange={e => handleInputChange(idx, 'sale_price', e.target.value)}
+                    placeholder="Sale Price"
+                  />
+                </td>
+                <td>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="px-2 py-0 me-1"
+                    style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                    onClick={() => handleSaveSingle(idx)}
+                    disabled={saving}
+                  >
+                    <FaSave className="m-1" />
+                    
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
+      {newCombinations.length > 0 && (
+        <Button
+          variant="primary"
+          className="mt-2"
+          onClick={handleSaveAll}
+          disabled={saving || newCombinations.length === 0}
+        >
+          {saving ? 'Saving...' : 'Save All New Variants'}
+        </Button>
+      )}
+      {(!styleColors.length || !styleSizes.length || !styleMaterials.length || !styleFits.length) && (
+        <div className="alert alert-warning mt-3">Assign at least one color, size, fit, and material to generate variants.</div>
       )}
     </div>
   );

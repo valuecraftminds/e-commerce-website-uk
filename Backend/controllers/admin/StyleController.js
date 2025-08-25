@@ -21,7 +21,7 @@ const StyleController = {
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories p ON c.parent_id = p.category_id
       WHERE s.company_code = ?
-      ORDER BY s.created_at DESC
+      ORDER BY s.created_at ASC
     `;
 
     db.query(sql, [company_code], (err, results) => {
@@ -239,45 +239,61 @@ const StyleController = {
 
   // Add variant
   addVariant(req, res) {
-    const { company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, sale_price } = req.body;
-    if (!company_code || !style_number || !color_id || !size_id || !fit_id || !material_id || unit_price === undefined || !sale_price) {
+    const { company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, sale_price, sku } = req.body;
+    if (!company_code || !style_number || !color_id || !size_id || !fit_id || !material_id) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
+    // If not provided, save as zero
+    const parsedUnitPrice = parseFloat(unit_price) || 0;
+    const parsedPrice = parseFloat(sale_price) || 0;
+
     const checkSql = `
       SELECT variant_id FROM style_variants 
-      WHERE style_number = ? AND color_id = ? AND size_id = ? AND fit_id = ?
+      WHERE style_number = ? AND company_code=? AND color_id = ? AND size_id = ? AND fit_id = ?
     `;
-    db.query(checkSql, [style_number, color_id, size_id, fit_id], (err, results) => {
+    db.query(checkSql, [style_number, company_code, color_id, size_id, fit_id], (err, results) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error checking variant' });
       }
-      if (results.length > 0) {
-        return res.status(409).json({ success: false, message: 'Variant already exists' });
+
+      if (!sku) {
+        return res.status(400).json({ success: false, message: 'SKU is required from frontend' });
       }
-
-      const detailsSql = `
-        SELECT c.color_name, s.size_name, f.fit_name 
-        FROM colors c, sizes s, fits f 
-        WHERE c.color_id = ? AND s.size_id = ? AND f.fit_id = ?
-      `;
-      db.query(detailsSql, [color_id, size_id, fit_id], (err, result) => {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error fetching variant details' });
-        }
-
-        const d = result[0];
-        const sku = `${style_number}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
+      if (results.length > 0) {
+        // Variant exists, update it
+        const variant_id = results[0].variant_id;
+        const updateSql = `
+          UPDATE style_variants 
+          SET material_id = ?, unit_price = ?, sale_price = ?, sku = ?, updated_at = NOW()
+          WHERE variant_id = ?
+        `;
+        db.query(updateSql, [
+          material_id, parsedUnitPrice, parsedPrice, sku, variant_id
+        ], (err) => {
+          if (err) {
+            console.error('Error updating variant:', err);
+            return res.status(500).json({ 
+              success: false, 
+              message: 'Error updating variant',
+              error: err.message 
+            });
+          }
+          res.json({ 
+            success: true, 
+            message: 'Variant updated', 
+            sku,
+            unit_price: parsedUnitPrice,
+            sale_price: parsedPrice
+          });
+        });
+      } else {
+        // Insert new variant
         const insertSql = `
           INSERT INTO style_variants 
           (company_code, style_number, color_id, size_id, fit_id, material_id, unit_price, sale_price, sku, is_active, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
         `;
-        
-        // Parse unit_price and price as floats
-        const parsedUnitPrice = parseFloat(unit_price) || 0;
-        const parsedPrice = parseFloat(sale_price) || 0;
-        
         db.query(insertSql, [
           company_code, style_number, color_id, size_id, fit_id, material_id, 
           parsedUnitPrice, parsedPrice, sku
@@ -295,20 +311,23 @@ const StyleController = {
             message: 'Variant added', 
             sku,
             unit_price: parsedUnitPrice,
-           sale_price: parsedPrice
+            sale_price: parsedPrice
           });
         });
-      });
+      }
     });
   },
 
   // Update variant
   updateVariant(req, res) {
     const { variant_id } = req.params;
-    const { color_id, size_id, fit_id, material_id, unit_price, sale_price } = req.body;
+    let { color_id, size_id, fit_id, material_id, unit_price, sale_price, sku } = req.body;
 
-    if (unit_price === undefined) {
-      return res.status(400).json({ success: false, message: 'Unit price is required' });
+    // If not provided, save as zero
+    if (unit_price === undefined || unit_price === null || unit_price === '') unit_price = 0;
+    if (sale_price === undefined || sale_price === null || sale_price === '') sale_price = 0;
+    if (!sku) {
+      return res.status(400).json({ success: false, message: 'SKU is required from frontend' });
     }
 
     const checkSql = `
@@ -323,59 +342,40 @@ const StyleController = {
         return res.status(409).json({ success: false, message: 'Variant already exists' });
       }
 
-      const detailsSql = `
-        SELECT s.style_number, c.color_name, s2.size_name, f.fit_name 
-        FROM style_variants sv
-        JOIN styles s ON sv.style_number = s.style_number
-        JOIN colors c ON c.color_id = ?
-        JOIN sizes s2 ON s2.size_id = ?
-        JOIN fits f ON f.fit_id = ?
-        WHERE sv.variant_id = ?
+      // Parse unit_price and price as floats
+      const parsedUnitPrice = parseFloat(unit_price) || 0;
+      const parsedPrice = parseFloat(sale_price) || 0;
+
+      const updateSql = `
+        UPDATE style_variants 
+        SET color_id = ?, 
+            size_id = ?, 
+            fit_id = ?, 
+            material_id = ?, 
+            unit_price = ?, 
+            sale_price = ?, 
+            sku = ?, 
+            updated_at = NOW()
+        WHERE variant_id = ?
       `;
-      db.query(detailsSql, [color_id, size_id, fit_id, variant_id], (err, result) => {
+      db.query(updateSql, [
+        color_id, size_id, fit_id, material_id, 
+        parsedUnitPrice, parsedPrice, sku, variant_id
+      ], (err) => {
         if (err) {
-          return res.status(500).json({ success: false, message: 'Error fetching variant details' });
-        }
-
-        const d = result[0];
-        const sku = `${d.style_number}-${d.color_name.substring(0,3).toUpperCase()}-${d.size_name}-${d.fit_name.substring(0,3).toUpperCase()}`;
-        
-        // Parse unit_price and price as floats
-        const parsedUnitPrice = parseFloat(unit_price) || 0;
-        const parsedPrice = parseFloat(sale_price) || 0;
-
-        const updateSql = `
-          UPDATE style_variants 
-          SET color_id = ?, 
-              size_id = ?, 
-              fit_id = ?, 
-              material_id = ?, 
-              unit_price = ?, 
-              sale_price = ?, 
-              sku = ?, 
-              updated_at = NOW()
-          WHERE variant_id = ?
-        `;
-        
-        db.query(updateSql, [
-          color_id, size_id, fit_id, material_id, 
-          parsedUnitPrice, parsedPrice, sku, variant_id
-        ], (err) => {
-          if (err) {
-            console.error('Error updating variant:', err);
-            return res.status(500).json({ 
-              success: false, 
-              message: 'Error updating variant',
-              error: err.message 
-            });
-          }
-          res.json({ 
-            success: true, 
-            message: 'Variant updated', 
-            sku,
-            unit_price: parsedUnitPrice,
-            sale_price: parsedPrice
+          console.error('Error updating variant:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Error updating variant',
+            error: err.message 
           });
+        }
+        res.json({ 
+          success: true, 
+          message: 'Variant updated', 
+          sku,
+          unit_price: parsedUnitPrice,
+          sale_price: parsedPrice
         });
       });
     });
