@@ -256,23 +256,29 @@ const CheckoutController = {
                 });
               }
 
-              // Insert bookings
+              // Get the starting order_item_id from the insert result
+              const startingOrderItemId = itemsResult.insertId;
+
+              // Insert bookings with correct order_item_id mapping
               const bookingQuery = `
                 INSERT INTO booking (
                   company_code,
                   variant_id,
                   sku,
-                  quantity,
-                  created_at
+                  ordered_qty,
+                  created_at,
+                  order_item_id
                 ) VALUES ?
               `;
 
-              const bookingValues = order_items.map(item => [
+              // Map each order item to its corresponding order_item_id
+              const bookingValues = order_items.map((item, index) => [
                 company_code,
                 item.variant_id,
                 item.sku,
                 item.quantity,
-                new Date()
+                new Date(),
+                startingOrderItemId + index // Calculate the actual order_item_id
               ]);
 
               db.query(bookingQuery, [bookingValues], (bookingErr, bookingResult) => {
@@ -288,63 +294,63 @@ const CheckoutController = {
 
                 // insert into payment
                 const paymentQuery = `
-  INSERT INTO payment (
-    company_code,
-    customer_id,
-    order_id,
-    payment_method_id,
-    subtotal,
-    tax,
-    shipping_fee,
-    total,
-    payment_date
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-`;
+                  INSERT INTO payment (
+                    company_code,
+                    customer_id,
+                    order_id,
+                    payment_method_id,
+                    subtotal,
+                    tax,
+                    shipping_fee,
+                    total,
+                    payment_date
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
 
-const paymentValues = [
-  company_code,
-  customer_id,
-  orderId,
-  paymentMethodId,
-  subtotal || 0,
-  tax_amount || 0,        // ← Fixed: use tax_amount instead of tax
-  shipping_fee || 0,
-  total_amount || 0,      // ← Fixed: use total_amount instead of total
-  new Date()
-];
+                const paymentValues = [
+                  company_code,
+                  customer_id,
+                  orderId,
+                  paymentMethodId,
+                  subtotal || 0,
+                  tax_amount || 0,       
+                  shipping_fee || 0,
+                  total_amount || 0,
+                  new Date()
+                ];
 
-db.query(paymentQuery, paymentValues, (paymentErr, paymentResult) => {
-  if (paymentErr) {
-    return db.rollback(() => {
-      console.error('Error inserting payment:', paymentErr);
-      res.status(500).json({
-        error: 'Failed to create payment',
-        details: paymentErr.message
-      });
-    });
-  }
-  
-
-                // Commit transaction 
-                db.commit((commitErr) => {
-                  if (commitErr) {
+                db.query(paymentQuery, paymentValues, (paymentErr, paymentResult) => {
+                  if (paymentErr) {
                     return db.rollback(() => {
-                      console.error('Transaction commit error:', commitErr);
-                      res.status(500).json({ error: 'Failed to complete order' });
+                      console.error('Error inserting payment:', paymentErr);
+                      res.status(500).json({
+                        error: 'Failed to create payment',
+                        details: paymentErr.message
+                      });
                     });
                   }
 
-                  // Success response
-                  res.status(201).json({ 
-                    message: 'Order created successfully',
-                    order_id: orderId,
-                    order_number: orderNumber,
-                    address_id: finalAddressId,
-                    payment_method_id: paymentMethodId,
-                    total_amount: total_amount,
-                    order_status: 'pending',
-                    booking_count: bookingResult.affectedRows,
-                    payment_date: new Date(),
+                  // Commit transaction 
+                  db.commit((commitErr) => {
+                    if (commitErr) {
+                      return db.rollback(() => {
+                        console.error('Transaction commit error:', commitErr);
+                        res.status(500).json({ error: 'Failed to complete order' });
+                      });
+                    }
+
+                    // Success response
+                    res.status(201).json({ 
+                      message: 'Order created successfully',
+                      order_id: orderId,
+                      order_number: orderNumber,
+                      address_id: finalAddressId,
+                      payment_method_id: paymentMethodId,
+                      total_amount: total_amount,
+                      order_status: 'pending',
+                      booking_count: bookingResult.affectedRows,
+                      payment_date: new Date(),
+                    });
                   });
                 });
               });
@@ -353,8 +359,7 @@ db.query(paymentQuery, paymentValues, (paymentErr, paymentResult) => {
         });
       });
     });
-  });
   }
-};
+}
 
 module.exports = CheckoutController;
