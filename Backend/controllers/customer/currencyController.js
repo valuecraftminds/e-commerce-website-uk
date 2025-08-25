@@ -29,7 +29,7 @@ const getCurrencyRates = (req, res) => {
   // Fetch from API
   console.log('Fetching fresh exchange rates from API');
 
-  axios.get('https://api.currencyapi.com/v3/latest?apikey=cur_live_Spd5bZ9jnvFWEQzhMAcmaQabDj8KdveVc46E6WzE', {
+  axios.get('https://api.currencyapi.com/v3/latest?apikey=cur_live_bg90WLPOcxTMNyqVUvbF5UfedrK9qHnw8WwOve3E', {
     params: {
       base_currency: 'USD',
       currencies: 'GBP,LKR'
