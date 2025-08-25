@@ -55,7 +55,6 @@ export default function AddGRN() {
     const [modalForm, setModalForm] = useState({
         received_qty: '',
         location_id: '',
-        lot_no: '',
         notes: '',
     });
     const [modalError, setModalError] = useState('');
@@ -109,7 +108,8 @@ export default function AddGRN() {
                                     max_qty: remainingData.max_qty,
                                     tolerance_limit: remainingData.tolerance_limit,
                                     total_received: remainingData.total_received,
-                                    remaining_qty: remainingData.remaining_qty
+                                    remaining_qty: remainingData.remaining_qty,
+                                    unit_price: remainingData.unit_price
                                 };
                             }
                             return item;
@@ -226,7 +226,6 @@ export default function AddGRN() {
         setModalForm({
             received_qty: item.remaining_qty.toString(),
             location_id: '',
-            lot_no: '',
             notes: ''
         });
         setModalError('');
@@ -257,12 +256,23 @@ export default function AddGRN() {
     }, [company_code]);
 
     // Validate and add GRN item
+    // Helper to generate next lot number
+    const getNextLotNo = () => {
+        const lotNumbers = grnItems
+            .map(item => item.lot_no)
+            .filter(Boolean)
+            .map(lot => {
+                const match = lot.match(/Lot-(\d+)/);
+                return match ? parseInt(match[1], 10) : 0;
+            });
+        const maxLot = lotNumbers.length > 0 ? Math.max(...lotNumbers) : 0;
+        return `LOT-${String(maxLot + 1).padStart(3, '0')}`;
+    };
+
     const handleAddGRNItem = async () => {
         setModalError('');
         setModalLoading(true);
         const received_qty = parseInt(modalForm.received_qty);
-        const lot_no = modalForm.lot_no?.trim() || '';
-        // Always treat location_id as string
         const location_id = String(modalForm.location_id || '').trim();
         // Basic validation
         if (!received_qty || received_qty <= 0) {
@@ -298,39 +308,21 @@ export default function AddGRN() {
                 setModalLoading(false);
                 return;
             }
-            // Check if item already exists in grnItems
-            const existingIndex = grnItems.findIndex(item => item.sku === selectedItem.sku && item.lot_no === lot_no && String(item.location_id) === location_id);
-            if (existingIndex !== -1) {
-                // Update existing item (same SKU and lot_no)
-                const updatedItems = [...grnItems];
-                const newReceivedQty = updatedItems[existingIndex].received_qty + received_qty;
-                if (newReceivedQty > selectedItem.remaining_qty) {
-                    setModalError(`Total received quantity (${newReceivedQty}) would exceed remaining quantity (${selectedItem.remaining_qty})`);
-                    setModalLoading(false);
-                    return;
-                }
-                updatedItems[existingIndex] = {
-                    ...updatedItems[existingIndex],
-                    received_qty: newReceivedQty,
-                    lot_no: lot_no || updatedItems[existingIndex].lot_no,
-                    notes: modalForm.notes || updatedItems[existingIndex].notes,
-                };
-                setGRNItems(updatedItems);
-            } else {
-                // Add new item
-                const newGRNItem = {
-                    style_number: selectedItem.style_number,
-                    sku: selectedItem.sku,
-                    ordered_qty: selectedItem.ordered_qty,
-                    max_qty: selectedItem.max_qty,
-                    received_qty: received_qty,
-                    location_id: location_id,
-                    lot_no: lot_no,
-                    notes: modalForm.notes || '',
-                    tolerance_limit: selectedItem.tolerance_limit,
-                };
-                setGRNItems(prev => [...prev, newGRNItem]);
-            }
+            // Always generate new lot number for each item
+            const lot_no = getNextLotNo();
+            // Add new item
+            const newGRNItem = {
+                style_number: selectedItem.style_number,
+                sku: selectedItem.sku,
+                ordered_qty: selectedItem.ordered_qty,
+                max_qty: selectedItem.max_qty,
+                received_qty: received_qty,
+                location_id: location_id,
+                lot_no: lot_no,
+                notes: modalForm.notes || '',
+                tolerance_limit: selectedItem.tolerance_limit,
+            };
+            setGRNItems(prev => [...prev, newGRNItem]);
             // Update remaining quantity in PO details
             const updatedPODetails = { ...poDetails };
             const itemIndex = updatedPODetails.items.findIndex(item => item.sku === selectedItem.sku);
@@ -359,7 +351,6 @@ export default function AddGRN() {
         setModalForm({
             received_qty: item.received_qty.toString(),
             location_id: item.location_id,
-            lot_no: item.lot_no || '',
             notes: item.notes,
         });
         // Remove the item from grnItems temporarily
@@ -586,8 +577,8 @@ useEffect(() => {
                                         <Col>
                                             <h5>PO Details: {poDetails.header.po_number}</h5>
                                             <div>Supplier: {poDetails.header.supplier_name}</div>
-                                            <div>Status: <Badge bg="info">{poDetails.header.status}</Badge></div>
-                                            <div>Tolerance Limit: <Badge bg="warning">{poDetails.header.tolerance_limit || 0}%</Badge></div>
+                                            <div>Status: {poDetails.header.status}</div>
+                                            <div>Tolerance Limit: {poDetails.header.tolerance_limit || 0}%</div>
                                         </Col>
                                     </Row>
                                 </Card.Header>
@@ -649,7 +640,9 @@ useEffect(() => {
                                             <tr>
                                                 <th>Style Code</th>
                                                 <th>SKU</th>
+                                                 <th>Unit Price</th>
                                                 <th>Ordered Qty</th>
+                                               
                                                 <th>Max Qty (with tolerance)</th>
                                                 <th>Total Received</th>
                                                 <th>Remaining Qty</th>
@@ -668,7 +661,9 @@ useEffect(() => {
                                                     >
                                                         <td>{item.style_number}</td>
                                                         <td>{item.sku}</td>
+                                                          <td>{item.unit_price}</td>
                                                         <td>{item.ordered_qty}</td>
+                                                      
                                                         <td>
                                                             {item.max_qty}
                                                             {item.tolerance_limit > 0 && (
@@ -681,7 +676,6 @@ useEffect(() => {
                                                                 {item.remaining_qty}
                                                             </Badge>
                                                         </td>
-                                                       
                                                     </tr>
                                                 );
                                             })}
@@ -799,6 +793,7 @@ useEffect(() => {
                                     <p><strong>Style Code:</strong> {selectedItem.style_number}</p>
                                     <p><strong>SKU:</strong> {selectedItem.sku}</p>
                                     <p><strong>Ordered Quantity:</strong> {selectedItem.ordered_qty}</p>
+                                    <p><strong>Unit Price:</strong> {selectedItem.unit_price}</p>
                                 </Col>
                                 <Col md={6}>
                                     <p><strong>Max Allowed:</strong> {selectedItem.max_qty} 
@@ -849,15 +844,31 @@ useEffect(() => {
                                             </Form.Select>
                                         </Form.Group>
                                     </Col>
+                                    {/* Lot No field removed, now auto-generated */}
                                     <Col md={4}>
                                         <Form.Group className="mb-3">
                                             <Form.Label>Lot No</Form.Label>
                                             <Form.Control
                                                 type="text"
-                                                value={modalForm.lot_no}
-                                                onChange={e => handleModalFormChange('lot_no', e.target.value)}
-                                                placeholder="Lot number (optional)"
+                                                value={(() => {
+                                                    // Show next lot number preview
+                                                    if (!selectedItem) return '';
+                                                    const lotNumbers = grnItems
+                                                        .map(item => item.lot_no)
+                                                        .filter(Boolean)
+                                                        .map(lot => {
+                                                            const match = lot.match(/Lot-(\d+)/);
+                                                            return match ? parseInt(match[1], 10) : 0;
+                                                        });
+                                                    const maxLot = lotNumbers.length > 0 ? Math.max(...lotNumbers) : 0;
+                                                    return `Lot-${String(maxLot + 1).padStart(3, '0')}`;
+                                                })()}
+                                                readOnly
+                                                disabled
                                             />
+                                            <Form.Text muted>
+                                                Lot number will be generated automatically.
+                                            </Form.Text>
                                         </Form.Group>
                                     </Col>
                                 </Row>

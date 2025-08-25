@@ -96,7 +96,7 @@ const PurchaseOrderController = {
     createPurchaseOrder(req, res) {
         console.log('Creating purchase order with data:', JSON.stringify(req.body, null, 2));
         
-        const { company_code, supplier_id, attention, remark, items, status, tolerance_limit } = req.body;
+    const { company_code, supplier_id, attention, remark, items, status, tolerance_limit, delivery_date } = req.body;
 
         // Enhanced Validation
         if (!company_code || typeof company_code !== 'string') {
@@ -198,8 +198,8 @@ const PurchaseOrderController = {
                 const headerSql = `
                     INSERT INTO purchase_order_headers (
                         po_number, company_code, supplier_id, attention, 
-                        remark, status, tolerance_limit, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                        remark, status, tolerance_limit, delivery_date, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 `;
 
                 const headerValues = [
@@ -209,7 +209,8 @@ const PurchaseOrderController = {
                     attention.trim(), 
                     (remark || '').trim(),
                     status || 'Pending',
-                    parseFloat(tolerance_limit) || 0
+                    parseFloat(tolerance_limit) || 0,
+                    delivery_date || null
                 ];
                 
                 console.log('Header SQL:', headerSql);
@@ -325,7 +326,7 @@ const PurchaseOrderController = {
         console.log('Update data:', JSON.stringify(req.body, null, 2));
         
         const { po_number } = req.params;
-        const { attention, supplier_id, remark, items, status, tolerance_limit } = req.body;
+    const { attention, supplier_id, remark, items, status, tolerance_limit, delivery_date } = req.body;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             console.error('Missing or empty items array for update');
@@ -349,11 +350,11 @@ const PurchaseOrderController = {
             // Update header
             const updateHeaderSql = `
                 UPDATE purchase_order_headers 
-                SET attention = ?, supplier_id = ?, remark = ?, status = ?, tolerance_limit = ?, updated_at = NOW()
+                SET attention = ?, supplier_id = ?, remark = ?, status = ?, tolerance_limit = ?, delivery_date = ?, updated_at = NOW()
                 WHERE po_number = ?
             `;
 
-            const headerValues = [attention, supplier_id, remark || '', status || 'Pending', parseFloat(tolerance_limit) || 0, po_number];
+            const headerValues = [attention, supplier_id, remark || '', status || 'Pending', parseFloat(tolerance_limit) || 0, delivery_date || null, po_number];
             console.log('Updating header with values:', headerValues);
 
             db.query(updateHeaderSql, headerValues, (err, updateResult) => {
@@ -528,7 +529,7 @@ const PurchaseOrderController = {
                    poi.quantity,
                    poi.unit_price,
                    poi.total_price,
-                   sv.unit_price as catalog_price,
+                   sv.unit_price,
                    st.style_number,
                    st.name as style_name,
                    c.color_name,
@@ -582,7 +583,8 @@ const PurchaseOrderController = {
                 status: results[0].status,
                 created_at: results[0].created_at,
                 updated_at: results[0].updated_at,
-                tolerance_limit: results[0].tolerance_limit || 0
+                tolerance_limit: results[0].tolerance_limit || 0,
+                delivery_date: results[0].delivery_date || null
             };
 
             const tolerance = parseFloat(header.tolerance_limit) || 0;
@@ -595,7 +597,6 @@ const PurchaseOrderController = {
                     quantity: row.quantity,
                     unit_price: row.unit_price,
                     total_price: row.total_price,
-                    catalog_price: row.catalog_price,
                     style_number: row.style_number,
                     style_name: row.style_name,
                     color_name: row.color_name,
@@ -670,7 +671,7 @@ const PurchaseOrderController = {
             // Now get the items for this specific PO
             const itemsSql = `
                 SELECT poi.id as item_id, poi.sku, poi.quantity, poi.unit_price, poi.total_price,
-                       sv.unit_price as catalog_price,
+                       sv.unit_price,
                        st.style_number, st.name as style_name,
                        c.color_name, sz.size_name, f.fit_name, m.material_name
                 FROM purchase_order_items poi
@@ -729,7 +730,6 @@ const PurchaseOrderController = {
                     quantity: row.quantity,
                     unit_price: row.unit_price,
                     total_price: row.total_price,
-                    catalog_price: row.catalog_price,
                     style_number: row.style_number,
                     style_name: row.style_name,
                     color_name: row.color_name,
@@ -812,38 +812,33 @@ const PurchaseOrderController = {
            .font('Helvetica-Bold')
            .text('Order Details', 50, 260);
 
-        // Table Headers
+        // Table Headers (Style Name before SKU, no Color/Size, improved spacing)
         const tableTop = 290;
         const col1X = 50;   // #
-        const col2X = 80;   // Item Code
-        const col3X = 150;  // Description
-        const col4X = 280;  // Color
-        const col5X = 340;  // Size/Width
-        const col6X = 380;  // Qty
-        const col7X = 430;  // Unit Price
-        const col8X = 510;  // Total
+        const col2X = 75;   // Style Name
+        const col3X = 180;  // SKU
+        const col4X = 320;  // Qty
+        const col5X = 370;  // Unit Price
+        const col6X = 450;  // Total
 
-        doc.fontSize(9)
+        doc.fontSize(10)
            .font('Helvetica-Bold');
 
-        doc.text('#', col1X, tableTop);
-        doc.text('Item Code', col2X, tableTop);
-        doc.text('Description', col3X, tableTop);
-        doc.text('Color', col4X, tableTop);
-        doc.text('Size', col5X, tableTop);
-        doc.text('Qty', col6X, tableTop);
-        // Show currency in header
-        doc.text(`Unit Price (${company.currency || 'Rs'})`, col7X, tableTop);
-        doc.text(`Total (${company.currency || 'Rs'})`, col8X, tableTop);
+        doc.text('#', col1X, tableTop, { width: 20, align: 'left' });
+        doc.text('Style Name', col2X, tableTop, { width: 100, align: 'left' });
+        doc.text('SKU', col3X, tableTop, { width: 120, align: 'left' });
+        doc.text('Qty', col4X, tableTop, { width: 40, align: 'right' });
+        doc.text('Unit Price', col5X, tableTop, { width: 70, align: 'right' });
+        doc.text('Total', col6X, tableTop, { width: 80, align: 'right' });
 
         // Draw header line
-        doc.moveTo(50, tableTop + 20)
-           .lineTo(580, tableTop + 20)
+        doc.moveTo(50, tableTop + 18)
+           .lineTo(530, tableTop + 18)
            .stroke();
 
         // Table Content
-        let currentY = tableTop + 25;
-        doc.font('Helvetica');
+        let currentY = tableTop + 23;
+        doc.font('Helvetica').fontSize(9);
 
         items.forEach((item, index) => {
             if (currentY > 700) {
@@ -851,22 +846,14 @@ const PurchaseOrderController = {
                 currentY = 50;
             }
 
-            doc.text((index + 1).toString(), col1X, currentY, { width: 25, ellipsis: true });
-            doc.text(item.sku || '', col2X, currentY, { width: 60, ellipsis: true });
+            doc.text((index + 1).toString(), col1X, currentY, { width: 20, align: 'left' });
+            doc.text(item.style_name || '', col2X, currentY, { width: 100, align: 'left' });
+            doc.text(item.sku || '', col3X, currentY, { width: 120, align: 'left' });
+            doc.text(item.quantity?.toString() || '0', col4X, currentY, { width: 40, align: 'right' });
+            doc.text(`${parseFloat(item.unit_price || 0).toFixed(2)}`, col5X, currentY, { width: 70, align: 'right' });
+            doc.text(`${parseFloat(item.total_price || 0).toFixed(2)}`, col6X, currentY, { width: 80, align: 'right' });
 
-            // Description (Style Name + Material)
-            const description = `${item.style_name || ''}${item.material_name ? ' - ' + item.material_name : ''}`;
-            doc.text(description, col3X, currentY, { width: 120, ellipsis: true });
-
-            doc.text(item.color_name || '', col4X, currentY, { width: 50, ellipsis: true });
-            doc.text(item.size_name || '', col5X, currentY, { width: 50, ellipsis: true });
-            doc.text(item.quantity?.toString() || '0', col6X, currentY, { width: 35, ellipsis: true });
-
-            // Use company currency for prices
-            doc.text(`${parseFloat(item.unit_price || 0).toFixed(2)}`, col7X, currentY, { width: 70, ellipsis: true });
-            doc.text(` ${parseFloat(item.total_price || 0).toFixed(2)}`, col8X, currentY, { width: 70, ellipsis: true });
-
-            currentY += 20;
+            currentY += 18;
         });
 
         // Draw bottom line

@@ -33,6 +33,7 @@ class GRNController {
             const ordered_qty = poItem.quantity;
             const tolerance_limit = parseFloat(poDetails.header.tolerance_limit) || 0;
             const max_qty = Math.floor(ordered_qty + (ordered_qty * tolerance_limit / 100));
+            const unit_price = poItem.unit_price;
 
             // Get total received_qty from grn_items
             const sqlGRN = 'SELECT SUM(received_qty) as total_received FROM grn_items WHERE po_number = ? AND sku = ?';
@@ -52,7 +53,8 @@ class GRNController {
                     tolerance_limit,
                     max_qty,
                     total_received, 
-                    remaining_qty: Math.max(0, remaining_qty)
+                    remaining_qty: Math.max(0, remaining_qty),
+                    unit_price
                 });
             });
         } catch (error) {

@@ -156,18 +156,13 @@ export const VariantFormModal = ({
 show,
 onHide,
 selectedStyle,
-variantForm,
 setVariantForm,
-handleSaveVariant,
-handleEditVariant,
 handleDeleteVariant,
 variants,
 colors,
 sizes,
 materials,
 fits,
-isEditing,
-editingId,
 setIsEditing,
 setEditingId
 }) => {
@@ -215,7 +210,7 @@ const columns = useMemo(
     },
     {
       header: 'Sale price',
-      accessorKey: 'price',
+      accessorKey: 'sale_price',
       cell: ({ getValue }) => `$${getValue()}`
     },
     {
@@ -281,150 +276,7 @@ return (
       </Modal.Title>
     </Modal.Header>
     <Modal.Body>
-      <div className="variant-form mb-4">
-        <Row className="g-3 align-items-end">
-          <Col md={2}>
-            <Form.Group className="mb-0">
-              <Form.Label className="form-label">Color *</Form.Label>
-              <Form.Select
-                value={variantForm.color_id}
-                onChange={(e) => setVariantForm({...variantForm, color_id: e.target.value})}
-                className="form-select variant-field"
-              >
-                <option value="">Select Color</option>
-                {colors.map(color => (
-                  <option key={color.color_id} value={color.color_id}>
-                    {color.color_name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-
-          <Col md={2}>
-            <Form.Group className="mb-0">
-              <Form.Label className="form-label">Size *</Form.Label>
-              <Form.Select
-                value={variantForm.size_id}
-                onChange={(e) => setVariantForm({...variantForm, size_id: e.target.value})}
-                className="form-select variant-field"
-              >
-                <option value="">Select Size</option>
-                {sizes.map(size => (
-                  <option key={size.size_id} value={size.size_id}>
-                    {size.size_name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-
-          <Col md={2}>
-            <Form.Group className="mb-0">
-              <Form.Label className="form-label">Fit *</Form.Label>
-              <Form.Select
-                value={variantForm.fit_id}
-                onChange={(e) => setVariantForm({...variantForm, fit_id: e.target.value})}
-                className="form-select variant-field"
-              >
-                <option value="">Select Fit</option>
-                {fits.map(fit => (
-                  <option key={fit.fit_id} value={fit.fit_id}>
-                    {fit.fit_name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-
-          <Col md={3}>
-            <Form.Group className="mb-0">
-              <Form.Label className="form-label">Material *</Form.Label>
-              <Form.Select
-                value={variantForm.material_id}
-                onChange={(e) => setVariantForm({...variantForm, material_id: e.target.value})}
-                className="form-select variant-field"
-              >
-                <option value="">Select Material</option>
-                {materials.map(material => (
-                  <option key={material.material_id} value={material.material_id}>
-                    {material.material_name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-
-          <Col md={2}>
-            <Form.Group className="mb-0">
-              <Form.Label className="form-label">Unit price *</Form.Label>
-              <Form.Control
-                type="number"
-                min="0"
-                value={variantForm.unit_price}
-                onChange={(e) => setVariantForm({...variantForm, unit_price: Math.max(0, Number(e.target.value))})}
-                onKeyDown={(e) => {
-                  if (e.key === '-' || e.key === 'e') {
-                    e.preventDefault();
-                  }
-                }}
-                className="variant-field"
-              />
-            </Form.Group>
-          </Col>
-
-          <Col md={2}>
-            <Form.Group className="mb-0">
-              <Form.Label className="form-label">Sale price *</Form.Label>
-              <Form.Control
-                type="number"
-                min="0"
-                value={variantForm.price}
-                onChange={(e) => setVariantForm({...variantForm, price: Math.max(0, Number(e.target.value))})}
-                onKeyDown={(e) => {
-                  if (e.key === '-' || e.key === 'e') {
-                    e.preventDefault();
-                  }
-                }}
-                className="variant-field"
-              />
-            </Form.Group>
-          </Col>
-
-          <Col md={isEditing ? 2 : 1}>
-            <div className="d-flex gap-2">
-              <button 
-                className="btn btn-primary variant-field"
-                onClick={isEditing ? () => handleEditVariant(editingId) : handleSaveVariant}
-                disabled={!variantForm.color_id || !variantForm.size_id || 
-                         !variantForm.fit_id || !variantForm.material_id || !variantForm.unit_price || 
-                         !variantForm.price}
-              >
-                {isEditing ? 'Update' : 'Add'}
-              </button>
-              {isEditing && (
-                <button 
-                  className="btn btn-secondary variant-field"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditingId(null);
-                    setVariantForm({
-                      color_id: '',
-                      size_id: '',
-                      fit_id: '',
-                      material_id: '',
-                      unit_price: '',
-                      price: '',
-                    });
-                  }}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </Col>
-        </Row>
-      </div>
+     
 
       <div className="variants-table-container">
         <div className="table-controls">

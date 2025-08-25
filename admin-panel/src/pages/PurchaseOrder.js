@@ -77,6 +77,10 @@ export default function PurchaseOrder() {
   }, [userData, userData?.company_code, fetchPurchaseOrders, fetchSuppliers]);
 
   const handleEditPO = (po) => {
+    if (po.status === 'Approved') {
+      alert('You cannot edit an approved purchase order.');
+      return;
+    }
     navigate(`/merchandising/po/${po.po_number}?mode=edit`);
   };
 
@@ -227,7 +231,8 @@ export default function PurchaseOrder() {
               <th>Total Cost</th>
               <th>Tolerance Limit (%)</th>
               <th>Status</th>
-              <th>Date</th>
+              <th>Delivery Date</th>
+              <th>Created date</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -253,6 +258,7 @@ export default function PurchaseOrder() {
                       {po.status || 'Pending'}
                     </span>
                   </td>
+                  <td>{new Date(po.delivery_date).toLocaleDateString()}</td>
                   <td>{new Date(po.created_at).toLocaleDateString()}</td>
                   <td>
                     <FaEye
@@ -262,10 +268,10 @@ export default function PurchaseOrder() {
                       style={{ cursor: 'pointer' }}
                     />
                     <FaEdit
-                      className="action-icon me-2 text-warning"
+                      className={`action-icon me-2 text-warning${po.status === 'Approved' ? ' disabled' : ''}`}
                       onClick={() => handleEditPO(po)}
-                      title="Edit"
-                      style={{ cursor: 'pointer' }}
+                      title={po.status === 'Approved' ? 'Cannot edit approved PO' : 'Edit'}
+                      style={{ cursor: po.status === 'Approved' ? 'not-allowed' : 'pointer', opacity: po.status === 'Approved' ? 0.5 : 1 }}
                     />
                     <FaDownload
                       className="action-icon me-2 text-success"
@@ -274,10 +280,16 @@ export default function PurchaseOrder() {
                       style={{ cursor: 'pointer' }}
                     />
                     <FaTrash
-                      className="action-icon text-danger"
-                      onClick={() => handleDelete(po.po_number)}
-                      title="Delete"
-                      style={{ cursor: 'pointer' }}
+                      className={`action-icon text-danger${po.status === 'Approved' ? ' disabled' : ''}`}
+                      onClick={() => {
+                        if (po.status === 'Approved') {
+                          alert('You cannot delete an approved purchase order.');
+                        } else {
+                          handleDelete(po.po_number);
+                        }
+                      }}
+                      title={po.status === 'Approved' ? 'Cannot delete approved PO' : 'Delete'}
+                      style={{ cursor: po.status === 'Approved' ? 'not-allowed' : 'pointer', opacity: po.status === 'Approved' ? 0.5 : 1 }}
                     />
                   </td>
                 </tr>

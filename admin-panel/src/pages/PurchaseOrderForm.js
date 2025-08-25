@@ -4,6 +4,7 @@ import { Alert, Button, Card, Col, Container, Form, Row, Table } from 'react-boo
 import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
+import ShowVariantModal from '../components/modals/ShowVariantModal';
 import { AuthContext } from '../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -22,22 +23,25 @@ export default function PurchaseOrderForm() {
   const [error, setError] = useState('');
   const [suppliers, setSuppliers] = useState([]);
   const [poItems, setPoItems] = useState([]);
-  const [skuDetails, setSkuDetails] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [unitPrice, setUnitPrice] = useState(0);
+  // Style/variant selection states
+  const [selectedStyle, setSelectedStyle] = useState(null);
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [styleVariants, setStyleVariants] = useState([]);
+  const [variantQuantities, setVariantQuantities] = useState({});
   const [formData, setFormData] = useState({
     attention: '',
     supplier_id: '',
     remark: '',
     status: 'Pending',
-    tolerance_limit: 0
+    tolerance_limit: 0,
+    delivery_date: ''
   });
   // Removed unused skuOptions state
   const [isLoading, setIsLoading] = useState(false);
   const [poDetails, setPoDetails] = useState(null);
 
-  // Add defaultSKUs state for initial loading
-  const [defaultSKUs, setDefaultSKUs] = useState([]);
+  // Add defaultStyles state for initial loading
+  const [defaultStyles, setDefaultStyles] = useState([]);
 
   // Fetch suppliers
   useEffect(() => {
@@ -75,7 +79,8 @@ export default function PurchaseOrderForm() {
                 supplier_id: response.data.header.supplier_id?.toString() || '',
                 remark: response.data.header.remark || '',
                 status: response.data.header.status || 'Pending',
-                tolerance_limit: response.data.header.tolerance_limit || 0
+                tolerance_limit: response.data.header.tolerance_limit || 0,
+                delivery_date: response.data.header.delivery_date ? response.data.header.delivery_date.slice(0, 10) : ''
               });
               
               const formattedItems = (response.data.items || []).map(item => ({
@@ -107,77 +112,72 @@ export default function PurchaseOrderForm() {
     loadPOData();
   }, [isEditing, isViewing, po_number, userData?.company_code]);
 
-  // Load initial SKUs when component mounts
+  // Load initial styles when component mounts
   useEffect(() => {
-    const loadInitialSKUs = async () => {
+    const loadInitialStyles = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/admin/styles/search-variants`, {
-          params: {
-            company_code: userData?.company_code,
-            limit: 100 // Load first 100 SKUs
-          }
+        const res = await axios.get(`${BASE_URL}/api/admin/styles/get-styles`, {
+          params: { company_code: userData?.company_code }
         });
-
-        const options = (response.data.variants || []).map(v => ({
-          value: v.sku,
-          label: `${v.sku} - ${v.style_name || 'Unknown Style'} (${v.color_name || 'Unknown Color'}, ${v.size_name || 'Unknown Size'})`,
-          ...v,
-          unit_price: parseFloat(v.unit_price) || 0
-        }));
-
-        setDefaultSKUs(options);
-        // Removed setSkuOptions as skuOptions is not used
+        if (res.data.success) {
+          setDefaultStyles(res.data.styles.map(style => ({
+            value: style.style_number,
+            label: `${style.style_number} - ${style.name}`,
+            ...style
+          })));
+        }
       } catch (error) {
-        console.error('Error loading initial SKUs:', error);
+        // ignore
       }
     };
-
     if (userData?.company_code) {
-      loadInitialSKUs();
+      loadInitialStyles();
     }
   }, [userData?.company_code]);
 
   // Improved loadSkuOptions function
-  const loadSkuOptions = async (inputValue) => {
+  // Style number search
+  const loadStyleOptions = async (inputValue) => {
     try {
-      if (!inputValue) {
-        return defaultSKUs;
-      }
-
-      if (inputValue.length < 2) {
-        return [];
-      }
-
-      const response = await axios.get(`${BASE_URL}/api/admin/styles/search-variants`, {
-        params: {
-          search: inputValue,
-          company_code: userData?.company_code
-        }
+      if (!inputValue) return defaultStyles;
+      const res = await axios.get(`${BASE_URL}/api/admin/styles/get-styles`, {
+        params: { company_code: userData?.company_code, search: inputValue }
       });
-
-      const options = (response.data.variants || []).map(v => ({
-        value: v.sku,
-        label: `${v.sku} - ${v.style_name || 'Unknown Style'} (${v.color_name || 'Unknown Color'}, ${v.size_name || 'Unknown Size'})`,
-        ...v,
-        unit_price: parseFloat(v.unit_price) || 0
-      }));
-
-      return options;
-    } catch (error) {
-      console.error('Error loading SKUs:', error);
+      if (res.data.success) {
+        return res.data.styles.map(style => ({
+          value: style.style_number,
+          label: `${style.style_number} - ${style.name}`,
+          ...style
+        }));
+      }
+      return [];
+    } catch {
       return [];
     }
   };
 
   // Improved handleSkuSelect function
-  const handleSkuSelect = (selectedOption) => {
+  // When a style is selected, fetch its variants and show modal
+  const handleStyleSelect = async (selectedOption) => {
+    setSelectedStyle(selectedOption);
+    setVariantQuantities({});
     if (selectedOption) {
-      setSkuDetails(selectedOption);
-      setUnitPrice(selectedOption.unit_price);
-      setError(''); // Clear any previous errors
+      setShowVariantModal(true); // Always open modal on style select
+      try {
+        const res = await axios.get(`${BASE_URL}/api/admin/styles/get-style-variants/${selectedOption.value}`, {
+          params: { company_code: userData?.company_code }
+        });
+        if (res.data.success) {
+          setStyleVariants(res.data.variants);
+        } else {
+          setStyleVariants([]);
+        }
+      } catch {
+        setStyleVariants([]);
+      }
     } else {
-      setSkuDetails(null);
-      setUnitPrice(0);
+      setShowVariantModal(false);
+      setStyleVariants([]);
     }
   };
 
@@ -190,61 +190,41 @@ export default function PurchaseOrderForm() {
   };
 
   // Improved handleAddItem function
-  const handleAddItem = () => {
-    if (!skuDetails) {
-      setError('Please select a SKU');
-      return;
-    }
-
+  // Add variant to PO items from modal
+  const handleAddVariant = (variant) => {
+    const quantity = parseInt(variantQuantities[variant.sku] || 0);
     if (!quantity || quantity <= 0) {
-      setError('Please enter a valid quantity');
+      setError('Please enter a valid quantity for the variant.');
       return;
     }
-
-    if (unitPrice < 0) {
-      setError('Unit price must be 0 or greater');
-      return;
-    }
-
     const newItem = {
-      sku: skuDetails.sku || skuDetails.value,
-      style_name: skuDetails.style_name || 'Unknown Style',
-      color_name: skuDetails.color_name || 'Unknown Color',
-      size_name: skuDetails.size_name || 'Unknown Size',
-      fit_name: skuDetails.fit_name || 'Unknown Fit',
-      material_name: skuDetails.material_name || 'Unknown Material',
-      quantity: parseInt(quantity),
-      unit_price: parseFloat(unitPrice),
-      total_price: parseInt(quantity) * parseFloat(unitPrice),
+      sku: variant.sku,
+      style_name: selectedStyle?.name || variant.style_name || 'Unknown Style',
+      color_name: variant.color_name || 'Unknown Color',
+      size_name: variant.size_name || 'Unknown Size',
+      fit_name: variant.fit_name || 'Unknown Fit',
+      material_name: variant.material_name || 'Unknown Material',
+      quantity,
+      unit_price: parseFloat(variant.unit_price || 0),
+      total_price: quantity * parseFloat(variant.unit_price || 0),
       company_code: userData?.company_code
     };
-
-    // Validate the item
     const validation = validateItem(newItem);
     if (validation) {
       setError(validation);
       return;
     }
-
     const existingItemIndex = poItems.findIndex(item => item.sku === newItem.sku);
     if (existingItemIndex !== -1) {
-      // Update existing item - add quantities
+      // Update quantity and total price
       const updatedItems = [...poItems];
-      updatedItems[existingItemIndex] = {
-        ...updatedItems[existingItemIndex],
-        quantity: updatedItems[existingItemIndex].quantity + newItem.quantity,
-        total_price: (updatedItems[existingItemIndex].quantity + newItem.quantity) * updatedItems[existingItemIndex].unit_price
-      };
+      updatedItems[existingItemIndex].quantity += quantity;
+      updatedItems[existingItemIndex].total_price = updatedItems[existingItemIndex].quantity * updatedItems[existingItemIndex].unit_price;
       setPoItems(updatedItems);
     } else {
-      // Add new item
       setPoItems([...poItems, newItem]);
     }
-
-    // Reset form fields
-    setSkuDetails(null);
-    setQuantity(1);
-    setUnitPrice(0);
+    setVariantQuantities({ ...variantQuantities, [variant.sku]: '' });
     setError('');
   };
 
@@ -265,6 +245,7 @@ export default function PurchaseOrderForm() {
         remark: formData.remark ? formData.remark.trim() : '',
         status: formData.status || 'Pending',
         tolerance_limit: parseFloat(formData.tolerance_limit) || 0,
+        delivery_date: formData.delivery_date || null,
         items: poItems.map(item => ({
           sku: item.sku,
           quantity: parseInt(item.quantity),
@@ -314,6 +295,7 @@ export default function PurchaseOrderForm() {
                     <tr><th>PO Number:</th><td>{poDetails.header.po_number}</td></tr>
                     <tr><th>Supplier:</th><td>{poDetails.header.supplier_name}</td></tr>
                     <tr><th>Attention:</th><td>{poDetails.header.attention}</td></tr>
+                    <tr><th>Delivery Date:</th><td>{poDetails.header.delivery_date ? new Date(poDetails.header.delivery_date).toLocaleDateString() : '-'}</td></tr>
                     <tr><th>Tolerance Limit (%):</th><td>{poDetails.header.tolerance_limit}</td></tr>
                     <tr>
                       <th>Status:</th>
@@ -334,6 +316,8 @@ export default function PurchaseOrderForm() {
                     <tr><th>Total Items:</th><td>{poDetails.items ? poDetails.items.length : 0}</td></tr>
                     <tr><th>Total Quantity:</th><td>{poDetails.items ? poDetails.items.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0) : 0}</td></tr>
                     <tr><th>Total Amount:</th><td>${(poDetails.total_amount || 0).toFixed(2)}</td></tr>
+                    <tr><th>Delivery Date:</th><td>{new Date(poDetails.header.delivery_date).toLocaleDateString()}</td></tr>
+
                     <tr><th>Created Date:</th><td>{new Date(poDetails.header.created_at).toLocaleDateString()}</td></tr>
                   </tbody>
                 </Table>
@@ -393,7 +377,7 @@ export default function PurchaseOrderForm() {
 
   return (
     <Container fluid className="p-4">
-      <Card>
+      <Card className='mb-3'>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h4>
             {isCreating ? 'Create Purchase Order' :
@@ -405,9 +389,15 @@ export default function PurchaseOrderForm() {
             Back to List
           </Button>
         </Card.Header>
+      </Card>
+
+      {/* Header Information Card */}
+      <Card className="mb-4">
+        <Card.Header>
+          <h4>Header Information</h4>
+        </Card.Header>
         <Card.Body>
           {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
-
           <Form onSubmit={handleSubmit}>
             <Row className="mb-3">
               <Col md={4}>
@@ -442,21 +432,18 @@ export default function PurchaseOrderForm() {
                 </Form.Group>
               </Col>
               <Col md={4}>
-                <Form.Group controlId="formStatus">
-                  <Form.Label>Status</Form.Label>
-                  <Form.Select
-                    value={formData.status}
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                <Form.Group controlId="formDeliveryDate">
+                  <Form.Label>Delivery Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={formData.delivery_date}
+                    onChange={e => setFormData({ ...formData, delivery_date: e.target.value })}
                     disabled={isViewing}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                  </Form.Select>
+                    required
+                  />
                 </Form.Group>
               </Col>
             </Row>
-
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group controlId="formToleranceLimit">
@@ -489,181 +476,175 @@ export default function PurchaseOrderForm() {
                 </Form.Group>
               </Col>
             </Row>
-
-            {/* Add SKU Selection Section for Create/Edit modes */}
-            {(isCreating || isEditing) && (
-              <>
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Search SKU <span className="text-danger">*</span></Form.Label>
-                      <AsyncSelect
-                        cacheOptions
-                        defaultOptions={defaultSKUs}
-                        loadOptions={loadSkuOptions}
-                        value={skuDetails}
-                        onChange={handleSkuSelect}
-                        placeholder="Type to search SKU..."
-                        isClearable
-                        isSearchable
-                        menuPlacement="auto"
-                        styles={{
-                          option: (base, state) => ({
-                            ...base,
-                            backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
-                            color: state.isSelected ? 'white' : '#212529'
-                          })
-                        }}
-                        noOptionsMessage={({ inputValue }) => 
-                          !inputValue ? "Type to search SKUs..." : 
-                          inputValue.length < 2 ? "Type at least 2 characters..." : 
-                          "No SKUs found"
-                        }
-                        formatOptionLabel={option => (
-                          <div>
-                            <strong>{option.value}</strong>
-                            <div style={{ fontSize: '0.8em' }}>
-                              Style: {option.style_name} | Color: {option.color_name} | Size: {option.size_name}
-                            </div>
-                          </div>
-                        )}
-                      />
-                    </Form.Group>
-                  </Col>
-                  {skuDetails && (
-                    <>
-                      <Col md={2}>
-                        <Form.Group>
-                          <Form.Label>Quantity <span className="text-danger">*</span></Form.Label>
-                          <Form.Control
-                            type="number"
-                            value={quantity}
-                            onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                            min={1}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={2}>
-                        <Form.Group>
-                          <Form.Label>Unit Price</Form.Label>
-                          <Form.Control
-                            type="number"
-                            value={unitPrice}
-                            onChange={e => setUnitPrice(Math.max(0, parseFloat(e.target.value) || 0))}
-                            step="0.01"
-                            min="0"
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={2} className="d-flex align-items-end">
-                        <Button 
-                          variant="primary" 
-                          onClick={handleAddItem} 
-                          disabled={!skuDetails || quantity <= 0}
-                          className="w-100"
-                        >
-                          Add Item
-                        </Button>
-                      </Col>
-                    </>
-                  )}
-                </Row>
-
-                {skuDetails && (
-                  <Row className="mb-3">
-                    <Col>
-                      <div className="bg-light p-3 rounded">
-                        <h6>Selected SKU Details:</h6>
-                        <Row>
-                          <Col md={3}><strong>Style:</strong> {skuDetails.style_name}</Col>
-                          <Col md={3}><strong>Color:</strong> {skuDetails.color_name}</Col>
-                          <Col md={3}><strong>Size:</strong> {skuDetails.size_name}</Col>
-                          <Col md={3}><strong>Fit:</strong> {skuDetails.fit_name}</Col>
-                        </Row>
-                        <Row className="mt-2">
-                          <Col md={6}><strong>Material:</strong> {skuDetails.material_name}</Col>
-                          <Col md={6}><strong>Catalog Price:</strong> ${parseFloat(skuDetails.unit_price || 0).toFixed(2)}</Col>
-                        </Row>
-                      </div>
-                    </Col>
-                  </Row>
-                )}
-              </>
-            )}
-
-            <Row className="mb-3">
-              <Col>
-                <h6>Items</h6>
-                <div className="table-responsive">
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>#</th><th>SKU</th><th>Style</th><th>Color</th><th>Size</th><th>Fit</th><th>Material</th><th>Quantity</th><th>Unit Price</th><th>Total Price</th>
-                        {isEditing && <th>Actions</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {poItems.map((item, index) => (
-                        <tr key={item.sku}>
-                          <td>{index + 1}</td>
-                          <td>{item.sku}</td>
-                          <td>{item.style_name}</td>
-                          <td>{item.color_name}</td>
-                          <td>{item.size_name}</td>
-                          <td>{item.fit_name}</td>
-                          <td>{item.material_name}</td>
-                          <td>
-                            <Form.Control
-                              type="number"
-                              value={item.quantity}
-                              onChange={e => {
-                                const newQuantity = Math.max(1, parseInt(e.target.value));
-                                const updatedItems = poItems.map(i => i.sku === item.sku ? { ...i, quantity: newQuantity, total_price: newQuantity * i.unit_price } : i);
-                                setPoItems(updatedItems);
-                              }}
-                              disabled={isViewing}
-                              min={1}
-                            />
-                          </td>
-                          <td>
-                            ${(item.unit_price).toFixed(2)}
-                          </td>
-                          <td>${(item.total_price).toFixed(2)}</td>
-                          {isEditing && (
-                            <td>
-                              <Button variant="danger" size="sm" onClick={() => handleRemoveItem(item.sku)} disabled={isViewing}>
-                                <FaTrash />
-                              </Button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="table-info">
-                        <th colSpan="8" className="text-end">Total:</th>
-                        <th>${(poItems.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseInt(item.quantity)), 0) || 0).toFixed(2)}</th>
-                        <th></th>
-                      </tr>
-                    </tfoot>
-                  </Table>
-                </div>
-              </Col>
-            </Row>
-
-            <div className="d-flex justify-content-end">
-              {!isViewing && (
-                <Button variant="success" type="submit" className="me-2" disabled={isLoading}>
-                  {isEditing ? 'Update Purchase Order' : 'Create Purchase Order'}
-                </Button>
-              )}
-              <Button variant="secondary" onClick={() => navigate('/merchandising/po')} disabled={isLoading}>
-                Cancel
-              </Button>
-            </div>
           </Form>
         </Card.Body>
       </Card>
+
+      {/* Product Information Card */}
+      <Card>
+        <Card.Header>
+          <h4>Product Information</h4>
+        </Card.Header>
+        <Card.Body>
+          {/* Style Number Search Section for Create/Edit modes */}
+          {(isCreating || isEditing) && (
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Search Style Number <span className="text-danger">*</span></Form.Label>
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions={defaultStyles}
+                    loadOptions={loadStyleOptions}
+                    value={selectedStyle}
+                    onChange={handleStyleSelect}
+                    placeholder="Type to search style number..."
+                    isClearable
+                    isSearchable
+                    menuPlacement="auto"
+                    styles={{
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+                        color: state.isSelected ? 'white' : '#212529'
+                      })
+                    }}
+                    noOptionsMessage={({ inputValue }) =>
+                      !inputValue ? "Type to search styles..." :
+                      inputValue.length < 2 ? "Type at least 2 characters..." :
+                      "No styles found"
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          )}
+
+          {/* Variant Modal as component */}
+          <ShowVariantModal
+            show={showVariantModal}
+            onHide={() => setShowVariantModal(false)}
+            selectedStyle={selectedStyle}
+            styleVariants={styleVariants}
+            variantQuantities={variantQuantities}
+            setVariantQuantities={setVariantQuantities}
+            handleAddVariant={handleAddVariant}
+            handleAddVariantsBatch={(variants) => {
+              // Add all variants to PO items in one go
+              let updatedItems = [...poItems];
+              let errorMsg = '';
+              variants.forEach(variant => {
+                const quantity = parseInt(variantQuantities[variant.sku] || 0);
+                if (!quantity || quantity <= 0) return;
+                const newItem = {
+                  sku: variant.sku,
+                  style_name: selectedStyle?.name || variant.style_name || 'Unknown Style',
+                  color_name: variant.color_name || 'Unknown Color',
+                  size_name: variant.size_name || 'Unknown Size',
+                  fit_name: variant.fit_name || 'Unknown Fit',
+                  material_name: variant.material_name || 'Unknown Material',
+                  quantity,
+                  unit_price: parseFloat(variant.unit_price || 0),
+                  total_price: quantity * parseFloat(variant.unit_price || 0),
+                  company_code: userData?.company_code
+                };
+                const validation = validateItem(newItem);
+                if (validation) {
+                  errorMsg = validation;
+                  return;
+                }
+                const existingItemIndex = updatedItems.findIndex(item => item.sku === newItem.sku);
+                if (existingItemIndex !== -1) {
+                  updatedItems[existingItemIndex].quantity += quantity;
+                  updatedItems[existingItemIndex].total_price = updatedItems[existingItemIndex].quantity * updatedItems[existingItemIndex].unit_price;
+                } else {
+                  updatedItems.push(newItem);
+                }
+              });
+              setPoItems(updatedItems);
+              setError(errorMsg);
+              // Optionally clear all quantities after add
+              setVariantQuantities({});
+            }}
+          />
+
+          <Row className="mb-3">
+            <Col>
+              <h6>Items</h6>
+              <div className="table-responsive">
+                <Table striped bordered hover>
+                  <thead>
+                    <tr>
+                      <th>#</th><th>SKU</th><th>Style</th><th>Color</th><th>Size</th><th>Fit</th><th>Material</th><th>Quantity</th><th>Unit Price</th><th>Total Price</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {poItems.map((item, index) => (
+                      <tr key={item.sku}>
+                        <td>{index + 1}</td>
+                        <td>{item.sku}</td>
+                        <td>{item.style_name}</td>
+                        <td>{item.color_name}</td>
+                        <td>{item.size_name}</td>
+                        <td>{item.fit_name}</td>
+                        <td>{item.material_name}</td>
+                        <td>
+                          {isViewing ? (
+                            item.quantity
+                          ) : (
+                            <Form.Control
+                              type="number"
+                              value={item.quantity}
+                              min={1}
+                              onChange={e => {
+                                const newQuantity = Math.max(1, parseInt(e.target.value) || 1);
+                                const updatedItems = poItems.map(i =>
+                                  i.sku === item.sku
+                                    ? { ...i, quantity: newQuantity, total_price: newQuantity * i.unit_price }
+                                    : i
+                                );
+                                setPoItems(updatedItems);
+                              }}
+                              style={{ width: 80 }}
+                            />
+                          )}
+                        </td>
+                        <td>${(item.unit_price).toFixed(2)}</td>
+                        <td>${(item.total_price).toFixed(2)}</td>
+                        <td>
+                          <Button variant="danger" size="sm" onClick={() => handleRemoveItem(item.sku)}>
+                            <FaTrash />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="table-info">
+                      <th colSpan="8" className="text-end">Total:</th>
+                      <th>${(poItems.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseInt(item.quantity)), 0) || 0).toFixed(2)}</th>
+                      <th></th>
+                    </tr>
+                  </tfoot>
+                </Table>
+              </div>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
+
+      {/* Action Buttons at the bottom of the page */}
+      <div className="d-flex justify-content-end mt-4">
+        {!isViewing && (
+          <Button variant="success" type="submit" className="me-2" disabled={isLoading} onClick={handleSubmit}>
+            {isEditing ? 'Update Purchase Order' : 'Create Purchase Order'}
+          </Button>
+        )}
+        <Button variant="secondary" onClick={() => navigate('/merchandising/po')} disabled={isLoading}>
+          Cancel
+        </Button>
+      </div>
     </Container>
   );
 }

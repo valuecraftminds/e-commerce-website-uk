@@ -321,7 +321,7 @@ const StyleController = {
   // Update variant
   updateVariant(req, res) {
     const { variant_id } = req.params;
-    let { color_id, size_id, fit_id, material_id, unit_price, sale_price, sku } = req.body;
+  let { color_id, size_id, fit_id, material_id, unit_price, sale_price, sku, company_code, style_number } = req.body;
 
     // If not provided, save as zero
     if (unit_price === undefined || unit_price === null || unit_price === '') unit_price = 0;
@@ -332,9 +332,9 @@ const StyleController = {
 
     const checkSql = `
       SELECT variant_id FROM style_variants 
-      WHERE color_id = ? AND size_id = ? AND fit_id = ? AND variant_id != ?
+      WHERE color_id = ? AND size_id = ? AND fit_id = ? AND company_code = ? AND style_number = ? AND variant_id != ?
     `;
-    db.query(checkSql, [color_id, size_id, fit_id, variant_id], (err, results) => {
+    db.query(checkSql, [color_id, size_id, fit_id, company_code, style_number, variant_id], (err, results) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Error checking variant' });
       }
