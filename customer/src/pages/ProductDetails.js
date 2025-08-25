@@ -40,6 +40,9 @@ export default function ProductDetails() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [stockStatus, setStockStatus] = useState(null);
+  const [stockError, setStockError] = useState(null);
+  const [checkingStock, setCheckingStock] = useState(false);
   
   // Single state for wishlist status
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -80,29 +83,55 @@ export default function ProductDetails() {
     return product.colors_by_size[selectedSize] || [];
   };
 
-  // Function to get variant info based on selected color and size
+ // Function to get variant info based on selected color and size
   const getVariantInfo = async (colorCode, sizeName) => {
     if (!colorCode || !sizeName || !product.style_number) {
       return null;
     }
 
     try {
-      const colorName = getAvailableColors().find(color => color.code === colorCode)?.name;
-      if (!colorName) return null;
+      setCheckingStock(true);
+      setStockError(null);
+      
+      // Get color_id from the color code
+      const selectedColorObj = getAvailableColors().find(color => color.code === colorCode);
+      if (!selectedColorObj?.color_id) return null;
+      
+      // Get size_id from the size name
+      const selectedSizeObj = product.all_sizes?.find(size => size.size_name === sizeName);
+      if (!selectedSizeObj?.size_id) return null;
 
       const response = await axios.get(`${BASE_URL}/api/customer/variant-info`, {
         params: {
           company_code: COMPANY_CODE,
           style_number: product.style_number,
-          color_name: colorName,
-          size_name: sizeName
+          color_id: selectedColorObj.color_id,
+          size_id: selectedSizeObj.size_id
         }
       });
 
-      return response.data;
+      const variantData = response.data;
+      
+      // Check stock availability
+      if (variantData.stock_qty <= 0) {
+        setStockStatus('out_of_stock');
+        setStockError('This item is currently out of stock');
+      } else if (variantData.stock_qty < 5) {
+        setStockStatus('low_stock');
+        setStockError(`Only ${variantData.stock_qty} items left in stock`);
+      } else {
+        setStockStatus('in_stock');
+        setStockError(null);
+      }
+
+      return variantData;
     } catch (error) {
       console.error('Error getting variant info:', error);
+      setStockStatus('error');
+      setStockError('Unable to check stock availability');
       return null;
+    } finally {
+      setCheckingStock(false);
     }
   };
 
@@ -129,7 +158,7 @@ export default function ProductDetails() {
   const fetchProductReviews = async () => {
     try {
       setLoadingReviews(true);
-      const response = await axios.get(`${BASE_URL}/api/customer/feedback/reviews/${styleId}`, {
+      const response = await axios.get(`${BASE_URL}/api/customer/feedback/${styleId}`, {
         params: { company_code: COMPANY_CODE }
       });
       setReviews(response.data.reviews || []);
@@ -594,6 +623,28 @@ export default function ProductDetails() {
                   )}
                 </div>
               </div>
+
+              {/* Stock Status Display */}
+              {selectedSize && selectedColor && (
+                <div className="mb-3 stock-status">
+                  {checkingStock ? (
+                    <div className="text-info">
+                      <i className="fas fa-spinner fa-spin"></i> Checking availability...
+                    </div>
+                  ) : stockError ? (
+                    <Alert 
+                      variant={stockStatus === 'out_of_stock' ? 'danger' : 'warning'}
+                      className="py-2"
+                    >
+                      {stockError}
+                    </Alert>
+                  ) : stockStatus === 'in_stock' && (
+                    <div className="text-success">
+                      <i className="fas fa-check-circle"></i> In Stock
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="mb-3">
                 <h5>Quantity:</h5>
