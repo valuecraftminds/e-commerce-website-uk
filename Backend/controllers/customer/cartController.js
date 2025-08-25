@@ -305,10 +305,11 @@ const cartController = {
     try {
       const sql = `
         DELETE FROM cart 
-        WHERE company_code = ? 
+        WHERE cart_id = ?
+        AND company_code = ? 
         AND (customer_id = ? OR customer_id IS NULL)
       `;
-      db.query(sql, [company_code, customer_id], (err, result) => {
+      db.query(sql, [cart_id, company_code, customer_id], (err, result) => {
         if (err) {
           console.error('Error removing cart item:', err);
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
