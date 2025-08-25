@@ -238,11 +238,11 @@ const productController = {
           available_colors: allColors, // All available colors
           colors_by_size: availableBySize, // Colors available for each size
           image: product.image,
-          material: {
+          material: materialInfo ? {
             material_id: materialInfo.material_id,
             material_name: materialInfo.material_name,
             material_description: materialInfo.material_description
-          }
+          } : null
         });
       });
     });
