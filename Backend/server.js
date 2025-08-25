@@ -35,6 +35,11 @@ const CurrencyRoutes = require('./routes/customer/CurrencyRoutes');
 const checkoutRoutes = require('./routes/customer/CheckoutRoutes');
 const ProfileRoutes = require('./routes/customer/ProfileRoutes');
 const CompanyDetailsRoutes = require('./routes/customer/CompanyDetailsRoutes');
+const AddressRoutes = require('./routes/customer/AddressRoutes');
+const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
+const wishlistRoutes = require('./routes/customer/WishlistRoutes');
+const OrdersHistoryRoutes = require('./routes/customer/OrdersHistoryRoutes');
+const FeedbackRoutes = require('./routes/customer/FeedbackRoutes');
 
 // Admin
 const adminAuthRoutes = require('./routes/admin/AdminAuth');
@@ -51,11 +56,6 @@ const purchaseOrderRoutes = require('./routes/admin/PurchaseOrder');
 const companyRoutes = require('./routes/admin/Company');
 const GRNRoutes = require('./routes/admin/GRN');
 const LocationRoutes = require('./routes/admin/Location');
-const AddressRoutes = require('./routes/customer/AddressRoutes');
-const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
-const wishlistRoutes = require('./routes/customer/WishlistRoutes');
-const OrdersHistoryRoutes = require('./routes/customer/OrdersHistoryRoutes');
-
 
 
 // Route bindings
@@ -71,6 +71,7 @@ app.use('/api/customer/address', AddressRoutes);
 app.use('/api/customer/payment-methods', PaymentMethodsRoutes);
 app.use('/api/customer/wishlist', wishlistRoutes);
 app.use('/api/customer/orders', OrdersHistoryRoutes);
+app.use('/api/customer/feedback', FeedbackRoutes);
 
 
 // Admin routes
