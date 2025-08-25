@@ -1,0 +1,245 @@
+/* Container for multiple feedback forms */
+.feedback-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.feedback-container > h3 {
+  text-align: center;
+  color: #333;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.feedback-container > p {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+/* Individual feedback form */
+.feedback-form {
+  max-width: 500px;
+  margin: 1.5rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e0e0e0;
+}
+
+.feedback-form.submitted {
+  border-color: #28a745;
+  background: #f8fff9;
+}
+
+.feedback-form h4 {
+  color: #333;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.feedback-form .item-name {
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.feedback-form h3 {
+  color: #333;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Completion message */
+.all-reviews-complete {
+  text-align: center;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin: 2rem auto;
+  max-width: 500px;
+}
+
+.all-reviews-complete h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.all-reviews-complete p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.feedback-form textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.feedback-form textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.feedback-form textarea::placeholder {
+  color: #999;
+}
+
+/* Star Rating Container */
+.star-rating {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  margin: 1.5rem 0;
+  gap: 0.25rem;
+}
+
+.feedback_star {
+  font-size: 4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  color: #ddd;
+}
+
+/* Hover effect: when hovering on a star, fill it and all following stars */
+.feedback_star:hover,
+.feedback_star:hover ~ .feedback_star {
+  color: #ffd700 !important;
+  transform: scale(1.05);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.feedback_star.filled {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.feedback_star.empty {
+  color: #ddd;
+}
+
+/* Submit Button */
+.feedback-form button[type="submit"] {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.feedback-form button[type="submit"]:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.feedback-form button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+.feedback-form button[type="submit"]:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Message Styles */
+.feedback-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.feedback-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.feedback-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Character Counter */
+.character-counter {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.character-counter.warning {
+  color: #ff6b6b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .feedback-form {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .star {
+    font-size: 1.75rem;
+  }
+  
+  .feedback-form h3 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .feedback-form {
+    padding: 1rem;
+  }
+  
+  .star {
+    font-size: 1.5rem;
+  }
+}
+
+/* Animation for form appearance */
+.feedback-form {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
