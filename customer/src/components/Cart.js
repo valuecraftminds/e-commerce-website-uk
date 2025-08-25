@@ -371,14 +371,6 @@ return (
                         <span>Items ({summary.total_items}):</span>
                         <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                       </div>
-                      {/* <div className="d-flex justify-content-between mb-3">
-                        <span>🚚 Shipping:</span>
-                        <span className="fw-bold">0.00</span>
-                      </div>
-                      <div className="d-flex justify-content-between mb-3">
-                        <span>🧾 Tax:</span>
-                        <span className="fw-bold">0.00</span>
-                      </div> */}
                       {isLoggedIn && (
                         <div className="d-flex justify-content-between mb-3">
                           <span>💸 Discount:</span>
@@ -400,7 +392,8 @@ return (
                         <Button 
                           variant="primary" 
                           size="lg"
-                          disabled={cart.length === 0 || cart.some(item => item.stock_quantity === 0)}
+                          // disabled={cart.length === 0 || cart.some(item => item.stock_quantity === 0)}
+                          disabled={cart.length ===0}
                           onClick={() => handleBuyNow()}
                         >
                           🚀 Proceed to Checkout
