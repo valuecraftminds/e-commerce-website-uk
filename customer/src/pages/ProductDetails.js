@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Image, Button } from "react-bootstrap";
+import { Container, Row, Col, Image, Button, Alert } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import { FaShare } from "react-icons/fa";
 import axios from "axios";
