@@ -88,6 +88,10 @@ export default function Footer() {
               <li><Link to="/faq" className="text-white text-decoration-none">FAQ</Link></li>
               <li><Link to="/returns" className="text-white text-decoration-none">Returns</Link></li>
               <li><Link to="/support" className="text-white text-decoration-none">Support</Link></li>
+              
+              {/* temporary link */}
+              <li><Link to="/feedback" className="text-white text-decoration-none">Feedback</Link></li>
+
             </ul>
           </Col>
 

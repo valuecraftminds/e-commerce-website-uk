@@ -18,6 +18,7 @@ import Wishlist from './pages/Wishlist';
 import OrdersHistory from './pages/OrdersHistory';
 import OrderDetails from './pages/OrderDetails';
 import OfferPage from './pages/OfferPage';
+import FeedbackForm from './pages/FeedbackForm';
 
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -87,6 +88,7 @@ function App() {
                                 <Route path="/orders-history" element={<OrdersHistory />} />
                                 <Route path="/orders/:orderId" element={<OrderDetails />} />
                                 <Route path="/offers" element={<OfferPage />} />
+                                <Route path="/feedback" element={<FeedbackForm />} />
 
                                 {/* Protected Routes */}
                                 <Route path="/usermenu" element={

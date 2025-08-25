@@ -43,4 +43,8 @@ const optionalAuth = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, optionalAuth };
+module.exports = { 
+  verifyToken, 
+  optionalAuth,
+  authenticateCustomer: verifyToken // Alias for consistency
+};

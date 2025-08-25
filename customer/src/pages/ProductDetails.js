@@ -129,7 +129,7 @@ export default function ProductDetails() {
   const fetchProductReviews = async () => {
     try {
       setLoadingReviews(true);
-      const response = await axios.get(`${BASE_URL}/api/customer/reviews/${styleId}`, {
+      const response = await axios.get(`${BASE_URL}/api/customer/feedback/reviews/${styleId}`, {
         params: { company_code: COMPANY_CODE }
       });
       setReviews(response.data.reviews || []);
