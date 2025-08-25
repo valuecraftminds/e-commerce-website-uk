@@ -15,4 +15,6 @@ router.get('/search', checkCompanyCode, productController.searchProducts);
 router.get('/offers', checkCompanyCode, productController.getStylesWithOfferPrice);
 router.get('/similar-products/:style_id', checkCompanyCode, productController.getSimilarProducts);
 
+router.get('/reviews/:style_id', checkCompanyCode, productController.getReview);
+
 module.exports = router;
