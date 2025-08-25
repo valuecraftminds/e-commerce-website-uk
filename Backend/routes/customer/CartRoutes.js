@@ -8,8 +8,8 @@ const router = express.Router();
 router.post('/add', checkCompanyCode, optionalAuth, cartController.addToCart);
 router.get('/get-cart', checkCompanyCode, optionalAuth, cartController.getCart);
 router.put('/:cart_id', checkCompanyCode, optionalAuth, cartController.updateCartItem);
+router.delete('/clear-all', checkCompanyCode, optionalAuth, cartController.clearCart);
 router.delete('/:cart_id', checkCompanyCode, optionalAuth, cartController.removeFromCart);
-router.delete('/clear/all', checkCompanyCode, optionalAuth, cartController.clearCart);
 router.post('/merge', checkCompanyCode, optionalAuth, cartController.mergeGuestCart);
 
 module.exports = router;
