@@ -37,6 +37,7 @@ export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedColorName, setSelectedColorName] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   
@@ -77,6 +78,32 @@ export default function ProductDetails() {
       return product.available_colors || [];
     }
     return product.colors_by_size[selectedSize] || [];
+  };
+
+  // Function to get variant info based on selected color and size
+  const getVariantInfo = async (colorCode, sizeName) => {
+    if (!colorCode || !sizeName || !product.style_number) {
+      return null;
+    }
+
+    try {
+      const colorName = getAvailableColors().find(color => color.code === colorCode)?.name;
+      if (!colorName) return null;
+
+      const response = await axios.get(`${BASE_URL}/api/customer/variant-info`, {
+        params: {
+          company_code: COMPANY_CODE,
+          style_number: product.style_number,
+          color_name: colorName,
+          size_name: sizeName
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error getting variant info:', error);
+      return null;
+    }
   };
 
   // Fetch exchange rates
@@ -203,6 +230,20 @@ export default function ProductDetails() {
     }
   }, [product?.style_id, COMPANY_CODE]);
 
+  // Update variant info when color or size changes
+  useEffect(() => {
+    const updateVariantInfo = async () => {
+      if (selectedColor && selectedSize && product) {
+        const variant = await getVariantInfo(selectedColor, selectedSize);
+        setSelectedVariant(variant);
+      } else {
+        setSelectedVariant(null);
+      }
+    };
+
+    updateVariantInfo();
+  }, [selectedColor, selectedSize, product]);
+
 
   const formatPrice = (sale_price) => {
     if (!sale_price) return "Price not available";
@@ -214,11 +255,15 @@ export default function ProductDetails() {
 
   const handleAddToCart = async () => {
     try {
+      // Use the SKU from the selected variant, fallback to product SKU
+      const skuToUse = selectedVariant?.sku || product.sku;
+      
       const result = await addToCart({
         name: product.name,
-        sku: product.sku,
+        sku: skuToUse,
         style_id: product.style_id,
         style_number: product.style_number,
+        variant_id: selectedVariant?.variant_id,
         size: selectedSize,
         color: {
           code: selectedColor,
@@ -238,6 +283,7 @@ export default function ProductDetails() {
               <div style={{ fontWeight: 'bold' }}>{product.name}</div>
               <div>Size: {selectedSize}</div>
               <div>Color: {selectedColorName}</div>
+              {skuToUse && <div>SKU: {skuToUse}</div>}
             </div>
         ),
       type: "success",
@@ -506,6 +552,7 @@ export default function ProductDetails() {
                           setSelectedSize(sizeObj.size_name);
                           setSelectedColor('');
                           setSelectedColorName('');
+                          setSelectedVariant(null);
                         }
                       }}
                       disabled={!sizeObj.available}
