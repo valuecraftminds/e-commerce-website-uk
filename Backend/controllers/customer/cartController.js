@@ -331,6 +331,10 @@ const cartController = {
     const { company_code } = req.query;
     const customer_id = req.user?.id || null;
 
+    if (!company_code) {
+      return res.status(400).json({ success: false, message: 'company_code is required' });
+    }
+
     try {
       const sql = `
         DELETE FROM cart 
@@ -342,8 +346,16 @@ const cartController = {
           console.error('Error clearing cart:', err);
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
         }
+        
+        const message = result.affectedRows > 0 
+          ? `Cart cleared successfully. ${result.affectedRows} item(s) removed.`
+          : 'Cart is already empty.';
 
-        res.json({ success: true, message: 'Cart cleared successfully', cleared_items: result.affectedRows });
+        res.json({ 
+          success: true, 
+          message: message, 
+          cleared_items: result.affectedRows 
+        });
       });
     } catch (error) {
       console.error('Error clearing cart:', error);
