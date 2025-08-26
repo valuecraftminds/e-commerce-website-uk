@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react';
+import { useContext, useRef, useState, useEffect } from 'react';
 import { Button, Nav, Offcanvas } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -226,6 +226,22 @@ const roleBasedMenuItems = {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openNestedDropdown, setOpenNestedDropdown] = useState(null);
 
+  // Collapse sidebar when clicking outside
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        if (!sidebarCollapsed) {
+          toggleSidebarCollapse();
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen, sidebarCollapsed, toggleSidebarCollapse]);
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -277,8 +293,8 @@ const roleBasedMenuItems = {
         responsive="lg"
         placement="start"
         className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}
-        ref={sidebarRef}
       >
+        <div ref={sidebarRef} style={{height: '100%'}}>
         <Offcanvas.Header closeButton className="d-lg-none">
           <Offcanvas.Title>Admin Panel</Offcanvas.Title>
         </Offcanvas.Header>
@@ -397,6 +413,7 @@ const roleBasedMenuItems = {
            
           </Nav>
         </Offcanvas.Body>
+        </div>
       </Offcanvas>
     </>
   );
