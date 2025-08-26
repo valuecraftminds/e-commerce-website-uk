@@ -90,9 +90,9 @@ export default function GRNDetails() {
                             <p><strong>Received Date:</strong> {new Date(grnDetails.header.received_date).toLocaleString()}</p>
                         </div>
                         <div className="col-md-6">
-                            <p><strong>Status:</strong> <Badge bg={grnDetails.header.status === 'completed' ? 'success' : 'warning'}>
+                            <p><strong>Status: </strong> 
                                 {grnDetails.header.status}
-                            </Badge></p>
+                            </p>
                             <p><strong>Batch Number:</strong> {grnDetails.header.batch_number || 'N/A'}</p>
                             <p><strong>Invoice Number:</strong> {grnDetails.header.invoice_number || 'N/A'}</p>
                         </div>
@@ -117,7 +117,6 @@ export default function GRNDetails() {
                                 <th>Received Qty</th>
                                 <th>Location</th>
                                 <th>Notes</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,15 +127,8 @@ export default function GRNDetails() {
                                     <td>{item.ordered_qty}</td>
                                     <td>{item.received_qty}</td>
                                     <td>{item.location || 'N/A'}</td>
-                                    <td>{item.notes || 'N/A'}</td>
-                                    <td>
-                                        <Badge bg={
-                                            item.status === 'received' ? 'success' : 
-                                            item.status === 'partial' ? 'warning' : 'secondary'
-                                        }>
-                                            {item.status}
-                                        </Badge>
-                                    </td>
+                                    <td>{item.notes || '-'}</td>
+                                   
                                 </tr>
                             ))}
                         </tbody>

@@ -639,7 +639,7 @@ export default function PurchaseOrderForm() {
       {/* Action Buttons at the bottom of the page */}
       <div className="d-flex justify-content-end mt-4">
         {!isViewing && (
-          <Button variant="success" type="submit" className="me-2" disabled={isLoading} onClick={handleSubmit}>
+          <Button variant="primary" type="submit" className="me-2" disabled={isLoading} onClick={handleSubmit}>
             {isEditing ? 'Update Purchase Order' : 'Create Purchase Order'}
           </Button>
         )}
