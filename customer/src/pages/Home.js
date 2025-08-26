@@ -115,6 +115,24 @@ export default function Home() {
     return `${symbol}${convertedPrice}`;
   };
 
+  // Utility function to calculate time left for a given end date
+  const calculateTimeLeft = (endDate) => {
+    const difference = new Date(endDate) - new Date();
+
+    if (difference <= 0) {
+      return { expired: true };
+    }
+
+    return {
+      expired: false,
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+    };
+  };
+
+
   return (
       <>
         {/* Banner Section */}
@@ -128,78 +146,122 @@ export default function Home() {
 
         {/* Offer Products Section */}
         {/* Offer Products Section - Only show if there are offer products */}
-{!offerLoading && !offerError && offerProducts.length > 0 && (
-  <Container fluid className="my-5 homepage-offer-products-container">
-    <div className="d-flex justify-content-between align-items-center mb-4">
-      <h2 className="offer-section-title">
-        <i className="fas fa-fire text-danger me-2"></i>
-        Hot Deals & Offers
-      </h2>
-      <button
-        className="btn btn-outline-primary btn-sm"
-        onClick={() => {
-          navigate('/offers');
-        }}
-      >
-        View All Offers <i className="fas fa-arrow-right ms-1"></i>
-      </button>
-    </div>
-
-    <div className="offer-products-grid">
-      {displayedProducts.map((product) => (
-        <div
-          key={product.style_id}
-          className="offer-product-card"
-          onClick={() => getProductDetails(product.style_id)}
-        >
-          <div className="offer-product-image-container">
-            {/* Discount Badge */}
-            <div className="discount-badge">
-              {product.discount_percentage > 0 && (
-                <span className="discount-percentage">
-                  -{product.discount_percentage}%
-                </span>
-              )}
+        {!offerLoading && !offerError && offerProducts.length > 0 && (
+          <Container fluid className="my-5 homepage-offer-products-container">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h2 className="offer-section-title">
+                <i className="fas fa-fire text-danger me-2"></i>
+                Hot Deals & Offers
+              </h2>
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => {
+                  navigate('/offers');
+                }}
+              >
+                View All Offers <i className="fas fa-arrow-right ms-1"></i>
+              </button>
             </div>
 
-            <img
-              src={`${BASE_URL}/uploads/styles/${product.image}`}
-              alt={product.name}
-              className="offer-product-image"
-            />
-          </div>
+            <div className="offer-products-grid">
+              {displayedProducts.map((product) => {
+                const timeLeft = calculateTimeLeft(product.offer_end_date);
 
-          <div className="offer-product-info">
-            <h4 className="offer-product-name">{product.name}</h4>
-            <p className="home-product-description">
-              {product.description && product.description.length > 100
-                ? `${product.description.substring(0, 100)}...`
-                : product.description
-              }
-            </p>
-           
-            <div className="offer-product-price">
-              <span className="current-price">
-                {formatPrice(product.offer_price)}
-              </span>
-              <span className="original-price">
-                {formatPrice(product.sale_price)}
-              </span>
+                return (
+                  <div
+                    key={product.style_id}
+                    className="offer-product-card"
+                    onClick={() => getProductDetails(product.style_id)}
+                  >
+                    <div className="offer-product-image-container">
+                      {/* Discount Badge */}
+                      <div className="discount-badge">
+                        {product.discount_percentage > 0 && (
+                          <span className="discount-percentage">
+                            -{product.discount_percentage}%
+                          </span>
+                        )}
+                      </div>
+
+                      <img
+                        src={`${BASE_URL}/uploads/styles/${product.image}`}
+                        alt={product.name}
+                        className="offer-product-image"
+                      />
+                    </div>
+
+                    <div className="offer-product-info">
+                      <h4 className="offer-product-name">{product.name}</h4>
+                      <p className="home-product-description">
+                        {product.description && product.description.length > 100
+                          ? `${product.description.substring(0, 100)}...`
+                          : product.description}
+                      </p>
+
+                      <div className="offer-product-price">
+                        <span className="current-price">
+                          {formatPrice(product.offer_price)}
+                        </span>
+                        <span className="original-price">
+                          {formatPrice(product.sale_price)}
+                        </span>
+                      </div>
+
+                      {/* Countdown Timer */}
+                      <div className="countdown-timer">
+                        {timeLeft.expired ? (
+                          <div className="countdown-label text-danger" style={{fontSize: '0.9rem' }}>Offer Ended</div>
+                        ) : (
+                          <>
+                            <div className="countdown-label text-danger" style={{fontSize: '0.9rem' }}>
+                              Ends on: {new Date(product.offer_end_date).toLocaleDateString()}
+                            </div>
+                            <div className="countdown-display text-danger" style={{fontSize: '0.9rem' }}>
+                              {timeLeft.days > 0 && (
+                                <span className="time-unit">
+                                  <span className="time-value">{timeLeft.days}</span>
+                                  <span className="time-label">d </span>
+                                </span>
+                              )}
+                              <span className="time-unit">
+                                <span className="time-value">
+                                  {timeLeft.hours.toString().padStart(2, "0")}
+                                </span>
+                                <span className="time-label">h </span>
+                              </span>
+                              <span className="time-unit">
+                                <span className="time-value">
+                                  {timeLeft.minutes.toString().padStart(2, "0")}
+                                </span>
+                                <span className="time-label">m </span>
+                              </span>
+                              <span className="time-unit">
+                                <span className="time-value">
+                                  {timeLeft.seconds.toString().padStart(2, "0")}
+                                </span>
+                                <span className="time-label">s </span>
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {product.category_name && (
+                        <div className="offer-product-category">
+                          <span className="offer-category-badge">
+                            {product.category_name}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            
-            {product.category_name && (
-              <div className="offer-product-category">
-                <span className="offer-category-badge">
-                  {product.category_name}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  </Container>
-)}
+          </Container>
+        )}
+
+        
 
         {/* Main Products Section */}
         <Container fluid className="my-5 home-products-container">
