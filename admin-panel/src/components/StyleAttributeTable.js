@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { Button, Card, Form, Table } from 'react-bootstrap';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit } from 'react-icons/fa';
 
 
 const StyleAttributeTable = ({ 
@@ -11,25 +10,16 @@ const StyleAttributeTable = ({
   setFormData,
   handleSubmit,
   handleEdit,
-  handleDelete,
   isEditing,
   loading,
   error,
   success,
   onCancel
 }) => {
-  const [deleteModalId, setDeleteModalId] = useState(null);
 
-  // Find the item to delete (for label, etc.)
-  const itemToDelete = items.find(item => {
-    const itemId = item.color_id || item.size_id || item.material_id || item.fit_id || item.id;
-    return itemId === deleteModalId;
-  });
 
-  const handleDeleteSuccess = (deletedId) => {
-    handleDelete(deletedId);
-    setDeleteModalId(null);
-  };
+
+
 
   return (
     <div className="management-container">

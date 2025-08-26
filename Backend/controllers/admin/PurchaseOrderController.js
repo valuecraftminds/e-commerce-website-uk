@@ -520,7 +520,15 @@ const PurchaseOrderController = {
 
     getPurchaseOrderDetails(req, res) {
         const { po_number } = req.params;
-        console.log('Fetching details for PO:', po_number);
+        const { company_code } = req.query;
+        console.log('Fetching details for PO:', po_number, 'Company:', company_code);
+
+        if (!company_code) {
+            return res.status(400).json({
+                success: false,
+                message: 'Company code is required'
+            });
+        }
 
         const sql = `
             SELECT poh.*, s.supplier_name,
@@ -540,19 +548,19 @@ const PurchaseOrderController = {
             FROM purchase_order_headers poh
             LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id
             LEFT JOIN purchase_order_items poi ON poh.po_number = poi.po_number
-            LEFT JOIN style_variants sv ON poi.sku = sv.sku
-            LEFT JOIN styles st ON sv.style_number = st.style_number
-            LEFT JOIN colors c ON sv.color_id = c.color_id
-            LEFT JOIN sizes sz ON sv.size_id = sz.size_id
-            LEFT JOIN fits f ON sv.fit_id = f.fit_id
-            LEFT JOIN materials m ON sv.material_id = m.material_id
-            WHERE poh.po_number = ?
+            LEFT JOIN style_variants sv ON poi.sku = sv.sku AND sv.company_code = poh.company_code
+            LEFT JOIN styles st ON sv.style_number = st.style_number AND st.company_code = sv.company_code
+            LEFT JOIN colors c ON sv.color_id = c.color_id AND c.company_code = sv.company_code
+            LEFT JOIN sizes sz ON sv.size_id = sz.size_id AND sz.company_code = sv.company_code
+            LEFT JOIN fits f ON sv.fit_id = f.fit_id AND f.company_code = sv.company_code
+            LEFT JOIN materials m ON sv.material_id = m.material_id AND m.company_code = sv.company_code
+            WHERE poh.po_number = ? AND poh.company_code = ?
             ORDER BY poi.id
         `;
 
         console.log('Details SQL:', sql);
 
-        db.query(sql, [po_number], (err, results) => {
+        db.query(sql, [po_number, company_code], (err, results) => {
             if (err) {
                 console.error('Error fetching purchase order details:', err);
                 return res.status(500).json({ 
@@ -563,10 +571,10 @@ const PurchaseOrderController = {
             }
 
             if (results.length === 0) {
-                console.log('Purchase order not found:', po_number);
+                console.log('Purchase order not found:', po_number, 'for company:', company_code);
                 return res.status(404).json({ 
                     success: false, 
-                    message: 'Purchase order not found' 
+                    message: 'Purchase order not found for this company' 
                 });
             }
 

@@ -44,11 +44,7 @@ export default function StyleAttributes() {
   // Delete modal state for each attribute type
   const [deleteModalInfo, setDeleteModalInfo] = useState({ type: '', id: null });
 
-  // New: Show management form states
-  const [showColorForm, setShowColorForm] = useState(false);
-  const [showSizeForm, setShowSizeForm] = useState(false);
-  const [showMaterialForm, setShowMaterialForm] = useState(false);
-  const [showFitForm, setShowFitForm] = useState(false);
+
 
   const [activeTab, setActiveTab] = useState('colors');
   const company_code = userData?.company_code;
@@ -545,7 +541,7 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
   React.useEffect(() => {
     if (!styleNumber) return;
     setLoading(true);
-    fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+    fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}?company_code=${company_code}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -658,7 +654,7 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
       if (onSuccess) onSuccess();
       // Refetch variants
       setLoading(true);
-      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}?company_code=${company_code}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -726,7 +722,7 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
       if (onSuccess) onSuccess();
       // Refetch variants
       setLoading(true);
-      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}?company_code=${company_code}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -791,7 +787,7 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
       if (onSuccess) onSuccess();
       // Refetch variants
       setLoading(true);
-      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`)
+      fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}?company_code=${company_code}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

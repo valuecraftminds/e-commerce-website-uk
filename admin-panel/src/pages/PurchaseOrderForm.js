@@ -68,7 +68,9 @@ export default function PurchaseOrderForm() {
       if ((isEditing || isViewing) && po_number) {
         setIsLoading(true);
         try {
-          const response = await axios.get(`${BASE_URL}/api/admin/po/get-purchase-order-details/${po_number}`);
+          const response = await axios.get(`${BASE_URL}/api/admin/po/get-purchase-order-details/${po_number}`, {
+            params: { company_code: userData?.company_code }
+          });
           
           if (response.data.success) {
             if (isViewing) {

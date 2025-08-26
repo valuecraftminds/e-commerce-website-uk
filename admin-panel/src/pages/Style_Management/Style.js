@@ -107,7 +107,7 @@ export default function Style() {
 
   const fetchVariants = useCallback(async (styleNumber) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}`);
+      const response = await fetch(`${BASE_URL}/api/admin/styles/get-style-variants/${styleNumber}?company_code=${company_code}`);
       const data = await response.json();
       if (data.success) {
         setVariants(data.variants);
@@ -115,7 +115,7 @@ export default function Style() {
     } catch (err) {
       setError('Error fetching variants');
     }
-  }, []);
+  }, [company_code]);
 
   const fetchColors = useCallback(async () => {
     try {
