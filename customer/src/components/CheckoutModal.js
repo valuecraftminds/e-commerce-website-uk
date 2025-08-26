@@ -402,6 +402,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
       cartItems = [{
         variant_id: product.variant_id ?? product.id,
         sku: product.sku ?? product.code,
+        style_number: product.style_number ?? product.styleNumber ?? null,
         quantity: qty,
         unit_price: unit,
         total_price: unit * qty
