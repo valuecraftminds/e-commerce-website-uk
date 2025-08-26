@@ -112,6 +112,13 @@ export default function ProductDetails() {
 
       const variantData = response.data;
       
+      // Check if variantData exists and has stock_qty property
+      if (!variantData || variantData.stock_qty === undefined || variantData.stock_qty === null) {
+        setStockStatus('error');
+        setStockError('This item is currently out of stock');
+        return null;
+      }
+      
       // Check stock availability
       if (variantData.stock_qty <= 0) {
         setStockStatus('out_of_stock');
@@ -677,7 +684,7 @@ export default function ProductDetails() {
                     >
                       {stockError}
                     </Alert>
-                  ) : stockStatus === 'in_stock' && (
+                  ) : stockStatus === 'in_stock' && selectedVariant && (
                     <div className="text-success">
                       <i className="fas fa-check-circle"></i> {selectedVariant.stock_qty} items are in stock 
                     </div>
