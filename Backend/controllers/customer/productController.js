@@ -329,45 +329,49 @@ const productController = {
   },
 
 
-// Get all styles that have variants with offer_price
-  getStylesWithOfferPrice: (req, res) => {
-    const { company_code } = req.query || req.params;
+  // Get all styles that have variants with offer_price
+    getStylesWithOfferPrice: (req, res) => {
+      const { company_code } = req.query || req.params;
 
-    if (!company_code) {
-      return res.status(400).json({ error: 'Company code is required' });
-    }
-
-    const sql = `
-    SELECT 
-      s.*,
-      c.category_name,
-      c.category_id,
-      parent_cat.category_name as parent_category_name,
-      sv.sale_price,
-      sv.offer_price,
-      COUNT(DISTINCT sv.variant_id) as variant_count,
-      ROUND(((sv.sale_price - sv.offer_price) / sv.sale_price) * 100, 2) as discount_percentage
-    FROM styles s
-    LEFT JOIN categories c ON s.category_id = c.category_id
-    LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
-    INNER JOIN style_variants sv ON s.style_number = sv.style_number 
-    WHERE sv.is_active = 1 
-    AND sv.offer_price IS NOT NULL 
-    AND sv.offer_price > 0
-    AND s.approved = 'yes' 
-    AND s.company_code = ?
-    GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
-    ORDER BY discount_percentage DESC, s.created_at DESC
-  `;
-
-    db.query(sql, [company_code], (err, results) => {
-      if (err) {
-        console.error('Error retrieving styles with offer price:', err);
-        return res.status(500).json({ error: 'Server error' });
+      if (!company_code) {
+        return res.status(400).json({ error: 'Company code is required' });
       }
-      res.status(200).json(results);
-    });
-  },
+
+      const sql = `
+      SELECT 
+        s.*,
+        c.category_name,
+        c.category_id,
+        parent_cat.category_name as parent_category_name,
+        sv.sale_price,
+        sv.offer_price,
+        sv.offer_start_date,
+        sv.offer_end_date,
+        COUNT(DISTINCT sv.variant_id) as variant_count,
+        ROUND(((sv.sale_price - sv.offer_price) / sv.sale_price) * 100, 2) as discount_percentage
+      FROM styles s
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
+      INNER JOIN style_variants sv ON s.style_number = sv.style_number 
+      WHERE sv.is_active = 1 
+      AND sv.offer_price IS NOT NULL 
+      AND sv.offer_price > 0
+      AND s.approved = 'yes' 
+      AND s.company_code = ?
+      AND (sv.offer_end_date IS NULL OR sv.offer_end_date > NOW())
+      GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image, sv.offer_start_date, sv.offer_end_date
+      ORDER BY discount_percentage DESC, s.created_at DESC
+    `;
+
+      db.query(sql, [company_code], (err, results) => {
+        if (err) {
+          console.error('Error retrieving styles with offer price:', err);
+          return res.status(500).json({ error: 'Server error' });
+        }
+        res.status(200).json(results);
+      });
+    },
+
 
 
   // GET similar products by category (exclude current product)
