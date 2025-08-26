@@ -452,6 +452,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
         order_items: cartItems.map(item => ({
           variant_id: item.variant_id,
           sku: item.sku,
+          style_number: item.style_number,
           quantity: item.quantity,
           unit_price: item.unit_price ?? item.price,   // tolerate both shapes
           total_price: item.total_price ?? (Number(item.unit_price ?? item.price) * Number(item.quantity))
