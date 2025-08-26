@@ -368,7 +368,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
 
   // 1. Calculate shipping fee function
   const calculateShippingFee = () => {
-    return 10.00; // fixed shipping fee
+    return 5.00; // fixed shipping fee
   };
 
   // 2. Calculate tax function
@@ -393,6 +393,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
     const itemsFromCart = Array.isArray(cart) ? cart : [];
 
     let cartItems = [];
+    let subtotal = 0;
 
     if (isDirectBuy && product) {
       // Direct Buy: ignore cart, checkout only this product
@@ -405,24 +406,19 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
         unit_price: unit,
         total_price: unit * qty
       }];
+      // For direct buy, calculate subtotal from product
+      subtotal = unit * qty;
+
     } else if (itemsFromCart && itemsFromCart.length > 0) {
       // Normal cart checkout
       cartItems = itemsFromCart;
-    }  else {
-      setError('Your cart is empty and no product was provided.');
-      return;
-    }
 
-
-    // - when checkout from cart, prefer summary values, fallback to recompute.
-    // - when directly checkout from product details page, compute from cartItems.
-    let subtotal = 0;
-    if (itemsFromCart.length > 0) {
-      const s = summary?.original_amount ?? summary?.total_amount;
-      const parsed = parseFloat(s ?? 0);
-      if (!Number.isNaN(parsed) && parsed > 0) {
-        subtotal = parsed;
+      // Use pre-calculated summary values from cart's Order Summary
+      if (summary?.original_amount || summary?.total_amount || summary?.subtotal) {
+        // Use the subtotal from cart summary
+        subtotal = Number(summary.subtotal ?? summary.original_amount ?? summary.total_amount ?? 0);
       } else {
+        // Fallback: calculate from cart items if summary not available
         subtotal = itemsFromCart.reduce((acc, it) => {
           const unit = Number(it.unit_price ?? it.price ?? 0);
           const qty = Number(it.quantity ?? 0);
@@ -430,8 +426,9 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
           return acc + total;
         }, 0);
       }
-    } else {
-      subtotal = cartItems.reduce((acc, it) => acc + Number(it.total_price || 0), 0);
+    }  else {
+      setError('Your cart is empty and no product was provided.');
+      return;
     }
 
     const shippingFee = calculateShippingFee();
@@ -866,34 +863,41 @@ return (
                       // Calculate totals based on cart or product
                       let subtotal = 0;
                       
-                      if (Array.isArray(cart) && cart.length > 0) {
-                        subtotal = cart.reduce((sum, item) => {
-                          const price = Number(item.price || 0);
-                          const quantity = Number(item.quantity || 1);
-                          return sum + (price * quantity);
-                        }, 0);
-                      } else if (product) {
+                      if (isDirectBuy && product) {
+                        // Direct buy: calculate from product
                         const price = Number(product.price || 0);
                         const quantity = Number(product.quantity || 1);
                         subtotal = price * quantity;
+                      } else if (Array.isArray(cart) && cart.length > 0) {
+                        // Cart checkout: prioritize summary data
+                        if (summary?.subtotal || summary?.original_amount || summary?.total_amount) {
+                          subtotal = Number(summary.subtotal ?? summary.original_amount ?? summary.total_amount ?? 0);
+                        } else {
+                          // Fallback calculation
+                          subtotal = cart.reduce((sum, item) => {
+                            const price = Number(item.price || 0);
+                            const quantity = Number(item.quantity || 1);
+                            return sum + (price * quantity);
+                          }, 0);
+                        }
                       }
 
-                      const shippingCost = calculateShippingFee(subtotal);
+                      const shippingCost = calculateShippingFee();
                       const tax = calculateTax(subtotal);
                       const total = subtotal + shippingCost + tax;
 
                       return (
                         <Card className="cart-summary">
                           <Card.Header>
-                            <h5 className="mb-0">📋 Order Summary</h5>
+                            <h5 className="mb-0">Order Summary</h5>
                           </Card.Header>
                           <Card.Body>
                             <div className="d-flex justify-content-between mb-3">
-                              <span>💰 Subtotal:</span>
+                              <span>Subtotal:</span>
                               <span className="fw-bold">{formatPrice(subtotal)}</span>
                             </div>
                             <div className="d-flex justify-content-between mb-3">
-                              <span>🚚 Shipping:</span>
+                              <span>Shipping:</span>
                               <span className="fw-bold">
                                 {shippingCost === 0 ? (
                                   <span className="text-success">FREE</span>
@@ -903,14 +907,14 @@ return (
                               </span>
                             </div>
                             <div className="d-flex justify-content-between mb-3">
-                              <span>🧾 Tax:</span>
+                              <span>Tax:</span>
                               <span className="fw-bold">{formatPrice(tax)}</span>
                             </div>
                             
                             <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
                                 
                             <div className="d-flex justify-content-between mb-4">
-                              <strong style={{fontSize: '1.3rem'}}>💎 Total:</strong>
+                              <strong style={{fontSize: '1.3rem'}}>Total:</strong>
                               <strong style={{fontSize: '1.3rem'}}>{formatPrice(total)}</strong>
                             </div>
                           </Card.Body>

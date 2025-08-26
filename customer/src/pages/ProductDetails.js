@@ -862,16 +862,27 @@ export default function ProductDetails() {
         </div>
       )}
     </Container>
-
       <CheckoutModal
         show={showCheckoutModal}
-        value={product}
+        value={product ? {
+          ...product,
+          price: product.offer_price && product.offer_price !== "" 
+                ? product.offer_price 
+                : product.sale_price,
+          variant_id: selectedVariant?.variant_id || product.style_id,
+          id: product.style_id,
+          quantity: quantity,
+          sku: selectedVariant?.sku || product.sku,
+          selectedSize,
+          selectedColor,
+          selectedColorName
+        } : null}
         onHide={() => setShowCheckoutModal(false)}
-        isDirectBuy={true}
         onSubmit={(data) => {
-          console.log('Checkout data:', data);
+          console.log('Order submitted:', data);
           setShowCheckoutModal(false);
         }}
+        isDirectBuy={true}
       />
     </div>
   );
