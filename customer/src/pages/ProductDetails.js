@@ -158,7 +158,7 @@ export default function ProductDetails() {
   const fetchProductReviews = async () => {
     try {
       setLoadingReviews(true);
-      const response = await axios.get(`${BASE_URL}/api/customer/feedback/${styleId}`, {
+      const response = await axios.get(`${BASE_URL}/api/customer/feedback/reviews/${styleId}`, {
         params: { company_code: COMPANY_CODE }
       });
       setReviews(response.data.reviews || []);
@@ -265,8 +265,14 @@ export default function ProductDetails() {
       if (selectedColor && selectedSize && product) {
         const variant = await getVariantInfo(selectedColor, selectedSize);
         setSelectedVariant(variant);
+        
+        // Reset quantity to 1 when variant changes, but check if current quantity exceeds new stock
+        if (variant?.stock_qty && quantity > variant.stock_qty) {
+          setQuantity(Math.min(quantity, variant.stock_qty));
+        }
       } else {
         setSelectedVariant(null);
+        setQuantity(1); // Reset to 1 when no variant is selected
       }
     };
 
@@ -284,6 +290,22 @@ export default function ProductDetails() {
 
   const handleAddToCart = async () => {
     try {
+      // Validate stock quantity before adding to cart
+      if (selectedVariant && quantity > selectedVariant.stock_qty) {
+        showNotify({
+          title: "Insufficient Stock",
+          message: `Only ${selectedVariant.stock_qty} items available in stock. Please reduce the quantity.`,
+          type: "error",
+          customButtons: [
+            {
+              label: "Ok",
+              onClick: () => {}
+            }
+          ]
+        });
+        return;
+      }
+
       // Use the SKU from the selected variant, fallback to product SKU
       const skuToUse = selectedVariant?.sku || product.sku;
       
@@ -370,6 +392,23 @@ export default function ProductDetails() {
       })
       return;
     }
+
+    // Validate stock quantity before proceeding to checkout
+    if (selectedVariant && quantity > selectedVariant.stock_qty) {
+      showNotify({
+        title: "Insufficient Stock",
+        message: `Only ${selectedVariant.stock_qty} items available in stock. Please reduce the quantity.`,
+        type: "error",
+        customButtons: [
+          {
+            label: "Ok",
+            onClick: () => {}
+          }
+        ]
+      });
+      return;
+    }
+
     setShowCheckoutModal(true);
   };
 
@@ -640,7 +679,7 @@ export default function ProductDetails() {
                     </Alert>
                   ) : stockStatus === 'in_stock' && (
                     <div className="text-success">
-                      <i className="fas fa-check-circle"></i> In Stock
+                      <i className="fas fa-check-circle"></i> {selectedVariant.stock_qty} items are in stock 
                     </div>
                   )}
                 </div>
@@ -651,23 +690,51 @@ export default function ProductDetails() {
                 <input
                   type="number"
                   min="1"
+                  max={selectedVariant?.stock_qty}
                   className="form-control w-25 input-product-quantity"
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                   value={quantity}
+                  onChange={(e) => {
+                    const val = e.target.value;
+
+                    // Allow empty string while typing
+                    if (val === "") {
+                      setQuantity("");
+                      return;
+                    }
+
+                    const num = parseInt(val, 10);
+                    const maxStock = selectedVariant?.stock_qty;
+
+                    // If user types less than 1, force it to 1
+                    if (isNaN(num) || num < 1) {
+                      setQuantity(1);
+                    } else if (num > maxStock) {
+                      // If user tries to enter more than available stock, limit to stock quantity
+                      setQuantity(maxStock);
+                    } else {
+                      setQuantity(num);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // If left empty, reset to 1 on blur
+                    if (e.target.value === "") {
+                      setQuantity(1);
+                    }
+                  }}
                 />
               </div>
 
               <div className="btns">
                 <Button 
                   className="btn-custom-primary me-2" 
-                  disabled={!selectedSize || !selectedColor || quantity < 1} 
+                  disabled={!selectedSize || !selectedColor || quantity < 1 || (selectedVariant && quantity > selectedVariant.stock_qty) || stockStatus === 'out_of_stock'} 
                   onClick={handleAddToCart}
                 >
                   Add to Cart
                 </Button>
                 <Button 
                   className="btn-custom-primary" 
-                  disabled={!selectedSize || !selectedColor || quantity < 1} 
+                  disabled={!selectedSize || !selectedColor || quantity < 1 || (selectedVariant && quantity > selectedVariant.stock_qty) || stockStatus === 'out_of_stock'} 
                   onClick={() => handleBuyNow(product)}
                 >
                   Buy Now
@@ -862,16 +929,27 @@ export default function ProductDetails() {
         </div>
       )}
     </Container>
-
       <CheckoutModal
         show={showCheckoutModal}
-        value={product}
+        value={product ? {
+          ...product,
+          price: product.offer_price && product.offer_price !== "" 
+                ? product.offer_price 
+                : product.sale_price,
+          variant_id: selectedVariant?.variant_id || product.style_id,
+          id: product.style_id,
+          quantity: quantity,
+          sku: selectedVariant?.sku || product.sku,
+          selectedSize,
+          selectedColor,
+          selectedColorName
+        } : null}
         onHide={() => setShowCheckoutModal(false)}
-        isDirectBuy={true}
         onSubmit={(data) => {
-          console.log('Checkout data:', data);
+          console.log('Order submitted:', data);
           setShowCheckoutModal(false);
         }}
+        isDirectBuy={true}
       />
     </div>
   );
