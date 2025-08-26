@@ -326,7 +326,7 @@ export default function ProductDetails() {
                 ? product.offer_price 
                 : product.sale_price
       });
-
+      console.log("Add to cart result:", result);
       showNotify({
         title: "Added to Cart",
         message: (

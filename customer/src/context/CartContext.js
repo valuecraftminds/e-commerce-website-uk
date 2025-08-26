@@ -29,44 +29,6 @@ const withSyncedTotals = (item) => {
   return { ...item, total_price, cart_key };
 };
 
-// const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
-//   // Only include items with stock > 0 for total_items
-//   const total_items = items.reduce((sum, item) => {
-//     const stockQty = Number(item?.quantity ?? 0);
-//     return stockQty > 0 ? sum + Number(item.quantity || 0) : sum;
-//   }, 0);
-  
-//   // Only include items with stock > 0 in the price calculation
-//   const base = items.reduce((s, it) => {
-//     const stockQty = Number(it?.quantity ?? 0);
-//     if (stockQty > 0) {
-//       return s + getUnitPrice(it) * Number(it.quantity || 0);
-//     }
-//     return s;
-//   }, 0);
-  
-//   // Count items that are in stock
-//   const available_items = items.reduce((s, it) => {
-//     const stockQty = Number(it?.quantity ?? 0);
-//     return stockQty > 0 ? s + Number(it.quantity || 0) : s;
-//   }, 0);
-  
-//   // Count items that are out of stock
-//   const out_of_stock_items = items.reduce((s, it) => {
-//     const stockQty = Number(it?.quantity ?? 0);
-//     return stockQty === 0 ? s + Number(it.quantity || 0) : s;
-//   }, 0);
-  
-//   return { 
-//     total_items, 
-//     available_items, 
-//     out_of_stock_items,
-//     total_amount: (base * exchangeRate).toFixed(2), 
-//     currency_symbol: currencySymbol, 
-//     original_amount: base.toFixed(2) 
-//   };
-// };
-
 // Replace your existing calculateSummary function with this:
 const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
   // Helper function to check if item is in stock

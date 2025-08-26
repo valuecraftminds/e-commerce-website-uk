@@ -224,6 +224,7 @@ const CheckoutController = {
                 customer_id,
                 variant_id, 
                 sku,
+                style_number,
                 quantity, 
                 unit_price, 
                 total_price, 
@@ -238,6 +239,7 @@ const CheckoutController = {
               customer_id,
               item.variant_id, 
               item.sku,
+              item.style_number,
               item.quantity,
               item.unit_price, 
               item.total_price, 
@@ -267,7 +269,8 @@ const CheckoutController = {
                   sku,
                   ordered_qty,
                   created_at,
-                  order_item_id
+                  order_item_id,
+                  style_number
                 ) VALUES ?
               `;
 
@@ -278,7 +281,8 @@ const CheckoutController = {
                 item.sku,
                 item.quantity,
                 new Date(),
-                startingOrderItemId + index // Calculate the actual order_item_id
+                startingOrderItemId + index, // Calculate the actual order_item_id
+                item.style_number,
               ]);
 
               db.query(bookingQuery, [bookingValues], (bookingErr, bookingResult) => {
