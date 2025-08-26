@@ -10,6 +10,8 @@
     "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.2",
     "lucide-react": "^0.536.0",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
@@ -19,6 +21,7 @@
     "react-phone-input-2": "^2.15.1",
     "react-router-dom": "^7.7.0",
     "react-scripts": "5.0.1",
+    "react-to-print": "^3.1.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

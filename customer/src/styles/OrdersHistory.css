@@ -175,6 +175,9 @@
   padding: 16px 20px;
   background-color: #f8f9fa;
   border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .order-summary {
@@ -187,6 +190,37 @@
 
 .order-items-count {
   font-weight: 500;
+}
+
+.order-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.download-invoice-btn {
+  background-color: #670a8b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.download-invoice-btn:hover {
+  background-color: #530870;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(83, 8, 112, 0.3);
+}
+
+.download-invoice-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(97, 53, 255, 0.3);
 }
 
 .order-total {

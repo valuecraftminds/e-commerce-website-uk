@@ -117,7 +117,68 @@ export default function OrdersHistory() {
         navigate(`/orders/${orderId}`);
     };
 
-    // Map tab to order status
+  // Handle invoice download
+  const handleDownloadInvoice = async (order) => {
+    try {
+      console.log('Downloading invoice for order:', order.order_id);
+      
+      const config = getAxiosConfig();
+      
+      // Create a link to download the PDF directly
+      const downloadUrl = `${BASE_URL}/api/customer/invoices/generate/${order.order_id}`;
+      const params = new URLSearchParams(config.params).toString();
+      const fullUrl = `${downloadUrl}?${params}`;
+      
+      // Add authorization header if available
+      const token = getAuthToken();
+      
+      if (token) {
+        // Use fetch to download with authorization
+        const response = await fetch(fullUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Create blob from response
+          const blob = await response.blob();
+          
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `invoice-${order.order_number || order.order_id}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          console.log(`Invoice downloaded successfully! Order: ${order.order_number || order.order_id}`);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate invoice');
+        }
+      } else {
+        // For non-authenticated users, open in new window
+        window.open(fullUrl, '_blank');
+      }
+
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      if (error.message.includes('401') || error.message.includes('authentication')) {
+        alert('❌ Please log in to download invoice');
+      } else if (error.message.includes('404')) {
+        alert('❌ Order not found or invoice cannot be generated');
+      } else {
+        alert(`❌ Failed to download invoice: ${error.message}`);
+      }
+    }
+  };   
+  
+  // Map tab to order status
     const getStatusByTab = (tab) => {
         const statusMap = {
             'pending': ['pending'],
@@ -275,6 +336,18 @@ export default function OrdersHistory() {
                     </span>
                     <span className="order-total">{formatPrice(order.total_amount)}</span>
                     <span className="order-id">Order ID: {order.order_number}</span>
+                </div>
+                <div className="order-actions">
+                    <button 
+                        className="download-invoice-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadInvoice(order);
+                        }}
+                        title="Download Invoice"
+                    >
+                        📄 Download Invoice
+                    </button>
                 </div>
             </div>
         </div>
