@@ -49,10 +49,11 @@ export default function OrdersHistory() {
     const sidebarItems = [
         { id: 'all', label: 'All Orders', icon: PiPackage },
         { id: 'pending', label: 'Pending', icon: AiOutlineClockCircle },
-        { id: 'shipped', label: 'Shipped', icon: PiTruckFill },
+        // { id: 'shipped', label: 'Shipped', icon: PiTruckFill },
+        { id: 'issued', label: 'Issued', icon: AiOutlineClockCircle },
         { id: 'delivered', label: 'Delivered', icon: AiOutlineCheckCircle },
-        { id: 'reviewed', label: 'Reviewed', icon: AiOutlineStar },
-        { id: 'returned', label: 'Returned', icon: PiArrowCounterClockwiseBold }
+        // { id: 'reviewed', label: 'Reviewed', icon: AiOutlineStar },
+        { id: 'cancelled', label: 'Cancelled', icon: PiArrowCounterClockwiseBold }
     ];
 
     // Fetch all orders
@@ -120,11 +121,10 @@ export default function OrdersHistory() {
     const getStatusByTab = (tab) => {
         const statusMap = {
             'pending': ['pending'],
-            'shipped': ['shipped'],
+            'issued': ['issued'],
             'delivered': ['delivered'],
-            'reviewed': ['completed'],
-            'returned': ['returned'],
-        };
+            'cancelled': ['cancelled']
+         };
         return statusMap[tab] || null;
     };
 
@@ -182,11 +182,10 @@ export default function OrdersHistory() {
     // Get status display text
     const getStatusDisplayText = (status) => {
         const statusMap = {
-            'pending': 'Order placed',
-            'shipped': 'Shipped',
-            'delivered': 'Delivered',
-            'completed': 'Delivered',
-            'returned': 'Returned'
+           'pending': ['pending'],
+            'issued': ['issued'],
+            'delivered': ['delivered'],
+            'cancelled': ['cancelled']
         };
         return statusMap[status] || status;
     };
