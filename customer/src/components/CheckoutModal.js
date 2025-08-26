@@ -472,6 +472,14 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
         if (!isDirectBuy && itemsFromCart.length > 0) {
           clearCart();
         }
+
+        // Show success message with invoice option
+        const invoiceAvailable = data.invoice_number;
+        const orderNumber = data.order_number || data.order_id;
+        
+        console.log(` Payment successful! Order Number: ${orderNumber}`);
+    
+
         onSubmit?.(data);
         onHide?.();
       } else {
@@ -491,6 +499,56 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to download invoice for an order
+  const downloadInvoiceForOrder = async (orderId) => {
+    try {
+      const api = createAxios();
+      const downloadUrl = `${BASE_URL}/api/customer/invoices/generate/${orderId}`;
+      const params = new URLSearchParams({ company_code: COMPANY_CODE }).toString();
+      const fullUrl = `${downloadUrl}?${params}`;
+      
+      const token = getAuthToken();
+      
+      if (token) {
+        // Use fetch to download with authorization
+        const response = await fetch(fullUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Create blob from response
+          const blob = await response.blob();
+          
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `invoice-${orderId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          console.log('Invoice downloaded successfully for order:', orderId);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate invoice');
+        }
+      } else {
+        // For non-authenticated users, open in new window
+        window.open(fullUrl, '_blank');
+      }
+
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      throw error; // Re-throw to handle in calling function
     }
   };
 

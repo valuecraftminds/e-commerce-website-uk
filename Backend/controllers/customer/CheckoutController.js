@@ -261,7 +261,6 @@ const CheckoutController = {
               // Get the starting order_item_id from the insert result
               const startingOrderItemId = itemsResult.insertId;
 
-              // Insert bookings with correct order_item_id mapping
               const bookingQuery = `
                 INSERT INTO booking (
                   company_code,
@@ -343,17 +342,41 @@ const CheckoutController = {
                       });
                     }
 
-                    // Success response
-                    res.status(201).json({ 
-                      message: 'Order created successfully',
-                      order_id: orderId,
-                      order_number: orderNumber,
-                      address_id: finalAddressId,
-                      payment_method_id: paymentMethodId,
-                      total_amount: total_amount,
-                      order_status: 'pending',
-                      booking_count: bookingResult.affectedRows,
-                      payment_date: new Date(),
+                    // Generate invoice record
+                    const invoiceNumber = `INV-${orderNumber}-${Date.now()}`;
+                    const invoiceQuery = `
+                      INSERT INTO invoices (
+                        company_code, customer_id, order_id, invoice_number, 
+                        invoice_date, total_amount, created_at
+                      ) VALUES (?, ?, ?, ?, NOW(), ?, NOW())
+                    `;
+
+                    db.query(invoiceQuery, [
+                      company_code, 
+                      customer_id, 
+                      orderId, 
+                      invoiceNumber, 
+                      total_amount
+                    ], (invoiceErr, invoiceResult) => {
+                      if (invoiceErr) {
+                        console.error('Failed to create invoice record:', invoiceErr);
+                      } else {
+                        console.log('Invoice record created successfully:', invoiceNumber);
+                      }
+
+                      // Success response (regardless of invoice creation)
+                      res.status(201).json({ 
+                        message: 'Order created successfully',
+                        order_id: orderId,
+                        order_number: orderNumber,
+                        address_id: finalAddressId,
+                        payment_method_id: paymentMethodId,
+                        total_amount: total_amount,
+                        order_status: 'pending',
+                        booking_count: bookingResult.affectedRows,
+                        payment_date: new Date(),
+                        invoice_number: invoiceErr ? null : invoiceNumber, // Include invoice number if successful
+                      });
                     });
                   });
                 });
