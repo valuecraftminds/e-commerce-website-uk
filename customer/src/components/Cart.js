@@ -36,12 +36,27 @@ const Cart = () => {
   const handleQuantityChange = async (cart_id, newQuantity) => {
     if (newQuantity < 1) return;
     
+    // Find the item to check stock
+    const item = cart.find(item => item.cart_id === cart_id);
+    if (item && newQuantity > item.stock_qty) {
+      showNotify({
+        title: 'Stock Limit Exceeded',
+        message: `Only ${item.stock_qty} items available in stock.`,
+        type: 'warning'
+      });
+      return;
+    }
+    
     setUpdatingItems(prev => new Set(prev).add(cart_id));
     
     try {
       const result = await updateQuantity(cart_id, newQuantity);
       if (!result.success) {
-        console.error('Failed to update quantity:', result.message);
+        showNotify({
+          title: 'Update Failed',
+          message: result.message || 'Failed to update quantity',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -232,6 +247,15 @@ return (
                                   <strong>Material:</strong> {item.material_name}
                                 </small>
                               )}
+                              <small className={`d-block mt-1 ${item.stock_qty <= 5 ? 'text-warning' : 'text-success'}`}>
+                                <strong>Stock:</strong> {item.stock_qty} available
+                                {item.stock_qty <= 5 && item.stock_qty > 0 && (
+                                  <span className="text-warning ms-1">(Low stock)</span>
+                                )}
+                                {item.stock_qty === 0 && (
+                                  <span className="text-danger ms-1">(Out of stock)</span>
+                                )}
+                              </small>
                             </div>
                           </Col>
                           
@@ -254,7 +278,7 @@ return (
                                   size="sm"
                                   onClick={() => handleQuantityChange(item.cart_id, item.quantity - 1)}
                                   disabled={
-                                    item.quantity >= item.stock_qty ||
+                                    item.quantity <= 1 ||
                                     updatingItems.has(item.cart_id) ||
                                     removingItems.has(item.cart_id)
                                   }
@@ -277,7 +301,7 @@ return (
                                   size="sm"
                                   onClick={() => handleQuantityChange(item.cart_id, item.quantity + 1)}
                                   disabled={
-                                    item.quantity >= item.stock_quantity || 
+                                    item.quantity >= item.stock_qty || 
                                     updatingItems.has(item.cart_id) ||
                                     removingItems.has(item.cart_id)
                                   }
