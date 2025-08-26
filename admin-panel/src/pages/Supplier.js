@@ -11,6 +11,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 export default function Supplier() {
   const { userData } = useContext(AuthContext);
   const [suppliers, setSuppliers] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
@@ -23,10 +24,26 @@ export default function Supplier() {
     bank_name: '',
     branch: '',
     account_number: '',
-    payment_terms: 'Cash', // Updated field name
+    payment_terms: 'Cash',
     credit_period: '',
-    advance_percentage: ''
+    advance_percentage: '',
+    currency_id: ''
   });
+  // Fetch currencies for dropdown
+  useEffect(() => {
+    if (!userData?.company_code) return;
+    axios.get(`${BASE_URL}/api/admin/currencies/get-currencies`, {
+      params: { company_code: userData.company_code }
+    })
+      .then(res => {
+        if (res.data.success && Array.isArray(res.data.currencies)) {
+          setCurrencies(res.data.currencies);
+        } else {
+          setCurrencies([]);
+        }
+      })
+      .catch(() => setCurrencies([]));
+  }, [userData?.company_code]);
   const [editingId, setEditingId] = useState(null);
 
   const fetchSuppliers = useCallback(async () => {
@@ -58,7 +75,8 @@ export default function Supplier() {
       account_number: '',
       payment_terms: 'Cash',
       credit_period: '',
-      advance_percentage: ''
+      advance_percentage: '',
+      currency_id: ''
     });
     setEditingId(null);
   };
@@ -78,7 +96,8 @@ export default function Supplier() {
       account_number: supplier.account_number || '',
       payment_terms: supplier.payment_terms,
       credit_period: supplier.credit_period || '',
-      advance_percentage: supplier.advance_percentage || ''
+      advance_percentage: supplier.advance_percentage || '',
+      currency_id: supplier.currency_id || ''
     });
     setEditingId(supplier.supplier_id);
     setShowModal(true);
@@ -170,44 +189,52 @@ export default function Supplier() {
             <th>BRN</th>
             <th>VAT</th>
             <th>Bank Details</th>
+            <th>Currency</th>
             <th>Payment Terms</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filteredSuppliers.map((supplier, index) => (
-            <tr key={supplier.supplier_id}>
-              <td>{index + 1}</td>
-              <td>{supplier.supplier_name}</td>
-              <td>{supplier.phone}</td>
-              <td>{supplier.email}</td>
-              <td>{supplier.address}</td>
-              <td>{supplier.brn}</td>
-              <td>{supplier.vat}</td>
-              <td>
-                {supplier.bank_name && (
-                  <div>
-                    <div><strong>{supplier.bank_name}</strong></div>
-                    <div>{supplier.branch}</div>
-                    <div>{supplier.account_number}</div>
-                  </div>
-                )}
-              </td>
-              <td>
-                <div>{supplier.payment_terms}</div>
-                {supplier.payment_terms === 'Credit' && supplier.credit_period && (
-                  <small>({supplier.credit_period} days)</small>
-                )}
-                {supplier.payment_terms === 'Advance' && supplier.advance_percentage && (
-                  <small>({supplier.advance_percentage}%)</small>
-                )}
-              </td>
-              <td>
-                <FaEdit className="action-icon edit" onClick={() => handleEdit(supplier)} />
-                <FaTrash className="action-icon delete" onClick={() => handleDelete(supplier.supplier_id)} />
-              </td>
-            </tr>
-          ))}
+          {filteredSuppliers.map((supplier, index) => {
+            // Find currency object for this supplier
+            const currency = currencies.find(cur => String(cur.currency_id) === String(supplier.currency_id));
+            return (
+              <tr key={supplier.supplier_id}>
+                <td>{index + 1}</td>
+                <td>{supplier.supplier_name}</td>
+                <td>{supplier.phone}</td>
+                <td>{supplier.email}</td>
+                <td>{supplier.address}</td>
+                <td>{supplier.brn}</td>
+                <td>{supplier.vat}</td>
+                <td>
+                  {supplier.bank_name && (
+                    <div>
+                      <div><strong>{supplier.bank_name}</strong></div>
+                      <div>{supplier.branch}</div>
+                      <div>{supplier.account_number}</div>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {currency ? `${currency.currency_name} (${currency.short_name})` : ''}
+                </td>
+                <td>
+                  <div>{supplier.payment_terms}</div>
+                  {supplier.payment_terms === 'Credit' && supplier.credit_period && (
+                    <small>({supplier.credit_period} days)</small>
+                  )}
+                  {supplier.payment_terms === 'Advance' && supplier.advance_percentage && (
+                    <small>({supplier.advance_percentage}%)</small>
+                  )}
+                </td>
+                <td>
+                  <FaEdit className="action-icon edit" onClick={() => handleEdit(supplier)} />
+                  <FaTrash className="action-icon delete" onClick={() => handleDelete(supplier.supplier_id)} />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -225,6 +252,21 @@ export default function Supplier() {
                 onChange={(e) => setFormData({...formData, supplier_name: e.target.value})}
                 required
               />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Currency</Form.Label>
+              <Form.Select
+                value={formData.currency_id}
+                onChange={e => setFormData({ ...formData, currency_id: e.target.value })}
+                required
+              >
+                <option value="">Select currency</option>
+                {currencies.map(cur => (
+                  <option key={cur.currency_id} value={cur.currency_id}>
+                    {cur.currency_name} ({cur.short_name})
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             
             <Form.Group className="mb-3">

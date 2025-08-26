@@ -34,7 +34,8 @@ const SupplierController = {
             payment_terms,
             credit_period,
             advance_percentage,
-            created_by 
+            created_by,
+            currency_id
         } = req.body;
 
         if (!company_code || !supplier_name || !payment_terms || !created_by) {
@@ -83,8 +84,9 @@ const SupplierController = {
                         payment_terms,
                         credit_period,
                         advance_percentage,
-                        created_by
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        created_by,
+                        currency_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         company_code, 
                         supplier_name, 
@@ -99,7 +101,8 @@ const SupplierController = {
                         payment_terms,
                         credit_period,
                         advance_percentage,
-                        created_by
+                        created_by,
+                        currency_id
                     ],
                     (err, result) => {
                         if (err) {
@@ -128,7 +131,8 @@ const SupplierController = {
             payment_terms,
             credit_period,
             advance_percentage,
-            company_code 
+            company_code,
+            currency_id
         } = req.body;
 
         if (!supplier_name || !payment_terms || !company_code) {
@@ -174,6 +178,7 @@ const SupplierController = {
                         credit_period = ?,
                         advance_percentage = ?,
                         company_code = ?, 
+                        currency_id = ?,
                         updated_at = NOW() 
                     WHERE supplier_id = ?`,
                     [
@@ -190,6 +195,7 @@ const SupplierController = {
                         credit_period,
                         advance_percentage,
                         company_code, 
+                        currency_id,
                         supplier_id
                     ],
                     (err, result) => {
