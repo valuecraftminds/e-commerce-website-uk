@@ -11,10 +11,9 @@ router.get('/all-styles', checkCompanyCode, productController.getAllStyles);
 router.get('/product/:style_id', checkCompanyCode, productController.getProductDetails);
 router.get('/product-listings', checkCompanyCode, productController.getProductListings);
 router.get('/search', checkCompanyCode, productController.searchProducts);
+router.get('/variant-info', checkCompanyCode, productController.getVariantInfo);
 
 router.get('/offers', checkCompanyCode, productController.getStylesWithOfferPrice);
 router.get('/similar-products/:style_id', checkCompanyCode, productController.getSimilarProducts);
-
-router.get('/reviews/:style_id', checkCompanyCode, productController.getReview);
 
 module.exports = router;

@@ -24,46 +24,87 @@ const withSyncedTotals = (item) => {
   const price = getUnitPrice(item);
   const cart_key = item?.cart_key ?? buildCartKey(item);
 
-  const stockQty = Number(item?.stock_quantity ?? 0);
+  const stockQty = Number(item?.quantity ?? 0);
   const total_price = stockQty > 0 ? price * qty : 0;
   return { ...item, total_price, cart_key };
 };
 
+// const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
+//   // Only include items with stock > 0 for total_items
+//   const total_items = items.reduce((sum, item) => {
+//     const stockQty = Number(item?.quantity ?? 0);
+//     return stockQty > 0 ? sum + Number(item.quantity || 0) : sum;
+//   }, 0);
+  
+//   // Only include items with stock > 0 in the price calculation
+//   const base = items.reduce((s, it) => {
+//     const stockQty = Number(it?.quantity ?? 0);
+//     if (stockQty > 0) {
+//       return s + getUnitPrice(it) * Number(it.quantity || 0);
+//     }
+//     return s;
+//   }, 0);
+  
+//   // Count items that are in stock
+//   const available_items = items.reduce((s, it) => {
+//     const stockQty = Number(it?.quantity ?? 0);
+//     return stockQty > 0 ? s + Number(it.quantity || 0) : s;
+//   }, 0);
+  
+//   // Count items that are out of stock
+//   const out_of_stock_items = items.reduce((s, it) => {
+//     const stockQty = Number(it?.quantity ?? 0);
+//     return stockQty === 0 ? s + Number(it.quantity || 0) : s;
+//   }, 0);
+  
+//   return { 
+//     total_items, 
+//     available_items, 
+//     out_of_stock_items,
+//     total_amount: (base * exchangeRate).toFixed(2), 
+//     currency_symbol: currencySymbol, 
+//     original_amount: base.toFixed(2) 
+//   };
+// };
+
+// Replace your existing calculateSummary function with this:
 const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
-  // Only include items with stock > 0 for total_items
-  const total_items = items.reduce((sum, item) => {
-    const stockQty = Number(item?.stock_quantity ?? 0);
-    return stockQty > 0 ? sum + Number(item.quantity || 0) : sum;
+  // Helper function to check if item is in stock
+  const isInStock = (item) => {
+    const stockQty = Number(item?.stock_qty ?? 0);
+    return stockQty > 0;
+  };
+
+  // Separate in-stock and out-of-stock items
+  const inStockItems = items.filter(isInStock);
+  const outOfStockItems = items.filter(item => !isInStock(item));
+
+  // Only count in-stock items for totals
+  const total_items = inStockItems.reduce((sum, item) => {
+    return sum + Number(item.quantity || 0);
   }, 0);
   
-  // Only include items with stock > 0 in the price calculation
-  const base = items.reduce((s, it) => {
-    const stockQty = Number(it?.stock_quantity ?? 0);
-    if (stockQty > 0) {
-      return s + getUnitPrice(it) * Number(it.quantity || 0);
-    }
-    return s;
+  // Only include in-stock items in price calculation
+  const base = inStockItems.reduce((sum, item) => {
+    return sum + getUnitPrice(item) * Number(item.quantity || 0);
   }, 0);
   
-  // Count items that are in stock
-  const available_items = items.reduce((s, it) => {
-    const stockQty = Number(it?.stock_quantity ?? 0);
-    return stockQty > 0 ? s + Number(it.quantity || 0) : s;
+  // Count available vs out of stock quantities
+  const available_items = inStockItems.reduce((sum, item) => {
+    return sum + Number(item.quantity || 0);
   }, 0);
   
-  // Count items that are out of stock
-  const out_of_stock_items = items.reduce((s, it) => {
-    const stockQty = Number(it?.stock_quantity ?? 0);
-    return stockQty === 0 ? s + Number(it.quantity || 0) : s;
+  const out_of_stock_items = outOfStockItems.reduce((sum, item) => {
+    return sum + Number(item.quantity || 0);
   }, 0);
   
   return { 
-    total_items, 
-    available_items, 
-    out_of_stock_items,
-    total_amount: (base * exchangeRate).toFixed(2), 
+    total_items,           // Only in-stock items
+    available_items,       // Same as total_items
+    out_of_stock_items,    // Out-of-stock item quantities
+    total_amount: (base * exchangeRate).toFixed(2),  // Only in-stock items
     currency_symbol: currencySymbol, 
-    original_amount: base.toFixed(2) 
+    original_amount: base.toFixed(2)  // Only in-stock items
   };
 };
 
@@ -321,7 +362,6 @@ export const CartProvider = ({ children }) => {
               color_name: item.color_name || item.color?.name || null,
               image: item.image || null,
               currency: item.currency || 'USD',
-              product_url: item.product_url || null,
               tax: item.tax || 0.0,
               shipping_fee: item.shipping_fee || 0.0,
               is_available: item.is_available !== undefined ? item.is_available : true,
@@ -422,7 +462,7 @@ export const CartProvider = ({ children }) => {
         price: unitPrice,
         unit_price: unitPrice,
         quantity: item.quantity || 1,
-        stock_quantity: item.stock_quantity,
+        stock_qty: item.stock_qty,
         sku: item.sku,
         color_name: item.color?.name,
         color_code: item.color?.code,

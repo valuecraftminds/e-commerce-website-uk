@@ -205,12 +205,12 @@ const cartController = {
           s.description AS style_description, 
           s.image AS style_image,
           sv.sale_price AS variant_price, 
-          sv.stock_quantity, 
           sv.sku AS variant_sku,
           col.color_name AS variant_color, 
           sz.size_name, 
           m.material_name, 
-          f.fit_name
+          f.fit_name,
+          ss.stock_qty
         FROM cart c
         JOIN style_variants sv ON c.variant_id = sv.variant_id
         JOIN styles s ON s.style_number = sv.style_number
@@ -218,6 +218,7 @@ const cartController = {
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
         LEFT JOIN fits f ON sv.fit_id = f.fit_id
+        LEFT JOIN stock_summary ss ON sv.sku = ss.sku
         WHERE c.company_code = ?
           AND c.customer_id ${customer_id ? '= ?' : 'IS NULL'}
           AND s.approved = 'yes'
@@ -331,6 +332,10 @@ const cartController = {
     const { company_code } = req.query;
     const customer_id = req.user?.id || null;
 
+    if (!company_code) {
+      return res.status(400).json({ success: false, message: 'company_code is required' });
+    }
+
     try {
       const sql = `
         DELETE FROM cart 
@@ -342,8 +347,16 @@ const cartController = {
           console.error('Error clearing cart:', err);
           return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
         }
+        
+        const message = result.affectedRows > 0 
+          ? `Cart cleared successfully. ${result.affectedRows} item(s) removed.`
+          : 'Cart is already empty.';
 
-        res.json({ success: true, message: 'Cart cleared successfully', cleared_items: result.affectedRows });
+        res.json({ 
+          success: true, 
+          message: message, 
+          cleared_items: result.affectedRows 
+        });
       });
     } catch (error) {
       console.error('Error clearing cart:', error);

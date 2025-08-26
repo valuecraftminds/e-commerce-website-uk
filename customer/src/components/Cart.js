@@ -254,7 +254,7 @@ return (
                                   size="sm"
                                   onClick={() => handleQuantityChange(item.cart_id, item.quantity - 1)}
                                   disabled={
-                                    item.quantity <= 1 || 
+                                    item.quantity >= item.stock_qty ||
                                     updatingItems.has(item.cart_id) ||
                                     removingItems.has(item.cart_id)
                                   }
@@ -264,7 +264,7 @@ return (
                                 <Form.Control 
                                   readOnly
                                   min="1"
-                                  max={item.stock_quantity}
+                                  max={item.stock_qty}
                                   value={item.quantity}
                                   className="quantity-input-vertical"
                                   disabled={
@@ -324,19 +324,18 @@ return (
                        
                         
                         {/* Stock warnings */}
-                        {item.stock_quantity < 5 && item.stock_quantity > 0 && (
+                        {item.stock_qty < 6 && item.stock_qty > 0 && (
                           <Row className="mt-3">
                             <Col>
                               <Alert variant="warning" className="mb-0 py-2">
                                 <small>
-                                  ⚠️ Only {item.stock_quantity} items left in stock!
+                                  ⚠️ Only {item.stock_qty} items left in stock!
                                 </small>
                               </Alert>
                             </Col>
                           </Row>
                         )}
-                        
-                        {item.stock_quantity === 0 && (
+                        {(item.stock_qty === 0 || item.stock_qty === null) && (
                           <Row className="mt-3">
                             <Col>
                               <Alert variant="danger" className="mb-0 py-2">
@@ -368,7 +367,7 @@ return (
                     </Card.Header>
                     <Card.Body>
                       <div className="d-flex justify-content-between mb-3">
-                        <span>Items ({summary.total_items}):</span>
+                        <span> Available Items ({summary.total_items}):</span>
                         <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                       </div>
                       {isLoggedIn && (
@@ -412,6 +411,9 @@ return (
                       </div>
                     </Card.Body>
                   </Card>
+                   <div>
+                      <span className='d-flex text-danger text-muted mt-3' > {summary.out_of_stock_items} items are unavailable at the moment. </span>
+                    </div>
                 </Col>
               </Row>
             </>
