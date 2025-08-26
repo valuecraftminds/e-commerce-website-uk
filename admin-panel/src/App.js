@@ -36,6 +36,7 @@ import GRNDetails from './components/GRNDetails';
 import Location from './pages/Location';
 import AddGRN from './pages/AddGRN';
 import StyleAttributes from './pages/Style_Management/StyleAttributes';
+import WarehouseIssuing from './pages/WarehouseIssuing';
 
 // Create Sidebar Context for global sidebar state management
 export const SidebarContext = createContext();
@@ -174,7 +175,6 @@ function App() {
       {!hideHeader && <div className="main-header" style={{position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 1030}}><Header /></div>}
       <div className={`main-content ${!hideHeader ? 'with-header' : ''}`} style={{paddingTop: !hideHeader ? 64 : 0}}>
         <Routes>
-          {/* ...existing code... */}
           <Route path='/' element={<LoginPage />} />
           <Route path='/login' element={<LoginPage />} />
           <Route path='/vcm-admin-dashboard' element={<VcmAdminDashboard />} />
@@ -219,6 +219,7 @@ function App() {
 
           <Route path="/company-settings" element={<CompanySettings />} />
           <Route path="/approve-po" element={<ApprovePO />} />
+          <Route path="/warehouse/issuing" element={<WarehouseIssuing />} />
         </Routes>
       </div>
     </SidebarProvider>

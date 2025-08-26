@@ -72,8 +72,8 @@ export default function AddGRN() {
         setLoading(true);
 
         try {
-            // Fetch PO details
-            const response = await fetch(`${BASE_URL}/api/admin/grn/po-details/${po_number}`);
+            // Fetch PO details (add company_code)
+            const response = await fetch(`${BASE_URL}/api/admin/grn/po-details/${po_number}?company_code=${company_code}`);
             const data = await response.json();
             
             if (data.success) {
@@ -96,7 +96,7 @@ export default function AddGRN() {
                     data.items.map(async (item) => {
                         try {
                             const remainingResponse = await fetch(
-                                `${BASE_URL}/api/admin/grn/get-remaining-qty?po_number=${po_number}&sku=${item.sku}`
+                                `${BASE_URL}/api/admin/grn/get-remaining-qty?po_number=${po_number}&sku=${item.sku}&company_code=${company_code}`
                             );
                             const remainingData = await remainingResponse.json();
                             
@@ -255,17 +255,25 @@ export default function AddGRN() {
     }, [company_code]);
 
     // Validate and add GRN item
-    // Helper to generate next lot number
+    // Helper to generate next unique lot number
     const getNextLotNo = () => {
-        const lotNumbers = grnItems
-            .map(item => item.lot_no)
-            .filter(Boolean)
-            .map(lot => {
-                const match = lot.match(/Lot-(\d+)/);
-                return match ? parseInt(match[1], 10) : 0;
-            });
-        const maxLot = lotNumbers.length > 0 ? Math.max(...lotNumbers) : 0;
-        return `LOT-${String(maxLot + 1).padStart(3, '0')}`;
+        // Collect all used lot numbers in grnItems
+        const usedLots = new Set(
+            grnItems
+                .map(item => item.lot_no)
+                .filter(Boolean)
+                .map(lot => {
+                    const match = lot.match(/LOT-(\d+)/i);
+                    return match ? parseInt(match[1], 10) : null;
+                })
+                .filter(num => num !== null)
+        );
+        // Find the lowest unused lot number starting from 1
+        let next = 1;
+        while (usedLots.has(next)) {
+            next++;
+        }
+        return `LOT-${String(next).padStart(3, '0')}`;
     };
 
     const handleAddGRNItem = async () => {
@@ -850,17 +858,23 @@ useEffect(() => {
                                             <Form.Control
                                                 type="text"
                                                 value={(() => {
-                                                    // Show next lot number preview
+                                                    // Show next unique lot number preview
                                                     if (!selectedItem) return '';
-                                                    const lotNumbers = grnItems
-                                                        .map(item => item.lot_no)
-                                                        .filter(Boolean)
-                                                        .map(lot => {
-                                                            const match = lot.match(/Lot-(\d+)/);
-                                                            return match ? parseInt(match[1], 10) : 0;
-                                                        });
-                                                    const maxLot = lotNumbers.length > 0 ? Math.max(...lotNumbers) : 0;
-                                                    return `Lot-${String(maxLot + 1).padStart(3, '0')}`;
+                                                    const usedLots = new Set(
+                                                        grnItems
+                                                            .map(item => item.lot_no)
+                                                            .filter(Boolean)
+                                                            .map(lot => {
+                                                                const match = lot.match(/LOT-(\d+)/i);
+                                                                return match ? parseInt(match[1], 10) : null;
+                                                            })
+                                                            .filter(num => num !== null)
+                                                    );
+                                                    let next = 1;
+                                                    while (usedLots.has(next)) {
+                                                        next++;
+                                                    }
+                                                    return `LOT-${String(next).padStart(3, '0')}`;
                                                 })()}
                                                 readOnly
                                                 disabled

@@ -4,15 +4,15 @@ const PurchaseOrderController = require('./PurchaseOrderController');
 class GRNController {
     // Get remaining_qty for a PO item with tolerance calculation
     static async getRemainingQty(req, res) {
-        const { po_number, sku } = req.query;
-        if (!po_number || !sku) {
-            return res.status(400).json({ success: false, message: 'Missing po_number or sku' });
+        const { po_number, sku, company_code } = req.query;
+        if (!po_number || !sku || !company_code) {
+            return res.status(400).json({ success: false, message: 'Missing po_number, sku, or company_code' });
         }
 
         try {
             // Get PO details including tolerance_limit
             const poDetails = await new Promise((resolve, reject) => {
-                const reqObj = { params: { po_number } };
+                const reqObj = { params: { po_number }, query: { company_code } };
                 const resObj = {
                     json: (data) => resolve(data),
                     status: (code) => ({ json: (data) => reject(data) })
@@ -36,8 +36,8 @@ class GRNController {
             const unit_price = poItem.unit_price;
 
             // Get total received_qty from grn_items
-            const sqlGRN = 'SELECT SUM(received_qty) as total_received FROM grn_items WHERE po_number = ? AND sku = ?';
-            db.query(sqlGRN, [po_number, sku], (err, grnResults) => {
+            const sqlGRN = 'SELECT SUM(received_qty) as total_received FROM grn_items WHERE po_number = ? AND sku = ? AND company_code = ?';
+            db.query(sqlGRN, [po_number, sku, company_code], (err, grnResults) => {
                 if (err) {
                     return res.status(500).json({ success: false, message: 'Error fetching GRN items', error: err.message });
                 }
@@ -285,7 +285,7 @@ static async searchPO(req, res) {
         try {
             // Get remaining quantity with tolerance
             const remainingResponse = await new Promise((resolve, reject) => {
-                const reqObj = { query: { po_number, sku } };
+                const reqObj = { query: { po_number, sku, company_code } };
                 const resObj = {
                     json: (data) => resolve(data),
                     status: (code) => ({ json: (data) => reject(data) })
@@ -387,7 +387,7 @@ static async searchPO(req, res) {
         let poDetails;
         try {
             poDetails = await new Promise((resolve, reject) => {
-                const reqObj = { params: { po_number } };
+                const reqObj = { params: { po_number }, query: { company_code } };
                 const resObj = {
                     json: (data) => resolve(data),
                     status: (code) => ({ json: (data) => reject(data) })
@@ -448,7 +448,7 @@ static async searchPO(req, res) {
                 // Validate each item against remaining quantities
                 for (const item of grn_items) {
                     const remainingResponse = await new Promise((resolve, reject) => {
-                        const reqObj = { query: { po_number, sku: item.sku } };
+                        const reqObj = { query: { po_number, sku: item.sku, company_code } };
                         const resObj = {
                             json: (data) => resolve(data),
                             status: (code) => ({ json: (data) => reject(data) })
