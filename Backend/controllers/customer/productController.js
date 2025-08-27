@@ -50,8 +50,7 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        MIN(sv.sale_price) as min_sale_price,
-        MAX(sv.sale_price) as max_sale_price,
+        sv.sale_price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
@@ -94,8 +93,7 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        MIN(sv.sale_price) as min_sale_price,
-        MAX(sv.sale_price) as max_sale_price,
+        sv.sale_price,
         sv.offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
