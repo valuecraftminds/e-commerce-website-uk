@@ -16,4 +16,6 @@ router.get('/variant-info', checkCompanyCode, productController.getVariantInfo);
 router.get('/offers', checkCompanyCode, productController.getStylesWithOfferPrice);
 router.get('/similar-products/:style_id', checkCompanyCode, productController.getSimilarProducts);
 
+router.post('/confirm-delivery/:order_id', checkCompanyCode, productController.confirmDelivery);
+
 module.exports = router;

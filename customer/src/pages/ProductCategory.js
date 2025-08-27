@@ -155,15 +155,15 @@ const ProductCategory = () => {
     switch (filters.priceSort) {
       case 'low-high':
         result.sort((a, b) => {
-          const priceA = a.min_price || 0;
-          const priceB = b.min_price || 0;
+          const priceA = a.offer_price && a.offer_price !== 0 ? a.offer_price : (a.min_sale_price || 0);
+          const priceB = b.offer_price && b.offer_price !== 0 ? b.offer_price : (b.min_sale_price || 0);
           return priceA - priceB;
         });
         break;
       case 'high-low':
         result.sort((a, b) => {
-          const priceA = a.max_price || a.min_price || 0;
-          const priceB = b.max_price || b.min_price || 0;
+          const priceA = a.offer_price && a.offer_price !== 0 ? a.offer_price : (a.min_sale_price || 0);
+          const priceB = b.offer_price && b.offer_price !== 0 ? b.offer_price : (b.min_sale_price || 0);
           return priceB - priceA;
         });
         break;

@@ -16,6 +16,7 @@ export default function OfferPage() {
   const [offerProducts, setOfferProducts] = useState([]);
   const [offerLoading, setOfferLoading] = useState(false);
   const [offerError, setOfferError] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
@@ -88,6 +89,32 @@ export default function OfferPage() {
     return `${symbol}${convertedPrice}`;
   };
 
+  // Utility function to calculate time left for a given end date
+  const calculateTimeLeft = (endDate) => {
+    const difference = new Date(endDate) - currentTime;
+
+    if (difference <= 0) {
+      return { expired: true };
+    }
+
+    return {
+      expired: false,
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+    };
+  };
+
+  // Timer effect for real-time countdown updates
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
       <>
         <Container fluid className="my-5 offer-products-container">
@@ -116,7 +143,10 @@ export default function OfferPage() {
               </div>
           ) : (
               <div className="offer-products-grid">
-                {offerProducts.map((product) => (
+                {offerProducts.map((product) => {
+                  const timeLeft = calculateTimeLeft(product.offer_end_date);
+                  
+                  return (
                     <div
                         key={product.style_id}
                         className="offer-product-card"
@@ -153,8 +183,44 @@ export default function OfferPage() {
                     {formatPrice(product.offer_price)}
                   </span>
                           <span className="original-price">
-                    {formatPrice(product.price)}
+                    {formatPrice(product.sale_price)}
                   </span>
+                        </div>
+
+                        {/* Countdown Timer */}
+                        <div className="countdown-timer">
+                          {timeLeft.expired ? (
+                            <div className="countdown-label text-danger" style={{fontSize: '0.9rem' }}>Offer Ended</div>
+                          ) : (
+                            <>
+                              <div className="countdown-display text-danger" style={{fontSize: '0.9rem' }}>
+                                {timeLeft.days > 0 && (
+                                  <span className="time-unit">
+                                    <span className="time-value">{timeLeft.days}</span>
+                                    <span className="time-label">d </span>
+                                  </span>
+                                )}
+                                <span className="time-unit">
+                                  <span className="time-value">
+                                    {timeLeft.hours.toString().padStart(2, "0")}
+                                  </span>
+                                  <span className="time-label">h </span>
+                                </span>
+                                <span className="time-unit">
+                                  <span className="time-value">
+                                    {timeLeft.minutes.toString().padStart(2, "0")}
+                                  </span>
+                                  <span className="time-label">m </span>
+                                </span>
+                                <span className="time-unit">
+                                  <span className="time-value">
+                                    {timeLeft.seconds.toString().padStart(2, "0")}
+                                  </span>
+                                  <span className="time-label">s </span>
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {product.category_name && (
@@ -166,7 +232,8 @@ export default function OfferPage() {
                         )}
                       </div>
                     </div>
-                ))}
+                  );
+                })}
               </div>
           )}
         </Container>

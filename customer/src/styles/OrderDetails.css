@@ -444,3 +444,16 @@
     width: auto !important;
     height: 100% !important;
 }
+.delivery-btn{
+  background-color: #8a18b8 !important;
+  color: #fff;
+  border: none !important;
+  border-radius: 5px;
+  padding: 5px 10px !important;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.delivery-btn:hover{
+  background-color: #6a0f8f !important;
+}

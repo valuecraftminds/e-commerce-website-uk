@@ -20,6 +20,7 @@ export default function Home() {
   const [offerLoading, setOfferLoading] = useState(false);
   const [offerError, setOfferError] = useState(null);
   const [displayLimit, ] = useState(7);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
@@ -117,7 +118,7 @@ export default function Home() {
 
   // Utility function to calculate time left for a given end date
   const calculateTimeLeft = (endDate) => {
-    const difference = new Date(endDate) - new Date();
+    const difference = new Date(endDate) - currentTime;
 
     if (difference <= 0) {
       return { expired: true };
@@ -131,6 +132,15 @@ export default function Home() {
       seconds: Math.floor((difference / 1000) % 60),
     };
   };
+
+  // Timer effect for real-time countdown updates
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
 
   return (
@@ -213,9 +223,9 @@ export default function Home() {
                           <div className="countdown-label text-danger" style={{fontSize: '0.9rem' }}>Offer Ended</div>
                         ) : (
                           <>
-                            <div className="countdown-label text-danger" style={{fontSize: '0.9rem' }}>
+                            {/* <div className="countdown-label text-danger" style={{fontSize: '0.9rem' }}>
                               Ends on: {new Date(product.offer_end_date).toLocaleDateString()}
-                            </div>
+                            </div> */}
                             <div className="countdown-display text-danger" style={{fontSize: '0.9rem' }}>
                               {timeLeft.days > 0 && (
                                 <span className="time-unit">

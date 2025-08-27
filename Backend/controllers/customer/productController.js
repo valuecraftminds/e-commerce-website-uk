@@ -478,7 +478,35 @@ getVariantInfo: (req, res) => {
     
     res.status(200).json(results[0]);
   });
-}
+},
+
+  // Confirm delivery of an order
+  confirmDelivery: (req, res) => {
+    const { order_id } = req.params;
+
+    if (!order_id) {
+      return res.status(400).json({ error: 'Order ID is required' });
+    }
+
+    const sql = `
+      UPDATE orders
+      SET order_status = 'delivered'
+      WHERE order_id = ?
+    `;
+
+    db.query(sql, [order_id], (err, results) => {
+      if (err) {
+        console.error('Error confirming delivery:', err);
+        return res.status(500).json({ error: 'Server error', details: err.message });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      res.status(200).json({ message: 'Delivery confirmed' });
+    });
+  }
 };
 
 module.exports = productController;
