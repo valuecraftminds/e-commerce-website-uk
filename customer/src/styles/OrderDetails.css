@@ -457,3 +457,25 @@
 .delivery-btn:hover{
   background-color: #6a0f8f !important;
 }
+
+/* Cancel Order Button */
+.cancel-order-btn {
+  background-color: transparent !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 5px;
+  padding: 5px 10px !important;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.cancel-order-btn:hover {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+/* Badge for cancelled status */
+.order-header .badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: #fff;
+}

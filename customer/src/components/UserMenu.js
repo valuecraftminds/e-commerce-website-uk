@@ -84,6 +84,10 @@ export default function UserMenu({ profilePicture }) {
               <i className="bi bi-bag me-2"></i>
               My Orders
             </Dropdown.Item>
+            <Dropdown.Item onClick={() => handleNavigate('/feedback-history')}>
+              <i className="bi bi-chat-left-text me-2"></i>
+              My Reviews
+            </Dropdown.Item>
             <Dropdown.Item onClick={() => handleNavigate('/wishlist')}>
               <i className="bi bi-heart me-2"></i>
               Wishlist
