@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -17,6 +17,47 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
     color_name: '',
     color_code: ''
   });
+
+  // CSS Colors API modal state
+  const [showCssColorsModal, setShowCssColorsModal] = useState(false);
+  const [cssColors, setCssColors] = useState([]);
+  const [cssColorsLoading, setCssColorsLoading] = useState(false);
+  const [cssColorsError, setCssColorsError] = useState('');
+  const [cssColorsSearch, setCssColorsSearch] = useState('');
+  // Fetch CSS colors from API
+  const fetchCssColors = async () => {
+    setCssColorsLoading(true);
+    setCssColorsError('');
+    try {
+      const res = await fetch('https://www.csscolorsapi.com/api/colors/');
+      const data = await res.json();
+      if (data && data.colors) {
+        setCssColors(data.colors);
+      } else {
+        setCssColorsError('Failed to load colors');
+      }
+    } catch (err) {
+      setCssColorsError('Failed to fetch colors');
+    }
+    setCssColorsLoading(false);
+  };
+
+  // Open modal and fetch colors if not already loaded
+  const handleOpenCssColorsModal = () => {
+    setShowCssColorsModal(true);
+    if (cssColors.length === 0) {
+      fetchCssColors();
+    }
+  };
+
+  // Select a color from modal
+  const handleSelectCssColor = (color) => {
+    setFormData({
+      color_name: color.name,
+      color_code: color.hex.startsWith('#') ? color.hex : `#${color.hex}`
+    });
+    setShowCssColorsModal(false);
+  };
 
   const columns = [
     { key: 'color_name', label: 'Color Name' },
@@ -144,6 +185,12 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
 
   return (
     <Container>
+      {/* Add from CSS Colors Button */}
+      <div className="mb-2" style={{ textAlign: 'right' }}>
+        <Button variant="outline-primary" size="sm" onClick={handleOpenCssColorsModal}>
+          Add from CSS Colors
+        </Button>
+      </div>
       <StyleAttributeTable 
         title="Colors"
         items={colors}
@@ -160,6 +207,66 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
         onCancel={resetForm}
         embedded={embedded}
       />
+
+      {/* CSS Colors Modal */}
+      <Modal show={showCssColorsModal} onHide={() => setShowCssColorsModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Select a CSS Color</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <InputGroup className="mb-3">
+            <Form.Control
+              placeholder="Search color name or hex..."
+              value={cssColorsSearch}
+              onChange={e => setCssColorsSearch(e.target.value)}
+            />
+          </InputGroup>
+          {cssColorsLoading ? (
+            <div>Loading colors...</div>
+          ) : cssColorsError ? (
+            <div className="text-danger">{cssColorsError}</div>
+          ) : (
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              <table className="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Hex</th>
+                    <th>Preview</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cssColors
+                    .filter(c =>
+                      c.name.toLowerCase().includes(cssColorsSearch.toLowerCase()) ||
+                      c.hex.toLowerCase().includes(cssColorsSearch.toLowerCase())
+                    )
+                    .map((color, idx) => (
+                      <tr key={color.hex + color.name + idx}>
+                        <td>{color.name}</td>
+                        <td>#{color.hex.toUpperCase()}</td>
+                        <td>
+                          <span style={{ display: 'inline-block', width: 30, height: 20, background: `#${color.hex}` }}></span>
+                        </td>
+                        <td>
+                          <Button size="sm" variant="success" onClick={() => handleSelectCssColor(color)}>
+                            Select
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCssColorsModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
