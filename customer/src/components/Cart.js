@@ -252,9 +252,9 @@ return (
                                 {item.stock_qty <= 5 && item.stock_qty > 0 && (
                                   <span className="text-warning ms-1">(Low stock)</span>
                                 )}
-                                {item.stock_qty === 0 && (
+                                {/* {item.stock_qty === 0 && (
                                   <span className="text-danger ms-1">(Out of stock)</span>
-                                )}
+                                )} */}
                               </small>
                             </div>
                           </Col>

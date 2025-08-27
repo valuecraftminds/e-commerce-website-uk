@@ -3,6 +3,7 @@ import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
 import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from 'react-bootstrap';
 
 import '../styles/OrderDetails.css';
 import { CountryContext } from "../context/CountryContext";
@@ -204,25 +205,51 @@ export default function OrderDetails() {
     if (!orderDetails) {
         return null;
     }
+    
+    const handleConfirmDelivery = async () => {
+        try {
+            const response = await axios.post(
+            `${BASE_URL}/api/customer/confirm-delivery/${orderDetails.order_id}`,
+            {}, 
+                getAxiosConfig()
+            );
+
+            alert('Delivery confirmed!');
+            console.log('Response:', response.data);
+
+        } catch (error) {
+            console.error('Error confirming delivery:', error);
+            alert('Failed to confirm delivery');
+        }
+        };
 
     return (
         <div className="order-details">
             {/* Header */}
-            <div className="order-header mb-4">
-                <button 
-                    className="btn btn-link text-decoration-none p-0 me-3"
-                    onClick={handleBacktoOrders}
-                >
-                    <AiOutlineArrowLeft size={20} className="me-2" />
-                </button>
-                <div>
-                    <h4 className="mb-1">Order #{orderDetails.order_number}</h4>
-                    <div className="d-flex align-items-center gap-3">
+            <div className="order-header mb-4 d-flex justify-content-between align-items-center">
+                {/* Left side */}
+                <div className="d-flex align-items-center">
+                    <button 
+                        className="btn btn-link text-decoration-none p-0 me-3"
+                        onClick={handleBacktoOrders}
+                    >
+                        <AiOutlineArrowLeft size={20} className="me-2" />
+                    </button>
+                    <div>
+                        <h4 className="mb-0">Order #{orderDetails.order_number}</h4>
                         <span className={`badge ${getStatusBadgeClass(orderDetails.order_status)}`}>
                             {orderDetails.order_status.charAt(0).toUpperCase() + orderDetails.order_status.slice(1)}
                         </span>
                     </div>
                 </div>
+
+                {/* Right side */}
+                <Button 
+                    className='delivery-btn'
+                    onClick={handleConfirmDelivery}
+                >
+                    Confirm Delivery
+                </Button>
             </div>
 
             {/* Shipping Address */}
