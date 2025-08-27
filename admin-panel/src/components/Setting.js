@@ -222,8 +222,8 @@ export default function Settings() {
             <Card className="register-card">
 
             <Button
-                variant="primary"
-                className="btn-custom-primary"
+                variant="secondary"
+                className="btn-custom-secondary"
                 onClick = {handleBack}
             >
                 ← Back

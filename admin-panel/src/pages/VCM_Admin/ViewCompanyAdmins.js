@@ -125,7 +125,7 @@ export default function ViewCompanyAdmins() {
           </Button>
           <div>
             <h5 className="admin-title m-0">
-              {companyDetails?.company_name || companyCode} - Company users
+              {companyDetails?.company_name || companyCode} - Company admins
             </h5>
             <small className="text-muted">Company Code: {companyCode}</small>
           </div>

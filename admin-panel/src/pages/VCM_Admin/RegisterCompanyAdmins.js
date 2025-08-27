@@ -342,12 +342,12 @@ export default function RegisterCompanyAdmins() {
               }
             }}
           >
-            ← Back to {companyCodeFromParams ? 'Company users' : 'Companies'}
+            ← Back to {companyCodeFromParams ? 'Company admins' : 'Companies'}
           </Button>
 
           <Card.Body>
             <h2 className="register-title">
-              {isUpdateMode ? 'Update Company User' : 'Add Company User'}
+              {isUpdateMode ? 'Update Company Admin' : 'Add Company Admin'}
             </h2>
 
             {successMsg && (
