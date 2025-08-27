@@ -241,8 +241,8 @@ export default function RegisterCompany() {
       <Container>
         <Card className="register-card">
           <Button 
-            variant="primary" 
-            className="btn-custom-primary mb-3" 
+            variant="secondary" 
+            className="btn-custom-secondary mb-3" 
             onClick={() => navigate('/vcm-admin/view-companies')}
           >
             ← Back to Companies
@@ -274,7 +274,7 @@ export default function RegisterCompany() {
                 )}
 
                 <Form className="register-form" onSubmit={handleSubmit}>
-                  <Row>
+                  <Row >
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Company Name</Form.Label>

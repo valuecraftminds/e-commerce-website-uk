@@ -124,9 +124,9 @@ export default function ViewCompanyAdmins() {
             <i className="bi-arrow-left"></i> Back to Companies
           </Button>
           <div>
-            <h3 className="admin-title m-0">
-              {companyDetails?.company_name || companyCode} - Admins
-            </h3>
+            <h5 className="admin-title m-0">
+              {companyDetails?.company_name || companyCode} - Company users
+            </h5>
             <small className="text-muted">Company Code: {companyCode}</small>
           </div>
         </div>
@@ -164,12 +164,7 @@ export default function ViewCompanyAdmins() {
                 <Badge bg="primary" className="me-2">
                   {companyAdmins.length} Admin{companyAdmins.length !== 1 ? 's' : ''}
                 </Badge>
-                {companyDetails.currency && (
-                  <span className="me-3">Currency: {companyDetails.currency}</span>
-                )}
-                {companyDetails.company_address && (
-                  <span>Address: {companyDetails.company_address}</span>
-                )}
+                
               </div>
             </div>
           </div>
