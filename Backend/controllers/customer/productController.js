@@ -58,9 +58,11 @@ const productController = {
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
+      LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE (c.parent_id = ? OR c.category_id = ?) 
       AND s.approved = 'yes' 
       AND s.company_code = ?
+      AND ss.stock_qty > 0
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
       ORDER BY s.created_at DESC
     `;
@@ -100,8 +102,10 @@ const productController = {
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
+      LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE s.approved = 'yes' 
       AND s.company_code = ?
+      AND ss.stock_qty > 0
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
       ORDER BY s.created_at DESC
     `;
@@ -154,15 +158,18 @@ const productController = {
           c.color_code,
           c.color_id,
           m.material_name,
-          m.description AS material_description
+          m.description AS material_description,
+          ss.stock_qty
         FROM styles s
         LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
         LEFT JOIN colors c ON sv.color_id = c.color_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
+        LEFT JOIN stock_summary ss ON sv.sku = ss.sku
         WHERE s.style_id = ? 
         AND s.company_code = ?
         AND s.approved = 'yes'
+        AND ss.stock_qty > 0
       `;
 
       db.query(productDetailsQuery, [style_id, company_code], (err, results) => {
@@ -256,9 +263,14 @@ const productController = {
     }
 
     const sql = `
-      SELECT style_id, style_number, name, description, image 
-      FROM styles 
-      WHERE approved = 'yes' 
+      SELECT
+        style_id,
+        style_number,
+        name,
+        description,
+        image
+      FROM styles
+      WHERE approved = 'yes'
       AND company_code = ?
       ORDER BY created_at DESC
     `;
@@ -282,16 +294,19 @@ const productController = {
     }
 
     const sql = `
-      SELECT
+      SELECT DISTINCT
         s.style_id,
         s.style_number,
         s.name,
         s.description,
         s.image
       FROM styles s
+      LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
+      LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE (s.name LIKE ? OR s.description LIKE ? OR s.style_number LIKE ?)
       AND s.approved = 'yes'
       AND s.company_code = ?
+      AND ss.stock_qty > 0
       ORDER BY 
         CASE 
           WHEN s.name LIKE ? THEN 1
@@ -343,6 +358,8 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
+        ss.stock_qty,
+        sv.sku,
         sv.sale_price,
         sv.offer_price,
         sv.offer_start_date,
@@ -353,6 +370,7 @@ const productController = {
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       INNER JOIN style_variants sv ON s.style_number = sv.style_number 
+      INNER JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE sv.is_active = 1 
       AND sv.offer_price IS NOT NULL 
       AND sv.offer_price > 0
@@ -420,10 +438,12 @@ getSimilarProducts: (req, res) => {
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
+      LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE s.category_id = ? 
       AND s.style_id != ?
       AND s.approved = 'yes' 
       AND s.company_code = ?
+      AND ss.stock_qty > 0
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
       ORDER BY s.created_at DESC
       LIMIT 8

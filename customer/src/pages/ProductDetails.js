@@ -671,7 +671,7 @@ export default function ProductDetails() {
               </div>
 
               {/* Stock Status Display */}
-              {selectedSize && selectedColor && (
+              {/* {selectedSize && selectedColor && (
                 <div className="mb-3 stock-status">
                   {checkingStock ? (
                     <div className="text-info">
@@ -690,7 +690,7 @@ export default function ProductDetails() {
                     </div>
                   )}
                 </div>
-              )}
+              )} */}
               
               <div className="mb-3">
                 <h5>Quantity:</h5>
@@ -748,36 +748,7 @@ export default function ProductDetails() {
                 </Button>
               </div>
 
-              {/* Size Guide Section */}
-              <div className="expandable-section size-guide">
-                <div 
-                  className="section-header"
-                  onClick={() => setShowSizeGuide(!showSizeGuide)}
-                >
-                  <h5>Size Guide</h5>
-                  <span className="toggle-icon">
-                    {showSizeGuide ? '−' : '+'}
-                  </span>
-                </div>
-                {showSizeGuide && (
-                  <div className="section-content">
-                    <div className="size-guide-image">
-                      <img 
-                        src={`${BASE_URL}/uploads/size-chart.png`}
-                        alt="Size Guide Chart" 
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/500x300/f8f9fa/6c757d?text=Size+Chart+Coming+Soon';
-                        }}
-                      />
-                      <p className="size-guide-instructions">
-                        <strong>How to measure:</strong> For the most accurate fit, measure your body wearing only undergarments. Keep the measuring tape level and snug but not tight.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Material Section */}
+               {/* Material Section */}
               <div className="expandable-section material">
                 <div 
                   className="section-header"
@@ -804,7 +775,36 @@ export default function ProductDetails() {
                 )}
               </div>
             </div>
-          </Col>
+          
+            {/* Size Guide Section */}
+            <div className="expandable-section size-guide">
+              <div 
+                className="section-header"
+                onClick={() => setShowSizeGuide(!showSizeGuide)}
+              >
+                <h5>Size Guide</h5>
+                <span className="toggle-icon">
+                  {showSizeGuide ? '−' : '+'}
+                </span>
+              </div>
+              {showSizeGuide && (
+                <div className="section-content">
+                  <div className="size-guide-image">
+                    <img 
+                      src={`${BASE_URL}/uploads/size-chart.png`}
+                      alt="Size Guide Chart" 
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/500x300/f8f9fa/6c757d?text=Size+Chart+Coming+Soon';
+                      }}
+                    />
+                    <p className="size-guide-instructions">
+                      <strong>How to measure:</strong> For the most accurate fit, measure your body wearing only undergarments. Keep the measuring tape level and snug but not tight.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            </Col>
 
           {/* Column 3: Reviews */}
           <Col lg={4} md={6} className="reviews-col">
