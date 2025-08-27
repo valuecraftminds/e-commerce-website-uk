@@ -128,7 +128,7 @@ export default function ViewCompanies() {
   return (
     <div className="admin-container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3 className="admin-title m-0">Companies</h3>
+        <h4 className="admin-title m-0">Companies</h4>
         <div>
           <button 
             className="btn-custom-primary" 
@@ -240,7 +240,7 @@ export default function ViewCompanies() {
                   </td>
                   <td>
                     <Button 
-                      variant="primary" 
+                      variant="success" 
                       size="sm"
                       className="me-2"
                       onClick={() => handleViewAdmins(company.company_code)}

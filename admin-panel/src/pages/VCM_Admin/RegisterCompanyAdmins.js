@@ -332,8 +332,8 @@ export default function RegisterCompanyAdmins() {
       <Container>
         <Card className="register-card">
           <Button 
-            variant="primary" 
-            className="btn-custom-primary mb-3" 
+            variant="secondary" 
+            className="btn-custom-secondary mb-3" 
             onClick={() => {
               if (companyCodeFromParams) {
                 navigate(`/vcm-admin/view-company-admins/${companyCodeFromParams}`);
@@ -342,12 +342,12 @@ export default function RegisterCompanyAdmins() {
               }
             }}
           >
-            ← Back to {companyCodeFromParams ? 'Company Admins' : 'Companies'}
+            ← Back to {companyCodeFromParams ? 'Company users' : 'Companies'}
           </Button>
 
           <Card.Body>
             <h2 className="register-title">
-              {isUpdateMode ? 'Update Company Admin' : 'Add Company Admin'}
+              {isUpdateMode ? 'Update Company User' : 'Add Company User'}
             </h2>
 
             {successMsg && (
@@ -362,7 +362,7 @@ export default function RegisterCompanyAdmins() {
             )}
 
             <Form className="register-form" onSubmit={handleSubmit}>
-              {!isUpdateMode && (
+              {/* {!isUpdateMode && (
                 <Row>
                   <Col md={12}>
                     <Form.Group className="mb-3">
@@ -391,7 +391,7 @@ export default function RegisterCompanyAdmins() {
                     </Form.Group>
                   </Col>
                 </Row>
-              )}
+              )} */}
 
               {selectedCompany && (
                 <Row>
