@@ -19,6 +19,23 @@ export default function Style() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { userData } = useContext(AuthContext);
+  const company_code = userData?.company_code;
+  // Company currency state
+  const [companyCurrency, setCompanyCurrency] = useState('USD');
+  // Fetch company currency
+  const fetchCompanyCurrency = useCallback(async () => {
+    if (!company_code) return;
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/companies-by-code/${company_code}`);
+      const data = await response.json();
+      if (data.success && data.company && data.company.currency) {
+        setCompanyCurrency(data.company.currency);
+      }
+    } catch (err) {
+      // fallback to USD
+      setCompanyCurrency('USD');
+    }
+  }, [company_code, BASE_URL]);
 
   // Modal states
   const [showStyleModal, setShowStyleModal] = useState(false);
@@ -29,7 +46,7 @@ export default function Style() {
   const [isEditingVariant, setIsEditingVariant] = useState(false);
   const [editingVariantId, setEditingVariantId] = useState(null);
 
-  const company_code = userData?.company_code;
+  // company_code is now initialized above
 
   // Form states updated for multiple images
   const [styleForm, setStyleForm] = useState({
@@ -173,7 +190,8 @@ export default function Style() {
     fetchSizes();
     fetchMaterials();
     fetchFits();
-  }, [fetchStyles, fetchCategories, fetchColors, fetchSizes, fetchMaterials, fetchFits]);
+    fetchCompanyCurrency();
+  }, [fetchStyles, fetchCategories, fetchColors, fetchSizes, fetchMaterials, fetchFits, fetchCompanyCurrency]);
 
   const handleAddStyle = () => {
     setEditingStyle(null);
@@ -475,6 +493,7 @@ export default function Style() {
         editingId={editingVariantId}
         setIsEditing={setIsEditingVariant}
         setEditingId={setEditingVariantId}
+        companyCurrency={companyCurrency}
       />
     </div>
   );

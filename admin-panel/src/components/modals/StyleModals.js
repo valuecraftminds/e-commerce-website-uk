@@ -153,108 +153,111 @@ BASE_URL
 );
 
 export const VariantFormModal = ({
-show,
-onHide,
-selectedStyle,
-setVariantForm,
-handleDeleteVariant,
-variants,
-colors,
-sizes,
-materials,
-fits,
-setIsEditing,
-setEditingId
+  show,
+  onHide,
+  selectedStyle,
+  setVariantForm,
+  handleDeleteVariant,
+  variants,
+  colors,
+  sizes,
+  materials,
+  fits,
+  setIsEditing,
+  setEditingId,
+  companyCurrency
 }) => {
-const columns = useMemo(
-  () => [
-    {
-      header: 'SKU',
-      accessorKey: 'sku',
-    },
-    {
-      header: 'Color',
-      accessorFn: row => colors.find(c => c.color_id === row.color_id)?.color_name || '',
-      cell: ({ row }) => {
-        const color = colors.find(c => c.color_id === row.original.color_id);
-        return (
-          <div className="d-flex align-items-center gap-2">
-            <span 
-              className="color-swatch"
-              style={{ 
-                backgroundColor: color?.color_code || '#fff',
-                border: '1px solid #dee2e6'
+  // Use companyCurrency for table headings
+  const currency = companyCurrency || 'USD';
+  const columns = useMemo(
+    () => [
+      {
+        header: 'SKU',
+        accessorKey: 'sku',
+      },
+      {
+        header: 'Color',
+        accessorFn: row => colors.find(c => c.color_id === row.color_id)?.color_name || '',
+        cell: ({ row }) => {
+          const color = colors.find(c => c.color_id === row.original.color_id);
+          return (
+            <div className="d-flex align-items-center gap-2">
+              <span 
+                className="color-swatch"
+                style={{ 
+                  backgroundColor: color?.color_code || '#fff',
+                  border: '1px solid #dee2e6'
+                }}
+              />
+              <span>{color?.color_name || ''}</span>
+            </div>
+          );
+        }
+      },
+      {
+        header: 'Size',
+        accessorFn: row => sizes.find(s => s.size_id === row.size_id)?.size_name || '',
+      },
+      {
+        header: 'Fit',
+        accessorFn: row => fits.find(f => f.fit_id === row.fit_id)?.fit_name || '',
+      },
+      {
+        header: 'Material',
+        accessorFn: row => materials.find(m => m.material_id === row.material_id)?.material_name || '',
+      },
+      {
+        header: `Unit price (${currency})`,
+        accessorKey: 'unit_price',
+        cell: ({ getValue }) => `${getValue()}`
+      },
+      {
+        header: `Sale price (${currency})`,
+        accessorKey: 'sale_price',
+        cell: ({ getValue }) => `${getValue()}`
+      },
+      {
+        header: 'Status',
+        accessorKey: 'is_active',
+        cell: ({ getValue }) => (
+          <span className={`status-badge ${getValue() ? 'approved' : 'pending'}`}>
+            {getValue() ? 'Active' : 'Inactive'}
+          </span>
+        )
+      },
+      {
+        header: 'Actions',
+        cell: ({ row }) => (
+          <div className="table-actions">
+            <button
+              className="action-btn edit-btn"
+              onClick={() => {
+                setIsEditing(true);
+                setEditingId(row.original.variant_id);
+                setVariantForm({
+                  color_id: row.original.color_id,
+                  size_id: row.original.size_id,
+                  fit_id: row.original.fit_id,
+                  material_id: row.original.material_id,
+                  unit_price: row.original.unit_price,
+                  price: row.original.price
+                });
               }}
-            />
-            <span>{color?.color_name || ''}</span>
+            >
+              <FaEdit size={14} />
+            </button>
+            <button
+              className="action-btn delete-btn"
+              onClick={() => handleDeleteVariant(row.original.variant_id)}
+            >
+              <FaTrash size={14} />
+            </button>
           </div>
-        );
+        )
       }
-    },
-    {
-      header: 'Size',
-      accessorFn: row => sizes.find(s => s.size_id === row.size_id)?.size_name || '',
-    },
-    {
-      header: 'Fit',
-      accessorFn: row => fits.find(f => f.fit_id === row.fit_id)?.fit_name || '',
-    },
-    {
-      header: 'Material',
-      accessorFn: row => materials.find(m => m.material_id === row.material_id)?.material_name || '',
-    },
-    {
-      header: 'Unit price',
-      accessorKey: 'unit_price',
-      cell: ({ getValue }) => `$${getValue()}`
-    },
-    {
-      header: 'Sale price',
-      accessorKey: 'sale_price',
-      cell: ({ getValue }) => `$${getValue()}`
-    },
-    {
-      header: 'Status',
-      accessorKey: 'is_active',
-      cell: ({ getValue }) => (
-        <span className={`status-badge ${getValue() ? 'approved' : 'pending'}`}>
-          {getValue() ? 'Active' : 'Inactive'}
-        </span>
-      )
-    },
-    {
-      header: 'Actions',
-      cell: ({ row }) => (
-        <div className="table-actions">
-          <button
-            className="action-btn edit-btn"
-            onClick={() => {
-              setIsEditing(true);
-              setEditingId(row.original.variant_id);
-              setVariantForm({
-                color_id: row.original.color_id,
-                size_id: row.original.size_id,
-                fit_id: row.original.fit_id,
-                material_id: row.original.material_id,
-                unit_price: row.original.unit_price,
-                price: row.original.price
-              });
-            }}
-          >
-            <FaEdit size={14} />
-          </button>
-          <button
-            className="action-btn delete-btn"
-            onClick={() => handleDeleteVariant(row.original.variant_id)}
-          >
-            <FaTrash size={14} />
-          </button>
-        </div>
-      )
-    }
-  ],
-  [colors, sizes, fits, materials, handleDeleteVariant, setEditingId, setIsEditing, setVariantForm]
-);
+    ],
+    [colors, sizes, fits, materials, handleDeleteVariant, setEditingId, setIsEditing, setVariantForm, currency]
+  );
 
 const table = useReactTable({
   data: variants,

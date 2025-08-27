@@ -265,3 +265,9 @@ description: 'Intentionally larger cut for a loose, casual style'
 
 ALTER TABLE booking CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER DATABASE database_name CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+GRANT INSERT, UPDATE ON your_db.stock_summary TO 'your_user'@'localhost';
+FLUSH PRIVILEGES;
+
+SHOW GRANTS FOR 'u658538868_uk'@'193.203.184.93';
