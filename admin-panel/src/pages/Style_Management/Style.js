@@ -4,6 +4,7 @@ import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { StyleFormModal, VariantFormModal } from '../../components/modals/StyleModals';
 import StyleTable from '../../components/StyleTable';
+import Spinner from '../../components/Spinner';
 import { AuthContext } from '../../context/AuthContext';
 import '../../styles/Style.css';
 
@@ -439,10 +440,11 @@ export default function Style() {
 
       {/* Styles Table */}
       <div className="styles-table-container">
-        {styles.length === 0 ? (
+        {loading ? (
+          <Spinner text="Loading styles..." />
+        ) : styles.length === 0 ? (
           <div className="empty-state">
             <h3>No Styles Found</h3>
-            <p>Start by adding your first clothing style.</p>
             <button className="add-style-btn" onClick={handleAddStyle}>
               Add First Style
             </button>

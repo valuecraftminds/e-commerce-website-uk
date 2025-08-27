@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import DeleteModal from './modals/DeleteModal';
+import Spinner from './Spinner';
 import { FaEdit, FaTrash, FaCogs } from 'react-icons/fa'; // Add FaCogs
 
 const StyleTable = ({ 
@@ -144,7 +145,7 @@ const StyleTable = ({
   };
 
   if (loading) {
-    return <div className="loading">Loading styles...</div>;
+    return <Spinner text="Loading styles..." />;
   }
 
   if (styles.length === 0) {
