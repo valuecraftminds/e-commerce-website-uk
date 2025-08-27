@@ -144,7 +144,8 @@ export default function OrderDetails() {
             'shipped': 'bg-primary',
             'delivered': 'bg-success',
             'reviewed': 'bg-success',
-            'returned': 'bg-secondary'
+            'returned': 'bg-secondary',
+            'cancelled': 'bg-danger'
         };
         return statusClasses[status] || 'bg-secondary';
     };
@@ -221,7 +222,38 @@ export default function OrderDetails() {
             console.error('Error confirming delivery:', error);
             alert('Failed to confirm delivery');
         }
-        };
+    };
+
+    // Cancel order function
+    const handleCancelOrder = async () => {
+        // Show confirmation dialog
+        if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const config = getAxiosConfig();
+            const response = await axios.post(
+                `${BASE_URL}/api/customer/orders/cancel-order/${orderDetails.order_id}`,
+                {},
+                config
+            );
+
+            if (response.data.success) {
+                alert('Order cancelled successfully!');
+                // Update the order status in the local state
+                setOrderDetails(prev => ({
+                    ...prev,
+                    order_status: 'cancelled'
+                }));
+            } else {
+                alert(response.data.message || 'Failed to cancel order');
+            }
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            alert(error.response?.data?.message || 'Failed to cancel order');
+        }
+    };
 
     return (
         <div className="order-details">
@@ -244,12 +276,26 @@ export default function OrderDetails() {
                 </div>
 
                 {/* Right side */}
-                <Button 
-                    className='delivery-btn'
-                    onClick={handleConfirmDelivery}
-                >
-                    Confirm Delivery
-                </Button>
+                <div className="d-flex gap-2">
+                    {/* Cancel Order Button - Only show for pending orders */}
+                    {orderDetails.order_status === 'pending' && (
+                        <Button 
+                            variant="outline-danger"
+                            className="cancel-order-btn"
+                            onClick={handleCancelOrder}
+                        >
+                            Cancel Order
+                        </Button>
+                    )}
+                    
+                    {/* Confirm Delivery Button */}
+                    <Button 
+                        className='delivery-btn'
+                        onClick={handleConfirmDelivery}
+                    >
+                        Confirm Delivery
+                    </Button>
+                </div>
             </div>
 
             {/* Shipping Address */}

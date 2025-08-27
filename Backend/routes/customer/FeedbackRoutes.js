@@ -10,6 +10,6 @@ router.get('/reviews/:style_id', checkCompanyCode, FeedbackController.getReview)
 router.post('/reviews', authenticateCustomer, checkCompanyCode, FeedbackController.addReview);
 
 // General feedback routes
-// router.get('/history', authenticateCustomer, checkCompanyCode, FeedbackController.getFeedbackHistory);
+router.get('/history', authenticateCustomer, checkCompanyCode, FeedbackController.getFeedbackHistory);
 
 module.exports = router;

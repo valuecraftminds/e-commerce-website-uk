@@ -110,19 +110,18 @@ const FeedbackController = {
 
         const sql = `
             SELECT 
-                feedback_id,
-                feedback_type,
-                rating,
-                subject,
-                message,
-                order_id,
-                status,
-                submitted_at,
-                admin_response,
-                responded_at
-            FROM customer_feedback 
-            WHERE customer_id = ? AND company_code = ?
-            ORDER BY submitted_at DESC
+                r.review_id,
+                r.style_id,
+                r.review,
+                r.rating,
+                r.created_at,
+                r.company_code,
+                s.name,
+                s.image
+            FROM reviews r
+            INNER JOIN styles s ON r.style_id = s.style_id
+            WHERE r.customer_id = ? AND r.company_code = ?
+            ORDER BY created_at DESC
         `;
 
         db.query(sql, [customer_id, company_code], (err, results) => {
