@@ -263,7 +263,7 @@ description: 'Intentionally larger cut for a loose, casual style'
 
 # convert collation in database or table
 
-ALTER TABLE booking CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+ALTER TABLE size_ranges CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER DATABASE database_name CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 

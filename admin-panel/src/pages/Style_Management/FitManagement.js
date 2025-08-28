@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import ManagementTable from '../../components/StyleAttributeTable';
+import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -139,7 +139,7 @@ const FitManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCancel
 
   return (
     <Container>
-      <ManagementTable 
+      <StyleAttributeTable 
         title="Fits"
         items={fits}
         columns={columns}

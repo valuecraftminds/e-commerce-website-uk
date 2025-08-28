@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Tabs, Tab, Accordion } from 'react-bootstrap';
 import { FaArrowLeft, FaPlus, FaTrash, FaSave } from 'react-icons/fa';
 import { AuthContext } from '../../context/AuthContext';
 import DeleteModal from '../../components/modals/DeleteModal';
@@ -29,6 +29,11 @@ export default function StyleAttributes() {
 
   const [allColors, setAllColors] = useState([]);
   const [allSizes, setAllSizes] = useState([]);
+  const [allSizeRanges, setAllSizeRanges] = useState([]);
+  const [selectedSizeRangeId, setSelectedSizeRangeId] = useState('');
+  const [rangeSizes, setRangeSizes] = useState([]);
+  const [assignedSizeRanges, setAssignedSizeRanges] = useState([]); // [{range, sizes:[]}]
+  const [assignedRangeSizes, setAssignedRangeSizes] = useState({}); // {rangeId: [sizes]}
   const [allMaterials, setAllMaterials] = useState([]);
   const [allFits, setAllFits] = useState([]);
 
@@ -67,22 +72,22 @@ export default function StyleAttributes() {
   // Fetch all available attributes
   const fetchAllAttributes = useCallback(async () => {
     try {
-      const [colorsRes, sizesRes, materialsRes, fitsRes] = await Promise.all([
+      const [colorsRes, sizeRangesRes, materialsRes, fitsRes] = await Promise.all([
         fetch(`${BASE_URL}/api/admin/colors/get-colors?company_code=${company_code}`),
-        fetch(`${BASE_URL}/api/admin/sizes/get-sizes?company_code=${company_code}`),
+        fetch(`${BASE_URL}/api/admin/sizes/get-size-ranges?company_code=${company_code}`),
         fetch(`${BASE_URL}/api/admin/materials/get-materials?company_code=${company_code}`),
         fetch(`${BASE_URL}/api/admin/fits/get-fits?company_code=${company_code}`)
       ]);
 
-      const [colorsData, sizesData, materialsData, fitsData] = await Promise.all([
+      const [colorsData, sizeRangesData, materialsData, fitsData] = await Promise.all([
         colorsRes.json(),
-        sizesRes.json(),
+        sizeRangesRes.json(),
         materialsRes.json(),
         fitsRes.json()
       ]);
 
       if (colorsData.success) setAllColors(colorsData.colors);
-      if (sizesData.success) setAllSizes(sizesData.sizes);
+      if (sizeRangesData.success) setAllSizeRanges(sizeRangesData.size_ranges);
       if (materialsData.success) setAllMaterials(materialsData.materials);
       if (fitsData.success) setAllFits(fitsData.fits);
     } catch (err) {
@@ -100,11 +105,30 @@ export default function StyleAttributes() {
         setStyleSizes(data.sizes || []);
         setStyleMaterials(data.materials || []);
         setStyleFits(data.fits || []);
+
+        // For sizes, group by size_range_id
+        if (data.sizes && data.sizes.length > 0) {
+          const rangeMap = {};
+          for (const sz of data.sizes) {
+            if (!rangeMap[sz.size_range_id]) rangeMap[sz.size_range_id] = [];
+            rangeMap[sz.size_range_id].push(sz);
+          }
+          setAssignedRangeSizes(rangeMap);
+          // Build assignedSizeRanges as [{range, sizes:[]}] for accordion
+          const assignedRanges = Object.keys(rangeMap).map(rangeId => {
+            const range = allSizeRanges.find(r => String(r.size_range_id) === String(rangeId));
+            return { range, sizes: rangeMap[rangeId] };
+          }).filter(r => r.range);
+          setAssignedSizeRanges(assignedRanges);
+        } else {
+          setAssignedRangeSizes({});
+          setAssignedSizeRanges([]);
+        }
       }
     } catch (err) {
       setError('Error fetching style attributes');
     }
-  }, [styleNumber, company_code]);
+  }, [styleNumber, company_code, allSizeRanges]);
 
   useEffect(() => {
     fetchStyleDetails();
@@ -131,6 +155,7 @@ export default function StyleAttributes() {
 
     setLoading(true);
     try {
+      // For sizes, assign size range(s) to style
       const response = await fetch(`${BASE_URL}/api/admin/styles/add-style-attributes`, {
         method: 'POST',
         headers: {
@@ -165,48 +190,11 @@ export default function StyleAttributes() {
     setDeleteModalInfo({ type, id: attributeId });
   };
 
-  const getAvailableItems = () => {
-    let allItems = [];
-    let styleItems = [];
-
-    switch (modalType) {
-      case 'colors':
-        allItems = allColors;
-        styleItems = styleColors;
-        break;
-      case 'sizes':
-        allItems = allSizes;
-        styleItems = styleSizes;
-        break;
-      case 'materials':
-        allItems = allMaterials;
-        styleItems = styleMaterials;
-        break;
-      case 'fits':
-        allItems = allFits;
-        styleItems = styleFits;
-        break;
-      default:
-        return [];
-    }
-
-    const styleItemIds = styleItems.map(item => {
-      switch (modalType) {
-        case 'colors': return item.color_id;
-        case 'sizes': return item.size_id;
-        case 'materials': return item.material_id;
-        case 'fits': return item.fit_id;
-        default: return null;
-      }
-    });
-
-    return allItems.filter(item => {
-      const itemId = modalType === 'colors' ? item.color_id :
-                    modalType === 'sizes' ? item.size_id :
-                    modalType === 'materials' ? item.material_id :
-                    item.fit_id;
-      return !styleItemIds.includes(itemId);
-    });
+  // For sizes, only allow selecting a size range (not individual sizes)
+  const getAvailableSizeRanges = () => {
+    // Exclude already assigned ranges
+    const assignedRangeIds = Object.keys(assignedRangeSizes || {});
+    return allSizeRanges.filter(r => !assignedRangeIds.includes(String(r.size_range_id)));
   };
 
   // Render two-column layout: left = Add New, right = Add Existing (table + assign)
@@ -253,11 +241,11 @@ export default function StyleAttributes() {
           )}
         </Card.Body>
       </Col>
-      {/* Right: Add Existing */}
+      {/* Right: Assigned Size Ranges (Accordion) or Table for others */}
       <Col md={6}>
-        <Card>
-          <Card.Header className="d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">Assigned {title}</h5>
+       {/* Add Existing button for sizes is outside accordion */}
+        {type === 'sizes' && (
+          <div className="d-flex justify-content-end mb-2">
             <Button 
               variant="primary" 
               className='add-style-btn'
@@ -265,69 +253,116 @@ export default function StyleAttributes() {
               onClick={() => handleOpenModal(type)}
             >
               <FaPlus className="me-2" />
-              Add Existing {title.slice(0, -1)}
+              Add Existing Size Range
             </Button>
-          </Card.Header>
-          <Card.Body>
-            {items.length === 0 ? (
-              <p className="text-muted text-center">No {title.toLowerCase()} added yet.</p>
+          </div>
+        )}
+        {type === 'sizes' ? (
+          <Accordion defaultActiveKey={assignedSizeRanges.length ? String(assignedSizeRanges[0]?.range?.size_range_id) : undefined}>
+            {assignedSizeRanges.length === 0 ? (
+              <Card>
+                <Card.Body className="text-center text-muted">No size ranges assigned yet.</Card.Body>
+              </Card>
             ) : (
-              <Table responsive striped size="sm" className="table-organized">
-                <thead>
-                  <tr style={{ verticalAlign: 'middle' }}>
-                    <th style={{ width: '40px' }}>#</th>
-                    <th style={{ minWidth: '120px' }}>Name</th>
-                    {type === 'colors' && <th style={{ minWidth: '80px' }}>Code</th>}
-                    {(type === 'materials' || type === 'fits') && <th style={{ minWidth: '120px' }}>Description</th>}
-                    <th style={{ width: '70px' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item, index) => (
-                    <tr key={index} style={{ verticalAlign: 'middle', height: '36px' }}>
-                      <td>{index + 1}</td>
-                      <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {type === 'colors' ? item.color_name :
-                         type === 'sizes' ? item.size_name :
-                         type === 'materials' ? item.material_name :
-                         item.fit_name}
-                      </td>
-                      {type === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
-                      {(type === 'materials' || type === 'fits') && <td>{item.description || '-'}</td>}
-                      <td>
-                        {type === 'colors' ? (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            className="py-0 px-2"
-                            style={{ fontSize: '0.9rem', lineHeight: 1 }}
-                            onClick={() => handleRemoveAttribute(type, item.color_id)}
-                          >
-                            <FaTrash />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            className="py-0 px-2"
-                            style={{ fontSize: '0.9rem', lineHeight: 1 }}
-                            onClick={() => handleRemoveAttribute(type, 
-                              type === 'sizes' ? item.size_id :
-                              type === 'materials' ? item.material_id :
-                              item.fit_id
-                            )}
-                          >
-                            <FaTrash />
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+              assignedSizeRanges.map(({ range, sizes }) => (
+                <Accordion.Item eventKey={String(range.size_range_id)} key={range.size_range_id}>
+                  <Accordion.Header>{range.range_name}</Accordion.Header>
+                  <Accordion.Body>
+                    <Table bordered size="sm" className="mb-0">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Size Name</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sizes.map((sz, idx) => (
+                          <tr key={sz.size_id}>
+                            <td>{idx + 1}</td>
+                            <td>{sz.size_name}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Accordion.Body>
+                </Accordion.Item>
+              ))
             )}
-          </Card.Body>
-        </Card>
+          </Accordion>
+        ) : (
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">Assigned {title}</h5>
+              <Button 
+                variant="primary" 
+                className='add-style-btn'
+                size="sm" 
+                onClick={() => handleOpenModal(type)}
+              >
+                <FaPlus className="me-2" />
+                Add Existing {title.slice(0, -1)}
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              {items.length === 0 ? (
+                <p className="text-muted text-center">No {title.toLowerCase()} added yet.</p>
+              ) : (
+                <Table responsive striped size="sm" className="table-organized">
+                  <thead>
+                    <tr style={{ verticalAlign: 'middle' }}>
+                      <th style={{ width: '40px' }}>#</th>
+                      <th style={{ minWidth: '120px' }}>Name</th>
+                      {type === 'colors' && <th style={{ minWidth: '80px' }}>Code</th>}
+                      {(type === 'materials' || type === 'fits') && <th style={{ minWidth: '120px' }}>Description</th>}
+                      <th style={{ width: '70px' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item, index) => (
+                      <tr key={index} style={{ verticalAlign: 'middle', height: '36px' }}>
+                        <td>{index + 1}</td>
+                        <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {type === 'colors' ? item.color_name :
+                           type === 'materials' ? item.material_name :
+                           item.fit_name}
+                        </td>
+                        {type === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
+                        {(type === 'materials' || type === 'fits') && <td>{item.description || '-'}</td>}
+                        <td>
+                          {type === 'colors' ? (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              className="py-0 px-2"
+                              style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                              onClick={() => handleRemoveAttribute(type, item.color_id)}
+                            >
+                              <FaTrash />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              className="py-0 px-2"
+                              style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                              onClick={() => handleRemoveAttribute(type, 
+                                type === 'materials' ? item.material_id :
+                                item.fit_id
+                              )}
+                            >
+                              <FaTrash />
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </Card.Body>
+          </Card>
+        )}
+       
       </Col>
     </Row>
   );
@@ -445,22 +480,32 @@ export default function StyleAttributes() {
       setTimeout(() => setSuccess(''), 3000);
     }}
     onError={setError}
+    assignedRangeSizes={assignedRangeSizes}
   />
 </Tab>
 </Tabs>
 
       {/* Selection Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="md">
         <Modal.Header closeButton>
           <Modal.Title>
-            Add {modalType.charAt(0).toUpperCase() + modalType.slice(1, -1)}
+            {modalType === 'sizes' ? 'Add Size Range' : `Add ${modalType.charAt(0).toUpperCase() + modalType.slice(1, -1)}`}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {getAvailableItems().length === 0 ? (
-            <p className="text-center text-muted">
-              All available {modalType} have already been added to this style.
-            </p>
+          {modalType === 'sizes' ? (
+            <Form.Group>
+              <Form.Label>Select Size Range</Form.Label>
+              <Form.Select
+                value={selectedSizeRangeId}
+                onChange={e => setSelectedSizeRangeId(e.target.value)}
+              >
+                <option value="">-- Select Size Range --</option>
+                {getAvailableSizeRanges().map(range => (
+                  <option key={range.size_range_id} value={range.size_range_id}>{range.range_name}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
           ) : (
             <div>
               <p>Select {modalType} to add to this style:</p>
@@ -470,38 +515,67 @@ export default function StyleAttributes() {
                     <th style={{ width: '60px' }}>Select</th>
                     <th style={{ minWidth: '120px' }}>Name</th>
                     {modalType === 'colors' && <th style={{ minWidth: '80px' }}>Code</th>}
-                    {modalType === 'sizes' && <th style={{ minWidth: '60px' }}>Order</th>}
                     {(modalType === 'materials' || modalType === 'fits') && <th style={{ minWidth: '120px' }}>Description</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {getAvailableItems().map((item) => {
-                    const itemId = modalType === 'colors' ? item.color_id :
-                                  modalType === 'sizes' ? item.size_id :
-                                  modalType === 'materials' ? item.material_id :
-                                  item.fit_id;
-                    return (
-                      <tr key={itemId} style={{ verticalAlign: 'middle', height: '34px' }}>
-                        <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={selectedItems.includes(itemId)}
-                            onChange={() => handleAttributeToggle(itemId)}
-                            style={{ marginTop: 0, marginBottom: 0 }}
-                          />
-                        </td>
-                        <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {modalType === 'colors' ? item.color_name :
-                           modalType === 'sizes' ? item.size_name :
-                           modalType === 'materials' ? item.material_name :
-                           item.fit_name}
-                        </td>
-                        {modalType === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
-                        {modalType === 'sizes' && <td>{item.order || '-'}</td>}
-                        {(modalType === 'materials' || modalType === 'fits') && <td>{item.description || '-'}</td>}
-                      </tr>
-                    );
-                  })}
+                  {(() => {
+                    let allItems = [];
+                    let styleItems = [];
+                    switch (modalType) {
+                      case 'colors':
+                        allItems = allColors;
+                        styleItems = styleColors;
+                        break;
+                      case 'materials':
+                        allItems = allMaterials;
+                        styleItems = styleMaterials;
+                        break;
+                      case 'fits':
+                        allItems = allFits;
+                        styleItems = styleFits;
+                        break;
+                      default:
+                        return null;
+                    }
+                    const styleItemIds = styleItems.map(item => {
+                      switch (modalType) {
+                        case 'colors': return item.color_id;
+                        case 'materials': return item.material_id;
+                        case 'fits': return item.fit_id;
+                        default: return null;
+                      }
+                    });
+                    return allItems.filter(item => {
+                      const itemId = modalType === 'colors' ? item.color_id :
+                                    modalType === 'materials' ? item.material_id :
+                                    item.fit_id;
+                      return !styleItemIds.includes(itemId);
+                    }).map(item => {
+                      const itemId = modalType === 'colors' ? item.color_id :
+                                    modalType === 'materials' ? item.material_id :
+                                    item.fit_id;
+                      return (
+                        <tr key={itemId} style={{ verticalAlign: 'middle', height: '34px' }}>
+                          <td>
+                            <Form.Check
+                              type="checkbox"
+                              checked={selectedItems.includes(itemId)}
+                              onChange={() => handleAttributeToggle(itemId)}
+                              style={{ marginTop: 0, marginBottom: 0 }}
+                            />
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {modalType === 'colors' ? item.color_name :
+                             modalType === 'materials' ? item.material_name :
+                             item.fit_name}
+                          </td>
+                          {modalType === 'colors' && <td style={{ fontFamily: 'monospace' }}>{item.color_code}</td>}
+                          {(modalType === 'materials' || modalType === 'fits') && <td>{item.description || '-'}</td>}
+                        </tr>
+                      );
+                    });
+                  })()}
                 </tbody>
               </Table>
             </div>
@@ -513,10 +587,42 @@ export default function StyleAttributes() {
           </Button>
           <Button 
             variant="primary" 
-            onClick={handleSaveAttributes}
-            disabled={selectedItems.length === 0 || loading}
+            onClick={async () => {
+              if (modalType === 'sizes') {
+                if (!selectedSizeRangeId) return;
+                setLoading(true);
+                try {
+                  // Assign only the size_range_id to style_size_ranges, ensure it's a number
+                  const response = await fetch(`${BASE_URL}/api/admin/styles/add-style-attributes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      style_number: styleNumber,
+                      company_code,
+                      type: 'sizes',
+                      attribute_ids: [Number(selectedSizeRangeId)]
+                    })
+                  });
+                  const respData = await response.json();
+                  if (respData.success) {
+                    setSuccess('Size range added successfully!');
+                    setShowModal(false);
+                    fetchStyleAttributes();
+                    setTimeout(() => setSuccess(''), 3000);
+                  } else {
+                    setError(respData.message || 'Error adding size range');
+                  }
+                } catch (err) {
+                  setError('Error adding size range');
+                }
+                setLoading(false);
+              } else {
+                handleSaveAttributes();
+              }
+            }}
+            disabled={loading || (modalType === 'sizes' && !selectedSizeRangeId) || (modalType !== 'sizes' && selectedItems.length === 0)}
           >
-            {loading ? 'Adding...' : `Add Selected ${modalType}`}
+            {loading ? 'Adding...' : modalType === 'sizes' ? 'Add Size Range' : `Add Selected ${modalType}`}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -529,7 +635,7 @@ function cartesianProduct(arrays) {
   return arrays.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]]);
 }
 
-function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, styleFits, company_code, styleNumber, BASE_URL, onSuccess, onError }) {
+function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, styleFits, company_code, styleNumber, BASE_URL, onSuccess, onError, assignedRangeSizes }) {
   const [existingVariants, setExistingVariants] = React.useState([]);
   const [variantInputs, setVariantInputs] = React.useState({});
   const [editInputs, setEditInputs] = React.useState({});
@@ -568,14 +674,26 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
 
   // Generate all possible combinations
   const combinations = React.useMemo(() => {
-    if (!styleColors.length || !styleSizes.length || !styleMaterials.length || !styleFits.length) return [];
+    if (!styleColors.length || !styleFits.length) return [];
+    let sizeArr = [];
+    if (Array.isArray(styleSizes) && styleSizes.length > 0) {
+      // If styleSizes is already all sizes, use as is (for backward compatibility)
+      sizeArr = styleSizes;
+    } else if (Array.isArray(window.assignedSizeRanges) && window.assignedSizeRanges.length > 0) {
+      // If assignedSizeRanges is available globally (should be passed as prop ideally)
+      sizeArr = window.assignedSizeRanges.flatMap(r => r.sizes);
+    }
+    // If assignedRangeSizes is available, use that
+    if (typeof assignedRangeSizes === 'object' && Object.keys(assignedRangeSizes).length > 0) {
+      sizeArr = Object.values(assignedRangeSizes).flat();
+    }
     return cartesianProduct([
       styleColors,
-      styleSizes,
+      sizeArr,
       styleFits,
       styleMaterials
     ]);
-  }, [styleColors, styleSizes, styleMaterials, styleFits]);
+  }, [styleColors, styleFits, assignedRangeSizes]);
 
   // Generate SKU string (same as backend logic, now includes material)
   function generateSku(style_number, color, size, fit, material) {

@@ -225,36 +225,36 @@ export const VariantFormModal = ({
           </span>
         )
       },
-      {
-        header: 'Actions',
-        cell: ({ row }) => (
-          <div className="table-actions">
-            <button
-              className="action-btn edit-btn"
-              onClick={() => {
-                setIsEditing(true);
-                setEditingId(row.original.variant_id);
-                setVariantForm({
-                  color_id: row.original.color_id,
-                  size_id: row.original.size_id,
-                  fit_id: row.original.fit_id,
-                  material_id: row.original.material_id,
-                  unit_price: row.original.unit_price,
-                  price: row.original.price
-                });
-              }}
-            >
-              <FaEdit size={14} />
-            </button>
-            <button
-              className="action-btn delete-btn"
-              onClick={() => handleDeleteVariant(row.original.variant_id)}
-            >
-              <FaTrash size={14} />
-            </button>
-          </div>
-        )
-      }
+      // {
+      //   header: 'Actions',
+      //   cell: ({ row }) => (
+      //     <div className="table-actions">
+      //       <button
+      //         className="action-btn edit-btn"
+      //         onClick={() => {
+      //           setIsEditing(true);
+      //           setEditingId(row.original.variant_id);
+      //           setVariantForm({
+      //             color_id: row.original.color_id,
+      //             size_id: row.original.size_id,
+      //             fit_id: row.original.fit_id,
+      //             material_id: row.original.material_id,
+      //             unit_price: row.original.unit_price,
+      //             price: row.original.price
+      //           });
+      //         }}
+      //       >
+      //         <FaEdit size={14} />
+      //       </button>
+      //       <button
+      //         className="action-btn delete-btn"
+      //         onClick={() => handleDeleteVariant(row.original.variant_id)}
+      //       >
+      //         <FaTrash size={14} />
+      //       </button>
+      //     </div>
+      //   )
+      // }
     ],
     [colors, sizes, fits, materials, handleDeleteVariant, setEditingId, setIsEditing, setVariantForm, currency]
   );

@@ -31,9 +31,10 @@ const StyleAttributesController = {
       colors: `SELECT c.* FROM colors c 
                INNER JOIN style_colors sc ON c.color_id = sc.color_id 
                WHERE sc.style_number = ? AND sc.company_code = ?`,
+      // For sizes, get all sizes for each assigned size_range_id
       sizes: `SELECT s.* FROM sizes s 
-              INNER JOIN style_sizes ss ON s.size_id = ss.size_id 
-              WHERE ss.style_number = ? AND ss.company_code = ?`,
+                INNER JOIN style_size_ranges ssr ON s.size_range_id = ssr.size_range_id 
+                WHERE ssr.style_number = ? AND ssr.company_code = ?`,
       materials: `SELECT m.* FROM materials m 
                   INNER JOIN style_materials sm ON m.material_id = sm.material_id 
                   WHERE sm.style_number = ? AND sm.company_code = ?`,
@@ -96,7 +97,7 @@ const StyleAttributesController = {
 
     const tableMap = {
       colors: { table: 'style_colors', column: 'color_id' },
-      sizes: { table: 'style_sizes', column: 'size_id' },
+      sizes: { table: 'style_size_ranges', column: 'size_range_id' },
       materials: { table: 'style_materials', column: 'material_id' },
       fits: { table: 'style_fits', column: 'fit_id' }
     };
@@ -150,10 +151,10 @@ const StyleAttributesController = {
     }
 
     const tableMap = {
-      colors: { table: 'style_colors', column: 'color_id' },
-      sizes: { table: 'style_sizes', column: 'size_id' },
-      materials: { table: 'style_materials', column: 'material_id' },
-      fits: { table: 'style_fits', column: 'fit_id' }
+      colors: { table: 'style_colors', column: 'color_id', variantCol: 'color_id' },
+      sizes: { table: 'style_size_ranges', column: 'size_range_id', variantCol: 'size_range_id' },
+      materials: { table: 'style_materials', column: 'material_id', variantCol: 'material_id' },
+      fits: { table: 'style_fits', column: 'fit_id', variantCol: 'fit_id' }
     };
 
     const config = tableMap[type];
@@ -164,28 +165,46 @@ const StyleAttributesController = {
       });
     }
 
-    const query = `DELETE FROM ${config.table} WHERE style_number = ? AND company_code = ? AND ${config.column} = ?`;
-
-    db.query(query, [style_number, company_code, attribute_id], (err, result) => {
+    // Check if attribute is used in style_variants
+    const variantCheckQuery = `SELECT COUNT(*) as count FROM style_variants WHERE style_number = ? AND company_code = ? AND ${config.variantCol} = ?`;
+    db.query(variantCheckQuery, [style_number, company_code, attribute_id], (err, results) => {
       if (err) {
-        console.error('Error removing style attribute:', err);
-        res.status(500).json({ 
-          success: false, 
-          message: 'Error removing attribute from style' 
+        console.error('Error checking style_variants:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error checking attribute usage in variants'
         });
-        return;
       }
-      
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ 
-          success: false, 
-          message: 'Attribute not found for this style' 
+      if (results[0].count > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot remove this ${type.slice(0, -1)} because it is used in style variants.`
         });
       }
 
-      res.json({ 
-        success: true, 
-        message: `${type.slice(0, -1)} removed from style successfully` 
+      // Proceed to delete if not used in variants
+      const query = `DELETE FROM ${config.table} WHERE style_number = ? AND company_code = ? AND ${config.column} = ?`;
+      db.query(query, [style_number, company_code, attribute_id], (err, result) => {
+        if (err) {
+          console.error('Error removing style attribute:', err);
+          res.status(500).json({ 
+            success: false, 
+            message: 'Error removing attribute from style' 
+          });
+          return;
+        }
+        
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Attribute not found for this style' 
+          });
+        }
+
+        res.json({ 
+          success: true, 
+          message: `${type.slice(0, -1)} removed from style successfully` 
+        });
       });
     });
   }
