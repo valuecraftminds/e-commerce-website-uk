@@ -22,20 +22,8 @@ const OrdersHistoryController = {
                 o.customer_id,
                 o.address_id,
                 o.payment_method_id,
-                o.company_code,
-                CASE 
-                    WHEN COUNT(CASE WHEN b.status = 'pending' THEN 1 END) = COUNT(*) THEN 'pending'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) = COUNT(*) THEN 'issued'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) > 0 AND COUNT(CASE WHEN b.status = 'pending' THEN 1 END) > 0 THEN 'partially_issued'
-                    ELSE 'unknown'
-                END as derived_order_status
+                o.company_code
             FROM orders o
-            JOIN order_items oi ON o.order_id = oi.order_id
-            JOIN booking b ON oi.booking_id = b.booking_id
-            WHERE o.customer_id = ? AND o.company_code = ? AND o.company_code = oi.company_code
-            GROUP BY o.order_id, o.company_code, o.customer_id, o.order_number, o.address_id, 
-                     o.payment_method_id, o.subtotal, o.shipping_fee, o.tax_amount, o.total_amount, 
-                     o.total_items, o.order_status, o.order_notes, o.created_at
             ORDER BY o.created_at DESC
         `;
 
@@ -46,11 +34,11 @@ const OrdersHistoryController = {
                 s.name as product_name,
                 s.image as image_url,
                 oi.quantity,
-                b.status as booking_status
+                COALESCE(b.status, 'cancelled') as booking_status
             FROM order_items oi
             INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
             INNER JOIN styles s ON sv.style_number = s.style_number
-            INNER JOIN booking b ON oi.booking_id = b.booking_id
+            LEFT JOIN booking b ON oi.booking_id = b.booking_id
             WHERE oi.order_id IN (?) AND oi.company_code = ?
             ORDER BY oi.order_item_id
         `;
@@ -117,7 +105,7 @@ const OrdersHistoryController = {
         });
     },
 
-    // Get orders by status with items (updated to work with derived booking status)
+    // Get orders by status with items (using order table status directly)
     getOrdersByStatus: async (req, res) => {
         const customerId = req.user?.id;
         const { company_code } = req.query;
@@ -138,12 +126,12 @@ const OrdersHistoryController = {
             statuses = status.split(',').map(s => s.trim());
         }
 
-        // Updated query to filter by derived booking status
+        // Simplified query to filter by order status directly from order table
         const ordersQuery = `
             SELECT 
                 o.order_id,
                 o.order_number,
-                o.order_status as original_order_status,
+                o.order_status,
                 o.order_notes,
                 o.subtotal,
                 o.tax_amount,
@@ -154,21 +142,9 @@ const OrdersHistoryController = {
                 o.customer_id,
                 o.address_id,
                 o.payment_method_id,
-                o.company_code,
-                CASE 
-                    WHEN COUNT(CASE WHEN b.status = 'pending' THEN 1 END) = COUNT(*) THEN 'pending'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) = COUNT(*) THEN 'issued'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) > 0 AND COUNT(CASE WHEN b.status = 'pending' THEN 1 END) > 0 THEN 'partially_issued'
-                    ELSE 'unknown'
-                END as derived_order_status
+                o.company_code
             FROM orders o
-            JOIN order_items oi ON o.order_id = oi.order_id
-            JOIN booking b ON oi.booking_id = b.booking_id
-            WHERE o.customer_id = ? AND o.company_code = ? AND o.company_code = oi.company_code
-            GROUP BY o.order_id, o.company_code, o.customer_id, o.order_number, o.address_id, 
-                     o.payment_method_id, o.subtotal, o.shipping_fee, o.tax_amount, o.total_amount, 
-                     o.total_items, o.order_status, o.order_notes, o.created_at
-            HAVING derived_order_status IN (${statuses.map(() => '?').join(',')})
+            WHERE o.customer_id = ? AND o.company_code = ? AND o.order_status IN (${statuses.map(() => '?').join(',')})
             ORDER BY o.created_at DESC
         `;
 
@@ -179,11 +155,11 @@ const OrdersHistoryController = {
                 s.name as product_name,
                 s.image as image_url,
                 oi.quantity,
-                b.status as booking_status
+                COALESCE(b.status, 'cancelled') as booking_status
             FROM order_items oi
             INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
             INNER JOIN styles s ON sv.style_number = s.style_number
-            INNER JOIN booking b ON oi.booking_id = b.booking_id
+            LEFT JOIN booking b ON oi.booking_id = b.booking_id
             WHERE oi.order_id IN (?) AND oi.company_code = ?
             ORDER BY oi.order_item_id
         `;
@@ -245,7 +221,6 @@ const OrdersHistoryController = {
                 // Add items to each order
                 const ordersWithItems = orderResults.map(order => ({
                     ...order,
-                    order_status: order.derived_order_status, // Use derived status
                     items: itemsByOrder[order.order_id] || []
                 }));
             
@@ -311,15 +286,17 @@ const OrdersHistoryController = {
                 a.phone,
                 CONCAT(a.first_name, ' ', a.last_name) as shipping_name,
                 CASE 
-                    WHEN COUNT(CASE WHEN b.status = 'pending' THEN 1 END) = COUNT(*) THEN 'pending'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) = COUNT(*) THEN 'issued'
+                    WHEN o.order_status = 'cancelled' THEN 'cancelled'
+                    WHEN COUNT(b.booking_id) = 0 THEN 'cancelled'
+                    WHEN COUNT(CASE WHEN b.status = 'pending' THEN 1 END) = COUNT(b.booking_id) THEN 'pending'
+                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) = COUNT(b.booking_id) THEN 'issued'
                     WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) > 0 AND COUNT(CASE WHEN b.status = 'pending' THEN 1 END) > 0 THEN 'partially_issued'
                     ELSE 'unknown'
                 END as derived_order_status
             FROM orders o
             LEFT JOIN address a ON o.address_id = a.address_id
             JOIN order_items oi ON o.order_id = oi.order_id
-            JOIN booking b ON oi.booking_id = b.booking_id
+            LEFT JOIN booking b ON oi.booking_id = b.booking_id
             WHERE o.order_id = ? AND o.customer_id = ? AND o.company_code = ?
             GROUP BY o.order_id, o.order_number, o.order_status, o.order_notes, o.subtotal, 
                      o.tax_amount, o.shipping_fee, o.total_amount, o.total_items, o.created_at, 
@@ -343,11 +320,11 @@ const OrdersHistoryController = {
                 s.name as style_name,
                 s.description as style_description,
                 s.image as style_image,
-                b.status as booking_status
+                COALESCE(b.status, 'cancelled') as booking_status
             FROM order_items oi
             INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
             INNER JOIN styles s ON sv.style_number = s.style_number
-            INNER JOIN booking b ON oi.booking_id = b.booking_id
+            LEFT JOIN booking b ON oi.booking_id = b.booking_id
             WHERE oi.order_id = ? AND oi.company_code = ?
             ORDER BY oi.order_item_id
         `;
@@ -437,6 +414,164 @@ const OrdersHistoryController = {
             });
         } catch (error) {
             console.error('Unexpected error:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal server error',
+                error: error.message
+            });
+        }
+    },
+
+    // cancel the order and delete associated booking records
+    cancelOrder: async (req, res) => {
+        const orderId = req.params.orderId;
+        const customerId = req.user?.id;
+        const { company_code } = req.query;
+
+        // Validate required parameters
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID is required'
+            });
+        }
+
+        if (!customerId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized access'
+            });
+        }
+
+        if (!company_code) {
+            return res.status(400).json({
+                success: false,
+                message: 'Company code is required'
+            });
+        }
+
+        try {
+            // First, check if the order exists and belongs to the customer
+            const checkOrderQuery = `
+                SELECT order_id, order_status, customer_id 
+                FROM orders 
+                WHERE order_id = ? AND customer_id = ? AND company_code = ?
+            `;
+
+            db.query(checkOrderQuery, [orderId, customerId, company_code], (error, results) => {
+                if (error) {
+                    console.error('Error checking order:', error);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error',
+                        error: error.message
+                    });
+                }
+
+                if (results.length === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Order not found or does not belong to this customer'
+                    });
+                }
+
+                const order = results[0];
+
+                // Check if order status is pending
+                if (order.order_status !== 'pending') {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Only pending orders can be cancelled'
+                    });
+                }
+
+                // Start transaction for order cancellation
+                db.beginTransaction((transactionErr) => {
+                    if (transactionErr) {
+                        console.error('Transaction start error:', transactionErr);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Failed to start transaction',
+                            error: transactionErr.message
+                        });
+                    }
+
+                    // Update order status to cancelled
+                    const updateOrderQuery = `
+                        UPDATE orders 
+                        SET order_status = 'cancelled'
+                        WHERE order_id = ? AND customer_id = ? AND company_code = ?
+                    `;
+
+                    db.query(updateOrderQuery, [orderId, customerId, company_code], (updateError, updateResults) => {
+                        if (updateError) {
+                            return db.rollback(() => {
+                                console.error('Error cancelling order:', updateError);
+                                return res.status(500).json({
+                                    success: false,
+                                    message: 'Failed to cancel order',
+                                    error: updateError.message
+                                });
+                            });
+                        }
+
+                        if (updateResults.affectedRows === 0) {
+                            return db.rollback(() => {
+                                return res.status(400).json({
+                                    success: false,
+                                    message: 'Failed to cancel order'
+                                });
+                            });
+                        }
+
+                        // Delete booking records for all items in this cancelled order
+                        const deleteBookingQuery = `
+                            DELETE b FROM booking b
+                            INNER JOIN order_items oi ON b.booking_id = oi.booking_id
+                            WHERE oi.order_id = ? AND oi.company_code = ?
+                        `;
+
+                        db.query(deleteBookingQuery, [orderId, company_code], (bookingError, bookingResults) => {
+                            if (bookingError) {
+                                return db.rollback(() => {
+                                    console.error('Error deleting booking records:', bookingError);
+                                    return res.status(500).json({
+                                        success: false,
+                                        message: 'Failed to delete booking records',
+                                        error: bookingError.message
+                                    });
+                                });
+                            }
+
+                            // Commit transaction
+                            db.commit((commitErr) => {
+                                if (commitErr) {
+                                    return db.rollback(() => {
+                                        console.error('Transaction commit error:', commitErr);
+                                        return res.status(500).json({
+                                            success: false,
+                                            message: 'Failed to commit cancellation',
+                                            error: commitErr.message
+                                        });
+                                    });
+                                }
+
+                                return res.status(200).json({
+                                    success: true,
+                                    message: 'Order cancelled successfully and booking records removed',
+                                    data: {
+                                        order_id: orderId,
+                                        new_status: 'cancelled',
+                                        bookings_deleted: bookingResults.affectedRows
+                                    }
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        } catch (error) {
+            console.error('Error in cancelOrder:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Internal server error',
