@@ -242,18 +242,17 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!id && formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
       return;
     }
-    
     setIsLoading(true);
-
+    setErrorMsg('');
+    setSuccessMsg('');
     try {
       let response, data;
       if (id) {
-        // Edit mode
+        // Edit mode (no change)
         response = await fetch(`${BASE_URL}/api/admin/auth/update-admin/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -265,38 +264,57 @@ export default function RegisterPage() {
             side_bar_options: JSON.stringify(sideBarOptions)
           })
         });
+        data = await response.json();
+        if (response.ok && data.success) {
+          setSuccessMsg('Admin updated successfully!');
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            role: '',
+            password: '',
+            confirmPassword: ''
+          });
+          setPasswordError('');
+          setTimeout(() => navigate('/users'), 1200);
+        } else {
+          setErrorMsg(data.message || 'Update failed');
+        }
       } else {
-        // Register mode
-        response = await fetch(`${BASE_URL}/api/admin/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            company_code: company_code,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            role: formData.role,
-            password: formData.password,
-            side_bar_options: JSON.stringify(sideBarOptions)
-          }),
-        });
-      }
-      data = await response.json();
+        // Register mode with email verification
+        const adminFormData = new FormData();
+        adminFormData.append('company_code', company_code);
+        adminFormData.append('name', formData.name);
+        adminFormData.append('email', formData.email);
+        adminFormData.append('phone', formData.phone);
+        adminFormData.append('role', formData.role);
+        adminFormData.append('password', formData.password);
+        adminFormData.append('side_bar_options', JSON.stringify(sideBarOptions));
+        adminFormData.append('frontend_url', window.location.origin);
 
-      if (response.ok && data.success) {
-        setSuccessMsg(id ? 'Admin updated successfully!' : 'User registered successfully!');
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          role: '',
-          password: '',
-          confirmPassword: ''
+        response = await fetch(`${BASE_URL}/api/admin/auth/create-company-admin`, {
+          method: 'POST',
+          body: adminFormData,
         });
-        setPasswordError('');
-        setTimeout(() => navigate('/users'), 1200);
-      } else {
-        setErrorMsg(data.message || (id ? 'Update failed' : 'Registration failed'));
+        data = await response.json();
+        if (response.ok && data.success) {
+          setSuccessMsg(
+            data.message?.toLowerCase().includes('verification')
+              ? `A verification email has been sent to ${formData.email}.`
+              : 'User registered successfully!'
+          );
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            role: '',
+            password: '',
+            confirmPassword: ''
+          });
+          setPasswordError('');
+        } else {
+          setErrorMsg(data.message || 'Registration failed');
+        }
       }
     } catch (error) {
       setErrorMsg('Something went wrong');

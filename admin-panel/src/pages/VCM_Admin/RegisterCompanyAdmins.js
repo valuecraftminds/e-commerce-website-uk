@@ -245,6 +245,8 @@ export default function RegisterCompanyAdmins() {
     adminFormData.append('role', formData.role);
     adminFormData.append('password', formData.password);
     adminFormData.append('company_code', formData.company_code);
+    adminFormData.append('frontend_url', window.location.origin);
+
 
     console.log('Creating admin user...', {
       name: formData.name,
@@ -265,8 +267,12 @@ export default function RegisterCompanyAdmins() {
       throw new Error(data.message || 'Failed to create admin user');
     }
 
-    setSuccessMsg(`Admin account created successfully for company "${selectedCompany?.company_name}"!`);
-    
+    setSuccessMsg(
+      data.message?.toLowerCase().includes('verification')
+        ? `A verification email has been sent to ${formData.email}.`
+        : `Admin account created successfully for company "${selectedCompany?.company_name}"!`
+    );
+
     // Reset form
     setFormData({
       name: '',

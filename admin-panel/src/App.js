@@ -37,6 +37,7 @@ import Location from './pages/Location';
 import AddGRN from './pages/AddGRN';
 import StyleAttributes from './pages/Style_Management/StyleAttributes';
 import WarehouseIssuing from './pages/WarehouseIssuing';
+import VerifyCompanyAdmin from './pages/VCM_Admin/VerifyCompanyAdmin';
 
 // Create Sidebar Context for global sidebar state management
 export const SidebarContext = createContext();
@@ -166,7 +167,7 @@ function App() {
   const location = useLocation();
 
   // Hide header on specific routes
-  const hideHeaderRoutes = ['/', '/login'];
+  const hideHeaderRoutes = ['/', '/login','/verify-company-admin'];
   const hideHeader = hideHeaderRoutes.includes(location.pathname);
 
   return (
@@ -220,6 +221,7 @@ function App() {
           <Route path="/company-settings" element={<CompanySettings />} />
           <Route path="/approve-po" element={<ApprovePO />} />
           <Route path="/warehouse/issuing" element={<WarehouseIssuing />} />
+          <Route path="/verify-company-admin" element={<VerifyCompanyAdmin />} />
         </Routes>
       </div>
     </SidebarProvider>

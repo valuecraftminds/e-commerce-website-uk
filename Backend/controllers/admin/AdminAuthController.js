@@ -1,9 +1,12 @@
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../../config/database');
-const CompanyController = require('./CompanyController'); // Adjust the path as needed
+const CompanyController = require('./CompanyController');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const transporter = require('../../utils/mailer');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -119,7 +122,7 @@ static login(req, res) {
       const token = jwt.sign(
         { id: user.id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '24h' }
       );
 
       // Parse and validate sidebar options
@@ -153,73 +156,7 @@ static login(req, res) {
 }
 
 
-  // Register company admin
-  static async registerCompanyAdmin(req, res) {
-    const { name, email, phone, role, password } = req.body;
-    const logoFile = req.file;
 
-    // Field presence check and validation
-    if (!name || !email || !phone || !role || !password || !logoFile) {
-      return res.status(400).json({ success: false, message: 'All fields are required' });
-    }
-
-    if (!/^[a-zA-Z\s]+$/.test(name)) {
-      return res.status(400).json({ success: false, message: 'Name can only contain letters and spaces' });
-    }
-
-    try {
-      // Check for existing email
-      const emailCheckResult = await new Promise((resolve, reject) => {
-        db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        });
-      });
-
-      if (emailCheckResult.length > 0) {
-        return res.status(409).json({ success: false, message: 'Email already exists' });
-      }
-
-      // Check for existing phone
-      const phoneCheckResult = await new Promise((resolve, reject) => {
-        db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        });
-      });
-
-      if (phoneCheckResult.length > 0) {
-        return res.status(409).json({ success: false, message: 'Phone number already exists' });
-      }
-
-      // Generate next company code
-      const newCompanyCode = await CompanyController.generateNextCompanyCode();
-
-      
-
-      // Then create admin user with company_code reference only
-      await new Promise((resolve, reject) => {
-        db.query(
-          'INSERT INTO admin_users (name, email, phone_number, role, password, company_code) VALUES (?, ?, ?, ?, ?, ?)',
-          [name, email, phone, role, hashedPassword, newCompanyCode],
-          (err, result) => {
-            if (err) reject(err);
-            else resolve(result);
-          }
-        );
-      });
-
-      return res.status(201).json({ 
-        success: true, 
-        message: 'Company admin registered successfully',
-        company_code: newCompanyCode 
-      });
-
-    } catch (error) {
-      console.error('Register company admin error:', error);
-      return res.status(500).json({ success: false, message: 'Server error' });
-    }
-  }
 
   // Create company only (Step 1)
   static async createCompany(req, res) {
@@ -304,7 +241,7 @@ static login(req, res) {
     }
   }
 
-  // Create company admin user only (Step 2)
+  // Create company admin user only (Step 2) with email verification
   static async createCompanyAdmin(req, res) {
     const { name, email, phone, role, password, company_code } = req.body;
 
@@ -319,57 +256,172 @@ static login(req, res) {
     try {
       // Check if company exists
       const company = await CompanyController.getCompanyByCode(company_code);
-      if (!company) {
-        return res.status(404).json({ success: false, message: 'Company not found' });
-      }
+      if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
 
-      // Check for existing email
+      // Check for existing email in admin_users
       const emailCheckResult = await new Promise((resolve, reject) => {
         db.query('SELECT * FROM admin_users WHERE email = ?', [email], (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
+          if (err) return reject(err);
+          resolve(rows);
         });
       });
+      if (emailCheckResult.length > 0) return res.status(409).json({ success: false, message: 'Email already exists' });
 
-      if (emailCheckResult.length > 0) {
-        return res.status(409).json({ success: false, message: 'Email already exists' });
-      }
-
-      // Check for existing phone
+      // Check for existing phone in admin_users
       const phoneCheckResult = await new Promise((resolve, reject) => {
         db.query('SELECT * FROM admin_users WHERE phone_number = ?', [phone], (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
+          if (err) return reject(err);
+          resolve(rows);
         });
       });
+      if (phoneCheckResult.length > 0) return res.status(409).json({ success: false, message: 'Phone already exists' });
 
-      if (phoneCheckResult.length > 0) {
-        return res.status(409).json({ success: false, message: 'Phone number already exists' });
-      }
+      // Check for existing email in pending_admin_verifications
+      const pendingEmail = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM pending_admin_verifications WHERE email = ?', [email], (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
+        });
+      });
+      if (pendingEmail.length > 0) return res.status(409).json({ success: false, message: 'A verification email has already been sent to this address. Please check your inbox.' });
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create admin user with company_code reference
+      // Generate verification token
+      const token = crypto.randomBytes(32).toString('hex');
+
+      // Save to pending_admin_verifications
       await new Promise((resolve, reject) => {
         db.query(
-          'INSERT INTO admin_users (name, email, phone_number, role, password, company_code) VALUES (?, ?, ?, ?, ?, ?)',
-          [name, email, phone, role, hashedPassword, company_code],
-          (err, result) => {
-            if (err) reject(err);
-            else resolve(result);
+          'INSERT INTO pending_admin_verifications (name, email, phone, role, password, company_code, token) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [name, email, phone, role, hashedPassword, company_code, token],
+          (err) => {
+            if (err) return reject(err);
+            resolve();
           }
         );
       });
 
-      return res.status(201).json({ 
-        success: true, 
-        message: 'Company admin created successfully',
-        company_code: company_code
+
+      // Use frontend_url from request if provided, else fallback to env
+      const frontendUrl = req.body.frontend_url || process.env.FRONTEND_URL || 'http://localhost:3000';
+      const verifyUrl = `${frontendUrl}/verify-company-admin?token=${token}`;
+
+      // Build company details HTML
+      let companyDetailsHtml = `<ul style="padding-left:18px;">
+        <li><strong>Company Name:</strong> ${company.company_name}</li>
+        <li><strong>Address:</strong> ${company.company_address || 'N/A'}</li>
+        <li><strong>Phone:</strong> ${company.company_phone || 'N/A'}</li>
+
+      </ul>`;
+
+      // Optional: company logo
+      let logoHtml = '';
+      if (company.company_logo) {
+        const logoUrl = `${process.env.BACKEND_URL || ''}/uploads/company_logos/${company.company_logo}`;
+        logoHtml = `<img src="${logoUrl}" alt="Company Logo" style="max-width:120px;max-height:60px;margin-bottom:10px;display:block;" />`;
+      }
+
+      await transporter.sendMail({
+        from: process.env.SMTP_USER || 'no-reply@yourdomain.com',
+        to: email,
+        subject: `Action Required: Verify Your Company Admin Account for ${company.company_name}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px 18px;background:#f9f9f9;border-radius:8px;">
+            ${logoHtml}
+            <h2 style="color:#2d3748;">Company Admin Account Verification</h2>
+            <p>Hello <strong>${name}</strong>,</p>
+            <p>You have been invited to become a Company Admin for the following company:</p>
+            ${companyDetailsHtml}
+            <p><strong>Your Details:</strong></p>
+            <ul style="padding-left:18px;">
+              <li><strong>Name:</strong> ${name}</li>
+              <li><strong>Email:</strong> ${email}</li>
+              <li><strong>Role:</strong> ${role}</li>
+            </ul>
+            <p>To activate your admin account and complete your registration, please verify your email address by clicking the button below:</p>
+            <div style="margin:18px 0;">
+              <a href="${verifyUrl}" style="background:#007bff;color:#fff;text-decoration:none;padding:12px 28px;border-radius:5px;font-size:1.1em;display:inline-block;">Verify My Email</a>
+            </div>
+            <hr style="margin:24px 0;" />
+            <p style="color:#555;font-size:0.97em;">If you did not request this or believe this was sent in error, you can safely ignore this email. Your account will not be activated unless you verify your email.</p>
+            <p style="color:#888;font-size:0.93em;">&copy; ${new Date().getFullYear()} ${company.company_name}</p>
+          </div>
+        `
       });
 
+      return res.status(201).json({ success: true, message: 'Verification email sent.' });
     } catch (error) {
       console.error('Create company admin error:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+
+  // Verify company admin email and move to admin_users
+  static async verifyCompanyAdminEmail(req, res) {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ success: false, message: 'Invalid or missing token.' });
+
+    try {
+      // Find pending admin by token
+      const pending = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM pending_admin_verifications WHERE token = ?', [token], (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
+        });
+      });
+
+      if (!pending.length) {
+        // Try to find if admin is already verified
+        // Get the email from the token (if you want to decode, you need to store email with token, or use a JWT. Here, we check all emails in admin_users with a matching token in the past.)
+        // Instead, try to find a matching admin in admin_users by searching for a token in the pending table (should be unique)
+        // But since the row is deleted, we can't get the email. So, ask user to try logging in, or say 'already verified or invalid/expired token'.
+        return res.status(409).json({ success: false, message: 'This email is already verified or the link is invalid/expired.' });
+      }
+      const admin = pending[0];
+
+      // Check if already exists in admin_users
+      const exists = await new Promise((resolve, reject) => {
+        db.query('SELECT * FROM admin_users WHERE email = ?', [admin.email], (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
+        });
+      });
+      if (exists.length > 0) {
+        // Clean up pending
+        await new Promise((resolve, reject) => {
+          db.query('DELETE FROM pending_admin_verifications WHERE id = ?', [admin.id], (err) => {
+            if (err) return reject(err);
+            resolve();
+          });
+        });
+        return res.status(409).json({ success: false, message: 'Admin already verified.' });
+      }
+
+      // Insert into admin_users
+      await new Promise((resolve, reject) => {
+        db.query(
+          'INSERT INTO admin_users (name, email, phone_number, role, password, company_code) VALUES (?, ?, ?, ?, ?, ?)',
+          [admin.name, admin.email, admin.phone, admin.role, admin.password, admin.company_code],
+          (err) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
+
+      // Delete from pending_admin_verifications
+      await new Promise((resolve, reject) => {
+        db.query('DELETE FROM pending_admin_verifications WHERE id = ?', [admin.id], (err) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
+
+      return res.json({ success: true, message: 'Email verified and admin account created successfully.' });
+    } catch (error) {
+      console.error('Verify company admin error:', error);
       return res.status(500).json({ success: false, message: 'Server error' });
     }
   }

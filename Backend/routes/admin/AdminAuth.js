@@ -2,7 +2,8 @@ const express = require('express');
 const AuthController = require('../../controllers/admin/AdminAuthController');
 const router = express.Router();
 const { uploadLogo } = require('../../middleware/upload');
-
+const multer = require('multer');
+const upload = multer();
 
 // ======================
 // Admin Authentication
@@ -12,12 +13,13 @@ router.post('/login', AuthController.login);
 
 // ======================
 // Admin Management
-// ======================
-router.post('/register-company-admin', uploadLogo.single('company_logo'), AuthController.registerCompanyAdmin);
-// New two-step process endpoints
+
 router.post('/create-company', uploadLogo.single('company_logo'), AuthController.createCompany);
 router.put('/update-company/:id', uploadLogo.single('company_logo'), AuthController.updateCompany);
-router.post('/create-company-admin', AuthController.createCompanyAdmin);
+
+router.post('/create-company-admin', upload.none(), AuthController.createCompanyAdmin);
+// Email verification endpoint
+router.get('/verify-company-admin', AuthController.verifyCompanyAdminEmail);
 // Update endpoints
 router.put('/update-company-admin/:user_id', uploadLogo.single('company_logo'), AuthController.updateCompanyAdmin); // Update company admin
 router.get('/get-admin/:user_id', AuthController.getAdminById);              // Get admin by ID
