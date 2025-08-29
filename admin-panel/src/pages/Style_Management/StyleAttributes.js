@@ -197,6 +197,11 @@ export default function StyleAttributes() {
     return allSizeRanges.filter(r => !assignedRangeIds.includes(String(r.size_range_id)));
   };
 
+  // Remove assigned size range from style
+  const handleRemoveSizeRange = (size_range_id) => {
+    setDeleteModalInfo({ type: 'sizes', id: size_range_id });
+  };
+
   // Render two-column layout: left = Add New, right = Add Existing (table + assign)
   const renderAttributeSection = (title, items, type) => (
     <Row className="mb-4">
@@ -266,7 +271,20 @@ export default function StyleAttributes() {
             ) : (
               assignedSizeRanges.map(({ range, sizes }) => (
                 <Accordion.Item eventKey={String(range.size_range_id)} key={range.size_range_id}>
-                  <Accordion.Header>{range.range_name}</Accordion.Header>
+                  <Accordion.Header>
+                    <div className="d-flex justify-content-between align-items-center w-100">
+                      <span>{range.range_name}</span>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        className="ms-2 py-0 px-2"
+                        style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                        onClick={e => { e.stopPropagation(); handleRemoveSizeRange(range.size_range_id); }}
+                      >
+                        <FaTrash />
+                      </Button>
+                    </div>
+                  </Accordion.Header>
                   <Accordion.Body>
                     <Table bordered size="sm" className="mb-0">
                       <thead>

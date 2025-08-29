@@ -133,7 +133,7 @@ const SizeManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCance
   // Add a size to the form list
   const handleAddFormSize = (e) => {
     e.preventDefault();
-    const size = formSize.trim();
+    const size = formSize.trim().toUpperCase();
     if (!size) return;
     if (formSizes.includes(size)) {
       setError('Size already added');
@@ -177,7 +177,7 @@ const SizeManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCance
                     type="text"
                     placeholder="e.g. XS or 38"
                     value={formSize}
-                    onChange={e => setFormSize(e.target.value)}
+                    onChange={e => setFormSize(e.target.value.toUpperCase())}
                     disabled={addingRange || updatingRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddFormSize(e); } }}
                   />

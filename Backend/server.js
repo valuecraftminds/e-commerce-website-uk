@@ -58,6 +58,7 @@ const companyRoutes = require('./routes/admin/Company');
 const GRNRoutes = require('./routes/admin/GRN');
 const LocationRoutes = require('./routes/admin/Location');
 const IssuingRoutes = require('./routes/admin/Issuing');
+const StockRoutes = require('./routes/admin/Stock');
 
 
 // Route bindings
@@ -93,6 +94,7 @@ app.use('/api/admin', companyRoutes);
 app.use('/api/admin/grn', GRNRoutes);
 app.use('/api/admin/locations', LocationRoutes);
 app.use('/api/admin/issuing', IssuingRoutes);
+app.use('/api/admin/stock', StockRoutes);
 
 
 

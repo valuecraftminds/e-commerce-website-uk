@@ -66,7 +66,7 @@ BASE_URL
           <label className="form-label">Main Category *</label>
           <select
             className="form-select"
-            value={selectedMainCategory}
+            value={selectedMainCategory || (editingStyle && editingStyle.main_category_id ? editingStyle.main_category_id.toString() : '')}
             onChange={(e) => handleMainCategoryChange(e.target.value)}
           >
             <option value="">Select Main Category</option>
@@ -78,20 +78,25 @@ BASE_URL
           </select>
         </div>
 
-        {selectedMainCategory && (
+        {(selectedMainCategory || (editingStyle && editingStyle.main_category_id)) && (
           <div className="form-group col-md-6">
             <label className="form-label">Sub Category *</label>
             <select
               className="form-select"
-              value={styleForm.category_id}
+              value={styleForm.category_id || (editingStyle && editingStyle.category_id ? editingStyle.category_id.toString() : '')}
               onChange={(e) => setStyleForm({...styleForm, category_id: e.target.value})}
             >
               <option value="">Select Sub Category</option>
-              {getSubcategoriesForMainCategory().map((subCategory) => (
-                <option key={subCategory.category_id} value={subCategory.category_id}>
-                  {subCategory.category_name}
-                </option>
-              ))}
+              {(() => {
+                // Determine which main category to use for subcategories
+                const mainCatId = selectedMainCategory || (editingStyle && editingStyle.main_category_id ? editingStyle.main_category_id.toString() : '');
+                const subCats = mainCatId ? getSubcategoriesForMainCategory(mainCatId) : [];
+                return subCats.map((subCategory) => (
+                  <option key={subCategory.category_id} value={subCategory.category_id}>
+                    {subCategory.category_name}
+                  </option>
+                ));
+              })()}
             </select>
           </div>
         )}

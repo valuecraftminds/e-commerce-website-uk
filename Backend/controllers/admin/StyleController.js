@@ -148,6 +148,26 @@ const StyleController = {
     });
   },
 
+
+  // Update is_view status only
+  updateIsView(req, res) {
+    const { style_id } = req.params;
+    const { is_view } = req.body;
+    if (!['yes', 'no'].includes(is_view)) {
+      return res.status(400).json({ success: false, message: 'Invalid is_view value' });
+    }
+    const sql = 'UPDATE styles SET is_view = ? WHERE style_id = ?';
+    db.query(sql, [is_view, style_id], (err, result) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error updating is_view' });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Style not found' });
+      }
+      res.json({ success: true, message: 'is_view updated' });
+    });
+  },
+
   // Delete style and its variants
   deleteStyle(req, res) {
     const { style_id } = req.params;

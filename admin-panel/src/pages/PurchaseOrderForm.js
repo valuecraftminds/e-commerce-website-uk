@@ -4,7 +4,7 @@ import { Alert, Button, Card, Col, Container, Form, Row, Table } from 'react-boo
 import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
-import ShowVariantModal from '../components/modals/ShowVariantModal';
+import PoVariantsModal from '../components/modals/PoVariantsModal';
 import { AuthContext } from '../context/AuthContext';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -74,7 +74,30 @@ export default function PurchaseOrderForm() {
           
           if (response.data.success) {
             if (isViewing) {
-              setPoDetails(response.data);
+              // For view mode, fetch available stock for each item
+              const itemsWithStock = await Promise.all(
+                (response.data.items || []).map(async item => {
+                  try {
+                    const stockRes = await axios.get(`${BASE_URL}/api/admin/stock/get-stock-summary`, {
+                      params: {
+                        company_code: userData?.company_code,
+                        style_number: item.style_number,
+                        sku: item.sku
+                      }
+                    });
+                    return {
+                      ...item,
+                      available_stock_qty: stockRes.data?.stock_qty ?? '-'
+                    };
+                  } catch {
+                    return {
+                      ...item,
+                      available_stock_qty: '-'
+                    };
+                  }
+                })
+              );
+              setPoDetails({ ...response.data, items: itemsWithStock });
             } else {
               setFormData({
                 attention: response.data.header.attention || '',
@@ -85,19 +108,37 @@ export default function PurchaseOrderForm() {
                 delivery_date: response.data.header.delivery_date ? response.data.header.delivery_date.slice(0, 10) : ''
               });
               
-              const formattedItems = (response.data.items || []).map(item => ({
-                sku: item.sku,
-                style_name: item.style_name || 'Unknown Style',
-                color_name: item.color_name || 'Unknown Color',
-                size_name: item.size_name || 'Unknown Size',
-                fit_name: item.fit_name || 'Unknown Fit',
-                material_name: item.material_name || 'Unknown Material',
-                quantity: parseInt(item.quantity) || 0,
-                unit_price: parseFloat(item.unit_price) || 0,
-                total_price: parseFloat(item.total_price) || 0,
-                company_code: userData?.company_code
-              }));
-              
+              const formattedItems = await Promise.all(
+                (response.data.items || []).map(async item => {
+                  // Always fetch available stock from backend endpoint
+                  try {
+                    const stockRes = await axios.get(`${BASE_URL}/api/admin/stock/get-stock-summary`, {
+                      params: {
+                        company_code: userData?.company_code,
+                        style_number: item.style_number,
+                        sku: item.sku
+                      }
+                    });
+                    return {
+                      ...item,
+                      available_stock_qty: stockRes.data?.stock_qty ?? '-',
+                      quantity: parseInt(item.quantity) || 0,
+                      unit_price: parseFloat(item.unit_price) || 0,
+                      total_price: parseFloat(item.total_price) || 0,
+                      company_code: userData?.company_code
+                    };
+                  } catch {
+                    return {
+                      ...item,
+                      available_stock_qty: '-',
+                      quantity: parseInt(item.quantity) || 0,
+                      unit_price: parseFloat(item.unit_price) || 0,
+                      total_price: parseFloat(item.total_price) || 0,
+                      company_code: userData?.company_code
+                    };
+                  }
+                })
+              );
               setPoItems(formattedItems);
             }
           } else {
@@ -164,19 +205,42 @@ export default function PurchaseOrderForm() {
     setSelectedStyle(selectedOption);
     setVariantQuantities({});
     if (selectedOption) {
-      setShowVariantModal(true); // Always open modal on style select
       try {
         const res = await axios.get(`${BASE_URL}/api/admin/styles/get-style-variants/${selectedOption.value}`, {
           params: { company_code: userData?.company_code }
         });
         if (res.data.success) {
-          setStyleVariants(res.data.variants);
+          // Always fetch available stock for each variant from backend endpoint
+          const variantsWithStock = await Promise.all(
+            res.data.variants.map(async (variant) => {
+              try {
+                const stockRes = await axios.get(`${BASE_URL}/api/admin/stock/get-stock-summary`, {
+                  params: {
+                    company_code: userData?.company_code,
+                    style_number: variant.style_number,
+                    sku: variant.sku
+                  }
+                });
+                return {
+                  ...variant,
+                  available_stock_qty: stockRes.data?.stock_qty ?? '-'
+                };
+              } catch {
+                return {
+                  ...variant,
+                  available_stock_qty: '-'
+                };
+              }
+            })
+          );
+          setStyleVariants(variantsWithStock);
         } else {
           setStyleVariants([]);
         }
       } catch {
         setStyleVariants([]);
       }
+      setShowVariantModal(true);
     } else {
       setShowVariantModal(false);
       setStyleVariants([]);
@@ -209,7 +273,8 @@ export default function PurchaseOrderForm() {
       quantity,
       unit_price: parseFloat(variant.unit_price || 0),
       total_price: quantity * parseFloat(variant.unit_price || 0),
-      company_code: userData?.company_code
+      company_code: userData?.company_code,
+      available_stock_qty: variant.available_stock_qty
     };
     const validation = validateItem(newItem);
     if (validation) {
@@ -222,6 +287,7 @@ export default function PurchaseOrderForm() {
       const updatedItems = [...poItems];
       updatedItems[existingItemIndex].quantity += quantity;
       updatedItems[existingItemIndex].total_price = updatedItems[existingItemIndex].quantity * updatedItems[existingItemIndex].unit_price;
+      updatedItems[existingItemIndex].available_stock_qty = variant.available_stock_qty;
       setPoItems(updatedItems);
     } else {
       setPoItems([...poItems, newItem]);
@@ -342,7 +408,17 @@ export default function PurchaseOrderForm() {
                   <Table striped bordered hover>
                     <thead>
                       <tr>
-                        <th>#</th><th>SKU</th><th>Style</th><th>Color</th><th>Size</th><th>Fit</th><th>Material</th><th>Quantity</th><th>Unit Price</th><th>Total Price</th>
+                        <th>#</th>
+                        <th>SKU</th>
+                        <th>Style</th>
+                        <th>Color</th>
+                        <th>Size</th>
+                        <th>Fit</th>
+                        <th>Material</th>
+                        <th>Quantity</th>
+                        <th>Available Stock </th>
+                        <th>Unit Price</th>
+                        <th>Total Price</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -356,6 +432,7 @@ export default function PurchaseOrderForm() {
                           <td>{item.fit_name || 'N/A'}</td>
                           <td>{item.material_name || 'N/A'}</td>
                           <td>{item.quantity}</td>
+                          <td>{item.available_stock_qty !== undefined && item.available_stock_qty !== null ? item.available_stock_qty : '-'}</td>
                           <td>${parseFloat(item.unit_price || 0).toFixed(2)}</td>
                           <td>${parseFloat(item.total_price || 0).toFixed(2)}</td>
                         </tr>
@@ -363,7 +440,7 @@ export default function PurchaseOrderForm() {
                     </tbody>
                     <tfoot>
                       <tr className="table-info">
-                        <th colSpan="9" className="text-end">Total:</th>
+                        <th colSpan="10" className="text-end">Total:</th>
                         <th>${(poDetails.total_amount || 0).toFixed(2)}</th>
                       </tr>
                     </tfoot>
@@ -523,7 +600,7 @@ export default function PurchaseOrderForm() {
           )}
 
           {/* Variant Modal as component */}
-          <ShowVariantModal
+          <PoVariantsModal
             show={showVariantModal}
             onHide={() => setShowVariantModal(false)}
             selectedStyle={selectedStyle}
@@ -577,7 +654,17 @@ export default function PurchaseOrderForm() {
                 <Table striped bordered hover>
                   <thead>
                     <tr>
-                      <th>#</th><th>SKU</th><th>Style</th><th>Color</th><th>Size</th><th>Fit</th><th>Material</th><th>Quantity</th><th>Unit Price</th><th>Total Price</th>
+                      <th>#</th>
+                      <th>SKU</th>
+                      <th>Style</th>
+                      <th>Color</th>
+                      <th>Size</th>
+                      <th>Fit</th>
+                      <th>Material</th>
+                      <th>Quantity</th>
+                      <th>Available Stock</th>
+                      <th>Unit Price</th>
+                      <th>Total Price</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -612,6 +699,7 @@ export default function PurchaseOrderForm() {
                             />
                           )}
                         </td>
+                        <td>{item.available_stock_qty !== undefined && item.available_stock_qty !== null ? item.available_stock_qty : '-'}</td>
                         <td>${(item.unit_price).toFixed(2)}</td>
                         <td>${(item.total_price).toFixed(2)}</td>
                         <td>
@@ -624,7 +712,7 @@ export default function PurchaseOrderForm() {
                   </tbody>
                   <tfoot>
                     <tr className="table-info">
-                      <th colSpan="8" className="text-end">Total:</th>
+                      <th colSpan="10" className="text-end">Total:</th>
                       <th>${(poItems.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseInt(item.quantity)), 0) || 0).toFixed(2)}</th>
                       <th></th>
                     </tr>

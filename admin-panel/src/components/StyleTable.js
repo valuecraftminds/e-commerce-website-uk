@@ -9,7 +9,9 @@ import {
 import { useMemo, useState } from 'react';
 import DeleteModal from './modals/DeleteModal';
 import Spinner from './Spinner';
-import { FaEdit, FaTrash, FaCogs } from 'react-icons/fa'; // Add FaCogs
+import { FaEdit, FaTrash, FaCogs, FaEye, FaEyeSlash } from 'react-icons/fa';
+
+import { useRef, useEffect } from 'react';
 
 const StyleTable = ({ 
   styles, 
@@ -17,9 +19,15 @@ const StyleTable = ({
   tableActions, 
   handleRowClick,
   BASE_URL,
-  onAfterDelete
+  onAfterDelete,
+  refreshKey // optional: incremented by parent to trigger refresh
 }) => {
   const [deleteModalId, setDeleteModalId] = useState(null);
+
+  // Track page index to preserve it across data refreshes
+  const pageIndexRef = useRef(0);
+
+  // Error state for each style row (keyed by style_id) is now handled in parent (Style.js)
 
   const columns = useMemo(
     () => [
@@ -83,46 +91,71 @@ const StyleTable = ({
       },
       {
         header: 'Actions',
-        maxWidth: 150,
-        cell: ({ row }) => (
-          <div className="table-actions">
-            <button
-              className="action-btn edit-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                tableActions.handleEditStyle(row.original);
-              }}
-              title="Edit"
-            >
-              <FaEdit size={14} />
-            </button>
-            <button
-              className="action-btn delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDeleteModalId(row.original.style_id);
-              }}
-              title="Delete"
-            >
-              <FaTrash size={14} />
-            </button>
-            <button
-              className="action-btn"
-              style={{ backgroundColor: '#34495e', color: 'white' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                tableActions.handleManageAttributes(row.original);
-              }}
-              title="Manage Attributes"
-            >
-              <FaCogs size={14} />
-            </button>
-          </div>
-        )
+        maxWidth: 200,
+        cell: ({ row }) => {
+          const style = row.original;
+          const isView = style.is_view === 'yes';
+          // Get error message from parent (Style.js)
+          const errorMsg = typeof tableActions.getIsViewError === 'function' ? tableActions.getIsViewError(style.style_id) : '';
+          return (
+            <div className="table-actions">
+              <button
+                className="action-btn edit-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tableActions.handleEditStyle(style);
+                }}
+                title="Edit"
+              >
+                <FaEdit size={14} />
+              </button>
+              <button
+                className="action-btn delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteModalId(style.style_id);
+                }}
+                title="Delete"
+              >
+                <FaTrash size={14} />
+              </button>
+              <button
+                className="action-btn"
+                style={{ backgroundColor: '#34495e', color: 'white' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tableActions.handleManageAttributes(style);
+                }}
+                title="Manage Attributes"
+              >
+                <FaCogs size={14} />
+              </button>
+              <button
+                className={`action-btn view-btn${isView ? ' on' : ''}`}
+                style={{
+                  backgroundColor: isView ? '#27ae60' : '#bdc3c7',
+                }}
+                title={isView ? 'Set Not Viewable' : 'Set Viewable'}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (typeof tableActions.handleToggleIsView === 'function') {
+                    await tableActions.handleToggleIsView(style, !isView);
+                  }
+                }}
+              >
+                {isView ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+              </button>
+              {errorMsg && (
+                <div style={{ color: 'red', fontSize: 12, marginTop: 2 }}>{errorMsg}</div>
+              )}
+            </div>
+          );
+        }
       }
     ],
     [tableActions, BASE_URL]
   );
+
 
   const table = useReactTable({
     data: styles,
@@ -132,9 +165,24 @@ const StyleTable = ({
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
-      pagination: { pageSize: 10 }
+      pagination: { pageSize: 10, pageIndex: pageIndexRef.current }
     }
   });
+
+  // When styles data changes, restore previous page index if possible
+  useEffect(() => {
+    // Save current page index before data changes
+    const currentPage = table.getState().pagination.pageIndex;
+    pageIndexRef.current = currentPage;
+    // After data changes, restore page index if possible
+    if (table.getPageCount() > pageIndexRef.current) {
+      table.setPageIndex(pageIndexRef.current);
+    } else {
+      table.setPageIndex(0);
+      pageIndexRef.current = 0;
+    }
+    // eslint-disable-next-line
+  }, [styles]);
 
   const handleDeleteSuccess = (deletedId) => {
     tableActions.handleDeleteStyle(deletedId);

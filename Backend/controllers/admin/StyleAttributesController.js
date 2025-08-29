@@ -150,13 +150,13 @@ const StyleAttributesController = {
       });
     }
 
+    // Map for table/column names
     const tableMap = {
       colors: { table: 'style_colors', column: 'color_id', variantCol: 'color_id' },
       sizes: { table: 'style_size_ranges', column: 'size_range_id', variantCol: 'size_range_id' },
       materials: { table: 'style_materials', column: 'material_id', variantCol: 'material_id' },
       fits: { table: 'style_fits', column: 'fit_id', variantCol: 'fit_id' }
     };
-
     const config = tableMap[type];
     if (!config) {
       return res.status(400).json({ 
@@ -165,48 +165,107 @@ const StyleAttributesController = {
       });
     }
 
-    // Check if attribute is used in style_variants
-    const variantCheckQuery = `SELECT COUNT(*) as count FROM style_variants WHERE style_number = ? AND company_code = ? AND ${config.variantCol} = ?`;
-    db.query(variantCheckQuery, [style_number, company_code, attribute_id], (err, results) => {
-      if (err) {
-        console.error('Error checking style_variants:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'Error checking attribute usage in variants'
-        });
-      }
-      if (results[0].count > 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Cannot remove this ${type.slice(0, -1)} because it is used in style variants.`
-        });
-      }
-
-      // Proceed to delete if not used in variants
-      const query = `DELETE FROM ${config.table} WHERE style_number = ? AND company_code = ? AND ${config.column} = ?`;
-      db.query(query, [style_number, company_code, attribute_id], (err, result) => {
+    if (type === 'sizes') {
+      // For sizes, attribute_id is size_range_id. Check if any sizes in this range are used in style_variants for this style.
+      db.query('SELECT size_id FROM sizes WHERE size_range_id = ?', [attribute_id], (err, sizes) => {
         if (err) {
-          console.error('Error removing style attribute:', err);
-          res.status(500).json({ 
-            success: false, 
-            message: 'Error removing attribute from style' 
+          console.error('Error fetching sizes for size range:', err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error checking attribute usage in variants'
           });
+        }
+        if (!sizes.length) {
+          // No sizes, safe to delete
+          proceedDelete();
           return;
         }
-        
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ 
-            success: false, 
-            message: 'Attribute not found for this style' 
+        const sizeIds = sizes.map(s => s.size_id);
+        db.query(
+          `SELECT COUNT(*) as count FROM style_variants WHERE style_number = ? AND company_code = ? AND size_id IN (?)`,
+          [style_number, company_code, sizeIds],
+          (err2, results) => {
+            if (err2) {
+              console.error('Error checking style_variants:', err2);
+              return res.status(500).json({
+                success: false,
+                message: 'Error checking attribute usage in variants'
+              });
+            }
+            if (results[0].count > 0) {
+              return res.status(400).json({
+                success: false,
+                message: `Cannot remove this size range because one or more sizes are used in style variants.`
+              });
+            }
+            proceedDelete();
+          }
+        );
+        function proceedDelete() {
+          const query = `DELETE FROM style_size_ranges WHERE style_number = ? AND company_code = ? AND size_range_id = ?`;
+          db.query(query, [style_number, company_code, attribute_id], (err, result) => {
+            if (err) {
+              console.error('Error removing style attribute:', err);
+              res.status(500).json({ 
+                success: false, 
+                message: 'Error removing attribute from style' 
+              });
+              return;
+            }
+            if (result.affectedRows === 0) {
+              return res.status(404).json({ 
+                success: false, 
+                message: 'Attribute not found for this style' 
+              });
+            }
+            res.json({ 
+              success: true, 
+              message: 'Size range removed from style successfully' 
+            });
           });
         }
-
-        res.json({ 
-          success: true, 
-          message: `${type.slice(0, -1)} removed from style successfully` 
+      });
+    } else {
+      // Non-size attributes: original logic
+      const variantCheckQuery = `SELECT COUNT(*) as count FROM style_variants WHERE style_number = ? AND company_code = ? AND ${config.variantCol} = ?`;
+      db.query(variantCheckQuery, [style_number, company_code, attribute_id], (err, results) => {
+        if (err) {
+          console.error('Error checking style_variants:', err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error checking attribute usage in variants'
+          });
+        }
+        if (results[0].count > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot remove this ${type.slice(0, -1)} because it is used in style variants.`
+          });
+        }
+        // Proceed to delete from style_xxx table
+        const query = `DELETE FROM ${config.table} WHERE style_number = ? AND company_code = ? AND ${config.column} = ?`;
+        db.query(query, [style_number, company_code, attribute_id], (err, result) => {
+          if (err) {
+            console.error('Error removing style attribute:', err);
+            res.status(500).json({ 
+              success: false, 
+              message: 'Error removing attribute from style' 
+            });
+            return;
+          }
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ 
+              success: false, 
+              message: 'Attribute not found for this style' 
+            });
+          }
+          res.json({ 
+            success: true, 
+            message: `${type.slice(0, -1)} removed from style successfully` 
+          });
         });
       });
-    });
+    }
   }
 };
 

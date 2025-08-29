@@ -9,6 +9,7 @@ router.get('/get-styles', StyleController.getAllStyles);
 router.get('/styles/:style_id', StyleController.getStyleById);
 router.post('/add-styles', uploadStyles.array('images', 5), StyleController.addStyle);
 router.put('/update-styles/:style_id', uploadStyles.array('images', 5), StyleController.updateStyle);
+router.put('/update-is-view/:style_id', StyleController.updateIsView);
 router.delete('/delete-styles/:style_id', StyleController.deleteStyle);
 
 // Style Variants

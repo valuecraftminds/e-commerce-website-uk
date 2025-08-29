@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Table, Button, Form, InputGroup } from 'react-bootstrap';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 
-export default function ShowVariantModal({
+export default function PoVariantsModal({
   show,
   onHide,
   selectedStyle,
@@ -78,6 +78,7 @@ export default function ShowVariantModal({
                 <th>Size</th>
                 <th>Fit</th>
                 <th>Material</th>
+                <th>Available Stock</th>
                 <th>Unit Price</th>
                 <th>Quantity</th>
                 <th>Actions</th>
@@ -92,6 +93,7 @@ export default function ShowVariantModal({
                   <td>{variant.size_name}</td>
                   <td>{variant.fit_name}</td>
                   <td>{variant.material_name}</td>
+                  <td>{variant.available_stock_qty !== undefined && variant.available_stock_qty !== null ? variant.available_stock_qty : '-'}</td>
                   <td>${parseFloat(variant.unit_price || 0).toFixed(2)}</td>
                   <td>
                     <Form.Control
@@ -103,7 +105,7 @@ export default function ShowVariantModal({
                     />
                   </td>
                   <td className="d-flex gap-2">
-                    <Button size="sm" variant="primary" onClick={() => handleAddVariant(variant)} title="Add">
+                    <Button size="sm" variant="success" onClick={() => handleAddVariant(variant)} title="Add">
                       <FaPlus />
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => handleRemoveVariant(variant.sku)} title="Remove">

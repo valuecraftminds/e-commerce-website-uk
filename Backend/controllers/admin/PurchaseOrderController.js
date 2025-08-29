@@ -543,8 +543,8 @@ const PurchaseOrderController = {
                    c.color_name,
                    sz.size_name,
                    f.fit_name,
-                   m.material_name
-                  , poh.tolerance_limit
+                   m.material_name,
+                   poh.tolerance_limit
             FROM purchase_order_headers poh
             LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id
             LEFT JOIN purchase_order_items poi ON poh.po_number = poi.po_number
@@ -562,20 +562,12 @@ const PurchaseOrderController = {
 
         db.query(sql, [po_number, company_code], (err, results) => {
             if (err) {
-                console.error('Error fetching purchase order details:', err);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error fetching purchase order details',
-                    error: err.message 
-                });
+                console.error('Error fetching PO details:', err);
+                return res.status(500).json({ success: false, message: 'Database error' });
             }
 
             if (results.length === 0) {
-                console.log('Purchase order not found:', po_number, 'for company:', company_code);
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'Purchase order not found for this company' 
-                });
+                return res.status(404).json({ success: false, message: 'Purchase order not found' });
             }
 
             console.log('Found PO details, results count:', results.length);
@@ -596,24 +588,20 @@ const PurchaseOrderController = {
             };
 
             const tolerance = parseFloat(header.tolerance_limit) || 0;
-            const items = results.filter(row => row.item_id).map(row => {
-                const ordered_qty = parseFloat(row.quantity || 0);
-                const max_qty = ordered_qty + (ordered_qty * tolerance / 100);
-                return {
-                    item_id: row.item_id,
-                    sku: row.sku,
-                    quantity: row.quantity,
-                    unit_price: row.unit_price,
-                    total_price: row.total_price,
-                    style_number: row.style_number,
-                    style_name: row.style_name,
-                    color_name: row.color_name,
-                    size_name: row.size_name,
-                    fit_name: row.fit_name,
-                    material_name: row.material_name,
-                    max_qty: parseFloat(max_qty.toFixed(2))
-                };
-            });
+            // Only items with item_id
+            let items = results.filter(row => row.item_id).map(row => ({
+                item_id: row.item_id,
+                sku: row.sku,
+                style_number: row.style_number,
+                style_name: row.style_name,
+                color_name: row.color_name,
+                size_name: row.size_name,
+                fit_name: row.fit_name,
+                material_name: row.material_name,
+                quantity: row.quantity,
+                unit_price: row.unit_price,
+                total_price: row.total_price
+            }));
 
             const total_amount = items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
 

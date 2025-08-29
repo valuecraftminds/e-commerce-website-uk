@@ -210,6 +210,8 @@ export default function Style() {
     setShowStyleModal(true);
   };
 
+
+
   const tableActions = useMemo(() => ({
     handleEditStyle: (style) => {
       setEditingStyle(style);
@@ -250,8 +252,48 @@ export default function Style() {
     },
     handleManageAttributes: (style) => {
       navigate(`/styles/${style.style_number}/attributes`);
-    }
-  }), [company_code, subCategories, fetchStyles, navigate]);
+    },
+    handleToggleIsView: async (style, toView) => {
+      // Always allow click, but check requirements and show error/success
+      // Required fields: style_number, name, description, category_id, main_category_id, image
+      const requiredFields = [
+        style.style_number,
+        style.name,
+        style.description,
+        style.category_id,
+        style.main_category_id,
+        style.image
+      ];
+      const allFieldsFilled = requiredFields.every(f => f !== null && f !== undefined && f !== '' && f !== 'null');
+      if (toView && (!allFieldsFilled || style.approved !== 'yes')) {
+        setError('All fields must be filled and approved to view in client side.');
+        setTimeout(() => setError(''), 2500);
+        return;
+      }
+      try {
+        const response = await fetch(`${BASE_URL}/api/admin/styles/update-is-view/${style.style_id}`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_view: toView ? 'yes' : 'no' })
+          }
+        );
+        const data = await response.json();
+        if (data.success) {
+          setSuccess(`Style is_view set to ${toView ? 'yes' : 'no'}`);
+          fetchStyles();
+          setTimeout(() => setSuccess(''), 2000);
+        } else {
+          setError(data.message || 'Failed to update view status');
+          setTimeout(() => setError(''), 2500);
+        }
+      } catch (err) {
+        setError('Error updating view status');
+        setTimeout(() => setError(''), 2500);
+      }
+    },
+    getIsViewError: () => '' // No longer used, but keep for compatibility
+  }), [company_code, subCategories, fetchStyles, navigate, BASE_URL]);
 
   const handleSaveStyle = async () => {
     setLoading(true);
