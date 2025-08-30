@@ -241,6 +241,11 @@ export default function Style() {
         
         if (data.success) {
           setSuccess('Style deleted successfully!');
+          // Clear selected style and close modals if the deleted style was selected
+          setSelectedStyle(prev => (prev && prev.style_id === styleId ? null : prev));
+          setShowVariantModal(false);
+          setEditingStyle(prev => (prev && prev.style_id === styleId ? null : prev));
+          setShowStyleModal(false);
           fetchStyles();
           setTimeout(() => setSuccess(''), 3000);
         } else {
@@ -298,22 +303,36 @@ export default function Style() {
   const handleSaveStyle = async () => {
     setLoading(true);
     setError('');
-    
+
+    // Check required fields
+    const requiredFields = [
+      styleForm.style_number,
+      styleForm.name,
+      styleForm.description,
+      styleForm.category_id,
+      styleForm.main_category_id,
+      styleForm.images && styleForm.images.length > 0
+    ];
+    const allFieldsFilled = requiredFields.every(f => f !== null && f !== undefined && f !== '' && f !== false && f !== 'null');
+
+    // Set is_view based on required fields
+    const formData = new FormData();
+    Object.keys(styleForm).forEach(key => {
+      if (key === 'images') {
+        styleForm.images.forEach(image => {
+          formData.append('images', image);
+        });
+      } else if (key === 'style_number') {
+        formData.append('style_number', styleForm.style_number); // send as style_number
+      } else if (key === 'is_view') {
+        // skip, will set below
+      } else {
+        formData.append(key, styleForm[key]);
+      }
+    });
+    formData.append('is_view', allFieldsFilled ? 'yes' : 'no');
+
     try {
-      const formData = new FormData();
-
-      Object.keys(styleForm).forEach(key => {
-        if (key === 'images') {
-          styleForm.images.forEach(image => {
-            formData.append('images', image);
-          });
-        } else if (key === 'style_number') {
-          formData.append('style_number', styleForm.style_number); // send as style_number
-        } else {
-          formData.append(key, styleForm[key]);
-        }
-      });
-
       const url = editingStyle 
         ? `${BASE_URL}/api/admin/styles/update-styles/${editingStyle.style_id}`
         : `${BASE_URL}/api/admin/styles/add-styles`;

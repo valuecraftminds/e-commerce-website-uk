@@ -61,12 +61,18 @@ const StyleController = {
 
   // Add new style
   addStyle(req, res) {
-    const { company_code, style_number, name, description, category_id, approved } = req.body;
+    const { company_code, style_number, name, description, category_id, main_category_id, approved } = req.body;
     const imagePaths = req.files ? req.files.map(file => file.filename).join(',') : null;
 
     if (!company_code || !style_number || !name || !category_id) {
       return res.status(400).json({ success: false, message: 'Company code, style number, name, and category are required' });
     }
+
+    // Determine is_view logic: all required fields must be filled
+    const allFieldsFilled = (
+      style_number && name && description && category_id && main_category_id && imagePaths && imagePaths.length > 0
+    );
+    const is_view = allFieldsFilled ? 'yes' : 'no';
 
     // Check for duplicate style_number (style_number)
     db.query('SELECT style_id FROM styles WHERE company_code = ? AND style_number = ?', [company_code, style_number], (err, results) => {
@@ -80,12 +86,12 @@ const StyleController = {
       const sql = `
         INSERT INTO styles (
           company_code, style_number, name, description, category_id, 
-          image, approved, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+          image, approved, is_view, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 
       db.query(sql, 
-        [company_code, style_number, name, description, category_id, imagePaths, approved || 'no'],
+        [company_code, style_number, name, description, category_id, imagePaths, approved || 'no', is_view],
         (err, results) => {
           if (err) {
             return res.status(500).json({ success: false, message: 'Error adding style' });
@@ -94,7 +100,8 @@ const StyleController = {
             success: true, 
             style_id: results.insertId, 
             style_number: style_number, 
-            image: imagePaths 
+            image: imagePaths, 
+            is_view
           });
         }
       );
@@ -175,10 +182,14 @@ const StyleController = {
     const getSql = 'SELECT style_number FROM styles WHERE style_id = ?';
     db.query(getSql, [style_id], (err, result) => {
       if (err) {
-        return res.status(500).json({ success: false, message: 'Error fetching style code' });
+        return res.status(500).json({ success: false, message: 'Error fetching style number' });
       }
       if (result.length === 0) {
         return res.status(404).json({ success: false, message: 'Style not found' });
+      }
+      else {
+      res.json({ success: true, message: 'Style deleted successfully' });
+
       }
 
       const styleNumber = result[0].style_number;

@@ -23,6 +23,8 @@ const StyleTable = ({
   refreshKey // optional: incremented by parent to trigger refresh
 }) => {
   const [deleteModalId, setDeleteModalId] = useState(null);
+    const [deleteModalStyle, setDeleteModalStyle] = useState(null);
+
 
   // Track page index to preserve it across data refreshes
   const pageIndexRef = useRef(0);
