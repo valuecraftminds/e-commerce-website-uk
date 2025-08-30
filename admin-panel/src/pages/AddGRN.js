@@ -13,7 +13,6 @@ import '../styles/WarehouseGRN.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-
 export default function AddGRN() {
     const navigate = useNavigate();
     const { po_number: poParam } = useParams();
@@ -46,8 +45,6 @@ export default function AddGRN() {
     // State for GRN header status from backend
     const [grnHeaderStatus, setGrnHeaderStatus] = useState('');
     
-
-    
     // State for modal
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -63,6 +60,32 @@ export default function AddGRN() {
     const [locations, setLocations] = useState([]);
     const [locationsLoading, setLocationsLoading] = useState(false);
 
+    // Function to check if all items are completed (within tolerance limits)
+    const checkAllItemsCompleted = useCallback(() => {
+        if (!poDetails || !poDetails.items) return false;
+        
+        return poDetails.items.every(item => {
+            const receivedQty = item.total_received || 0;
+            const orderedQty = item.ordered_qty;
+            const toleranceLimit = item.tolerance_limit || 0;
+            
+            // Calculate min and max acceptable quantities
+            const minQty = Math.max(0, orderedQty - (orderedQty * toleranceLimit / 100));
+            const maxQty = orderedQty + (orderedQty * toleranceLimit / 100);
+            
+            // Check if received quantity is within tolerance limits
+            return receivedQty >= minQty && receivedQty <= maxQty;
+        });
+    }, [poDetails]);
+
+    // Update header status when items change
+    useEffect(() => {
+        if (checkAllItemsCompleted()) {
+            setHeaderStatus('completed');
+        } else {
+            setHeaderStatus('partial');
+        }
+    }, [poDetails, checkAllItemsCompleted]);
 
     // Select PO and fetch details (useCallback to avoid re-creation)
     const handleSelectPO = useCallback(async (po_number) => {
@@ -212,9 +235,6 @@ export default function AddGRN() {
         return () => clearTimeout(timeout);
     }, [searchPO, company_code]);
 
-
-
-
     // Open modal for item entry
     const handleItemClick = (item) => {
         if (item.remaining_qty <= 0) {
@@ -254,7 +274,6 @@ export default function AddGRN() {
             .finally(() => setLocationsLoading(false));
     }, [company_code]);
 
-    // Validate and add GRN item
     // Helper to generate next unique lot number
     const getNextLotNo = () => {
         // Collect all used lot numbers in grnItems
@@ -335,6 +354,8 @@ export default function AddGRN() {
             const itemIndex = updatedPODetails.items.findIndex(item => item.sku === selectedItem.sku);
             if (itemIndex !== -1) {
                 updatedPODetails.items[itemIndex].remaining_qty -= received_qty;
+                updatedPODetails.items[itemIndex].total_received = 
+                    (updatedPODetails.items[itemIndex].total_received || 0) + received_qty;
             }
             setPODetails(updatedPODetails);
             setShowModal(false);
@@ -367,6 +388,8 @@ export default function AddGRN() {
         const itemIndex = updatedPODetails.items.findIndex(pi => pi.sku === item.sku);
         if (itemIndex !== -1) {
             updatedPODetails.items[itemIndex].remaining_qty += item.received_qty;
+            updatedPODetails.items[itemIndex].total_received = 
+                Math.max(0, (updatedPODetails.items[itemIndex].total_received || 0) - item.received_qty);
         }
         setPODetails(updatedPODetails);
         setModalError('');
@@ -381,6 +404,8 @@ export default function AddGRN() {
         const itemIndex = updatedPODetails.items.findIndex(pi => pi.sku === item.sku);
         if (itemIndex !== -1) {
             updatedPODetails.items[itemIndex].remaining_qty += item.received_qty;
+            updatedPODetails.items[itemIndex].total_received = 
+                Math.max(0, (updatedPODetails.items[itemIndex].total_received || 0) - item.received_qty);
         }
         setPODetails(updatedPODetails);
         // Remove item from grnItems
@@ -464,30 +489,28 @@ export default function AddGRN() {
     const totals = calculateTotals();
 
     // Helper to generate batch number
-const generateBatchNumber = (invoice, po) => {
-    if (!invoice || !po) return '';
-    const now = new Date();
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const yy = String(now.getFullYear()).slice(-2);
-    const poLast2 = String(po).slice(-2).padStart(2, '0');
-    const invLast2 = String(invoice).slice(-2).padStart(2, '0');
-    return `${dd}${mm}${yy}${poLast2}${invLast2}`;
-};
+    const generateBatchNumber = (invoice, po) => {
+        if (!invoice || !po) return '';
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yy = String(now.getFullYear()).slice(-2);
+        const poLast2 = String(po).slice(-2).padStart(2, '0');
+        const invLast2 = String(invoice).slice(-2).padStart(2, '0');
+        return `${dd}${mm}${yy}${poLast2}${invLast2}`;
+    };
 
-// Auto-generate batch number when invoice number changes
-useEffect(() => {
-    if (invoiceNumber && selectedPO) {
-        setBatchNumber(generateBatchNumber(invoiceNumber, selectedPO));
-    } else {
-        setBatchNumber('');
-    }
-}, [invoiceNumber, selectedPO]);
+    // Auto-generate batch number when invoice number changes
+    useEffect(() => {
+        if (invoiceNumber && selectedPO) {
+            setBatchNumber(generateBatchNumber(invoiceNumber, selectedPO));
+        } else {
+            setBatchNumber('');
+        }
+    }, [invoiceNumber, selectedPO]);
 
     return (
         <Container fluid className="warehouse-grn-container">
-           
-
             {/* Alerts */}
             {success && (
                 <Alert variant="success" dismissible onClose={() => setSuccess('')}>
@@ -574,7 +597,6 @@ useEffect(() => {
                         </Card.Body>
                     </Card>
 
-
                     {/* PO Details and GRN Processing */}
                     {poDetails && (
                         <>
@@ -586,6 +608,13 @@ useEffect(() => {
                                             <div>Supplier: {poDetails.header.supplier_name}</div>
                                             <div>Status: {poDetails.header.status}</div>
                                             <div>Tolerance Limit: {poDetails.header.tolerance_limit || 0}%</div>
+                                        </Col>
+                                        <Col xs="auto">
+                                            {checkAllItemsCompleted() && (
+                                                <Badge bg="success" className="fs-6">
+                                                    All Items Completed
+                                                </Badge>
+                                            )}
                                         </Col>
                                     </Row>
                                 </Card.Header>
@@ -657,6 +686,15 @@ useEffect(() => {
                                         </thead>
                                         <tbody>
                                             {poDetails.items.map((item) => {
+                                                // Calculate tolerance range
+                                                const orderedQty = item.ordered_qty;
+                                                const toleranceLimit = item.tolerance_limit || 0;
+                                                const minQty = Math.max(0, orderedQty - (orderedQty * toleranceLimit / 100));
+                                                const maxQty = orderedQty + (orderedQty * toleranceLimit / 100);
+                                                const receivedQty = item.total_received || 0;
+                                                
+                                               
+                                                
                                                 // Use headerStatus instead of grnHeaderStatus for clickable logic
                                                 const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed');
                                                 return (
@@ -676,12 +714,13 @@ useEffect(() => {
                                                                 <small className="text-muted"> (+{item.tolerance_limit}%)</small>
                                                             )}
                                                         </td>
-                                                        <td>{item.total_received || 0}</td>
+                                                        <td>{receivedQty}</td>
                                                         <td>
                                                             <Badge bg={canReceive ? 'success' : 'secondary'}>
                                                                 {item.remaining_qty}
                                                             </Badge>
                                                         </td>
+                                                       
                                                     </tr>
                                                 );
                                             })}
@@ -759,10 +798,16 @@ useEffect(() => {
                                                         value={headerStatus}
                                                         onChange={e => setHeaderStatus(e.target.value)}
                                                         style={{ minWidth: 140 }}
+                                                        disabled={checkAllItemsCompleted()}
                                                     >
                                                         <option value="partial">Partial</option>
                                                         <option value="completed">Completed</option>
                                                     </Form.Select>
+                                                    {checkAllItemsCompleted() && (
+                                                        <Form.Text className="text-muted">
+                                                            Auto-set to completed as all items are within tolerance
+                                                        </Form.Text>
+                                                    )}
                                                 </Form.Group>
                                                 <Button
                                                     variant="success"
@@ -780,8 +825,6 @@ useEffect(() => {
                         </>
                     )}
                 </Col>
-
-
             </Row>
 
             {/* GRN Item Entry Modal */}
@@ -894,8 +937,6 @@ useEffect(() => {
                                         placeholder="Additional notes (optional)"
                                     />
                                 </Form.Group>
-
-                               
                             </Form>
                         </>
                     )}
