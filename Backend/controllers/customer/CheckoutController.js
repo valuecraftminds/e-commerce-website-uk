@@ -398,59 +398,101 @@ const CheckoutController = {
                         if (!custErr && custResults.length > 0) {
                           const customer = custResults[0];
                           
-                          try {
-                            // Generate and send invoice email with PDF (pass existing invoice data)
-                            const emailResult = await generateAndSendInvoice(
-                              {
-                                orderId: orderId,
-                                orderNumber: orderNumber,
-                                orderDate: new Date(),
-                                totalAmount: total_amount,
-                                subtotal: subtotal || 0,
-                                taxAmount: tax_amount || 0,
-                                shippingFee: shipping_fee || 0,
-                                items: order_items,
-                                company_code: company_code,
-                                customer_id: customer_id
-                              },
-                              {
-                                firstName: customer.first_name,
-                                lastName: customer.last_name,
-                                email: customer.email,
-                                customer_id: customer_id
-                              },
-                              {
-                                invoiceDate: invoiceDate,
-                                invoiceNumber: invoiceNumber, // Pass the already generated invoice number
-                                invoiceId: invoiceId
-                              }
-                            );
-                            
-                            if (emailResult.success) {
-                              console.log('Invoice email sent successfully to:', customer.email);
-                            } else {
-                              console.error('Failed to send invoice email:', emailResult.error);
+                          // Fetch complete order items with size and color information
+                          const completeItemsQuery = `
+                            SELECT 
+                              oi.*,
+                              s.name as style_name,
+                              s.style_number,
+                              sz.size_name,
+                              c.color_name,
+                              f.fit_name
+                            FROM order_items oi
+                            LEFT JOIN styles s ON oi.style_number = s.style_number AND oi.company_code = s.company_code
+                            LEFT JOIN style_variants v ON oi.sku = v.sku AND oi.company_code = v.company_code
+                            LEFT JOIN sizes sz ON v.size_id = sz.size_id AND oi.company_code = sz.company_code
+                            LEFT JOIN colors c ON v.color_id = c.color_id AND oi.company_code = c.company_code
+                            LEFT JOIN fits f ON v.fit_id = f.fit_id AND oi.company_code = f.company_code
+                            WHERE oi.order_id = ? AND oi.company_code = ?
+                          `;
+                          
+                          db.query(completeItemsQuery, [orderId, company_code], async (itemsErr, completeItems) => {
+                            if (itemsErr) {
+                              console.error('Error fetching complete order items:', itemsErr);
+                              // Fall back to original items if query fails
+                              completeItems = order_items;
                             }
                             
-                          } catch (emailError) {
-                            console.error('Error sending emails:', emailError);
-                          }
+                            try {
+                              // Generate and send invoice email with PDF (pass complete invoice data)
+                              const emailResult = await generateAndSendInvoice(
+                                {
+                                  orderId: orderId,
+                                  orderNumber: orderNumber,
+                                  orderDate: new Date(),
+                                  totalAmount: total_amount,
+                                  subtotal: subtotal || 0,
+                                  taxAmount: tax_amount || 0,
+                                  shippingFee: shipping_fee || 0,
+                                  items: completeItems, // Use complete items with size and color
+                                  company_code: company_code,
+                                  customer_id: customer_id,
+                                  shippingAddress: { address_id: finalAddressId } // Add shipping address info
+                                },
+                                {
+                                  firstName: customer.first_name,
+                                  lastName: customer.last_name,
+                                  email: customer.email,
+                                  customer_id: customer_id
+                                },
+                                {
+                                  invoiceDate: invoiceDate,
+                                  invoiceNumber: invoiceNumber, // Pass the already generated invoice number
+                                  invoiceId: invoiceId
+                                }
+                              );
+                            
+                              if (emailResult.success) {
+                                console.log('Invoice email sent successfully to:', customer.email);
+                              } else {
+                                console.error('Failed to send invoice email:', emailResult.error);
+                              }
+                              
+                            } catch (emailError) {
+                              console.error('Error sending emails:', emailError);
+                            }
+                            
+                            // Success response
+                            res.status(201).json({ 
+                              message: 'Order created successfully',
+                              order_id: orderId,
+                              order_number: orderNumber,
+                              address_id: finalAddressId,
+                              payment_method_id: paymentMethodId,
+                              total_amount: total_amount,
+                              order_status: 'pending',
+                              booking_count: bookingResult.affectedRows,
+                              payment_date: new Date(),
+                              invoice_id: invoiceId,
+                              invoice_number: invoiceNumber
+                            });
+                          });
+                        } else {
+                          // No customer found, but still send success response
+                          res.status(201).json({ 
+                            message: 'Order created successfully',
+                            order_id: orderId,
+                            order_number: orderNumber,
+                            address_id: finalAddressId,
+                            payment_method_id: paymentMethodId,
+                            total_amount: total_amount,
+                            order_status: 'pending',
+                            booking_count: bookingResult.affectedRows,
+                            payment_date: new Date(),
+                            invoice_id: invoiceId,
+                            invoice_number: invoiceNumber
+                          });
                         }
-
-                        // Success response
-                        res.status(201).json({ 
-                          message: 'Order created successfully',
-                          order_id: orderId,
-                          order_number: orderNumber,
-                          address_id: finalAddressId,
-                          payment_method_id: paymentMethodId,
-                          total_amount: total_amount,
-                          order_status: 'pending',
-                          booking_count: bookingResult.affectedRows,
-                          payment_date: new Date(),
-                          invoice_id: invoiceId,
-                          invoice_number: invoiceNumber
-                        });
                       });
                     });
                   });

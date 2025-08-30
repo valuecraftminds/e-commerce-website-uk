@@ -49,6 +49,28 @@ const getShippingAddressDetails = (addressId, companyCode) => {
   });
 };
 
+// Helper function to fetch customer billing address details
+const getCustomerBillingDetails = (customerId, companyCode) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT c.first_name, c.last_name, c.email, c.phone
+      FROM customers c
+      WHERE c.customer_id = ? AND c.company_code = ?
+    `;
+    
+    db.query(query, [customerId, companyCode], (err, results) => {
+      if (err) {
+        console.error('Error fetching customer billing details:', err);
+        reject(err);
+      } else if (results.length === 0) {
+        reject(new Error(`Customer not found for customer_id: ${customerId}`));
+      } else {
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
 // Configure email transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
@@ -167,6 +189,20 @@ const createTransporter = () => {
         }
     }
 
+        // Fetch complete customer billing details
+        let billingCustomerDetails = customerData;
+        if (orderData.customer_id && orderData.company_code) {
+            try {
+                billingCustomerDetails = await getCustomerBillingDetails(orderData.customer_id, orderData.company_code);
+                // Merge with existing customer data to preserve any additional fields
+                billingCustomerDetails = { ...customerData, ...billingCustomerDetails };
+            } catch (customerError) {
+                console.error('Failed to fetch customer billing details:', customerError);
+                // Use provided customer data as fallback
+                billingCustomerDetails = customerData;
+            }
+        }
+
         // Fetch shipping address details if address_id is provided
         let shippingAddressDetails = null;
         if (orderData.shippingAddress && orderData.shippingAddress.address_id) {
@@ -203,7 +239,7 @@ const createTransporter = () => {
         doc.pipe(fs.createWriteStream(invoiceFilePath));
 
         // Generate PDF content with company information
-        generateInvoicePDFContent(doc, orderData, customerData, invoiceData, companyInfo, shippingAddressDetails);
+        generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails);
 
         // Finalize PDF
         doc.end();
@@ -351,7 +387,7 @@ const createTransporter = () => {
     doc.fillColor(primaryColor)
         .fontSize(12)
         .font('Helvetica-Bold')
-        .text('Billing Address', billToX + 10, currentY + 10);
+        .text('Billing Information', billToX + 10, currentY + 10);
     
     doc.fillColor(textColor)
         .fontSize(10)
@@ -362,8 +398,11 @@ const createTransporter = () => {
     const billLineHeight = 12;
     
     // Customer name
-    doc.text(`${customerData.firstName} ${customerData.lastName}`, billToX + 10, billY, { width: sectionWidth - 20 });
-    billY += billLineHeight;
+    const customerName = `${customerData.firstName || customerData.first_name || ''} ${customerData.lastName || customerData.last_name || ''}`.trim();
+    if (customerName) {
+        doc.text(customerName, billToX + 10, billY, { width: sectionWidth - 20 });
+        billY += billLineHeight;
+    }
 
     // House/Building
     if (customerData.house) {
@@ -436,47 +475,15 @@ const createTransporter = () => {
       shipY += shipLineHeight;
     }
     
-    // House/Building
-    if (shippingAddressDetails.house) {
-      doc.text(shippingAddressDetails.house, shipToX + 10, shipY, { width: sectionWidth - 20 });
-      shipY += shipLineHeight;
-    }
-    
-    // Address line 1
-    if (shippingAddressDetails.address_line_1) {
-      doc.text(shippingAddressDetails.address_line_1, shipToX + 10, shipY, { width: sectionWidth - 20 });
-      shipY += shipLineHeight;
-    }
-    
-    // Address line 2
-    if (shippingAddressDetails.address_line_2) {
-      doc.text(shippingAddressDetails.address_line_2, shipToX + 10, shipY, { width: sectionWidth - 20 });
-      shipY += shipLineHeight;
-    }
-    
-    // City, State on one line
-    let cityStateLine = '';
-    if (shippingAddressDetails.city) cityStateLine += shippingAddressDetails.city;
-    if (shippingAddressDetails.state) cityStateLine += (cityStateLine ? ', ' : '') + shippingAddressDetails.state;
-
-    if (cityStateLine) {
-        doc.text(cityStateLine, shipToX + 10, shipY, { width: sectionWidth - 20 });
-        shipY += shipLineHeight;
-    }
-    
-    // Postal code, Country
-    let postalCountryLine = '';
-    if (shippingAddressDetails.postal_code) postalCountryLine += shippingAddressDetails.postal_code;
-    if (shippingAddressDetails.country) postalCountryLine += (postalCountryLine ? ', ' : '') + shippingAddressDetails.country;
-
-    if (postalCountryLine) {
-      doc.text(postalCountryLine, shipToX + 10, shipY, { width: sectionWidth - 20 });
-      shipY += shipLineHeight;
-    }
-    
     // Phone
     if (shippingAddressDetails.phone) {
         doc.text(`Phone: ${shippingAddressDetails.phone}`, shipToX + 10, shipY, { width: sectionWidth - 20 });
+    }
+
+    // email
+    if (shippingAddressDetails.email) {
+      doc.text(`Email: ${shippingAddressDetails.email}`, shipToX + 10, shipY, { width: sectionWidth - 20 });
+      shipY += shipLineHeight;
     }
   } else {
     // Same as billing address if no separate shipping address
@@ -497,13 +504,13 @@ const createTransporter = () => {
   // Items table
   const tableStartY = currentY;
   const tableHeaders = [
-    { text: 'Item', x: margin, width: 130 },
-    { text: 'SKU', x: margin + 130, width: 130 },
-    { text: 'Size', x: margin + 260, width: 40 },
-    { text: 'Color', x: margin + 300, width: 60 },
-    { text: 'Qty', x: margin + 360, width: 30 },
-    { text: 'Price', x: margin + 390, width: 50 },
-    { text: 'Subtotal', x: margin + 440, width: 50 }
+    { text: 'Item', x: margin + 5, width: 115 },
+    { text: 'SKU', x: margin + 125, width: 150 },
+    { text: 'Size', x: margin + 275, width: 35 },
+    { text: 'Color', x: margin + 315, width: 55 },
+    { text: 'Qty', x: margin + 375, width: 25 },
+    { text: 'Price', x: margin + 405, width: 55 },
+    { text: 'Subtotal', x: margin + 465, width: 55 }
   ];
   
   // Table header background
