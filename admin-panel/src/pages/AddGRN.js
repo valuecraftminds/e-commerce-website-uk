@@ -21,9 +21,7 @@ export default function AddGRN() {
     const company_code = userData?.company_code;
     const warehouse_user_id = userData?.id;
     
-    // State for PO search and selection
-    const [searchPO, setSearchPO] = useState('');
-    const [poResults, setPOResults] = useState([]);
+    // State for PO selection
     const [selectedPO, setSelectedPO] = useState(poParam || null);
     const [poDetails, setPODetails] = useState(null);
     
@@ -161,8 +159,6 @@ export default function AddGRN() {
 
     // Clear all states
     const clearAllStates = () => {
-        setSearchPO('');
-        setPOResults([]);
         setSelectedPO(null);
         setPODetails(null);
         setGRNItems([]);
@@ -175,65 +171,7 @@ export default function AddGRN() {
         navigate('/warehouse/add-grn');
     };
 
-    // Search PO numbers (manual submit)
-    const handleSearchPO = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        clearAllStates();
-        try {
-            const response = await fetch(
-                `${BASE_URL}/api/admin/grn/search-po?company_code=${company_code}&po_number=${searchPO}`
-            );
-            const data = await response.json();
-            if (data.success && data.purchase_orders?.length > 0) {
-                setPOResults(data.purchase_orders);
-                if (data.purchase_orders.length === 1) {
-                    navigate(`/warehouse/add-grn/${data.purchase_orders[0].po_number}`);
-                }
-            } else {
-                setError(data.message || 'No PO found matching the search criteria');
-            }
-        } catch (err) {
-            setError('Error searching PO numbers');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Autocomplete PO numbers as user types
-    const [showPODropdown, setShowPODropdown] = useState(false);
-    const poInputRef = useRef();
-
-    useEffect(() => {
-        if (!searchPO || !company_code) {
-            setPOResults([]);
-            setShowPODropdown(false);
-            return;
-        }
-        // Only fetch if at least 1 character
-        const fetchPOs = async () => {
-            try {
-                const response = await fetch(
-                    `${BASE_URL}/api/admin/grn/search-po?company_code=${company_code}&po_number=${searchPO}`
-                );
-                const data = await response.json();
-                if (data.success && data.purchase_orders?.length > 0) {
-                    setPOResults(data.purchase_orders);
-                    setShowPODropdown(true);
-                } else {
-                    setPOResults([]);
-                    setShowPODropdown(false);
-                }
-            } catch {
-                setPOResults([]);
-                setShowPODropdown(false);
-            }
-        };
-        // Debounce
-        const timeout = setTimeout(fetchPOs, 250);
-        return () => clearTimeout(timeout);
-    }, [searchPO, company_code]);
+    // (PO search logic removed; now handled in WarehouseGRN)
 
     // Open modal for item entry
     const handleItemClick = (item) => {
@@ -517,86 +455,23 @@ export default function AddGRN() {
                     {success}
                 </Alert>
             )}
-            
             {error && (
                 <Alert variant="danger" dismissible onClose={() => setError('')}>
                     {error}
                 </Alert>
             )}
 
+            {/* Back Button */}
+            <Row className="mb-3">
+                <Col>
+                    <Button variant="secondary" onClick={() => navigate('/warehouse/grn')}>Back to GRN History</Button>
+                </Col>
+            </Row>
+
             {/* Main Content */}
             <Row>
-                {/* Search PO Section */}
-                <Col >
-                    <Card className="mb-4">
-                        <Card.Body>
-                            <Form onSubmit={handleSearchPO} autoComplete="off">
-                                <Row className="g-3 align-items-end">
-                                    <Col >
-                                        <Form.Group>
-                                            <Form.Label>Search PO Number</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                value={searchPO}
-                                                onChange={e => setSearchPO(e.target.value)}
-                                                placeholder="Enter PO number"
-                                                required
-                                                ref={poInputRef}
-                                                onFocus={() => searchPO && poResults.length > 0 && setShowPODropdown(true)}
-                                                onBlur={() => setTimeout(() => setShowPODropdown(false), 200)}
-                                            />
-                                            {/* Autocomplete dropdown */}
-                                            {showPODropdown && poResults.length > 0 && (
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    zIndex: 10,
-                                                    background: '#fff',
-                                                    border: '1px solid #ccc',
-                                                    width: '100%',
-                                                    maxHeight: 200,
-                                                    overflowY: 'auto',
-                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                                                }}>
-                                                    {poResults.map(po => (
-                                                        <div
-                                                            key={po.po_number}
-                                                            style={{ padding: '8px', cursor: 'pointer' }}
-                                                            onMouseDown={() => {
-                                                                setSearchPO(po.po_number);
-                                                                setShowPODropdown(false);
-                                                                navigate(`/warehouse/add-grn/${po.po_number}`);
-                                                            }}
-                                                        >
-                                                            {po.po_number} - {po.supplier_name || po.supplier_id}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </Form.Group>
-                                    </Col>
-                                    <Col lg={selectedPO ? 3 : 2} md={6}>
-                                        <Button
-                                            type="submit"
-                                            className="w-100"
-                                            disabled={loading}
-                                        >
-                                            {loading ? <Spinner size="sm" /> : 'Search'}
-                                        </Button>
-                                    </Col>
-                                    <Col lg={selectedPO ? 3 : 2} md={6}>
-                                        <Button
-                                            variant="secondary"
-                                            className="w-100"
-                                            onClick={clearAllStates}
-                                        >
-                                            Clear
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-
+                {/* PO search UI removed; now handled in WarehouseGRN */}
+                <Col>
                     {/* PO Details and GRN Processing */}
                     {poDetails && (
                         <>

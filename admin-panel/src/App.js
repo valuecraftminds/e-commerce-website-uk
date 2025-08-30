@@ -16,6 +16,7 @@ import OrderingDashboard from './pages/OrderingDashboard';
 import PdcDashboard from './pages/PdcDashboard';
 import PurchaseOrder from './pages/PurchaseOrder';
 import PurchaseOrderForm from './pages/PurchaseOrderForm';
+import ViewPurchaseOrder from './pages/ViewPurchaseOrder';
 import Style from './pages/Style_Management/Style';
 import ColorManagement from './pages/Style_Management/ColorManagement';
 import FitManagement from './pages/Style_Management/FitManagement';
@@ -216,7 +217,8 @@ function App() {
           <Route path="/finance/location" element={<Location />} />
           <Route path="/merchandising/po" element={<PurchaseOrder />} />
           <Route path="/merchandising/po/new" element={<PurchaseOrderForm />} />
-          <Route path="/merchandising/po/:po_number" element={<PurchaseOrderForm />} />
+          <Route path="/merchandising/po/:po_number/edit" element={<PurchaseOrderForm />} />
+          <Route path="/merchandising/po/:po_number/view" element={<ViewPurchaseOrder />} />
 
           <Route path="/company-settings" element={<CompanySettings />} />
           <Route path="/approve-po" element={<ApprovePO />} />

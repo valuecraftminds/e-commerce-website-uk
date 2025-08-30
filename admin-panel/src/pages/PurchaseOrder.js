@@ -85,8 +85,8 @@ export default function PurchaseOrder() {
   };
 
   const handleViewDetails = (po_number) => {
-    navigate(`/merchandising/po/${po_number}?mode=view`);
-  };
+    navigate(`/merchandising/po/${po_number}/view`);
+  }
 
   const handleDownloadPO = async (po_number) => {
     try {
