@@ -189,7 +189,7 @@ const ProductCategory = () => {
   };
 
   const handleProductClick = (product) => {
-    navigate(`/product/${product.style_id}`);
+    navigate(`/product/${product.style_number}`);
   };
 
   const handleBackToCategory = () => {

@@ -8,7 +8,7 @@ router.get('/main-categories', checkCompanyCode, productController.getMainCatego
 router.get('/product-types/:parentId', checkCompanyCode, productController.getProductTypes);
 router.get('/styles-by-parent-category/:parentId', checkCompanyCode, productController.getStylesByParentCategory);
 router.get('/all-styles', checkCompanyCode, productController.getAllStyles);
-router.get('/product/:style_id', checkCompanyCode, productController.getProductDetails);
+router.get('/product/:style_number', checkCompanyCode, productController.getProductDetails);
 router.get('/product-listings', checkCompanyCode, productController.getProductListings);
 router.get('/search', checkCompanyCode, productController.searchProducts);
 router.get('/variant-info', checkCompanyCode, productController.getVariantInfo);

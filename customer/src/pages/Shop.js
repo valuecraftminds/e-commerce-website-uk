@@ -22,8 +22,8 @@ export default function Shop() {
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
 
-  const getProductDetails = (id) => {
-    navigate(`/product/${id}`);
+  const getProductDetails = (styleNumber) => {
+    navigate(`/product/${styleNumber}`);
   };
 
   // Fetch exchange rates
@@ -229,7 +229,7 @@ export default function Shop() {
               <div 
                 key={product.style_id} 
                 className="shop-product-card"
-                onClick={() => getProductDetails(product.style_id)}
+                onClick={() => getProductDetails(product.style_number)}
               >
                 <div className="home-product-image-container">
                   <img 

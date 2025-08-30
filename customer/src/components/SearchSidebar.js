@@ -61,7 +61,7 @@ export default function SearchSidebar({ show, onClose }) {
   }, [searchTerm]);
 
   const handleResultClick = (item) => {
-    navigate(`/product/${item.style_id}`);
+    navigate(`/product/${item.style_number}`);
     handleClose();
     setSearchTerm("");
   };
