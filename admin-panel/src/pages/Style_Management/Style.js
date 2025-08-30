@@ -248,7 +248,8 @@ export default function Style() {
           setShowStyleModal(false);
           fetchStyles();
           setTimeout(() => setSuccess(''), 3000);
-        } else {
+        }
+         else {
           setError(data.message || 'Failed to delete style');
         }
       } catch (err) {

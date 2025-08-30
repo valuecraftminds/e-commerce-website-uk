@@ -187,11 +187,7 @@ const StyleController = {
       if (result.length === 0) {
         return res.status(404).json({ success: false, message: 'Style not found' });
       }
-      else {
-      res.json({ success: true, message: 'Style deleted successfully' });
-
-      }
-
+      
       const styleNumber = result[0].style_number;
 
       db.query('DELETE FROM style_variants WHERE style_number = ?', [styleNumber], (err) => {

@@ -657,8 +657,8 @@ useEffect(() => {
                                         </thead>
                                         <tbody>
                                             {poDetails.items.map((item) => {
-                                                // Add GRN header status to canReceive logic if needed
-                                                const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' &&  (grnHeaderStatus !== 'completed');
+                                                // Use headerStatus instead of grnHeaderStatus for clickable logic
+                                                const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed');
                                                 return (
                                                     <tr 
                                                         key={item.sku}
@@ -668,9 +668,8 @@ useEffect(() => {
                                                     >
                                                         <td>{item.style_number}</td>
                                                         <td>{item.sku}</td>
-                                                          <td>{item.unit_price}</td>
+                                                        <td>{item.unit_price}</td>
                                                         <td>{item.ordered_qty}</td>
-                                                      
                                                         <td>
                                                             {item.max_qty}
                                                             {item.tolerance_limit > 0 && (
