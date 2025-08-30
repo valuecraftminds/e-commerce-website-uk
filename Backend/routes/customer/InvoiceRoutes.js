@@ -7,6 +7,9 @@ const { optionalAuth } = require('../../middleware/customer/CustomerAuth');
 // Generate invoice PDF for an order
 router.get('/generate/:order_id', checkCompanyCode, optionalAuth, invoiceController.generateInvoice);
 
+// Generate and email invoice PDF to customer
+router.post('/email/:order_id', checkCompanyCode, optionalAuth, invoiceController.generateAndEmailInvoice);
+
 // Get invoice data by order ID
 router.get('/:order_id', checkCompanyCode, optionalAuth, invoiceController.getInvoice);
 
