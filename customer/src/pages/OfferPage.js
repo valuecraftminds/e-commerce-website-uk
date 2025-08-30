@@ -22,8 +22,8 @@ export default function OfferPage() {
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
 
-  const getProductDetails = (id) => {
-    navigate(`/product/${id}`);
+  const getProductDetails = (styleNumber) => {
+    navigate(`/product/${styleNumber}`);
   };
 
 // fetch items with offer_price
@@ -150,7 +150,7 @@ export default function OfferPage() {
                     <div
                         key={product.style_id}
                         className="offer-product-card"
-                        onClick={() => getProductDetails(product.style_id)}
+                        onClick={() => getProductDetails(product.style_number)}
                     >
                       <div className="offer-product-image-container">
                         {/* Discount Badge */}
