@@ -265,6 +265,7 @@ const CheckoutController = {
                 INSERT INTO booking (
                   company_code,
                   variant_id,
+                  order_id,
                   sku,
                   ordered_qty,
                   created_at,
@@ -277,6 +278,7 @@ const CheckoutController = {
               const bookingValues = order_items.map((item, index) => [
                 company_code,
                 item.variant_id,
+                orderId,
                 item.sku,
                 item.quantity,
                 new Date(),

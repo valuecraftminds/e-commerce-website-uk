@@ -16,8 +16,7 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function ProductDetails() {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const styleId = parseInt(id, 10);
+  const { style_number } = useParams();
   const { addToCart } = useCart();
   const { showNotify } = useNotifyModal();
 
@@ -163,9 +162,11 @@ export default function ProductDetails() {
 
   // Fetch product reviews
   const fetchProductReviews = async () => {
+    if (!product?.style_id) return;
+    
     try {
       setLoadingReviews(true);
-      const response = await axios.get(`${BASE_URL}/api/customer/feedback/reviews/${styleId}`, {
+      const response = await axios.get(`${BASE_URL}/api/customer/feedback/reviews/${product.style_id}`, {
         params: { company_code: COMPANY_CODE }
       });
       setReviews(response.data.reviews || []);
@@ -183,7 +184,7 @@ export default function ProductDetails() {
   const fetchSimilarProducts = async () => {
     try {
       setLoadingSimilar(true);
-      const response = await axios.get(`${BASE_URL}/api/customer/similar-products/${styleId}`, {
+      const response = await axios.get(`${BASE_URL}/api/customer/similar-products/${product?.style_id}`, {
         params: { company_code: COMPANY_CODE }
       });
       setSimilarProducts(response.data);
@@ -200,17 +201,11 @@ export default function ProductDetails() {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/customer/product/${styleId}`, {
+        const response = await axios.get(`${BASE_URL}/api/customer/product/${style_number}`, {
           params: { company_code: COMPANY_CODE }
         });
         setProduct(response.data);
         setError(null);
-        
-        // Fetch reviews for this product
-        fetchProductReviews();
-        
-        // Fetch similar products - ADD THIS LINE
-        fetchSimilarProducts();
       } catch (err) {
         console.error('Error fetching product details:', err);
         setError('Failed to load product details');
@@ -219,10 +214,18 @@ export default function ProductDetails() {
       }
     };
 
-    if (styleId) {
+    if (style_number) {
       fetchProductDetails();
     }
-  }, [styleId]);
+  }, [style_number]);
+
+  // Fetch reviews and similar products when product is loaded
+  useEffect(() => {
+    if (product?.style_id) {
+      fetchProductReviews();
+      fetchSimilarProducts();
+    }
+  }, [product?.style_id]);
 
   const getRate = () => {
     switch (country) {
@@ -488,7 +491,7 @@ export default function ProductDetails() {
   };
 
   const ShareBtn = (product) => {
-    const productURL = `${window.location.origin}/product/${product.style_id}`;
+    const productURL = `${window.location.origin}/product/${product.style_number}`;
 
     const handleShare = async () => {
       navigator.clipboard.writeText(productURL);
@@ -887,7 +890,7 @@ export default function ProductDetails() {
             <div
               key={similarProduct.style_id}
               className="home-product-card"
-              onClick={() => navigate(`/product/${similarProduct.style_id}`)}
+              onClick={() => navigate(`/product/${similarProduct.style_number}`)}
             >
               <div className="home-product-image-container">
                 <img

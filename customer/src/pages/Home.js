@@ -26,8 +26,8 @@ export default function Home() {
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
 
-  const getProductDetails = (id) => {
-    navigate(`/product/${id}`);
+  const getProductDetails = (style_number) => {
+    navigate(`/product/${style_number}`);
   };
 
   // Fetch product listings from the backend
@@ -181,7 +181,7 @@ export default function Home() {
                   <div
                     key={product.style_id}
                     className="offer-product-card"
-                    onClick={() => getProductDetails(product.style_id)}
+                    onClick={() => getProductDetails(product.style_number)}
                   >
                     <div className="offer-product-image-container">
                       {/* Discount Badge */}
@@ -302,7 +302,7 @@ export default function Home() {
                     <div
                         key={product.style_id}
                         className="home-product-card"
-                        onClick={() => getProductDetails(product.style_id)}
+                        onClick={() => getProductDetails(product.style_number)}
                     >
                       <div className="home-product-image-container">
                         <img

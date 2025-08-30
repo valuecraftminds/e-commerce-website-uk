@@ -120,18 +120,29 @@ const productController = {
 
   //get product details
   getProductDetails: (req, res) => {
-    const { style_id } = req.params;
+    const { style_number } = req.params;
     const { company_code } = req.query;
 
     // get all sizes from the sizes table
     const getAllSizesQuery = `
-      SELECT size_id, size_name, size_order
-      FROM sizes 
-      WHERE company_code = ?
-      ORDER BY size_order ASC
+      SELECT 
+          sr.range_name,
+          s.size_id,
+          s.size_name
+      FROM style_size_ranges ssr
+      JOIN size_ranges sr 
+          ON ssr.size_range_id = sr.size_range_id 
+        AND ssr.company_code = sr.company_code
+      JOIN sizes s 
+          ON sr.size_range_id = s.size_range_id 
+        AND sr.company_code = s.company_code
+      WHERE ssr.style_number = ?
+        AND ssr.company_code = ?;
     `;
+console.log('=== getAllSizesQuery ===');
+console.log(getAllSizesQuery);
 
-    db.query(getAllSizesQuery, [company_code], (err, allSizesResult) => {
+    db.query(getAllSizesQuery, [style_number, company_code], (err, allSizesResult) => {
       if (err) {
         console.error('Error fetching all sizes:', err);
         return res.status(500).json({ error: 'Server error' });
@@ -164,13 +175,13 @@ const productController = {
         LEFT JOIN colors c ON sv.color_id = c.color_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
         LEFT JOIN stock_summary ss ON sv.sku = ss.sku
-        WHERE s.style_id = ? 
+        WHERE s.style_number = ? 
         AND s.company_code = ?
         AND s.approved = 'yes'
         AND ss.stock_qty > 0
       `;
 
-      db.query(productDetailsQuery, [style_id, company_code], (err, results) => {
+      db.query(productDetailsQuery, [style_number, company_code], (err, results) => {
         if (err) {
           console.error('Error fetching product details:', err);
           return res.status(500).json({ error: 'Server error' });
