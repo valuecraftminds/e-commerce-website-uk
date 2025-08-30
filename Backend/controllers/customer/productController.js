@@ -60,6 +60,7 @@ const productController = {
       LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE (c.parent_id = ? OR c.category_id = ?) 
       AND s.approved = 'yes' 
+      AND s.is_view = 'yes'
       AND s.company_code = ?
       AND ss.stock_qty > 0
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
@@ -102,6 +103,7 @@ const productController = {
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE s.approved = 'yes' 
+      AND s.is_view = 'yes'
       AND s.company_code = ?
       AND ss.stock_qty > 0
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
@@ -178,6 +180,7 @@ console.log(getAllSizesQuery);
         WHERE s.style_number = ? 
         AND s.company_code = ?
         AND s.approved = 'yes'
+        AND s.is_view = 'yes'
         AND ss.stock_qty > 0
       `;
 
@@ -280,6 +283,7 @@ console.log(getAllSizesQuery);
         image
       FROM styles
       WHERE approved = 'yes'
+      AND is_view = 'yes'
       AND company_code = ?
       ORDER BY created_at DESC
     `;
@@ -314,6 +318,7 @@ console.log(getAllSizesQuery);
       LEFT JOIN stock_summary ss ON sv.sku = ss.sku
       WHERE (s.name LIKE ? OR s.description LIKE ? OR s.style_number LIKE ?)
       AND s.approved = 'yes'
+      AND s.is_view = 'yes'
       AND s.company_code = ?
       AND ss.stock_qty > 0
       ORDER BY 
@@ -384,6 +389,7 @@ console.log(getAllSizesQuery);
       AND sv.offer_price IS NOT NULL 
       AND sv.offer_price > 0
       AND s.approved = 'yes' 
+      AND s.is_view = 'yes'
       AND s.company_code = ?
       AND (sv.offer_end_date IS NULL OR sv.offer_end_date > NOW())
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image, sv.offer_start_date, sv.offer_end_date
@@ -451,6 +457,7 @@ getSimilarProducts: (req, res) => {
       WHERE s.category_id = ? 
       AND s.style_id != ?
       AND s.approved = 'yes' 
+      AND s.is_view = 'yes'
       AND s.company_code = ?
       AND ss.stock_qty > 0
       GROUP BY s.style_id, s.style_number, s.name, s.description, s.category_id, s.image
