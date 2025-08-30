@@ -403,44 +403,6 @@ const createTransporter = () => {
         doc.text(customerName, billToX + 10, billY, { width: sectionWidth - 20 });
         billY += billLineHeight;
     }
-
-    // House/Building
-    if (customerData.house) {
-      doc.text(customerData.house, billToX + 10, billY, { width: sectionWidth - 20 });
-      billY += billLineHeight;
-    }
-    
-    // Address line 1
-    if (customerData.address_line_1) {
-      doc.text(customerData.address_line_1, billToX + 10, billY, { width: sectionWidth - 20 });
-      billY += billLineHeight;
-    }
-    
-    // Address line 2
-    if (customerData.address_line_2) {
-      doc.text(customerData.address_line_2, billToX + 10, billY, { width: sectionWidth - 20 });
-      billY += billLineHeight;
-    }
-    
-    // City, State on one line
-    let cityStateLine = '';
-    if (customerData.city) cityStateLine += customerData.city;
-    if (customerData.state) cityStateLine += (cityStateLine ? ', ' : '') + customerData.state;
-
-    if (cityStateLine) {
-        doc.text(cityStateLine, billToX + 10, billY, { width: sectionWidth - 20 });
-        billY += billLineHeight;
-    }
-    
-    // Postal code, Country
-    let postalCountryLine = '';
-    if (customerData.postal_code) postalCountryLine += customerData.postal_code;
-    if (customerData.country) postalCountryLine += (postalCountryLine ? ', ' : '') + customerData.country;
-
-    if (postalCountryLine) {
-      doc.text(postalCountryLine, billToX + 10, billY, { width: sectionWidth - 20 });
-      billY += billLineHeight;
-    }
   
   // Email
   if (customerData.email) {
@@ -475,15 +437,47 @@ const createTransporter = () => {
       shipY += shipLineHeight;
     }
     
+    // House/Building
+    if (shippingAddressDetails.house) {
+      doc.text(shippingAddressDetails.house, shipToX + 10, shipY, { width: sectionWidth - 20 });
+      shipY += shipLineHeight;
+    }
+    
+    // Address line 1
+    if (shippingAddressDetails.address_line_1) {
+      doc.text(shippingAddressDetails.address_line_1, shipToX + 10, shipY, { width: sectionWidth - 20 });
+      shipY += shipLineHeight;
+    }
+    
+    // Address line 2
+    if (shippingAddressDetails.address_line_2) {
+      doc.text(shippingAddressDetails.address_line_2, shipToX + 10, shipY, { width: sectionWidth - 20 });
+      shipY += shipLineHeight;
+    }
+    
+    // City, State on one line
+    let cityStateLine = '';
+    if (shippingAddressDetails.city) cityStateLine += shippingAddressDetails.city;
+    if (shippingAddressDetails.state) cityStateLine += (cityStateLine ? ', ' : '') + shippingAddressDetails.state;
+
+    if (cityStateLine) {
+        doc.text(cityStateLine, shipToX + 10, shipY, { width: sectionWidth - 20 });
+        shipY += shipLineHeight;
+    }
+    
+    // Postal code, Country
+    let postalCountryLine = '';
+    if (shippingAddressDetails.postal_code) postalCountryLine += shippingAddressDetails.postal_code;
+    if (shippingAddressDetails.country) postalCountryLine += (postalCountryLine ? ', ' : '') + shippingAddressDetails.country;
+
+    if (postalCountryLine) {
+      doc.text(postalCountryLine, shipToX + 10, shipY, { width: sectionWidth - 20 });
+      shipY += shipLineHeight;
+    }
+    
     // Phone
     if (shippingAddressDetails.phone) {
         doc.text(`Phone: ${shippingAddressDetails.phone}`, shipToX + 10, shipY, { width: sectionWidth - 20 });
-    }
-
-    // email
-    if (shippingAddressDetails.email) {
-      doc.text(`Email: ${shippingAddressDetails.email}`, shipToX + 10, shipY, { width: sectionWidth - 20 });
-      shipY += shipLineHeight;
     }
   } else {
     // Same as billing address if no separate shipping address
