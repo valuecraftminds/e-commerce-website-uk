@@ -38,15 +38,22 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const reviewData = {
+      company_code: COMPANY_CODE,
+      order_id: item.order_id,
+      style_id: item.style_id,
+      style_number: item.style_number,
+      customer_id,
+      review,
+      rating,
+      sku: item.sku
+    };
+
+    console.log('Submitting review data:', reviewData); // Debug log
+
     try {
-      const res = await axios.post(`${BASE_URL}/api/customer/feedback/reviews`, {
-        company_code: COMPANY_CODE,
-        style_id: item.style_id,
-        style_number: item.style_number,
-        customer_id,
-        review,
-        rating,
-      }, getAxiosConfig());
+      const res = await axios.post(`${BASE_URL}/api/customer/feedback/reviews`, reviewData, getAxiosConfig());
       
       setMessage(res.data.message);
       setReview("");
@@ -58,6 +65,7 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
         onSubmissionComplete(item.style_id);
       }
     } catch (err) {
+      console.error('Error submitting review:', err.response?.data || err);
       setMessage(err.response?.data?.message || "Error submitting review");
     }
   };
@@ -73,8 +81,8 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
 
   return (
     <form className="feedback-form" onSubmit={handleSubmit}>
-      <h4>Leave your feedback {item.style_number}</h4>
-      {item.style_name && <p className="item-name">{item.style_name}</p>}
+      <h4>Leave your feedback for {item.style_name}</h4>
+      {item.style_name && <p className="item-name">{item.sku}</p>}
       <hr />
       
       <div className="star-rating">
@@ -103,11 +111,16 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
 }
 
 // Main feedback form component that handles multiple items
-function FeedbackForm({ items, customer_id }) {
+function FeedbackForm({ items, customer_id, onSubmissionComplete }) {
   const [completedReviews, setCompletedReviews] = useState([]);
 
   const handleSubmissionComplete = (styleId) => {
     setCompletedReviews(prev => [...prev, styleId]);
+    
+    // Call the parent callback if provided
+    if (onSubmissionComplete) {
+      onSubmissionComplete(styleId);
+    }
   };
 
   // Handle single item case (backward compatibility)
@@ -115,7 +128,9 @@ function FeedbackForm({ items, customer_id }) {
     const singleItem = {
       style_id: items?.style_id,
       style_number: items?.style_number,
-      style_name: items?.style_name
+      style_name: items?.style_name,
+      order_id: items?.order_id,
+      sku: items?.sku
     };
     return (
       <div className="feedback-container">
