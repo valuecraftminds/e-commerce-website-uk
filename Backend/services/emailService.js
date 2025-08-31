@@ -99,6 +99,10 @@ const createTransporter = () => {
     try {
         const transporter = createTransporter();
 
+        // Generate order details link
+        const frontendUrl = process.env.FRONTEND_URL;
+        const orderDetailsLink = `${frontendUrl}/orders/${orderData.orderId || orderData.order_id}?customer_id=${orderData.customer_id}&company_code=${orderData.company_code}`;
+
         // Combined email template for order confirmation and invoice
         const emailTemplate = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -117,6 +121,15 @@ const createTransporter = () => {
         
         <div style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2E5090;">
             <p style="margin: 0;"><strong>📎 Invoice Attached:</strong> Your detailed invoice is attached as a PDF file for your records.</p>
+        </div>
+        
+        <div style="background-color: #e8f8e8; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745;">
+            <p style="margin: 0;"><strong>📋 Review your items:</strong> Check your order details and add reviews for your items!</p>
+            <div style="margin-top: 10px;">
+                <a href="${orderDetailsLink}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Add Review</a>
+                <br>
+                <p> You can return to your order details page anytime to review your items. </p>
+            </div>
         </div>
         
         <p>If you have any questions about your order, please don't hesitate to contact us.</p>
