@@ -139,11 +139,11 @@ const ProductCategory = () => {
     }
   };
 
-  const formatPrice = (min_sale_price) => {
-    if (!min_sale_price) return "Price not defined";
+  const formatPrice = (sale_price) => {
+    if (!sale_price) return "Price not defined";
     const symbol = currencySymbols[country] || '$';
     const rate = getRate();
-    const convertedPrice = (min_sale_price * rate).toFixed(2);
+    const convertedPrice = (sale_price * rate).toFixed(2);
     return `${symbol}${convertedPrice}`;
   };
 
@@ -155,15 +155,15 @@ const ProductCategory = () => {
     switch (filters.priceSort) {
       case 'low-high':
         result.sort((a, b) => {
-          const priceA = a.offer_price && a.offer_price !== 0 ? a.offer_price : (a.min_sale_price || 0);
-          const priceB = b.offer_price && b.offer_price !== 0 ? b.offer_price : (b.min_sale_price || 0);
+          const priceA = a.offer_price && a.offer_price !== 0 ? a.offer_price : (a.sale_price || 0);
+          const priceB = b.offer_price && b.offer_price !== 0 ? b.offer_price : (b.sale_price || 0);
           return priceA - priceB;
         });
         break;
       case 'high-low':
         result.sort((a, b) => {
-          const priceA = a.offer_price && a.offer_price !== 0 ? a.offer_price : (a.min_sale_price || 0);
-          const priceB = b.offer_price && b.offer_price !== 0 ? b.offer_price : (b.min_sale_price || 0);
+          const priceA = a.offer_price && a.offer_price !== 0 ? a.offer_price : (a.sale_price || 0);
+          const priceB = b.offer_price && b.offer_price !== 0 ? b.offer_price : (b.sale_price || 0);
           return priceB - priceA;
         });
         break;
@@ -319,7 +319,7 @@ const ProductCategory = () => {
                 
                 <div className="product-info">
                   <h3 className="product-name">{product.name}</h3>
-                  <p className="product-description">
+                  <p className="pc-product-description">
                     {product.description && product.description.length > 100 
                       ? `${product.description.substring(0, 100)}...` 
                       : product.description
@@ -332,11 +332,11 @@ const ProductCategory = () => {
                           {formatPrice(product.offer_price)}
                         </span>
                         <span className="text-muted text-decoration-line-through small">
-                          {formatPrice(product.min_sale_price)}
+                          {formatPrice(product.sale_price)}
                         </span>
                       </>
                     ) : (
-                      <span>{formatPrice(product.min_sale_price)}</span>
+                      <span>{formatPrice(product.sale_price)}</span>
                     )}
                   </div>
                   
