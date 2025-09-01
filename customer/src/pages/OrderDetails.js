@@ -3,10 +3,11 @@ import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 
 import '../styles/OrderDetails.css';
 import { CountryContext } from "../context/CountryContext";
+import FeedbackForm from './FeedbackForm';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -18,6 +19,9 @@ export default function OrderDetails() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [exchangeRates, setExchangeRates] = useState({});
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [reviewedItems, setReviewedItems] = useState(new Set()); // Track reviewed items
     
     const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
     const { country } = useContext(CountryContext);
@@ -56,6 +60,8 @@ export default function OrderDetails() {
 
             if (response.data && response.data.success) {
                 setOrderDetails(response.data.data);
+                // After setting order details, check for existing reviews
+                checkExistingReviews(response.data.data);
             } else {
                 setError(response.data?.message || 'Failed to fetch order details');
             }
@@ -65,6 +71,41 @@ export default function OrderDetails() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Check if items in this order have been reviewed
+    const checkExistingReviews = async (orderData) => {
+        try {
+            const config = getAxiosConfig();
+            const response = await axios.get(`${BASE_URL}/api/customer/feedback/history`, config);
+            
+            if (response.data && response.data.feedback && Array.isArray(response.data.feedback)) {
+                const reviewedStyleIds = new Set();
+                
+                // Find reviews that belong to this order
+                response.data.feedback.forEach(review => {
+                    if (review.order_id === orderData.order_id) {
+                        reviewedStyleIds.add(review.style_id);
+                    }
+                });
+                
+                setReviewedItems(reviewedStyleIds);
+                console.log('Reviewed items for this order:', Array.from(reviewedStyleIds));
+            } else {
+                // No reviews found, keep empty set
+                setReviewedItems(new Set());
+            }
+        } catch (err) {
+            console.error('Error checking existing reviews:', err);
+            // Don't show error to user, just log it and keep empty set
+            setReviewedItems(new Set());
+        }
+    };
+
+    // Check if a specific item has been reviewed
+    const isItemReviewed = (item) => {
+        const styleId = item.style?.style_id || item.style_id;
+        return reviewedItems.has(styleId);
     };
 
     // Fetch exchange rates
@@ -192,8 +233,7 @@ export default function OrderDetails() {
 
     // Get image URL from item
     const getItemImageUrl = (item) => {
-        // Try different possible image paths based on your API structure
-        const imagePath = item.style?.image || item.image_url || item.image;
+        const imagePath = item.style?.image || item.image;
         
         if (imagePath) {
             // Construct the full URL
@@ -255,6 +295,38 @@ export default function OrderDetails() {
         }
     };
 
+    // Handle opening feedback modal for specific item
+    const handleAddReview = (item) => {
+        const selectedItemData = {
+            style_id: item.style?.style_id || item.style_id,
+            style_number: item.style?.style_number || item.style_number,
+            style_name: item.style?.name || item.name || 'Product',
+            order_item_id: item.order_item_id,
+            sku: item.variant?.sku || item.sku,
+            order_id: orderDetails?.order_id // Add order_id to the selected item
+        };
+        
+        console.log('Selected item data for review:', selectedItemData); // Debug log
+        setSelectedItem(selectedItemData);
+        setShowFeedbackModal(true);
+    };
+
+    // Handle closing feedback modal
+    const handleCloseFeedbackModal = () => {
+        setShowFeedbackModal(false);
+        setSelectedItem(null);
+    };
+
+    // Handle feedback submission completion
+    const handleFeedbackSubmissionComplete = (styleId) => {
+        // Update the reviewed items set
+        setReviewedItems(prev => new Set([...prev, styleId]));
+        
+        console.log(`Review submitted for style_id: ${styleId}`);
+        setShowFeedbackModal(false);
+        setSelectedItem(null);
+    };
+
     return (
         <div className="order-details">
             {/* Header */}
@@ -277,7 +349,7 @@ export default function OrderDetails() {
 
                 {/* Right side */}
                 <div className="d-flex gap-2">
-                    {/* Cancel Order Button - Only show for pending orders */}
+                    {/* "Cancel Order" Button - Only show for pending orders */}
                     {orderDetails.order_status === 'pending' && (
                         <Button 
                             variant="outline-danger"
@@ -289,12 +361,14 @@ export default function OrderDetails() {
                     )}
                     
                     {/* Confirm Delivery Button */}
-                    <Button 
-                        className='delivery-btn'
-                        onClick={handleConfirmDelivery}
-                    >
-                        Confirm Delivery
-                    </Button>
+                    {orderDetails.order_status !== 'cancelled' || orderDetails.order_status !=='delivered' && (
+                        <Button 
+                            className='delivery-btn'
+                            onClick={handleConfirmDelivery}
+                        >
+                            Confirm Delivery
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -392,6 +466,24 @@ export default function OrderDetails() {
                                                     </div>
                                                 </div>
                                             </div>
+                                            {/* Add Review Button */}
+                                            <div className="pricing-row review-action">
+                                                <Button 
+                                                    variant="outline-primary" 
+                                                    size="sm"
+                                                    className="add-review-btn mt-2"
+                                                    onClick={() => handleAddReview(item)}
+                                                >
+                                                    Add Review
+                                                </Button>
+                                                
+                                                {/* Show review status */}
+                                                {isItemReviewed(item) && (
+                                                    <small className="text-success mt-1 d-block">
+                                                        ✓ You've reviewed this item
+                                                    </small>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -449,6 +541,27 @@ export default function OrderDetails() {
                     )}
                 </div>
             </div>
+
+            {/* Feedback Modal */}
+            <Modal 
+                show={showFeedbackModal} 
+                onHide={handleCloseFeedbackModal}
+                size="lg"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Add Review</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedItem && (
+                        <FeedbackForm 
+                            items={selectedItem}
+                            customer_id={orderDetails?.customer_id}
+                            onSubmissionComplete={handleFeedbackSubmissionComplete}
+                        />
+                    )}
+                </Modal.Body>
+            </Modal>
         </div>
     );
 }

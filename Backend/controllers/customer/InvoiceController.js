@@ -1,5 +1,9 @@
 const db = require('../../config/database');
 const PDFDocument = require('pdfkit');
+const { sendInvoiceEmail } = require('../../services/emailService');
+const fs = require('fs');
+const path = require('path');
+const { generateUniqueInvoiceNumber, generateInvoiceFileName } = require('../../utils/invoiceUtils');
 
 const InvoiceController = {
   // Generate and download invoice PDF for an order
@@ -113,8 +117,8 @@ const InvoiceController = {
             });
           }
 
-          // Generate invoice number if not exists
-          const invoiceNumber = `INV-${order.order_number || order.order_id}-${Date.now()}`;
+          // Generate unique invoice number using utility function
+          const invoiceNumber = generateUniqueInvoiceNumber(order.order_id);
           
           // Create PDF with A4 size and optimized margins
           const doc = new PDFDocument({ 
@@ -123,9 +127,12 @@ const InvoiceController = {
             bufferPages: true
           });
           
+          // Generate consistent filename using utility function
+          const downloadFileName = generateInvoiceFileName(order.order_number, invoiceNumber);
+          
           // Set response headers for PDF download
           res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoiceNumber}.pdf"`);
+          res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
           
           // Pipe PDF to response
           doc.pipe(res);
@@ -449,6 +456,271 @@ const InvoiceController = {
 
     } catch (error) {
       console.error('Get company details error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
+
+  // Generate and email invoice PDF to customer
+  generateAndEmailInvoice: async (req, res) => {
+    try {
+      const customer_id = req.user?.id;
+      const { company_code } = req.query;
+      const { order_id } = req.params;
+
+      // Validate required fields
+      if (!customer_id) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'User not authenticated' 
+        });
+      }
+
+      if (!company_code) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Company code is required' 
+        });
+      }
+
+      if (!order_id) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Order ID is required' 
+        });
+      }
+
+      // Fetch order data with all related information
+      const orderQuery = `
+        SELECT 
+          o.*,
+          c.first_name,
+          c.last_name,
+          c.email,
+          c.phone,
+          p.payment_id,
+          p.subtotal as payment_subtotal,
+          p.tax as payment_tax,
+          p.shipping_fee as payment_shipping_fee,
+          p.total as payment_total,
+          p.payment_date,
+          a.address_id,
+          a.first_name as shipping_first_name,
+          a.last_name as shipping_last_name,
+          a.house,
+          a.address_line_1,
+          a.address_line_2,
+          a.city,
+          a.state,
+          a.country,
+          a.postal_code,
+          a.phone as shipping_phone,
+          comp.company_name,
+          comp.company_address,
+          comp.company_phone,
+          comp.company_email
+        FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.customer_id AND o.company_code = c.company_code
+        LEFT JOIN payment p ON o.order_id = p.order_id AND o.company_code = p.company_code
+        LEFT JOIN address a ON o.address_id = a.address_id AND o.company_code = a.company_code
+        LEFT JOIN companies comp ON o.company_code = comp.company_code
+        WHERE o.order_id = ? AND o.customer_id = ? AND o.company_code = ?
+      `;
+
+      db.query(orderQuery, [order_id, customer_id, company_code], (err, orderResults) => {
+        if (err) {
+          console.error('Error fetching order:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch order data' 
+          });
+        }
+
+        if (orderResults.length === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Order not found' 
+          });
+        }
+
+        const order = orderResults[0];
+
+        // Fetch order items
+        const itemsQuery = `
+          SELECT 
+            oi.*,
+            s.name,
+            s.style_number,
+            sz.size_name,
+            c.color_name,
+            f.fit_name
+          FROM order_items oi
+          LEFT JOIN styles s ON oi.style_number = s.style_number AND oi.company_code = s.company_code
+          LEFT JOIN style_variants v ON oi.sku = v.sku AND oi.company_code = v.company_code
+          LEFT JOIN sizes sz ON v.size_id = sz.size_id AND oi.company_code = sz.company_code
+          LEFT JOIN colors c ON v.color_id = c.color_id AND oi.company_code = c.company_code
+          LEFT JOIN fits f ON v.fit_id = f.fit_id AND oi.company_code = f.company_code
+          WHERE oi.order_id = ? AND oi.company_code = ?
+        `;
+
+        db.query(itemsQuery, [order_id, company_code], async (err, itemsResults) => {
+          if (err) {
+            console.error('Error fetching order items:', err);
+            return res.status(500).json({ 
+              success: false, 
+              message: 'Failed to fetch order items', 
+              error: err.message
+            });
+          }
+
+          try {
+            // Generate unique invoice number using utility function
+            const invoiceNumber = generateUniqueInvoiceNumber(order.order_id);
+            
+            // Create invoices directory if it doesn't exist
+            const invoicesDir = path.join(__dirname, '../../invoices');
+            if (!fs.existsSync(invoicesDir)) {
+              fs.mkdirSync(invoicesDir, { recursive: true });
+            }
+
+            // Generate PDF filename using utility function
+            const invoiceFileName = generateInvoiceFileName(order.order_number, invoiceNumber);
+            const invoiceFilePath = path.join(invoicesDir, invoiceFileName);
+
+            // Create PDF document
+            const doc = new PDFDocument({ 
+              size: 'A4', 
+              margin: 30,
+              bufferPages: true
+            });
+            
+            // Pipe PDF to file
+            const stream = fs.createWriteStream(invoiceFilePath);
+            doc.pipe(stream);
+
+            // Generate PDF content using the existing function
+            generatePDFContent(doc, {
+              order,
+              items: itemsResults,
+              customer: {
+                first_name: order.first_name,
+                last_name: order.last_name,
+                email: order.email,
+                phone: order.phone
+              },
+              shippingAddress: {
+                address_id: order.address_id,
+                first_name: order.shipping_first_name,
+                last_name: order.shipping_last_name,
+                house: order.house,
+                address_line_1: order.address_line_1,
+                address_line_2: order.address_line_2,
+                city: order.city,
+                state: order.state,
+                country: order.country,
+                postal_code: order.postal_code,
+                phone: order.shipping_phone,
+                is_default: order.is_default
+              },
+              company: {
+                name: order.company_name,
+                address: order.company_address,
+                phone: order.company_phone,
+                email: order.company_email,
+                code: company_code
+              },
+              payment: {
+                payment_id: order.payment_id,
+                subtotal: order.payment_subtotal,
+                tax: order.payment_tax,
+                shipping_fee: order.payment_shipping_fee,
+                total: order.payment_total,
+                payment_date: order.payment_date
+              },
+              invoiceNumber,
+              company_code
+            });
+
+            // Finalize PDF
+            doc.end();
+
+            // Wait for PDF to be written
+            stream.on('finish', async () => {
+              try {
+                // Send invoice email with PDF attachment
+                const emailResult = await sendInvoiceEmail(
+                  order.email,
+                  `${order.first_name} ${order.last_name}`,
+                  {
+                    orderId: order.order_id,
+                    orderNumber: order.order_number || order.order_id,
+                    orderDate: order.created_at,
+                    totalAmount: order.total_amount,
+                    company_name: order.company_name,
+                    customer_id: order.customer_id,
+                    company_code: order.company_code
+                  },
+                  invoiceFilePath
+                );
+
+                // Store invoice record in database for tracking
+                storeInvoiceRecord(order, invoiceNumber, company_code);
+
+                if (emailResult.success) {
+                  res.json({
+                    success: true,
+                    message: 'Invoice generated and sent successfully',
+                    invoice_number: invoiceNumber,
+                    email_sent: true,
+                    sent_to: order.email
+                  });
+                } else {
+                  res.status(500).json({
+                    success: false,
+                    message: 'Invoice generated but failed to send email',
+                    invoice_number: invoiceNumber,
+                    email_sent: false,
+                    error: emailResult.error
+                  });
+                }
+
+              } catch (emailError) {
+                console.error('Error sending invoice email:', emailError);
+                res.status(500).json({
+                  success: false,
+                  message: 'Invoice generated but failed to send email',
+                  invoice_number: invoiceNumber,
+                  email_sent: false,
+                  error: emailError.message
+                });
+              }
+            });
+
+            stream.on('error', (streamError) => {
+              console.error('Error writing PDF file:', streamError);
+              res.status(500).json({
+                success: false,
+                message: 'Failed to generate invoice PDF',
+                error: streamError.message
+              });
+            });
+
+          } catch (pdfError) {
+            console.error('PDF generation error:', pdfError);
+            res.status(500).json({
+              success: false,
+              message: 'Failed to generate invoice PDF',
+              error: pdfError.message
+            });
+          }
+        });
+      });
+
+    } catch (error) {
+      console.error('Generate and email invoice error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error',
