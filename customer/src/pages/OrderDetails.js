@@ -479,24 +479,26 @@ export default function OrderDetails() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            {/* Add Review Button */}
-                                            <div className="pricing-row review-action">
-                                                <Button 
-                                                    variant="outline-primary" 
-                                                    size="sm"
-                                                    className="add-review-btn mt-2"
-                                                    onClick={() => handleAddReview(item)}
-                                                >
-                                                    Add Review
-                                                </Button>
-                                                
-                                                {/* Show review status */}
-                                                {isItemReviewed(item) && (
-                                                    <small className="text-success mt-1 d-block">
-                                                        ✓ You've reviewed this item
-                                                    </small>
-                                                )}
-                                            </div>
+                                            {/* Add Review Button - Only show if order is not cancelled */}
+                                            {orderDetails.order_status !== 'Cancelled' && (
+                                                <div className="pricing-row review-action">
+                                                    <Button 
+                                                        variant="outline-primary" 
+                                                        size="sm"
+                                                        className="add-review-btn mt-2"
+                                                        onClick={() => handleAddReview(item)}
+                                                    >
+                                                        Add Review
+                                                    </Button>
+                                                    
+                                                    {/* Show review status */}
+                                                    {isItemReviewed(item) && (
+                                                        <small className="text-success mt-1 d-block">
+                                                            ✓ You've reviewed this item
+                                                        </small>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

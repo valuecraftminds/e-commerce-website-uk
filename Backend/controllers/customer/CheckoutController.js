@@ -28,7 +28,8 @@ const CheckoutController = {
       tax_amount,
       total_amount,
       order_notes,
-      address_id // If using existing address instead of creating new one
+      address_id, // If using existing address instead of creating new one
+      frontend_url // Frontend URL from window.location.origin
     } = req.body;
 
     // Validate required fields
@@ -449,7 +450,9 @@ const CheckoutController = {
                                   invoiceDate: invoiceDate,
                                   invoiceNumber: invoiceNumber, // Pass the already generated invoice number
                                   invoiceId: invoiceId
-                                }
+                                },
+                                null, // companyData - will be fetched automatically
+                                frontend_url // Pass frontend URL
                               );
                             
                               if (emailResult.success) {
