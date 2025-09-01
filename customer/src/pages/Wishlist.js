@@ -42,8 +42,8 @@ const Wishlist = () => {
         return config;
     };
 
-    const handleRedirect = (style_id) => {
-        navigate(`/product/${style_id}`);
+    const handleRedirect = (style_number)  => {
+        navigate(`/product/${style_number}`);
     };
 
     // Fetch wishlist
@@ -66,7 +66,7 @@ const Wishlist = () => {
     }, []);
 
     // Remove item from wishlist
-    const handleRemove = async (style_id) => {
+    const handleRemove = async (style_number) => {
         showNotify({
             title: "Removing Item",
             message: "Are you sure you want to remove this item from the Wishlist?",
@@ -81,12 +81,12 @@ const Wishlist = () => {
                                 `${BASE_URL}/api/customer/wishlist/remove`,
                                 {
                                     ...config,
-                                    data: {style_id: style_id}
+                                    data: {style_number: style_number}
                                 }
                             );
-                            console.log('style_id:', style_id);
-                            setWishlistItems(prev => prev.filter(item => item.style_id !== style_id));
-                            console.log('Item removed from wishlist:', style_id);
+                            console.log('style_number:', style_number);
+                            setWishlistItems(prev => prev.filter(item => item.style_number !== style_number));
+                            console.log('Item removed from wishlist:', style_number);
                         } catch (error) {
                             console.error('Error removing wishlist item:', error);
                         }
@@ -141,13 +141,12 @@ const Wishlist = () => {
                 {wishlistItems.map((item) => (
                     <div 
                         className="wishlist-item" 
-                        key={item.style_id}
-                        
+                        key={item.style_number}
                     >
                         <img
                             src={`${BASE_URL}/uploads/styles/${item.image}`}
                             alt={item.name}
-                            onClick={() => handleRedirect(item.style_id)} 
+                            onClick={() => handleRedirect(item.style_number)} 
                         />
                         <h2>{item.name}</h2>
                         <p className="wishlist-description">{item.description}</p>
@@ -155,7 +154,7 @@ const Wishlist = () => {
                         <div className="wishlist-footer-row">
                             <button
                                 className="remove-btn"
-                                onClick={() => handleRemove(item.style_id)}
+                                onClick={() => handleRemove(item.style_number)}
                             >
                                 <BsTrash3 className="wishlist-bin" />
                                 <h7 className="remove-text"> Remove from Wishlist </h7>

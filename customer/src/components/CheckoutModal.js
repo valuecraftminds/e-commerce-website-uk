@@ -463,7 +463,8 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
         tax_amount: tax,
         total_amount: totalAmount,
         total_items: cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
-        order_notes: shippingData.order_notes || null
+        order_notes: shippingData.order_notes || null,
+        frontend_url: window.location.origin // Add frontend URL from browser
       };
 
       const { data, status } = await api.post(`${BASE_URL}/api/customer/checkout/submit-checkout`, payload);

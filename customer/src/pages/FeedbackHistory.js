@@ -13,6 +13,8 @@ const FeedbackHistory = () => {
   const [sortBy, setSortBy] = useState('date'); // date, rating, product
   const [filterRating, setFilterRating] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [itemsToShow, setItemsToShow] = useState(10); // Number of items to display
+  const [itemsPerLoad] = useState(10); // Items to load per "Load More" click
   const navigate = useNavigate();
 
   // Get auth token from logged in user
@@ -66,6 +68,11 @@ const FeedbackHistory = () => {
   useEffect(() => {
     fetchFeedbackHistory();
   }, []);
+
+  // Reset items to show when filters change
+  useEffect(() => {
+    setItemsToShow(itemsPerLoad);
+  }, [sortBy, filterRating, searchTerm, itemsPerLoad]);
 
   // Render star rating
   const renderStars = (rating) => {
@@ -131,6 +138,13 @@ const FeedbackHistory = () => {
   };
 
   const filteredFeedback = getFilteredAndSortedFeedback();
+  const displayedFeedback = filteredFeedback.slice(0, itemsToShow);
+  const hasMoreItems = itemsToShow < filteredFeedback.length;
+
+  // Handle load more
+  const handleLoadMore = () => {
+    setItemsToShow(prevItems => prevItems + itemsPerLoad);
+  };
 
   // Calculate statistics
   const totalReviews = feedbackHistory.length;
@@ -161,10 +175,6 @@ const FeedbackHistory = () => {
               <span className="feedback-stat-number">{totalReviews}</span>
               <span className="feedback-stat-label">Total Reviews</span>
             </div>
-            {/* <div className="feedback-stat-item">
-              <span className="feedback-stat-number">{averageRating}</span>
-              <span className="feedback-stat-label">Avg Rating</span>
-            </div> */}
           </div>
         )}
       </div>
@@ -230,7 +240,7 @@ const FeedbackHistory = () => {
                 <p>No reviews match your current filters.</p>
               </div>
             ) : (
-              filteredFeedback.map((item) => (
+              displayedFeedback.map((item) => (
                 <div key={item.review_id} className="feedback-item">
                   <div className="feedback-header">
                     <div className="feedback-product-info">
@@ -274,13 +284,34 @@ const FeedbackHistory = () => {
             )}
           </div>
 
+          {/* Load More Section */}
           {filteredFeedback.length > 0 && (
-            <div className="feedback-results-summary">
-              <p>
-                Showing {filteredFeedback.length} of {totalReviews} reviews
-                {searchTerm && ` for "${searchTerm}"`}
-                {filterRating !== 'all' && ` with ${filterRating} star${filterRating !== '1' ? 's' : ''}`}
-              </p>
+            <div className="feedback-load-more-section">
+              <div className="feedback-results-summary">
+                <p>
+                  Showing {displayedFeedback.length} of {filteredFeedback.length} reviews
+                  {searchTerm && ` for "${searchTerm}"`}
+                  {filterRating !== 'all' && ` with ${filterRating} star${filterRating !== '1' ? 's' : ''}`}
+                  {filteredFeedback.length !== totalReviews && ` (${totalReviews} total)`}
+                </p>
+              </div>
+
+              {hasMoreItems && (
+                <div className="feedback-load-more-container">
+                  <button 
+                    onClick={handleLoadMore} 
+                    className="feedback-load-more-btn"
+                  >
+                    Load More Reviews ({Math.min(itemsPerLoad, filteredFeedback.length - itemsToShow)} more)
+                  </button>
+                </div>
+              )}
+
+              {!hasMoreItems && displayedFeedback.length > itemsPerLoad && (
+                <div className="feedback-end-message">
+                  <p>You've reached the end of your reviews</p>
+                </div>
+              )}
             </div>
           )}
         </>
