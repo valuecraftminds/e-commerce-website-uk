@@ -526,7 +526,7 @@ getVariantInfo: (req, res) => {
 
     const sql = `
       UPDATE orders
-      SET order_status = 'delivered'
+      SET order_status = 'Delivered'
       WHERE order_id = ?
     `;
 
