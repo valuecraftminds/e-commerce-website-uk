@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const QRCode = require('qrcode');
 const db = require('../config/database');
 const { generateInvoiceFileName } = require('../utils/invoiceUtils');
 
@@ -71,6 +72,29 @@ const getCustomerBillingDetails = (customerId, companyCode) => {
   });
 };
 
+// Helper function to generate QR code for PDF
+const generateQRCodeForPDF = async (url) => {
+  try {
+    const options = {
+      errorCorrectionLevel: 'M',
+      type: 'png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: 120
+    };
+
+    // Generate QR code as buffer for PDF
+    return await QRCode.toBuffer(url, options);
+  } catch (error) {
+    console.error('Error generating QR code for PDF:', error);
+    return null;
+  }
+};
+
 // Configure email transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
@@ -119,14 +143,10 @@ const createTransporter = () => {
             <p><strong>Total Amount:</strong> $${orderData.totalAmount}</p>
         </div>
         
-        <div style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2E5090;">
-            <p style="margin: 0;"><strong>📎 Invoice Attached:</strong> Your detailed invoice is attached as a PDF file for your records.</p>
-        </div>
-        
-        <div style="background-color: #e8f8e8; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745;">
+        <div style="background-color: #e8eaf8ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2E5090;">
             <p style="margin: 0;"><strong>📋 Review your items:</strong> Check your order details and add reviews for your items!</p>
             <div style="margin-top: 10px;">
-                <a href="${orderDetailsLink}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Add Review</a>
+                <a href="${orderDetailsLink}" style="background-color: #2E5090; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Add Review</a>
                 <br>
                 <p> You can return to your order details page anytime to review your items. </p>
             </div>
@@ -216,7 +236,7 @@ const createTransporter = () => {
             }
         }
 
-        // Fetch shipping address details if address_id is provided
+        // Fetch shipping address details
         let shippingAddressDetails = null;
         if (orderData.shippingAddress && orderData.shippingAddress.address_id) {
         try {
@@ -252,7 +272,7 @@ const createTransporter = () => {
         doc.pipe(fs.createWriteStream(invoiceFilePath));
 
         // Generate PDF content with company information
-        generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails);
+        await generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails);
 
         // Finalize PDF
         doc.end();
@@ -292,7 +312,7 @@ const createTransporter = () => {
     };
 
     // Helper function to generate PDF content for invoice
-    const generateInvoicePDFContent = (doc, orderData, customerData, invoiceData, companyInfo, shippingAddressDetails) => {
+    const generateInvoicePDFContent = async (doc, orderData, customerData, invoiceData, companyInfo, shippingAddressDetails) => {
     // Define colors
     const primaryColor = '#2E5090';
     const secondaryColor = '#E8F0FE';
@@ -304,6 +324,11 @@ const createTransporter = () => {
     const pageHeight = doc.page.height;
     const margin = 30;
     const contentWidth = pageWidth - (margin * 2);
+    
+    // Generate QR code for order details link
+    const frontendUrl = process.env.FRONTEND_URL;
+    const orderDetailsLink = `${frontendUrl}/orders/${orderData.orderId || orderData.order_id}?customer_id=${orderData.customer_id}&company_code=${orderData.company_code}`;
+    const qrCodeBuffer = await generateQRCodeForPDF(orderDetailsLink);
     
     // Header with company branding
     doc.rect(0, 0, pageWidth, 80).fill(primaryColor);
@@ -632,6 +657,43 @@ const createTransporter = () => {
     currentY += 30;
   } else {
     currentY += 30;
+  }
+  
+  // QR Code section
+  if (qrCodeBuffer) {
+    currentY += 70;
+    
+    // QR Code section background
+    const qrSectionHeight = 100;
+    const qrSectionY = currentY;
+    doc.rect(margin, qrSectionY, contentWidth, qrSectionHeight).fill('#F8F9FA');
+    doc.rect(margin, qrSectionY, contentWidth, qrSectionHeight).stroke('#E0E0E0');
+    
+    // QR Code title
+    doc.fillColor(primaryColor)
+       .fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Quick Access to Order Details', margin + 15, qrSectionY + 15);
+    
+    // QR Code description
+    doc.fillColor(textColor)
+       .fontSize(9)
+       .font('Helvetica')
+       .text('Scan this QR code with your phone to add reviews to your items.', margin + 15, qrSectionY + 35, {
+         width: contentWidth - 150
+       });
+    
+    // Add QR code image
+    try {
+      doc.image(qrCodeBuffer, pageWidth - 130, qrSectionY + 10, {
+        width: 80,
+        height: 80
+      });
+    } catch (error) {
+      console.error('Error adding QR code to PDF:', error);
+    }
+    
+    currentY += qrSectionHeight + 20;
   }
   
   // Footer - positioned relative to content, not fixed to page bottom
