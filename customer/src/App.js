@@ -18,7 +18,7 @@ import Wishlist from './pages/Wishlist';
 import OrdersHistory from './pages/OrdersHistory';
 import OrderDetails from './pages/OrderDetails';
 import OfferPage from './pages/OfferPage';
-import FeedbackForm from './pages/FeedbackForm';
+import FeedbackForm from './components/FeedbackForm';
 import FeedbackHistory from './pages/FeedbackHistory';
 
 import { CartProvider } from './context/CartContext';

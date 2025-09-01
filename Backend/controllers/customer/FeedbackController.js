@@ -81,7 +81,7 @@ const FeedbackController = {
             return res.status(400).json({ error: 'Company code is required' });
         }
 
-        if (!customer_id || !order_id || !style_id || !style_number || !review || !rating) {
+        if (!customer_id || !order_id || !style_id || !style_number || !rating) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 

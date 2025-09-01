@@ -2,12 +2,13 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Modal } from 'react-bootstrap';
 
 import '../styles/OrderDetails.css';
 import { CountryContext } from "../context/CountryContext";
-import FeedbackForm from './FeedbackForm';
+import { AuthContext } from "../context/AuthContext";
+import FeedbackForm from '../components/FeedbackForm';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -15,6 +16,8 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 export default function OrderDetails() {
     const { orderId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { isLoggedIn } = useContext(AuthContext);
     const [orderDetails, setOrderDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -25,6 +28,18 @@ export default function OrderDetails() {
     
     const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
     const { country } = useContext(CountryContext);
+
+    // Check authentication and redirect to login if not authenticated
+    useEffect(() => {
+        if (!isLoggedIn) {
+            // Only redirect to login with return path if user is accessing order details directly
+            navigate('/login', { 
+                state: { from: location },
+                replace: true 
+            });
+            return;
+        }
+    }, [isLoggedIn, navigate, location]);
 
     // Get auth token from logged in user
     const getAuthToken = () => {
@@ -194,10 +209,10 @@ export default function OrderDetails() {
     };
 
     useEffect(() => {
-        if (orderId) {
+        if (orderId && isLoggedIn) {
             fetchOrderDetails(orderId);
         }
-    }, [orderId]);
+    }, [orderId, isLoggedIn]);
 
     if (loading) {
         return (
