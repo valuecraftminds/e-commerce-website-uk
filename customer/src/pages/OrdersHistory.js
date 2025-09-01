@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 
-import { PiPackage, PiTruckFill, PiArrowCounterClockwiseBold } from "react-icons/pi";
+import { PiPackage, PiArrowCounterClockwiseBold } from "react-icons/pi";
 import { AiOutlineClockCircle, AiOutlineCheckCircle, AiOutlineStar } from "react-icons/ai";
 import { useNavigate } from 'react-router-dom';
 
@@ -18,6 +18,7 @@ export default function OrdersHistory() {
     const [, setSelectedOrderId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // const [downloadingInvoice, setDownloadingInvoice] = useState(null);
     const [exchangeRates, setExchangeRates] = useState({});
 
     const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
@@ -50,7 +51,7 @@ export default function OrdersHistory() {
         { id: 'all', label: 'All Orders', icon: PiPackage },
         { id: 'pending', label: 'Pending', icon: AiOutlineClockCircle },
         // { id: 'shipped', label: 'Shipped', icon: PiTruckFill },
-        { id: 'issued', label: 'Issued', icon: AiOutlineClockCircle },
+        { id: 'in-transit', label: 'In Transit', icon: AiOutlineClockCircle },
         { id: 'delivered', label: 'Delivered', icon: AiOutlineCheckCircle },
         // { id: 'reviewed', label: 'Reviewed', icon: AiOutlineStar },
         { id: 'cancelled', label: 'Cancelled', icon: PiArrowCounterClockwiseBold }
@@ -118,73 +119,63 @@ export default function OrdersHistory() {
     };
 
   // Handle invoice download
-  const handleDownloadInvoice = async (order) => {
-    try {
-      console.log('Downloading invoice for order:', order.order_id);
-      
-      const config = getAxiosConfig();
-      
-      // Create a link to download the PDF directly
-      const downloadUrl = `${BASE_URL}/api/customer/invoices/generate/${order.order_id}`;
-      const params = new URLSearchParams(config.params).toString();
-      const fullUrl = `${downloadUrl}?${params}`;
-      
-      // Add authorization header if available
-      const token = getAuthToken();
-      
-      if (token) {
-        // Use fetch to download with authorization
-        const response = await fetch(fullUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+//   const handleDownloadInvoice = async (order) => {
+//     try {
+//       const token = getAuthToken();
+//       if (!token) {
+//         alert('Please log in to download invoices.');
+//         return;
+//       }
 
-        if (response.ok) {
-          // Create blob from response
-          const blob = await response.blob();
-          
-          // Create download link
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `invoice-${order.order_number || order.order_id}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+//       setDownloadingInvoice(order.order_id); // Set loading state for this specific order
 
-          console.log(`Invoice downloaded successfully! Order: ${order.order_number || order.order_id}`);
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to generate invoice');
-        }
-      } else {
-        // For non-authenticated users, open in new window
-        window.open(fullUrl, '_blank');
-      }
+//       const config = getAxiosConfig();
+      
+//       // Generate invoice PDF using the backend endpoint
+//       const response = await axios.get(
+//         `${BASE_URL}/api/customer/invoice/generate/${order.order_id}`, 
+//         {
+//           ...config,
+//           responseType: 'blob' // Important for handling binary data
+//         }
+//       );
 
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
-      if (error.message.includes('401') || error.message.includes('authentication')) {
-        alert('❌ Please log in to download invoice');
-      } else if (error.message.includes('404')) {
-        alert('❌ Order not found or invoice cannot be generated');
-      } else {
-        alert(`❌ Failed to download invoice: ${error.message}`);
-      }
-    }
-  };   
+//       // Create a blob URL and trigger download
+//       const blob = new Blob([response.data], { type: 'application/pdf' });
+//       const url = window.URL.createObjectURL(blob);
+      
+//       // Create a temporary anchor element to trigger download
+//       const link = document.createElement('a');
+//       link.href = url;
+//       link.download = `invoice-${order.order_number}.pdf`;
+//       document.body.appendChild(link);
+//       link.click();
+      
+//       // Clean up
+//       document.body.removeChild(link);
+//       window.URL.revokeObjectURL(url);
+      
+//     } catch (error) {
+//       console.error('Error downloading invoice:', error);
+//       if (error.response?.status === 401) {
+//         alert('Session expired. Please log in again to download invoices.');
+//       } else if (error.response?.status === 404) {
+//         alert('Invoice not found for this order.');
+//       } else {
+//         alert('Failed to download invoice. Please try again later.');
+//       }
+//     } finally {
+//       setDownloadingInvoice(null); // Clear loading state
+//     }
+//   };   
   
-  // Map tab to order status
+    // Map tab to order status
     const getStatusByTab = (tab) => {
         const statusMap = {
-            'pending': ['pending'],
-            'issued': ['issued'],
-            'delivered': ['delivered'],
-            'cancelled': ['cancelled']
+            'pending': ['Pending'],
+            'in-transit': ['In Transit'],
+            'delivered': ['Delivered'],
+            'cancelled': ['Cancelled']
          };
         return statusMap[tab] || null;
     };
@@ -243,10 +234,10 @@ export default function OrdersHistory() {
     // Get status display text
     const getStatusDisplayText = (status) => {
         const statusMap = {
-           'pending': ['pending'],
-            'issued': ['issued'],
-            'delivered': ['delivered'],
-            'cancelled': ['cancelled']
+           'pending': ['Pending'],
+            'in-transit': ['In Transit'],
+            'delivered': ['Delivered'],
+            'cancelled': ['Cancelled']
         };
         return statusMap[status] || status;
     };
@@ -336,19 +327,29 @@ export default function OrdersHistory() {
                     </span>
                     <span className="order-total">{formatPrice(order.total_amount)}</span>
                     <span className="order-id">Order ID: {order.order_number}</span>
+                    {order.status && (
+                        <span className={`order-status status-${order.status?.toLowerCase().replace(/\s+/g, '-')}`}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                    )}
                 </div>
-                <div className="order-actions">
+                {/* <div className="order-actions">
                     <button 
                         className="download-invoice-btn"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleDownloadInvoice(order);
                         }}
+                        disabled={downloadingInvoice === order.order_id}
                         title="Download Invoice"
                     >
-                        📄 Download Invoice
+                        {downloadingInvoice === order.order_id ? (
+                            <>⏳ Downloading...</>
+                        ) : (
+                            <>📄 Download Invoice</>
+                        )}
                     </button>
-                </div>
+                </div> */}
             </div>
         </div>
     );

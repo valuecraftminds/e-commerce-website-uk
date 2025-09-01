@@ -11,7 +11,7 @@ const OrdersHistoryController = {
             SELECT 
                 o.order_id,
                 o.order_number,
-                o.order_status as original_order_status,
+                o.order_status,
                 o.order_notes,
                 o.subtotal,
                 o.tax_amount,
@@ -24,6 +24,7 @@ const OrdersHistoryController = {
                 o.payment_method_id,
                 o.company_code
             FROM orders o
+            WHERE o.customer_id = ? AND o.company_code = ?
             ORDER BY o.created_at DESC
         `;
 
@@ -33,13 +34,12 @@ const OrdersHistoryController = {
                 oi.order_item_id,
                 s.name as product_name,
                 s.image as image_url,
-                oi.quantity,
-                COALESCE(b.status, 'cancelled') as booking_status
+                oi.quantity
             FROM order_items oi
             INNER JOIN style_variants sv ON oi.variant_id = sv.variant_id
             INNER JOIN styles s ON sv.style_number = s.style_number
-            LEFT JOIN booking b ON oi.booking_id = b.booking_id
-            WHERE oi.order_id IN (?) AND oi.company_code = ?
+            WHERE oi.order_id IN (?)
+            AND oi.company_code = ?
             ORDER BY oi.order_item_id
         `;
         
@@ -84,15 +84,14 @@ const OrdersHistoryController = {
                         order_item_id: item.order_item_id,
                         product_name: item.product_name,
                         image_url: item.image_url,
-                        quantity: item.quantity,
-                        booking_status: item.booking_status
+                        quantity: item.quantity
                     });
                 });
 
                 // Add items to each order
                 const ordersWithItems = orderResults.map(order => ({
                     ...order,
-                    order_status: order.derived_order_status, // Use derived status
+                    status: order.order_status, // Use the actual order_status from database
                     items: itemsByOrder[order.order_id] || []
                 }));
 
@@ -221,6 +220,7 @@ const OrdersHistoryController = {
                 // Add items to each order
                 const ordersWithItems = orderResults.map(order => ({
                     ...order,
+                    status: order.order_status, // Use the actual order_status from database
                     items: itemsByOrder[order.order_id] || []
                 }));
             
@@ -268,7 +268,7 @@ const OrdersHistoryController = {
             SELECT 
                 o.order_id,
                 o.order_number,
-                o.order_status as original_order_status,
+                o.order_status,
                 o.order_notes,
                 o.subtotal,
                 o.tax_amount,
@@ -284,15 +284,7 @@ const OrdersHistoryController = {
                 a.postal_code,
                 a.country,
                 a.phone,
-                CONCAT(a.first_name, ' ', a.last_name) as shipping_name,
-                CASE 
-                    WHEN o.order_status = 'cancelled' THEN 'cancelled'
-                    WHEN COUNT(b.booking_id) = 0 THEN 'cancelled'
-                    WHEN COUNT(CASE WHEN b.status = 'pending' THEN 1 END) = COUNT(b.booking_id) THEN 'pending'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) = COUNT(b.booking_id) THEN 'issued'
-                    WHEN COUNT(CASE WHEN b.status = 'issued' THEN 1 END) > 0 AND COUNT(CASE WHEN b.status = 'pending' THEN 1 END) > 0 THEN 'partially_issued'
-                    ELSE 'unknown'
-                END as derived_order_status
+                CONCAT(a.first_name, ' ', a.last_name) as shipping_name
             FROM orders o
             LEFT JOIN address a ON o.address_id = a.address_id
             JOIN order_items oi ON o.order_id = oi.order_id
@@ -364,8 +356,7 @@ const OrdersHistoryController = {
                     const orderData = {
                         order_id: orderResult.order_id,
                         order_number: orderResult.order_number,
-                        order_status: orderResult.derived_order_status, // Use derived status
-                        original_order_status: orderResult.original_order_status,
+                        order_status: orderResult.order_status,
                         order_notes: orderResult.order_notes,
                         subtotal: orderResult.subtotal,
                         tax_amount: orderResult.tax_amount,
@@ -478,7 +469,7 @@ const OrdersHistoryController = {
                 const order = results[0];
 
                 // Check if order status is pending
-                if (order.order_status !== 'pending') {
+                if (order.order_status !== 'Pending') {
                     return res.status(400).json({
                         success: false,
                         message: 'Only pending orders can be cancelled'
@@ -499,7 +490,7 @@ const OrdersHistoryController = {
                     // Update order status to cancelled
                     const updateOrderQuery = `
                         UPDATE orders 
-                        SET order_status = 'cancelled'
+                        SET order_status = 'Cancelled'
                         WHERE order_id = ? AND customer_id = ? AND company_code = ?
                     `;
 
@@ -561,7 +552,7 @@ const OrdersHistoryController = {
                                     message: 'Order cancelled successfully and booking records removed',
                                     data: {
                                         order_id: orderId,
-                                        new_status: 'cancelled',
+                                        new_status: 'Cancelled',
                                         bookings_deleted: bookingResults.affectedRows
                                     }
                                 });

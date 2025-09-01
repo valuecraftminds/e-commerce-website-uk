@@ -181,12 +181,10 @@ export default function OrderDetails() {
     // Get status badge class
     const getStatusBadgeClass = (status) => {
         const statusClasses = {
-            'pending': 'bg-warning',
-            'shipped': 'bg-primary',
-            'delivered': 'bg-success',
-            'reviewed': 'bg-success',
-            'returned': 'bg-secondary',
-            'cancelled': 'bg-danger'
+            'Pending': 'bg-warning',
+            'In Transit': 'bg-primary',
+            'Delivered': 'bg-success',
+            'Cancelled': 'bg-danger'
         };
         return statusClasses[status] || 'bg-secondary';
     };
@@ -284,7 +282,7 @@ export default function OrderDetails() {
                 // Update the order status in the local state
                 setOrderDetails(prev => ({
                     ...prev,
-                    order_status: 'cancelled'
+                    order_status: 'Cancelled'
                 }));
             } else {
                 alert(response.data.message || 'Failed to cancel order');
@@ -349,8 +347,8 @@ export default function OrderDetails() {
 
                 {/* Right side */}
                 <div className="d-flex gap-2">
-                    {/* "Cancel Order" Button - Only show for pending orders */}
-                    {orderDetails.order_status === 'pending' && (
+                    {/* "Cancel Order" Button */}
+                    {orderDetails.order_status === 'Pending' && (
                         <Button 
                             variant="outline-danger"
                             className="cancel-order-btn"
@@ -361,7 +359,7 @@ export default function OrderDetails() {
                     )}
                     
                     {/* Confirm Delivery Button */}
-                    {orderDetails.order_status !== 'cancelled' || orderDetails.order_status !=='delivered' && (
+                    {orderDetails.order_status === 'In Transit' && (
                         <Button 
                             className='delivery-btn'
                             onClick={handleConfirmDelivery}

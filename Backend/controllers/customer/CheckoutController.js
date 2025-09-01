@@ -203,7 +203,7 @@ const CheckoutController = {
             tax_amount || 0, 
             total_amount, 
             order_items.reduce((sum, item) => sum + item.quantity, 0), // Total items
-            'pending', 
+            'Pending', 
             order_notes,
             new Date(), new Date()
           ];
@@ -470,7 +470,7 @@ const CheckoutController = {
                               address_id: finalAddressId,
                               payment_method_id: paymentMethodId,
                               total_amount: total_amount,
-                              order_status: 'pending',
+                              order_status: 'Pending',
                               booking_count: bookingResult.affectedRows,
                               payment_date: new Date(),
                               invoice_id: invoiceId,
@@ -486,7 +486,7 @@ const CheckoutController = {
                             address_id: finalAddressId,
                             payment_method_id: paymentMethodId,
                             total_amount: total_amount,
-                            order_status: 'pending',
+                            order_status: 'Pending',
                             booking_count: bookingResult.affectedRows,
                             payment_date: new Date(),
                             invoice_id: invoiceId,
