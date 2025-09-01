@@ -659,7 +659,9 @@ const InvoiceController = {
                     orderNumber: order.order_number || order.order_id,
                     orderDate: order.created_at,
                     totalAmount: order.total_amount,
-                    company_name: order.company_name
+                    company_name: order.company_name,
+                    customer_id: order.customer_id,
+                    company_code: order.company_code
                   },
                   invoiceFilePath
                 );

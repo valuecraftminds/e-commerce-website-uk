@@ -258,11 +258,11 @@ export default function Shop() {
                           {formatPrice(product.offer_price)}
                         </span>
                         <span className="text-muted text-decoration-line-through small">
-                          {formatPrice(product.min_sale_price)}
+                          {formatPrice(product.sale_price)}
                         </span>
                       </>
                     ) : (
-                      <span>{formatPrice(product.min_sale_price)}</span>
+                      <span>{formatPrice(product.sale_price)}</span>
                     )}
                   </div>
                   

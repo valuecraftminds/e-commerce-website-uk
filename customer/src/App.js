@@ -90,6 +90,7 @@ function App() {
                                 <Route path="/orders/:orderId" element={<OrderDetails />} />
                                 <Route path="/offers" element={<OfferPage />} />
                                 <Route path="/feedback" element={<FeedbackForm />} />
+                                <Route path="/order-review/:orderId" element={<FeedbackForm />} />
                                 <Route path="/feedback-history" element={<FeedbackHistory />} />
 
                                 {/* Protected Routes */}

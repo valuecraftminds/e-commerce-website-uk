@@ -17,10 +17,13 @@ const FeedbackController = {
         SELECT 
         r.review_id,
         r.customer_id,
+        r.order_id,
         r.style_id,
+        r.style_number,
         c.first_name AS customer_name,
         r.review,
         r.rating,
+        r.sku,
         r.created_at
         FROM reviews r
         INNER JOIN customers c ON r.customer_id = c.customer_id
@@ -57,7 +60,8 @@ const FeedbackController = {
         user_name: review.customer_name,
         comment: review.review,
         rating: review.rating || 5,
-        created_at: review.created_at
+        created_at: review.created_at,
+        sku: review.sku
         }));
 
         // Return in the structure your frontend expects
@@ -70,23 +74,23 @@ const FeedbackController = {
 
     addReview: (req, res) => {
         const customer_id = req.user?.id;
-        const { style_id, review, rating } = req.body;
+        const { order_id, style_id, style_number, review, rating, sku } = req.body;
         const { company_code } = req.query;
 
         if (!company_code) {
             return res.status(400).json({ error: 'Company code is required' });
         }
 
-        if (!customer_id || !style_id || !review || !rating) {
+        if (!customer_id || !order_id || !style_id || !style_number || !review || !rating) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
         const sql = `
-            INSERT INTO reviews (customer_id, style_id, review, rating, company_code, created_at)
-            VALUES (?, ?, ?, ?, ?, NOW())
+            INSERT INTO reviews (customer_id, order_id, style_id, style_number, review, rating, company_code, created_at, sku)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
         ;`;
 
-        db.query(sql, [customer_id, style_id, review, rating, company_code], (err, result) => {
+        db.query(sql, [customer_id, order_id, style_id, style_number, review, rating, company_code, sku], (err, result) => {
             if (err) {
                 console.error('Error adding review:', err);
                 return res.status(500).json({ error: 'Server error' });
@@ -111,13 +115,16 @@ const FeedbackController = {
         const sql = `
             SELECT 
                 r.review_id,
+                r.order_id,
                 r.style_id,
+                r.style_number,
                 r.review,
                 r.rating,
                 r.created_at,
                 r.company_code,
                 s.name,
-                s.image
+                s.image,
+                r.sku
             FROM reviews r
             INNER JOIN styles s ON r.style_id = s.style_id
             WHERE r.customer_id = ? AND r.company_code = ?
