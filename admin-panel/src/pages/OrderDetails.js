@@ -18,6 +18,7 @@ export default function OrderDetails() {
   const [shippingAddress, setShippingAddress] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [stockData, setStockData] = useState({});
 
   // Fetch order details
   useEffect(() => {
@@ -42,6 +43,8 @@ export default function OrderDetails() {
               phone: data.order.address_phone
             });
           }
+          // Fetch stock data for all items
+          fetchStockData(data.items || []);
         } else {
           setError(data.error || 'Failed to load order details');
         }
@@ -53,9 +56,44 @@ export default function OrderDetails() {
       });
   }, [company_code, order_id]);
 
+  // Fetch stock data for order items
+  const fetchStockData = async (items) => {
+    if (!company_code || items.length === 0) return;
+
+    try {
+      const stockPromises = items.map(async item => {
+        try {
+          const response = await fetch(`${BASE_URL}/api/admin/stock/get-stock-summary?company_code=${company_code}&style_number=${item.style_number}&sku=${item.sku}`);
+          const data = await response.json();
+          return {
+            sku: item.sku,
+            stock_qty: data?.stock_qty ?? 0
+          };
+        } catch (error) {
+          console.error(`Failed to fetch stock for ${item.sku}:`, error);
+          return {
+            sku: item.sku,
+            stock_qty: 0
+          };
+        }
+      });
+
+      const stockResults = await Promise.all(stockPromises);
+      const stockMap = {};
+      
+      stockResults.forEach(result => {
+        stockMap[result.sku] = result.stock_qty;
+      });
+
+      setStockData(stockMap);
+    } catch (error) {
+      console.error('Failed to fetch stock data:', error);
+    }
+  };
+
   // Handle issue all items at once
   const handleIssueAllItems = () => {
-    if (!window.confirm('Are you sure you want to issue all available items for this order? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to issue items for this order? This action cannot be undone.')) {
       return;
     }
 
@@ -71,75 +109,59 @@ export default function OrderDetails() {
       return;
     }
 
-    // For demonstration, we'll use first available stock for each item
-    // In a real application, you might want to show a modal to select stock for each item
-    const processAllItems = async () => {
-      const issuingItems = [];
-      
-      for (const item of availableItems) {
-        try {
-          // Fetch main stock for each item
-          const stockResponse = await fetch(`${BASE_URL}/api/admin/issuing/main-stock?company_code=${company_code}&style_number=${item.style_number}&sku=${item.sku}`);
-          const stockData = await stockResponse.json();
-          
-          if (Array.isArray(stockData) && stockData.length > 0) {
-            // Use the first available stock
-            const stock = stockData[0];
-            issuingItems.push({
-              order_item_id: item.order_item_id,
-              style_number: item.style_number,
-              sku: item.sku,
-              batch_number: stock.batch_number,
-              lot_no: stock.lot_no,
-              unit_price: stock.unit_price,
-              issuing_qty: item.quantity
-            });
-          }
-        } catch (error) {
-          console.error(`Failed to fetch stock for ${item.sku}:`, error);
-        }
-      }
+    // Check if all items have sufficient stock before proceeding
+    const insufficientStockItems = availableItems.filter(item => 
+      stockData[item.sku] !== undefined && stockData[item.sku] < item.quantity
+    );
 
-      if (issuingItems.length === 0) {
-        setError('No available stock found for any items.');
-        setLoading(false);
-        return;
-      }
+    if (insufficientStockItems.length > 0) {
+      const itemsList = insufficientStockItems.map(item => `${item.sku} (Required: ${item.quantity}, Available: ${stockData[item.sku]})`).join('\n');
+      setError(`Insufficient stock for the following items:\n${itemsList}`);
+      setLoading(false);
+      return;
+    }
 
-      // Issue all items
-      fetch(`${BASE_URL}/api/admin/issuing/orders/${order.order_id}/issue-all`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company_code: company_code,
-          issuing_items: issuingItems
-        })
+    // Prepare issuing items - backend will automatically select appropriate stock using FIFO
+    const issuingItems = availableItems.map(item => ({
+      order_item_id: item.order_item_id,
+      style_number: item.style_number,
+      sku: item.sku,
+      issuing_qty: item.quantity
+    }));
+
+    // Issue all items
+    fetch(`${BASE_URL}/api/admin/issuing/orders/${order.order_id}/issue-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        company_code: company_code,
+        issuing_items: issuingItems
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            // Update all issued items
-            setOrderItems(prev => prev.map(item => {
-              const issuedItem = issuingItems.find(issued => issued.order_item_id === item.order_item_id);
-              return issuedItem ? { ...item, booking_status: 'Issued' } : item;
-            }));
-            alert(`Successfully issued ${data.issued_count} items!`);
-          } else {
-            setError(data.error || 'Failed to issue all items.');
-          }
-          setLoading(false);
-        })
-        .catch(() => {
-          setError('Failed to issue all items.');
-          setLoading(false);
-        });
-    };
-
-    processAllItems();
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Update all issued items
+          setOrderItems(prev => prev.map(item => {
+            const issuedItem = issuingItems.find(issued => issued.order_item_id === item.order_item_id);
+            return issuedItem ? { ...item, booking_status: 'Issued' } : item;
+          }));
+          alert(`Successfully issued ${data.issued_count} items!`);
+          // Refresh stock data after issuing
+          fetchStockData(orderItems);
+        } else {
+          setError(data.error || 'Failed to issue all items.');
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to issue all items.');
+        setLoading(false);
+      });
   };
 
   const handleBackToOrders = () => {
-    navigate('/warehouse-issuing');
+    navigate('/warehouse/issuing');
   };
 
   if (loading) {
@@ -307,7 +329,15 @@ export default function OrderDetails() {
             variant="success" 
             size="sm"
             onClick={handleIssueAllItems}
-            disabled={orderItems.length === 0 || orderItems.every(item => item.booking_status === 'Issued')}
+            disabled={
+              orderItems.length === 0 || 
+              orderItems.every(item => item.booking_status === 'Issued') ||
+              orderItems.some(item => 
+                item.booking_status !== 'Issued' && 
+                stockData[item.sku] !== undefined && 
+                stockData[item.sku] < item.quantity
+              )
+            }
           >
             Issue All Items
           </Button>
@@ -327,13 +357,13 @@ export default function OrderDetails() {
                   <th>Quantity</th>
                   <th>Unit Price</th>
                   <th>Total Price</th>
-                  <th>Status</th>
+                  <th>Available Stock</th>
                 </tr>
               </thead>
               <tbody>
                 {orderItems.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="text-center">No order items found.</td>
+                    <td colSpan={12} className="text-center">No order items found.</td>
                   </tr>
                 ) : orderItems.map((item, idx) => (
                   <tr key={item.order_item_id}>
@@ -348,11 +378,15 @@ export default function OrderDetails() {
                     <td>${parseFloat(item.unit_price || 0).toFixed(2)}</td>
                     <td>${parseFloat(item.total_price || 0).toFixed(2)}</td>
                     <td>
-                      <Badge bg={item.booking_status === 'Issued' ? 'success' : 
-                        item.booking_status === 'Not Booked' ? 'warning' : 'secondary'}>
-                        {item.booking_status}
+                      <Badge bg={
+                        stockData[item.sku] === undefined ? 'secondary' :
+                        stockData[item.sku] >= item.quantity ? 'success' :
+                        stockData[item.sku] > 0 ? 'warning' : 'danger'
+                      }>
+                        {stockData[item.sku] !== undefined ? stockData[item.sku] : 'Loading...'}
                       </Badge>
                     </td>
+                    
                   </tr>
                 ))}
               </tbody>

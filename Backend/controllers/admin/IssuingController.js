@@ -206,57 +206,88 @@ class IssuingController {
       const errors = [];
 
       const processIssueItem = (item, callback) => {
-        const { order_item_id, style_number, sku, batch_number, lot_no, unit_price, issuing_qty } = item;
+        const { order_item_id, style_number, sku, issuing_qty } = item;
 
-        // Insert into stock_issuing (main_stock_qty updated by trigger)
-        const issuingSql = `
-          INSERT INTO stock_issuing (company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty) 
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+        // First, get available stock for this SKU ordered by date (FIFO - First In, First Out)
+        const getStockSql = `
+          SELECT batch_number, lot_no, unit_price, main_stock_qty, created_at 
+          FROM main_stock 
+          WHERE company_code = ? AND style_number = ? AND sku = ? AND main_stock_qty > 0
+          ORDER BY created_at ASC
         `;
 
-        db.query(issuingSql, [company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty], (err, result) => {
+        db.query(getStockSql, [company_code, style_number, sku], (err, stockResults) => {
           if (err) {
-            errors.push(`Failed to issue ${sku}: ${err.message}`);
+            errors.push(`Failed to fetch stock for ${sku}: ${err.message}`);
             return callback(err);
           }
 
-          // Update or create booking record
-          const checkBookingSql = `
-            SELECT booking_id FROM booking WHERE order_item_id = ? AND company_code = ?
+          if (!stockResults || stockResults.length === 0) {
+            errors.push(`No available stock found for ${sku}`);
+            return callback(new Error(`No available stock for ${sku}`));
+          }
+
+          // Check if we have enough total stock
+          const totalAvailableStock = stockResults.reduce((sum, stock) => sum + stock.main_stock_qty, 0);
+          if (totalAvailableStock < issuing_qty) {
+            errors.push(`Insufficient stock for ${sku}. Required: ${issuing_qty}, Available: ${totalAvailableStock}`);
+            return callback(new Error(`Insufficient stock for ${sku}`));
+          }
+
+          // Use the oldest stock (first in the ordered list) for issuing
+          const selectedStock = stockResults[0];
+          const { batch_number, lot_no, unit_price } = selectedStock;
+
+          // Insert into stock_issuing (main_stock_qty updated by trigger)
+          const issuingSql = `
+            INSERT INTO stock_issuing (company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
           `;
 
-          db.query(checkBookingSql, [order_item_id, company_code], (err, bookingResults) => {
+          db.query(issuingSql, [company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty], (err, result) => {
             if (err) {
-              errors.push(`Failed to check booking for ${sku}: ${err.message}`);
+              errors.push(`Failed to issue ${sku}: ${err.message}`);
               return callback(err);
             }
 
-            if (bookingResults.length > 0) {
-              // Update existing booking status to Issued
-              const updateBookingSql = `
-                UPDATE booking SET status = 'Issued' WHERE booking_id = ?
-              `;
-              db.query(updateBookingSql, [bookingResults[0].booking_id], (err) => {
-                if (err) {
-                  errors.push(`Failed to update booking for ${sku}: ${err.message}`);
-                  return callback(err);
-                }
-                callback(null);
-              });
-            } else {
-              // Create new booking record with Issued status
-              const createBookingSql = `
-                INSERT INTO booking (company_code, order_item_id, sku, style_number, ordered_qty, status) 
-                VALUES (?, ?, ?, ?, ?, 'Issued')
-              `;
-              db.query(createBookingSql, [company_code, order_item_id, sku, style_number, issuing_qty], (err) => {
-                if (err) {
-                  errors.push(`Failed to create booking for ${sku}: ${err.message}`);
-                  return callback(err);
-                }
-                callback(null);
-              });
-            }
+            // Update or create booking record
+            const checkBookingSql = `
+              SELECT booking_id FROM booking WHERE order_item_id = ? AND company_code = ?
+            `;
+
+            db.query(checkBookingSql, [order_item_id, company_code], (err, bookingResults) => {
+              if (err) {
+                errors.push(`Failed to check booking for ${sku}: ${err.message}`);
+                return callback(err);
+              }
+
+              if (bookingResults.length > 0) {
+                // Update existing booking status to Issued
+                const updateBookingSql = `
+                  UPDATE booking SET status = 'Issued' WHERE booking_id = ?
+                `;
+                db.query(updateBookingSql, [bookingResults[0].booking_id], (err) => {
+                  if (err) {
+                    errors.push(`Failed to update booking for ${sku}: ${err.message}`);
+                    return callback(err);
+                  }
+                  callback(null);
+                });
+              } else {
+                // Create new booking record with Issued status
+                const createBookingSql = `
+                  INSERT INTO booking (company_code, order_item_id, sku, style_number, ordered_qty, status) 
+                  VALUES (?, ?, ?, ?, ?, 'Issued')
+                `;
+                db.query(createBookingSql, [company_code, order_item_id, sku, style_number, issuing_qty], (err) => {
+                  if (err) {
+                    errors.push(`Failed to create booking for ${sku}: ${err.message}`);
+                    return callback(err);
+                  }
+                  callback(null);
+                });
+              }
+            });
           });
         });
       };
