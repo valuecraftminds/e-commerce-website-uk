@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { FaFacebookF, FaGoogle, FaTwitter } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { AuthContext } from '../context/AuthContext';
@@ -12,7 +12,12 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
+  
+  // Get the page the user was trying to access before login
+  // Only redirect to 'from' if user was redirected here from a protected route
+  const from = location.state?.from?.pathname;
   
   const [formData, setFormData] = useState({
     email: '',
@@ -48,7 +53,14 @@ export default function LoginPage() {
 
       if (response.ok && data.success) {
         login(data.token, data.user);
-        navigate('/');
+        // Only redirect to 'from' location if user was redirected here from a protected route
+        // Otherwise, go to home page for normal logins
+        if (from && location.state?.from) {
+          const fullPath = from + (location.state.from.search || '');
+          navigate(fullPath, { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
         console.log('Login successful:', data);
         console.log('token:', data.token);
         

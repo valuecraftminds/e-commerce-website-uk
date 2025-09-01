@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Container, Row, Col, Image, Button, Alert } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import { FaShare } from "react-icons/fa";
@@ -16,6 +16,7 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function ProductDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { style_number } = useParams();
   const { addToCart } = useCart();
   const { showNotify } = useNotifyModal();
@@ -389,7 +390,9 @@ export default function ProductDetails() {
             {
                 label: "Login",
                 onClick: () => {
-                navigate('/login');
+                navigate('/login', { 
+                  state: { from: location }
+                });
                 }
             },
             {
@@ -432,7 +435,9 @@ export default function ProductDetails() {
             {
                 label: "Login",
                 onClick: () => {
-                navigate('/login');
+                navigate('/login', { 
+                  state: { from: location }
+                });
                 }
             },
             {
