@@ -50,8 +50,8 @@ export default function ApprovePO() {
   };
 
   const handleView = (po_number) => {
-    navigate(`/merchandising/po/${po_number}?mode=view`);
-  };
+    navigate(`/merchandising/po/${po_number}/view`);
+  }
 
   return (
     <div className="container mt-4">

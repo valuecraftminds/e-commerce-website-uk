@@ -45,7 +45,10 @@ const roleBasedMenuItems = {
         dropdown: true,
         items: [
           { label: 'GRN', path: '/warehouse/grn', icon: 'bi-box-seam' },
-          { label: 'Issuing', path: '/warehouse/issuing', icon: 'bi-box-arrow-up' }
+          { label: 'Issuing', path: '/warehouse/issuing', icon: 'bi-box-arrow-up' },
+          { label: 'Stock', path: '/warehouse/stock', icon: 'bi-collection', value: 'warehouse_stock' },
+        { label: 'Offers', path: '/warehouse/offers', icon: 'bi-percent', value: 'warehouse_offers' }
+
         ]
       },
       
@@ -116,7 +119,10 @@ const roleBasedMenuItems = {
       dropdown: true,
       items: [
         { label: 'GRN', path: '/warehouse/grn', icon: 'bi-box-seam', value: 'warehouse_grn' },
-        { label: 'Issuing', path: '/warehouse/issuing', icon: 'bi-box-arrow-up', value: 'warehouse_issuing' }
+        { label: 'Issuing', path: '/warehouse/issuing', icon: 'bi-box-arrow-up', value: 'warehouse_issuing' },
+        { label: 'Stock', path: '/warehouse/stock', icon: 'bi-collection', value: 'warehouse_stock' },
+        { label: 'Offers', path: '/warehouse/offers', icon: 'bi-percent', value: 'warehouse_offers' }
+
       ]
     },
     merchandising: {
