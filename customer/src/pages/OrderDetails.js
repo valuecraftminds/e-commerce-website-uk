@@ -9,6 +9,7 @@ import '../styles/OrderDetails.css';
 import { CountryContext } from "../context/CountryContext";
 import { AuthContext } from "../context/AuthContext";
 import FeedbackForm from '../components/FeedbackForm';
+import { useNotifyModal} from "../context/NotifyModalProvider";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -28,6 +29,7 @@ export default function OrderDetails() {
     
     const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
     const { country } = useContext(CountryContext);
+    const { showNotify } = useNotifyModal();
 
     // Check authentication and redirect to login if not authenticated
     useEffect(() => {
@@ -100,7 +102,7 @@ export default function OrderDetails() {
                 // Find reviews that belong to this order
                 response.data.feedback.forEach(review => {
                     if (review.order_id === orderData.order_id) {
-                        reviewedStyleIds.add(review.style_id);
+                        reviewedStyleIds.add(review.style_number);
                     }
                 });
                 
@@ -119,8 +121,8 @@ export default function OrderDetails() {
 
     // Check if a specific item has been reviewed
     const isItemReviewed = (item) => {
-        const styleId = item.style?.style_id || item.style_id;
-        return reviewedItems.has(styleId);
+        const style_number = item.style?.style_number || item.style_number;
+        return reviewedItems.has(style_number);
     };
 
     // Fetch exchange rates
@@ -267,13 +269,23 @@ export default function OrderDetails() {
             {}, 
                 getAxiosConfig()
             );
+            
+            // Notify modal
+            showNotify({
+                title: 'Delivery Confirmed',
+                message: `Your delivery for order ${orderDetails.order_id} has been confirmed.`,
+                type: 'success'
+            });
 
-            alert('Delivery confirmed!');
             console.log('Response:', response.data);
 
         } catch (error) {
             console.error('Error confirming delivery:', error);
-            alert('Failed to confirm delivery');
+            showNotify({
+                title: 'Delivery Confirmation Failed',
+                message: 'Failed to confirm delivery',
+                type: 'error'
+            });
         }
     };
 
@@ -293,18 +305,31 @@ export default function OrderDetails() {
             );
 
             if (response.data.success) {
-                alert('Order cancelled successfully!');
+                showNotify({
+                    title: 'Order Cancelled',
+                    message: `Your order ${orderDetails.order_id} has been cancelled.`,
+                    type: 'success'
+                });
                 // Update the order status in the local state
                 setOrderDetails(prev => ({
                     ...prev,
                     order_status: 'Cancelled'
                 }));
             } else {
-                alert(response.data.message || 'Failed to cancel order');
+                showNotify({
+                    title: 'Order Cancellation Failed',
+                    message: 'Failed to cancel order',
+                    type: 'error'
+                });
+                console.log(response.data.message || 'Failed to cancel order');
             }
         } catch (error) {
             console.error('Error cancelling order:', error);
-            alert(error.response?.data?.message || 'Failed to cancel order');
+            showNotify({
+                title: 'Order Cancellation Failed',
+                message: 'Failed to cancel order',
+                type: 'error'
+            });
         }
     };
 
@@ -331,11 +356,11 @@ export default function OrderDetails() {
     };
 
     // Handle feedback submission completion
-    const handleFeedbackSubmissionComplete = (styleId) => {
+    const handleFeedbackSubmissionComplete = (style_number) => {
         // Update the reviewed items set
-        setReviewedItems(prev => new Set([...prev, styleId]));
-        
-        console.log(`Review submitted for style_id: ${styleId}`);
+        setReviewedItems(prev => new Set([...prev, style_number]));
+
+        console.log(`Review submitted for style_number: ${style_number}`);
         setShowFeedbackModal(false);
         setSelectedItem(null);
     };

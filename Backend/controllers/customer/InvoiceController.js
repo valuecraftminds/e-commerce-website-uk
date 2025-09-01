@@ -1,6 +1,6 @@
 const db = require('../../config/database');
 const PDFDocument = require('pdfkit');
-const { sendInvoiceEmail } = require('../../services/emailService');
+const { sendInvoiceEmail } = require('../../services/customer/emailService');
 const fs = require('fs');
 const path = require('path');
 const { generateUniqueInvoiceNumber, generateInvoiceFileName } = require('../../utils/invoiceUtils');

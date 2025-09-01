@@ -2,8 +2,8 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const QRCode = require('qrcode');
-const db = require('../config/database');
-const { generateInvoiceFileName } = require('../utils/invoiceUtils');
+const db = require('../../config/database');
+const { generateInvoiceFileName } = require('../../utils/invoiceUtils');
 
 // Helper function to fetch company details
 const getCompanyDetails = (companyCode) => {

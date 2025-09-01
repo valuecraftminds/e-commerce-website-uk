@@ -1,5 +1,5 @@
 const db = require('../../config/database');
-const {generateAndSendInvoice } = require('../../services/emailService');
+const {generateAndSendInvoice } = require('../../services/customer/emailService');
 const { generateUniqueInvoiceNumber } = require('../../utils/invoiceUtils');
 
 const CheckoutController = {
