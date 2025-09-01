@@ -10,7 +10,7 @@ const FeedbackController = {
         return res.status(400).json({ error: 'Company code is required' });
     }
 
-        // Convert string to integer for database query
+    // Convert string to integer for database query
     const styleId = parseInt(style_id);
 
     const sql = `
@@ -37,7 +37,7 @@ const FeedbackController = {
         console.error('Error retrieving product reviews:', err);
         return res.status(500).json({ error: 'Server error' });
         }
-    // Calculate rating statistics
+    // Calculate rating
         let stats = { average: 0, total: results.length };
         
         if (results.length > 0) {
@@ -95,11 +95,11 @@ const FeedbackController = {
                 console.error('Error adding review:', err);
                 return res.status(500).json({ error: 'Server error' });
             }
-            res.status(201).json({ message: 'Review added successfully', review_id: result.insertId });
+            res.status(201).json({ review_id: result.insertId });
         });
     },
     
-    // Get customer's feedback history (optional)
+    // Get customer's feedback history
     getFeedbackHistory: (req, res) => {
         const customer_id = req.user?.id;
         const { company_code } = req.query;

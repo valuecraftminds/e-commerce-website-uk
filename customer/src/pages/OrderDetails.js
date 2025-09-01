@@ -233,8 +233,7 @@ export default function OrderDetails() {
 
     // Get image URL from item
     const getItemImageUrl = (item) => {
-        // Try different possible image paths based on your API structure
-        const imagePath = item.style?.image || item.image_url || item.image;
+        const imagePath = item.style?.image || item.image;
         
         if (imagePath) {
             // Construct the full URL
@@ -326,8 +325,6 @@ export default function OrderDetails() {
         console.log(`Review submitted for style_id: ${styleId}`);
         setShowFeedbackModal(false);
         setSelectedItem(null);
-        // Optionally show a success message
-        alert('Review submitted successfully!');
     };
 
     return (
@@ -352,7 +349,7 @@ export default function OrderDetails() {
 
                 {/* Right side */}
                 <div className="d-flex gap-2">
-                    {/* Cancel Order Button - Only show for pending orders */}
+                    {/* "Cancel Order" Button - Only show for pending orders */}
                     {orderDetails.order_status === 'pending' && (
                         <Button 
                             variant="outline-danger"
@@ -364,12 +361,14 @@ export default function OrderDetails() {
                     )}
                     
                     {/* Confirm Delivery Button */}
-                    <Button 
-                        className='delivery-btn'
-                        onClick={handleConfirmDelivery}
-                    >
-                        Confirm Delivery
-                    </Button>
+                    {orderDetails.order_status !== 'cancelled' || orderDetails.order_status !=='delivered' && (
+                        <Button 
+                            className='delivery-btn'
+                            onClick={handleConfirmDelivery}
+                        >
+                            Confirm Delivery
+                        </Button>
+                    )}
                 </div>
             </div>
 

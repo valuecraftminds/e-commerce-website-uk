@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
+import { useNotifyModal } from "../context/NotifyModalProvider";
 import '../styles/FeedbackForm.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -10,8 +11,7 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
   const [review, setReview] = useState("");
   const [rating, setRating] = useState(0);
-  const [message, setMessage] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { showNotify } = useNotifyModal();
 
   // Get auth token from logged in user
   const getAuthToken = () => {
@@ -50,15 +50,24 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
       sku: item.sku
     };
 
-    console.log('Submitting review data:', reviewData); // Debug log
-
     try {
       const res = await axios.post(`${BASE_URL}/api/customer/feedback/reviews`, reviewData, getAxiosConfig());
       
-      setMessage(res.data.message);
+      // Show success notification
+      showNotify({
+        title: "Review Submitted Successfully!",
+        message: `Thank you for your feedback on ${item.style_name || item.style_number}.`,
+        type: "success",
+        customButtons: [
+          {
+            label: "Done",
+            onClick: () => {}
+          }
+        ]
+      });
+      
       setReview("");
       setRating(0);
-      setIsSubmitted(true);
       
       // Notify parent component
       if (onSubmissionComplete) {
@@ -66,18 +75,20 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
       }
     } catch (err) {
       console.error('Error submitting review:', err.response?.data || err);
-      setMessage(err.response?.data?.message || "Error submitting review");
+      // Show error notification
+      showNotify({
+        title: "Error Submitting Review",
+        message: "Failed to submit review. Please try again.",
+        type: "error",
+        customButtons: [
+          {
+            label: "Try Again",
+            onClick: () => {}
+          }
+        ]
+      });
     }
   };
-
-  if (isSubmitted) {
-    return (
-      <div className="feedback-form submitted">
-        <h4>Review for {item.style_number}</h4>
-        <p className="feedback-message success"> Review submitted successfully!</p>
-      </div>
-    );
-  }
 
   return (
     <form className="feedback-form" onSubmit={handleSubmit}>
@@ -102,10 +113,8 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
         onChange={(e) => setReview(e.target.value)}
         maxLength={255}
         placeholder="Write your review here..."
-        required
       />
       <button type="submit">Submit</button>
-      {message && <p className={`feedback-message ${message.includes('Error') ? 'error' : 'success'}`}>{message}</p>}
     </form>
   );
 }
@@ -123,7 +132,7 @@ function FeedbackForm({ items, customer_id, onSubmissionComplete }) {
     }
   };
 
-  // Handle single item case (backward compatibility)
+  // Handle single item case
   if (!Array.isArray(items)) {
     const singleItem = {
       style_id: items?.style_id,
