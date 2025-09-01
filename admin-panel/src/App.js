@@ -38,6 +38,7 @@ import Location from './pages/Location';
 import AddGRN from './pages/AddGRN';
 import StyleAttributes from './pages/Style_Management/StyleAttributes';
 import WarehouseIssuing from './pages/WarehouseIssuing';
+import OrderDetails from './pages/OrderDetails';
 import VerifyCompanyAdmin from './pages/VCM_Admin/VerifyCompanyAdmin';
 
 // Create Sidebar Context for global sidebar state management
@@ -223,6 +224,7 @@ function App() {
           <Route path="/company-settings" element={<CompanySettings />} />
           <Route path="/approve-po" element={<ApprovePO />} />
           <Route path="/warehouse/issuing" element={<WarehouseIssuing />} />
+          <Route path="/order-details/:order_id" element={<OrderDetails />} />
           <Route path="/verify-company-admin" element={<VerifyCompanyAdmin />} />
         </Routes>
       </div>
