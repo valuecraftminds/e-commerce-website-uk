@@ -21,6 +21,14 @@ export default function OrdersHistory() {
     // const [downloadingInvoice, setDownloadingInvoice] = useState(null);
     const [exchangeRates, setExchangeRates] = useState({});
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalOrders, setTotalOrders] = useState(0);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    const ordersPerPage = 5;
+
     const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
     const { country } = useContext(CountryContext);
 
@@ -58,31 +66,46 @@ export default function OrdersHistory() {
     ];
 
     // Fetch all orders
-    const fetchAllOrders = async () => {
+    const fetchAllOrders = async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
             
             const config = getAxiosConfig();
+            config.params.page = page;
+            config.params.limit = ordersPerPage;
+            
             const response = await axios.get(`${BASE_URL}/api/customer/orders/all-orders`, config);
 
             if (response.data && response.data.success) {
                 setOrders(response.data.data || []);
+                
+                // Update pagination state
+                const pagination = response.data.pagination;
+                if (pagination) {
+                    setCurrentPage(pagination.currentPage);
+                    setTotalPages(pagination.totalPages);
+                    setTotalOrders(pagination.totalOrders);
+                    setHasNextPage(pagination.hasNextPage);
+                    setHasPreviousPage(pagination.hasPreviousPage);
+                }
             } else {
                 setError('Failed to fetch orders');
                 setOrders([]);
+                resetPagination();
             }
         } catch (err) {
             console.error('Error fetching orders:', err);
             setError(err.response?.data?.message || 'Failed to fetch orders');
             setOrders([]);
+            resetPagination();
         } finally {
             setLoading(false);
         }
     };
 
     // Fetch orders by status
-    const fetchOrdersByStatus = async (statuses) => {
+    const fetchOrdersByStatus = async (statuses, page = 1) => {
         try {
             setLoading(true);
             setError(null);
@@ -93,23 +116,62 @@ export default function OrdersHistory() {
             const response = await axios.get(`${BASE_URL}/api/customer/orders/orders-by-status`, {
                 params: { 
                     company_code: COMPANY_CODE,
-                    status: statusParam
+                    status: statusParam,
+                    page: page,
+                    limit: ordersPerPage
                 },
                 headers: config.headers
             });
 
             if (response.data && response.data.success) {
                 setOrders(response.data.data || []);
+                
+                // Update pagination state
+                const pagination = response.data.pagination;
+                if (pagination) {
+                    setCurrentPage(pagination.currentPage);
+                    setTotalPages(pagination.totalPages);
+                    setTotalOrders(pagination.totalOrders);
+                    setHasNextPage(pagination.hasNextPage);
+                    setHasPreviousPage(pagination.hasPreviousPage);
+                }
             } else {
                 setError('Failed to fetch orders');
                 setOrders([]);
+                resetPagination();
             }
         } catch (err) {
             console.error('Error fetching orders by status:', err);
             setError(err.response?.data?.message || 'Failed to fetch orders');
             setOrders([]);
+            resetPagination();
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Reset pagination state
+    const resetPagination = () => {
+        setCurrentPage(1);
+        setTotalPages(0);
+        setTotalOrders(0);
+        setHasNextPage(false);
+        setHasPreviousPage(false);
+    };
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        if (newPage < 1 || newPage > totalPages) return;
+        
+        setCurrentPage(newPage);
+        
+        if (activeTab === 'all') {
+            fetchAllOrders(newPage);
+        } else {
+            const statuses = getStatusByTab(activeTab);
+            if (statuses) {
+                fetchOrdersByStatus(statuses, newPage);
+            }
         }
     };
 
@@ -117,57 +179,6 @@ export default function OrdersHistory() {
     const handleOrderClick = (orderId) => {
         navigate(`/orders/${orderId}`);
     };
-
-  // Handle invoice download
-//   const handleDownloadInvoice = async (order) => {
-//     try {
-//       const token = getAuthToken();
-//       if (!token) {
-//         alert('Please log in to download invoices.');
-//         return;
-//       }
-
-//       setDownloadingInvoice(order.order_id); // Set loading state for this specific order
-
-//       const config = getAxiosConfig();
-      
-//       // Generate invoice PDF using the backend endpoint
-//       const response = await axios.get(
-//         `${BASE_URL}/api/customer/invoice/generate/${order.order_id}`, 
-//         {
-//           ...config,
-//           responseType: 'blob' // Important for handling binary data
-//         }
-//       );
-
-//       // Create a blob URL and trigger download
-//       const blob = new Blob([response.data], { type: 'application/pdf' });
-//       const url = window.URL.createObjectURL(blob);
-      
-//       // Create a temporary anchor element to trigger download
-//       const link = document.createElement('a');
-//       link.href = url;
-//       link.download = `invoice-${order.order_number}.pdf`;
-//       document.body.appendChild(link);
-//       link.click();
-      
-//       // Clean up
-//       document.body.removeChild(link);
-//       window.URL.revokeObjectURL(url);
-      
-//     } catch (error) {
-//       console.error('Error downloading invoice:', error);
-//       if (error.response?.status === 401) {
-//         alert('Session expired. Please log in again to download invoices.');
-//       } else if (error.response?.status === 404) {
-//         alert('Invoice not found for this order.');
-//       } else {
-//         alert('Failed to download invoice. Please try again later.');
-//       }
-//     } finally {
-//       setDownloadingInvoice(null); // Clear loading state
-//     }
-//   };   
   
     // Map tab to order status
     const getStatusByTab = (tab) => {
@@ -211,7 +222,7 @@ export default function OrdersHistory() {
             return exchangeRates['LKR'] || 320;
         default:
             return 1;
-        }
+    }
     };
 
     const formatPrice = (minPrice) => {
@@ -253,23 +264,103 @@ export default function OrdersHistory() {
         return '/placeholder-image.png';
     };
 
+    // Render pagination controls
+    const renderPaginationControls = () => {
+        if (totalPages <= 1) return null;
+
+        const pageNumbers = [];
+        const maxVisiblePages = 5;
+        
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage < maxVisiblePages - 1) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.push(i);
+        }
+
+        return (
+            <div className="pagination-controls">
+                <div className="pagination-info">
+                    Showing {orders.length} of {totalOrders} orders
+                </div>
+                <div className="pagination-buttons">
+                    <button 
+                        className="pagination-btn"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={!hasPreviousPage}
+                    >
+                        Previous
+                    </button>
+                    
+                    {startPage > 1 && (
+                        <>
+                            <button 
+                                className="pagination-btn page-number"
+                                onClick={() => handlePageChange(1)}
+                            >
+                                1
+                            </button>
+                            {startPage > 2 && <span className="pagination-ellipsis">...</span>}
+                        </>
+                    )}
+                    
+                    {pageNumbers.map(pageNum => (
+                        <button
+                            key={pageNum}
+                            className={`pagination-btn page-number ${pageNum === currentPage ? 'active' : ''}`}
+                            onClick={() => handlePageChange(pageNum)}
+                        >
+                            {pageNum}
+                        </button>
+                    ))}
+                    
+                    {endPage < totalPages && (
+                        <>
+                            {endPage < totalPages - 1 && <span className="pagination-ellipsis">...</span>}
+                            <button 
+                                className="pagination-btn page-number"
+                                onClick={() => handlePageChange(totalPages)}
+                            >
+                                {totalPages}
+                            </button>
+                        </>
+                    )}
+                    
+                    <button 
+                        className="pagination-btn"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={!hasNextPage}
+                    >
+                        Next
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     // Handle tab change
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);
         setSelectedOrderId(null);
+        setCurrentPage(1); // Reset to first page when changing tabs
+        resetPagination();
         
         if (tabId === 'all') {
-            fetchAllOrders();
+            fetchAllOrders(1);
         } else {
             const statuses = getStatusByTab(tabId);
             if (statuses) {
-                fetchOrdersByStatus(statuses);
+                fetchOrdersByStatus(statuses, 1);
             }
         }
     };
 
     useEffect(() => {
-        fetchAllOrders();
+        fetchAllOrders(1);
     }, []);
 
     // Render order card
@@ -333,23 +424,6 @@ export default function OrdersHistory() {
                         </span>
                     )}
                 </div>
-                {/* <div className="order-actions">
-                    <button 
-                        className="download-invoice-btn"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadInvoice(order);
-                        }}
-                        disabled={downloadingInvoice === order.order_id}
-                        title="Download Invoice"
-                    >
-                        {downloadingInvoice === order.order_id ? (
-                            <>⏳ Downloading...</>
-                        ) : (
-                            <>📄 Download Invoice</>
-                        )}
-                    </button>
-                </div> */}
             </div>
         </div>
     );
@@ -405,9 +479,12 @@ export default function OrdersHistory() {
                     )}
 
                     {!loading && !error && orders.length > 0 && (
-                        <div className="orders-list">
-                            {orders.map(renderOrderCard)}
-                        </div>
+                        <>
+                            <div className="orders-list">
+                                {orders.map(renderOrderCard)}
+                            </div>
+                            {renderPaginationControls()}
+                        </>
                     )}
                 </div>
             </div>

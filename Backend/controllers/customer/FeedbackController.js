@@ -102,7 +102,7 @@ const FeedbackController = {
     // Get customer's feedback history
     getFeedbackHistory: (req, res) => {
         const customer_id = req.user?.id;
-        const { company_code } = req.query;
+        const { company_code, page = 1, limit = 5 } = req.query;
 
         if (!company_code) {
             return res.status(400).json({ error: 'Company code is required' });
@@ -112,32 +112,67 @@ const FeedbackController = {
             return res.status(401).json({ error: 'Authentication required' });
         }
 
-        const sql = `
-            SELECT 
-                r.review_id,
-                r.order_id,
-                r.style_id,
-                r.style_number,
-                r.review,
-                r.rating,
-                r.created_at,
-                r.company_code,
-                s.name,
-                s.image,
-                r.sku
+        // Convert page and limit to integers
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const offset = (pageNumber - 1) * limitNumber;
+
+        // First, get the total count
+        const countSql = `
+            SELECT COUNT(*) as total
             FROM reviews r
             INNER JOIN styles s ON r.style_id = s.style_id
             WHERE r.customer_id = ? AND r.company_code = ?
-            ORDER BY created_at DESC
         `;
 
-        db.query(sql, [customer_id, company_code], (err, results) => {
+        db.query(countSql, [customer_id, company_code], (err, countResults) => {
             if (err) {
-                console.error('Error retrieving feedback history:', err);
+                console.error('Error counting feedback records:', err);
                 return res.status(500).json({ error: 'Server error' });
             }
 
-            res.status(200).json({ feedback: results });
+            const totalRecords = countResults[0].total;
+            const totalPages = Math.ceil(totalRecords / limitNumber);
+
+            // Then get the paginated results
+            const sql = `
+                SELECT 
+                    r.review_id,
+                    r.order_id,
+                    r.style_id,
+                    r.style_number,
+                    r.review,
+                    r.rating,
+                    r.created_at,
+                    r.company_code,
+                    s.name,
+                    s.image,
+                    r.sku
+                FROM reviews r
+                INNER JOIN styles s ON r.style_id = s.style_id
+                WHERE r.customer_id = ? AND r.company_code = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+            `;
+
+            db.query(sql, [customer_id, company_code, limitNumber, offset], (err, results) => {
+                if (err) {
+                    console.error('Error retrieving feedback history:', err);
+                    return res.status(500).json({ error: 'Server error' });
+                }
+
+                res.status(200).json({ 
+                    feedback: results,
+                    pagination: {
+                        currentPage: pageNumber,
+                        totalPages: totalPages,
+                        totalRecords: totalRecords,
+                        limit: limitNumber,
+                        hasNextPage: pageNumber < totalPages,
+                        hasPreviousPage: pageNumber > 1
+                    }
+                });
+            });
         });
     }
 }
