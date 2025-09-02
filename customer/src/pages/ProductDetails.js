@@ -812,7 +812,7 @@ export default function ProductDetails() {
                 </div>
               )}
             </div>
-            </Col>
+          </Col>
 
           {/* Column 3: Reviews */}
           <Col lg={4} md={6} className="reviews-col">

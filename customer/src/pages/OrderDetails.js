@@ -472,14 +472,14 @@ export default function OrderDetails() {
                                                     {item.style?.description && (
                                                         <p className="item-description">{item.style.description}</p>
                                                     )}
-                                                    <div className="item-meta">
+                                                    {/* <div className="item-meta">
                                                         {item.variant?.sku && (
                                                             <span className="meta-item">SKU: {item.variant.sku}</span>
                                                         )}
                                                         {item.style?.style_number && (
                                                             <span className="meta-item">Style: {item.style.style_number}</span>
                                                         )}
-                                                    </div>
+                                                    </div> */}
                                                 </div>
                                                 
                                                 {/* Quantity and Price */}
