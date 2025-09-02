@@ -41,6 +41,7 @@ import WarehouseIssuing from './pages/WarehouseIssuing';
 import OrderDetails from './pages/OrderDetails';
 import VerifyCompanyAdmin from './pages/VCM_Admin/VerifyCompanyAdmin';
 import StockManagement from './pages/StockManagement';
+import ProductOffers from './pages/ProductOffers';
 
 // Create Sidebar Context for global sidebar state management
 export const SidebarContext = createContext();
@@ -228,6 +229,7 @@ function App() {
           <Route path="/order-details/:order_id" element={<OrderDetails />} />
           <Route path="/verify-company-admin" element={<VerifyCompanyAdmin />} />
           <Route path="/warehouse/stock" element={<StockManagement />} />
+          <Route path="/warehouse/offers" element={<ProductOffers />} />
         </Routes>
       </div>
     </SidebarProvider>
