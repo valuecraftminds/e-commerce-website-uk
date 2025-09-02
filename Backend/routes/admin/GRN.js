@@ -15,6 +15,9 @@ router.post('/create-grn', GRNController.createGRN);
 // New routes to add:
 router.post('/validate-item', GRNController.validateGRNItem);
 
+// Get purchase orders with GRN status
+router.get('/purchase-orders-with-status', GRNController.getPurchaseOrdersWithGRNStatus);
+
 // Get all GRN history for a company
 router.get('/history', GRNController.getGRNHistory);
 

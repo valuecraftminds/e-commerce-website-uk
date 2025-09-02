@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useContext, useEffect, useState, useCallback } from 'react';
-import { Alert, Button, Col, Container, Row, Spinner, Table, Form, Card } from 'react-bootstrap';
+import { Alert, Button, Col, Container, Row, Table, Form, Card, Nav } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Spinner from '../components/Spinner';
 // For purchase orders table
 
 
@@ -26,21 +27,26 @@ export default function WarehouseGRN() {
   });
   const [poLoading, setPoLoading] = useState(false);
   const [poError, setPoError] = useState('');
+  const [activeTab, setActiveTab] = useState('pending'); // New state for tabs
 
   // Fetch purchase orders
   const fetchPurchaseOrders = useCallback(async () => {
     try {
       setPoLoading(true);
       setPoError('');
-      const params = { company_code, ...poFilter };
-      const response = await axios.get(`${BASE_URL}/api/admin/po/get-purchase-orders`, { params });
+      const params = { 
+        company_code, 
+        ...poFilter,
+        status: activeTab // Add status filter based on active tab
+      };
+      const response = await axios.get(`${BASE_URL}/api/admin/grn/purchase-orders-with-status`, { params });
       setPurchaseOrders(response.data.purchase_orders || []);
     } catch (error) {
       setPoError(error.response?.data?.message || error.message);
     } finally {
       setPoLoading(false);
     }
-  }, [company_code, poFilter]);
+  }, [company_code, poFilter, activeTab]); // Add activeTab to dependencies
 
   // Fetch suppliers for PO filter
   const fetchPoSuppliers = useCallback(async () => {
@@ -65,6 +71,12 @@ export default function WarehouseGRN() {
   const [grnHistory, setGrnHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [grnFilter, setGrnFilter] = useState({
+    search: '',
+    status: '',
+    from_date: '',
+    to_date: ''
+  });
 
   // PO Search State
   const [searchPO, setSearchPO] = useState('');
@@ -77,8 +89,12 @@ export default function WarehouseGRN() {
       setLoading(true);
       setError('');
       try {
+        const params = new URLSearchParams({
+          company_code,
+          ...grnFilter
+        });
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history?company_code=${company_code}`
+          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history?${params}`
         );
         const data = await response.json();
         if (data.success) {
@@ -93,7 +109,7 @@ export default function WarehouseGRN() {
       }
     };
     if (company_code) fetchHistory();
-  }, [company_code]);
+  }, [company_code, grnFilter]);
 
   // Autocomplete PO numbers as user types (logic from AddGRN)
   useEffect(() => {
@@ -136,6 +152,31 @@ export default function WarehouseGRN() {
     navigate(`/warehouse/add-grn/${po_number}`);
   };
 
+  // Fetch GRN history with filters
+  const fetchGRNHistory = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams({
+        company_code,
+        ...grnFilter
+      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history?${params}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        setGrnHistory(data.grns);
+      } else {
+        setError(data.message || 'Failed to fetch GRN history');
+      }
+    } catch (err) {
+      setError('Error fetching GRN history');
+    } finally {
+      setLoading(false);
+    }
+  }, [company_code, grnFilter]);
+
   return (
     <Container className="py-4">
       <Row className="mb-4">
@@ -164,8 +205,8 @@ export default function WarehouseGRN() {
                       onBlur={() => setTimeout(() => setShowPODropdown(false), 200)}
                       style={{ flex: 1 }}
                     />
-                    <Button type="submit" variant="primary" disabled={!searchPO || poLoading}>
-                      {poLoading ? <Spinner size="sm" /> : 'Search'}
+                    <Button type="submit" variant="primary" disabled={!searchPO || poSearchLoading || poLoading}>
+                      {poSearchLoading ? 'Searching...' : 'Search'}
                     </Button>
                     {showPODropdown && poResults.length > 0 && (
                       <div style={{
@@ -211,6 +252,29 @@ export default function WarehouseGRN() {
           <Card>
             <Card.Body>
               <h5>Purchase Orders</h5>
+              
+              {/* Status Tabs */}
+              <Nav variant="tabs" className="mb-3">
+                <Nav.Item>
+                  <Nav.Link 
+                    active={activeTab === 'pending'} 
+                    onClick={() => !poLoading && setActiveTab('pending')}
+                    style={{ cursor: poLoading ? 'not-allowed' : 'pointer', opacity: poLoading ? 0.6 : 1 }}
+                  >
+                    Pending Orders
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link 
+                    active={activeTab === 'partial'} 
+                    onClick={() => !poLoading && setActiveTab('partial')}
+                    style={{ cursor: poLoading ? 'not-allowed' : 'pointer', opacity: poLoading ? 0.6 : 1 }}
+                  >
+                    Partial Orders
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+
               {/* Filters */}
               <Form className="mb-3">
                 <Row>
@@ -221,6 +285,7 @@ export default function WarehouseGRN() {
                         type="text"
                         value={poFilter.po_number}
                         onChange={e => setPoFilter({ ...poFilter, po_number: e.target.value })}
+                        disabled={poLoading}
                       />
                     </Form.Group>
                   </Col>
@@ -230,6 +295,7 @@ export default function WarehouseGRN() {
                       <Form.Select
                         value={poFilter.supplier_id}
                         onChange={e => setPoFilter({ ...poFilter, supplier_id: e.target.value })}
+                        disabled={poLoading}
                       >
                         <option value="">All Suppliers</option>
                         {poSuppliers.map(s => (
@@ -247,6 +313,7 @@ export default function WarehouseGRN() {
                         type="date"
                         value={poFilter.from_date}
                         onChange={e => setPoFilter({ ...poFilter, from_date: e.target.value })}
+                        disabled={poLoading}
                       />
                     </Form.Group>
                   </Col>
@@ -257,6 +324,7 @@ export default function WarehouseGRN() {
                         type="date"
                         value={poFilter.to_date}
                         onChange={e => setPoFilter({ ...poFilter, to_date: e.target.value })}
+                        disabled={poLoading}
                       />
                     </Form.Group>
                   </Col>
@@ -269,45 +337,49 @@ export default function WarehouseGRN() {
               </Form>
               {/* Table */}
               {poError && <Alert variant="danger">{poError}</Alert>}
-              <div className="table-responsive">
-                <Table striped bordered hover>
-                  <thead>
-                    <tr>
-                      <th>PO Number</th>
-                      <th>Supplier</th>
-                      <th>Total Quantity</th>
-                      <th>Total Styles</th>
-                      <th>Total Cost</th>
-                      <th>Tolerance Limit (%)</th>
-                      <th>Delivery Date</th>
-                      <th>Created date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {purchaseOrders.length === 0 ? (
+              {poLoading ? (
+                <div className="text-center py-4">
+                  <Spinner text="Loading purchase orders..." />
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <Table striped bordered hover>
+                    <thead>
                       <tr>
-                        <td colSpan="9" className="text-center">
-                          {poLoading ? 'Loading...' : 'No purchase orders found'}
-                        </td>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Total Quantity</th>
+                        <th>Total Styles</th>
+                        <th>Total Cost</th>
+                        <th>Tolerance Limit (%)</th>
+                        {activeTab !== 'pending' && <th>Latest GRN Date</th>}
                       </tr>
-                    ) : (
-                      purchaseOrders.map(po => (
-                        <tr key={po.po_number} style={{ cursor: 'pointer' }} onClick={() => handleSelectPO(po.po_number)}>
-                          <td>{po.po_number}</td>
-                          <td>{po.supplier_name || 'Unknown Supplier'}</td>
-                          <td>{po.total_quantity || 0}</td>
-                          <td>{po.total_styles || 0}</td>
-                          <td>{po.total_cost || "0.00"}</td>
-                          <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}</td>
-                          
-                          <td>{new Date(po.delivery_date).toLocaleDateString()}</td>
-                          <td>{new Date(po.created_at).toLocaleDateString()}</td>
+                    </thead>
+                    <tbody>
+                      {purchaseOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={activeTab === 'pending' ? '6' : '7'} className="text-center">
+                            No {activeTab} purchase orders found
+                          </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </div>
+                      ) : (
+                        purchaseOrders.map(po => (
+                          <tr key={po.po_number} style={{ cursor: 'pointer' }} onClick={() => handleSelectPO(po.po_number)}>
+                            <td>{po.po_number}</td>
+                            <td>{po.supplier_name || 'Unknown Supplier'}</td>
+                            <td>{po.total_quantity || 0}</td>
+                            <td>{po.total_styles || 0}</td>
+                            <td>${parseFloat(po.total_cost || 0).toFixed(2)}</td>
+                            <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}%</td>
+                           
+                            {activeTab !== 'pending' && <td>{po.latest_grn_date ? new Date(po.latest_grn_date).toLocaleDateString() : '-'}</td>}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
@@ -315,6 +387,83 @@ export default function WarehouseGRN() {
       
       <Row className="mb-3 align-items-center">
         <Col><h2>GRN History</h2></Col>
+      </Row>
+      
+      {/* GRN History Filters */}
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Body>
+              <Form className="mb-3">
+                <Row>
+                  <Col md={3}>
+                    <Form.Group>
+                      <Form.Label>Search</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={grnFilter.search}
+                        onChange={e => setGrnFilter({ ...grnFilter, search: e.target.value })}
+                        placeholder="GRN ID, PO Number, Batch Number, Supplier"
+                        disabled={loading}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Group>
+                      <Form.Label>Status</Form.Label>
+                      <Form.Select
+                        value={grnFilter.status}
+                        onChange={e => setGrnFilter({ ...grnFilter, status: e.target.value })}
+                        disabled={loading}
+                      >
+                        <option value="">All Status</option>
+                        <option value="partial">Partial</option>
+                        <option value="complete">Complete</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Group>
+                      <Form.Label>From Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={grnFilter.from_date}
+                        onChange={e => setGrnFilter({ ...grnFilter, from_date: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Group>
+                      <Form.Label>To Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={grnFilter.to_date}
+                        onChange={e => setGrnFilter({ ...grnFilter, to_date: e.target.value })}
+                        disabled={loading}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={2} className="d-flex align-items-end">
+                    <Button onClick={fetchGRNHistory} disabled={loading} className="me-2">
+                      {loading ? 'Filtering...' : 'Filter'}
+                    </Button>
+                    <Button 
+                      variant="outline-secondary" 
+                      onClick={() => setGrnFilter({ search: '', status: '', from_date: '', to_date: '' })}
+                      disabled={loading}
+                    >
+                      Clear
+                    </Button>
+                  </Col>
+                  <Col md={1} className="d-flex align-items-end">
+                    
+                  </Col>
+                </Row>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
       </Row>
       {loading ? (
         <div className="text-center py-5">
@@ -345,7 +494,7 @@ export default function WarehouseGRN() {
                   <td>{grn.grn_id}</td>
                   <td>{grn.po_number}</td>
                   <td>{grn.supplier_name || grn.supplier_id}</td>
-                  <td>{new Date(grn.received_date).toLocaleString()}</td>
+                  <td>{new Date(grn.received_date).toLocaleDateString()}</td>
                   <td>{grn.status}</td>
                   <td>{grn.batch_number || '-'}</td>
                   <td>{grn.total_items || grn.items_count || '-'}</td>

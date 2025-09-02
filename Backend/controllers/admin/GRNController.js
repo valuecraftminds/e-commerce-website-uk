@@ -2,6 +2,103 @@ const db = require('../../config/database');
 const PurchaseOrderController = require('./PurchaseOrderController');
 
 class GRNController {
+    // Get purchase orders with GRN status
+    static async getPurchaseOrdersWithGRNStatus(req, res) {
+        const { company_code, po_number, supplier_id, from_date, to_date, status } = req.query;
+        
+        if (!company_code) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing company_code' 
+            });
+        }
+
+        try {
+            let sql = `
+                SELECT poh.*, 
+                       s.supplier_name,
+                       COUNT(DISTINCT poi.sku) as total_styles,
+                       SUM(poi.quantity) as total_quantity,
+                       SUM(poi.total_price) as total_cost,
+                       CASE 
+                           WHEN latest_grn.po_number IS NULL THEN 'pending'
+                           ELSE latest_grn.status
+                       END as grn_status,
+                       GROUP_CONCAT(DISTINCT gh.grn_id ORDER BY gh.received_date DESC) as grn_ids,
+                       latest_grn.received_date as latest_grn_date
+                FROM purchase_order_headers poh
+                LEFT JOIN suppliers s ON poh.supplier_id = s.supplier_id AND poh.company_code = s.company_code
+                LEFT JOIN purchase_order_items poi ON poh.po_number = poi.po_number AND poh.company_code = poi.company_code
+                LEFT JOIN grn_headers gh ON poh.po_number = gh.po_number AND poh.company_code = gh.company_code
+                LEFT JOIN (
+                    SELECT gh1.po_number, gh1.company_code, gh1.status, gh1.received_date
+                    FROM grn_headers gh1
+                    INNER JOIN (
+                        SELECT po_number, company_code, MAX(received_date) as max_date
+                        FROM grn_headers
+                        GROUP BY po_number, company_code
+                    ) gh2 ON gh1.po_number = gh2.po_number 
+                         AND gh1.company_code = gh2.company_code 
+                         AND gh1.received_date = gh2.max_date
+                ) latest_grn ON poh.po_number = latest_grn.po_number AND poh.company_code = latest_grn.company_code
+                WHERE poh.company_code = ?
+            `;
+
+            const params = [company_code];
+
+            // Add filters
+            if (po_number) {
+                sql += ` AND poh.po_number LIKE ?`;
+                params.push(`%${po_number}%`);
+            }
+            if (supplier_id) {
+                sql += ` AND poh.supplier_id = ?`;
+                params.push(supplier_id);
+            }
+            if (from_date) {
+                sql += ` AND DATE(poh.created_at) >= ?`;
+                params.push(from_date);
+            }
+            if (to_date) {
+                sql += ` AND DATE(poh.created_at) <= ?`;
+                params.push(to_date);
+            }
+
+            sql += ` GROUP BY poh.po_number`;
+
+            // Add status filter after grouping
+            if (status) {
+                sql += ` HAVING grn_status = ?`;
+                params.push(status);
+            }
+
+            sql += ` ORDER BY poh.created_at DESC`;
+
+            db.query(sql, params, (err, results) => {
+                if (err) {
+                    console.error('Error fetching purchase orders with GRN status:', err);
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error fetching purchase orders',
+                        error: err.message 
+                    });
+                }
+
+                res.json({ 
+                    success: true, 
+                    purchase_orders: results 
+                });
+            });
+        } catch (error) {
+            console.error('Error in getPurchaseOrdersWithGRNStatus:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching purchase orders', 
+                error: error.message 
+            });
+        }
+    }
+
     // Get remaining_qty for a PO item with tolerance calculation
     static async getRemainingQty(req, res) {
         const { po_number, sku, company_code } = req.query;
@@ -199,7 +296,7 @@ static async searchPO(req, res) {
 
     // Get all GRNs for a company (ignore PO param, always show all)
     static async getGRNHistory(req, res) {
-        const { company_code, page = 1, limit = 10, search = '' } = req.query;
+        const { company_code, page = 1, limit = 10, search = '', status = '', from_date = '', to_date = '' } = req.query;
 
         if (!company_code) {
             return res.status(400).json({ success: false, message: 'Missing company_code' });
@@ -217,7 +314,7 @@ static async searchPO(req, res) {
                        COUNT(gi.id) as items_count
                 FROM grn_headers gh
                 LEFT JOIN grn_items gi ON gh.grn_id = gi.grn_id
-                LEFT JOIN suppliers s ON gh.supplier_id = s.supplier_id
+                LEFT JOIN suppliers s ON gh.supplier_id = s.supplier_id AND gh.company_code = s.company_code
                 WHERE gh.company_code = ?
             `;
             const params = [company_code];
@@ -226,6 +323,22 @@ static async searchPO(req, res) {
             if (search) {
                 sql += ` AND (gh.grn_id LIKE ? OR gh.po_number LIKE ? OR gh.batch_number LIKE ? OR s.supplier_name LIKE ?)`;
                 params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+            }
+
+            // Add status filter if provided
+            if (status) {
+                sql += ` AND gh.status = ?`;
+                params.push(status);
+            }
+
+            // Add date range filters if provided
+            if (from_date) {
+                sql += ` AND DATE(gh.received_date) >= ?`;
+                params.push(from_date);
+            }
+            if (to_date) {
+                sql += ` AND DATE(gh.received_date) <= ?`;
+                params.push(to_date);
             }
 
             // Group and order
@@ -240,13 +353,33 @@ static async searchPO(req, res) {
                 });
             });
 
-            // Get total count for pagination
-            let countSql = `SELECT COUNT(*) as total FROM grn_headers WHERE company_code = ?`;
+            // Get total count for pagination with same filters
+            let countSql = `
+                SELECT COUNT(DISTINCT gh.grn_id) as total 
+                FROM grn_headers gh
+                LEFT JOIN suppliers s ON gh.supplier_id = s.supplier_id AND gh.company_code = s.company_code
+                WHERE gh.company_code = ?
+            `;
             const countParams = [company_code];
+            
+            // Apply same filters to count query
             if (search) {
-                countSql += ` AND (grn_id LIKE ? OR po_number LIKE ? OR batch_number LIKE ?)`;
-                countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+                countSql += ` AND (gh.grn_id LIKE ? OR gh.po_number LIKE ? OR gh.batch_number LIKE ? OR s.supplier_name LIKE ?)`;
+                countParams.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
             }
+            if (status) {
+                countSql += ` AND gh.status = ?`;
+                countParams.push(status);
+            }
+            if (from_date) {
+                countSql += ` AND DATE(gh.received_date) >= ?`;
+                countParams.push(from_date);
+            }
+            if (to_date) {
+                countSql += ` AND DATE(gh.received_date) <= ?`;
+                countParams.push(to_date);
+            }
+
             const countResult = await new Promise((resolve, reject) => {
                 db.query(countSql, countParams, (err, results) => {
                     if (err) reject(err);

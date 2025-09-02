@@ -4,11 +4,11 @@ import {
     Button, Card, Col, Container, Form,
     Modal,
     Row,
-    Spinner,
     Table
 } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Spinner from '../components/Spinner';
 import '../styles/WarehouseGRN.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -464,7 +464,13 @@ export default function AddGRN() {
             {/* Back Button */}
             <Row className="mb-3">
                 <Col>
-                    <Button variant="secondary" onClick={() => navigate('/warehouse/grn')}>Back to GRN History</Button>
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => navigate('/warehouse/grn')}
+                        disabled={loading}
+                    >
+                        Back to GRN History
+                    </Button>
                 </Col>
             </Row>
 
@@ -511,7 +517,7 @@ export default function AddGRN() {
                                                         value={invoiceNumber}
                                                         onChange={e => setInvoiceNumber(e.target.value)}
                                                         placeholder="Enter invoice number"
-                                                        disabled={poDetails.header.status !== 'Approved'}
+                                                        disabled={poDetails.header.status !== 'Approved' || loading}
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -525,6 +531,7 @@ export default function AddGRN() {
                                                         placeholder="Batch number"
                                                         required
                                                         readOnly
+                                                        disabled={loading}
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -537,7 +544,7 @@ export default function AddGRN() {
                                                         value={reference}
                                                         onChange={e => setReference(e.target.value)}
                                                         placeholder="Optional reference"
-                                                        disabled={poDetails.header.status !== 'Approved'}
+                                                        disabled={poDetails.header.status !== 'Approved' || loading}
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -545,21 +552,28 @@ export default function AddGRN() {
                                     </Form>
 
                                     {/* PO Items Table */}
-                                    <h6>Click on items to add to GRN:</h6>
-                                    <Table striped bordered hover responsive className="mb-4">
-                                        <thead>
-                                            <tr>
-                                                <th>Style Code</th>
-                                                <th>SKU</th>
-                                                 <th>Unit Price</th>
-                                                <th>Ordered Qty</th>
-                                               
-                                                <th>Max Qty (with tolerance)</th>
-                                                <th>Total Received</th>
-                                                <th>Remaining Qty</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                    {loading ? (
+                                        <div className="text-center py-5">
+                                            <Spinner />
+                                            <p className="mt-3 text-muted">Loading PO details...</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <h6>Click on items to add to GRN:</h6>
+                                            <Table striped bordered hover responsive className="mb-4">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Style Code</th>
+                                                        <th>SKU</th>
+                                                         <th>Unit Price</th>
+                                                        <th>Ordered Qty</th>
+                                                       
+                                                        <th>Max Qty (with tolerance)</th>
+                                                        <th>Total Received</th>
+                                                        <th>Remaining Qty</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
                                             {poDetails.items.map((item) => {
                                                 // Calculate tolerance range
                                                 const orderedQty = item.ordered_qty;
@@ -571,7 +585,7 @@ export default function AddGRN() {
                                                
                                                 
                                                 // Use headerStatus instead of grnHeaderStatus for clickable logic
-                                                const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed');
+                                                const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading;
                                                 return (
                                                     <tr 
                                                         key={item.sku}
@@ -601,6 +615,8 @@ export default function AddGRN() {
                                             })}
                                         </tbody>
                                     </Table>
+                                        </>
+                                    )}
                                 </Card.Body>
                             </Card>
 
@@ -640,7 +656,7 @@ export default function AddGRN() {
                                                                 variant="outline-primary"
                                                                 className="me-2"
                                                                 onClick={() => handleEditGRNItem(index)}
-                                                                disabled={poDetails.header.status !== 'Approved'}
+                                                                disabled={poDetails.header.status !== 'Approved' || loading}
                                                             >
                                                                 Edit
                                                             </Button>
@@ -648,7 +664,7 @@ export default function AddGRN() {
                                                                 size="sm"
                                                                 variant="outline-danger"
                                                                 onClick={() => handleDeleteGRNItem(index)}
-                                                                disabled={poDetails.header.status !== 'Approved'}
+                                                                disabled={poDetails.header.status !== 'Approved' || loading}
                                                             >
                                                                 Delete
                                                             </Button>
@@ -673,7 +689,7 @@ export default function AddGRN() {
                                                         value={headerStatus}
                                                         onChange={e => setHeaderStatus(e.target.value)}
                                                         style={{ minWidth: 140 }}
-                                                        disabled={checkAllItemsCompleted()}
+                                                        disabled={checkAllItemsCompleted() || loading}
                                                     >
                                                         <option value="partial">Partial</option>
                                                         <option value="completed">Completed</option>
@@ -689,8 +705,8 @@ export default function AddGRN() {
                                                     onClick={handleSubmitGRN}
                                                     disabled={loading || grnItems.length === 0 || !batchNumber.trim() || poDetails.header.status !== 'Approved'}
                                                 >
-                                                    {loading ? <Spinner size="sm" className="me-2" /> : null}
-                                                    Submit GRN ({grnItems.length} items)
+                                                    {loading ? <Spinner className="me-2" /> : null}
+                                                    {loading ? 'Submitting GRN...' : `Submit GRN (${grnItems.length} items)`}
                                                 </Button>
                                             </div>
                                         </div>
@@ -703,8 +719,8 @@ export default function AddGRN() {
             </Row>
 
             {/* GRN Item Entry Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-                <Modal.Header closeButton>
+            <Modal show={showModal} onHide={() => !modalLoading && setShowModal(false)} size="lg">
+                <Modal.Header closeButton={!modalLoading}>
                     <Modal.Title>
                         Add Item to GRN - {selectedItem?.sku}
                     </Modal.Title>
@@ -747,6 +763,7 @@ export default function AddGRN() {
                                                 onChange={e => handleModalFormChange('received_qty', e.target.value)}
                                                 placeholder={`Max: ${selectedItem.remaining_qty}`}
                                                 required
+                                                disabled={modalLoading}
                                             />
                                         </Form.Group>
                                     </Col>
@@ -757,7 +774,7 @@ export default function AddGRN() {
                                                 value={modalForm.location_id}
                                                 onChange={e => handleModalFormChange('location_id', e.target.value)}
                                                 required
-                                                disabled={locationsLoading}
+                                                disabled={locationsLoading || modalLoading}
                                             >
                                                 <option value="">Select location</option>
                                                 {locations.map(loc => (
@@ -810,6 +827,7 @@ export default function AddGRN() {
                                         value={modalForm.notes}
                                         onChange={e => handleModalFormChange('notes', e.target.value)}
                                         placeholder="Additional notes (optional)"
+                                        disabled={modalLoading}
                                     />
                                 </Form.Group>
                             </Form>
@@ -817,7 +835,11 @@ export default function AddGRN() {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => setShowModal(false)}
+                        disabled={modalLoading}
+                    >
                         Cancel
                     </Button>
                     <Button
@@ -825,8 +847,8 @@ export default function AddGRN() {
                         onClick={handleAddGRNItem}
                         disabled={modalLoading || !modalForm.received_qty}
                     >
-                        {modalLoading ? <Spinner size="sm" className="me-2" /> : null}
-                        Add to GRN
+                        {modalLoading ? <Spinner className="me-2" /> : null}
+                        {modalLoading ? 'Adding...' : 'Add to GRN'}
                     </Button>
                 </Modal.Footer>
             </Modal>
