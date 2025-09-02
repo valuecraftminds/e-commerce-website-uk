@@ -4,6 +4,7 @@ import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getFilt
 
 import Spinner from '../components/Spinner';
 import { AuthContext } from '../context/AuthContext';
+import AddOfferModal from '../components/modals/AddOffersModal';
 import '../styles/ProductOffers.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -15,7 +16,9 @@ export default function ProductOffers() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
-    const [sortOption, setSortOption] = useState('all'); // 'all', 'active_offers', 'upcoming_offers'
+    const [sortOption, setSortOption] = useState('all');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 0,
@@ -70,7 +73,7 @@ export default function ProductOffers() {
                 filtered.sort((a, b) => new Date(b.offer_end_date) - new Date(a.offer_end_date));
                 break;
                 
-            default: // 'all'
+            default: 
                 // Show all products without any filtering
                 break;
         }
@@ -194,6 +197,26 @@ export default function ProductOffers() {
         onGlobalFilterChange: setGlobalFilter,
     });
 
+    // Handle row click to open modal with product details
+    const handleRowClick = (product, event) => {
+        // Prevent row click if clicking on interactive elements
+        if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') {
+            return;
+        }
+        
+        console.log('Row clicked, product:', product); // Debug log
+        setSelectedProduct(product);
+        setIsModalOpen(true);
+    };
+
+    // Handle modal close and refresh data
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setSelectedProduct(null);
+        // Optionally refresh data after modal closes
+        fetchProducts(pagination.currentPage);
+    };
+
     if (loading) {
         return (
             <div className="pf-product-offers-container">
@@ -256,7 +279,13 @@ export default function ProductOffers() {
                         </thead>
                         <tbody className="pf-table-body">
                             {table.getRowModel().rows.map(row => (
-                                <tr key={row.id} className="pf-table-row">
+                                <tr 
+                                    key={row.id} 
+                                    className="pf-table-row pf-clickable-row"
+                                    onClick={(event) => handleRowClick(row.original, event)}
+                                    title="Click to add/edit offer"
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     {row.getVisibleCells().map((cell, index) => (
                                         <td
                                             key={cell.id}
@@ -362,6 +391,14 @@ export default function ProductOffers() {
                     </div>
                 </div>
             )}
+
+            {/* AddOffer Modal */}
+            <AddOfferModal
+                isOpen={isModalOpen}
+                onClose={handleModalClose}
+                product={selectedProduct}
+                onOfferUpdated={() => fetchProducts(pagination.currentPage)}
+            />
         </div>
     );
 }

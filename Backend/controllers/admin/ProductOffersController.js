@@ -1,6 +1,6 @@
 const db = require('../../config/database');
 
-class AddOffersController{
+class ProductOffersController{
     // get product details
     getProductDetailsWithDate(req, res){
         const { company_code, page = 1, limit = 15 } = req.query;
@@ -46,7 +46,7 @@ class AddOffersController{
                     s.name AS style_name,
                     ms.batch_number,
                     ms.lot_no,
-                    ms.unit_price,
+                    sv.unit_price,
                     ms.main_stock_qty,
                     ms.created_at,
                     sv.sale_price,
@@ -80,7 +80,37 @@ class AddOffersController{
                 });
             });
         });
+    };
+
+    createOffer(req, res) {
+        const { company_code, sku, offer_price, offer_start_date, offer_end_date } = req.body;
+
+        // Validate input
+        if (!sku || !offer_price || !company_code) {
+            return res.status(400).json({ error: 'Missing required fields: sku, offer_price, and company_code are required.' });
+        }
+
+        const sql = `
+            UPDATE style_variants 
+            SET offer_price = ?, 
+                offer_start_date = ?, 
+                offer_end_date = ?
+            WHERE sku = ? AND company_code = ?
+        `;
+
+        db.query(sql, [offer_price, offer_start_date, offer_end_date, sku, company_code], (error, results) => {
+            if (error) {
+                console.error('Error creating/updating offer:', error);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            if (results.affectedRows === 0) {
+                return res.status(404).json({ error: 'Product not found or no changes made.' });
+            }
+
+            res.json({ success: true, message: 'Offer created/updated successfully.' });
+        });
     }
 }
 
-module.exports = new AddOffersController();
+module.exports = new ProductOffersController();
