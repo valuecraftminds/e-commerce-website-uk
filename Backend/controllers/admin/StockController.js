@@ -27,16 +27,62 @@ const StockController = {
   // Get main stock summary
   async getMainStockSummary(req, res) {
     const company_code = req.params.company_code || req.query.company_code || req.body.company_code;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
     if (!company_code) {
       return res.status(400).json({ success: false, message: 'company_code is required' });
     }
     try {
-      const sql = `SELECT stock_summary_id, style_number, sku, stock_qty, updated_at FROM main_stock_summary WHERE company_code = ?`;
-      db.query(sql, [company_code], (err, results) => {
+      // Get total count
+      const countSql = `
+        SELECT COUNT(*) as total 
+        FROM main_stock_summary mss
+        WHERE mss.company_code = ?
+      `;
+      
+      // Get paginated data
+      const sql = `
+        SELECT 
+          mss.stock_summary_id, 
+          mss.style_number, 
+          s.name AS style_name,
+          mss.sku, 
+          mss.stock_qty, 
+          mss.updated_at 
+        FROM main_stock_summary mss
+        LEFT JOIN styles s ON mss.style_number = s.style_number AND mss.company_code = s.company_code
+        WHERE mss.company_code = ?
+        LIMIT ? OFFSET ?
+      `;
+      
+      db.query(countSql, [company_code], (err, countResult) => {
         if (err) {
           return res.status(500).json({ success: false, message: 'Database error', error: err.message });
         }
-        return res.json({ success: true, data: results });
+        
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+        
+        db.query(sql, [company_code, limit, offset], (err, results) => {
+          if (err) {
+            return res.status(500).json({ success: false, message: 'Database error', error: err.message });
+          }
+          
+          return res.json({ 
+            success: true, 
+            data: results,
+            pagination: {
+              currentPage: page,
+              totalPages: totalPages,
+              totalRecords: total,
+              limit: limit,
+              hasNext: page < totalPages,
+              hasPrev: page > 1
+            }
+          });
+        });
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -46,17 +92,63 @@ const StockController = {
   // get issued stock data
   async getIssuedStock(req, res) {
     const company_code = req.params.company_code || req.query.company_code || req.body.company_code;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
     if (!company_code) {
       return res.status(400).json({ success: false, message: 'company_code is required' });
     }
     try {
-      const sql = `SELECT id, style_number, sku, batch_number, lot_no, issuing_qty FROM stock_issuing WHERE company_code = ?`;
+      // Get total count
+      const countSql = `
+        SELECT COUNT(*) as total 
+        FROM stock_issuing si 
+        WHERE si.company_code = ?
+      `;
+      
+      // Get paginated data
+      const sql = `
+        SELECT 
+          si.id, 
+          si.style_number, 
+          s.name AS style_name,
+          si.sku, 
+          si.batch_number, 
+          si.lot_no, 
+          si.issuing_qty 
+        FROM stock_issuing si 
+        LEFT JOIN styles s ON si.style_number = s.style_number AND si.company_code = s.company_code
+        WHERE si.company_code = ?
+        LIMIT ? OFFSET ?
+      `;
 
-      db.query(sql, [company_code], (err, results) => {
+      db.query(countSql, [company_code], (err, countResult) => {
         if (err) {
           return res.status(500).json({ success: false, message: 'Database error', error: err.message });
         }
-        return res.json({ success: true, data: results });
+        
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+        
+        db.query(sql, [company_code, limit, offset], (err, results) => {
+          if (err) {
+            return res.status(500).json({ success: false, message: 'Database error', error: err.message });
+          }
+          
+          return res.json({ 
+            success: true, 
+            data: results,
+            pagination: {
+              currentPage: page,
+              totalPages: totalPages,
+              totalRecords: total,
+              limit: limit,
+              hasNext: page < totalPages,
+              hasPrev: page > 1
+            }
+          });
+        });
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -66,17 +158,66 @@ const StockController = {
   // get GRN stock
   async getGrnStock(req, res) {
     const company_code = req.params.company_code || req.query.company_code || req.body.company_code;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
     if (!company_code) {
       return res.status(400).json({ success: false, message: 'company_code is required' });
     }
     try {
-      const sql = `SELECT id, style_number, sku, batch_number, lot_no, stock_qty, created_at FROM stock_received WHERE company_code = ?`;
+      // Get total count
+      const countSql = `
+        SELECT COUNT(*) as total 
+        FROM stock_received sr
+        WHERE sr.company_code = ?
+      `;
+      
+      // Get paginated data
+      const sql = `
+        SELECT 
+          sr.id, 
+          gi.grn_id,
+          sr.style_number,
+          s.name as style_name,
+          sr.sku, 
+          sr.batch_number, 
+          sr.lot_no, 
+          sr.stock_qty, 
+          sr.created_at 
+        FROM stock_received sr
+        LEFT JOIN grn_items gi ON sr.sku = gi.sku AND sr.company_code = gi.company_code
+        LEFT JOIN styles s ON sr.style_number = s.style_number AND sr.company_code = s.company_code
+        WHERE sr.company_code = ?
+        LIMIT ? OFFSET ?
+      `;
 
-      db.query(sql, [company_code], (err, results) => {
+      db.query(countSql, [company_code], (err, countResult) => {
         if (err) {
           return res.status(500).json({ success: false, message: 'Database error', error: err.message });
         }
-        return res.json({ success: true, data: results });
+        
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+        
+        db.query(sql, [company_code, limit, offset], (err, results) => {
+          if (err) {
+            return res.status(500).json({ success: false, message: 'Database error', error: err.message });
+          }
+          
+          return res.json({ 
+            success: true, 
+            data: results,
+            pagination: {
+              currentPage: page,
+              totalPages: totalPages,
+              totalRecords: total,
+              limit: limit,
+              hasNext: page < totalPages,
+              hasPrev: page > 1
+            }
+          });
+        });
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Server error', error: error.message });
