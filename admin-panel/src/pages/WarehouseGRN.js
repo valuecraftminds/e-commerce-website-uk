@@ -279,7 +279,6 @@ export default function WarehouseGRN() {
                       <th>Total Styles</th>
                       <th>Total Cost</th>
                       <th>Tolerance Limit (%)</th>
-                      <th>Status</th>
                       <th>Delivery Date</th>
                       <th>Created date</th>
                     </tr>
@@ -300,12 +299,7 @@ export default function WarehouseGRN() {
                           <td>{po.total_styles || 0}</td>
                           <td>{po.total_cost || "0.00"}</td>
                           <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}</td>
-                          <td>
-                            <span className={`badge ${po.status === 'Pending' ? 'bg-warning text-dark' : 
-                              po.status === 'Approved' ? 'bg-success' : 'bg-secondary'}`}>
-                              {po.status || 'Pending'}
-                            </span>
-                          </td>
+                          
                           <td>{new Date(po.delivery_date).toLocaleDateString()}</td>
                           <td>{new Date(po.created_at).toLocaleDateString()}</td>
                         </tr>

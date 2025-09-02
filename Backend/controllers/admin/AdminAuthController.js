@@ -319,7 +319,7 @@ static login(req, res) {
       // Optional: company logo
       let logoHtml = '';
       if (company.company_logo) {
-        const logoUrl = `${process.env.BACKEND_URL || ''}/uploads/company_logos/${company.company_logo}`;
+        const logoUrl = `${process.env.BACKEND_URL}/uploads/company_logos/${company.company_logo}`;
         logoHtml = `<img src="${logoUrl}" alt="Company Logo" style="max-width:120px;max-height:60px;margin-bottom:10px;display:block;" />`;
       }
 
