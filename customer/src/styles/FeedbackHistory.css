@@ -379,6 +379,79 @@
   font-size: 0.95rem;
 }
 
+/* Pagination Styles */
+.feedback-pagination {
+  margin-top: 2rem;
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.feedback-pagination-info {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.feedback-pagination-info p {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.feedback-pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.feedback-pagination-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-pagination-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #ff6b35;
+  color: #ff6b35;
+}
+
+.feedback-pagination-btn:disabled {
+  background: #f8f9fa;
+  color: #ccc;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.feedback-pagination-btn.active {
+  background: #ff6b35;
+  color: white;
+  border-color: #ff6b35;
+}
+
+.feedback-pagination-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.feedback-pagination-prev,
+.feedback-pagination-next {
+  font-weight: 500;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .feedback-history {
@@ -429,6 +502,19 @@
     width: 60px;
     height: 60px;
   }
+
+  .feedback-pagination {
+    padding: 1rem;
+  }
+  
+  .feedback-pagination-controls {
+    gap: 0.25rem;
+  }
+  
+  .feedback-pagination-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -456,6 +542,25 @@
   .product-image {
     width: 50px;
     height: 50px;
+  }
+
+  .feedback-pagination-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .feedback-pagination-numbers {
+    order: 2;
+  }
+  
+  .feedback-pagination-prev {
+    order: 1;
+    width: 100%;
+  }
+  
+  .feedback-pagination-next {
+    order: 3;
+    width: 100%;
   }
 }
 

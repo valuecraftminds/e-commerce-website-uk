@@ -176,6 +176,51 @@
     border-bottom: none;
 }
 
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  margin-top: 20px;
+  border-top: 1px solid #dee2e6;
+}
+
+.pagination-info {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination-btn {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #495057;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  min-width: 40px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.pagination-btn:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .stock-management {
@@ -217,6 +262,16 @@
     .issued-stock-table td,
     .grn-stock-table td {
         padding: 8px;
+    }
+
+    .pagination-controls {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .pagination-buttons {
+        justify-content: center;
     }
 }
 

@@ -4,9 +4,28 @@ const OrdersHistoryController = {
     // Get all orders with items and derived booking status
     getAllOrders: async (req, res) => {
         const customerId = req.user?.id;
-        const { company_code } = req.query;
+        const { company_code, page = 1, limit = 5 } = req.query;
         
-        // Updated query to include booking status logic
+        // Parse and validate pagination parameters
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
+
+        if (pageNum < 1 || limitNum < 1 || limitNum > 50) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 50'
+            });
+        }
+
+        // Count total orders for pagination
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM orders o
+            WHERE o.customer_id = ? AND o.company_code = ?
+        `;
+        
+        // Updated query to include pagination
         const ordersQuery = `
             SELECT 
                 o.order_id,
@@ -26,6 +45,7 @@ const OrdersHistoryController = {
             FROM orders o
             WHERE o.customer_id = ? AND o.company_code = ?
             ORDER BY o.created_at DESC
+            LIMIT ? OFFSET ?
         `;
 
         const itemsQuery = `
@@ -43,77 +63,120 @@ const OrdersHistoryController = {
             ORDER BY oi.order_item_id
         `;
         
-        db.query(ordersQuery, [customerId, company_code], (error, orderResults) => {
-            if (error) {
-                console.error('Error fetching orders:', error);
+        // First get the total count
+        db.query(countQuery, [customerId, company_code], (countError, countResults) => {
+            if (countError) {
+                console.error('Error counting orders:', countError);
                 return res.status(500).json({
                     success: false,
                     message: 'Internal server error',
-                    error: error.message
-                });
-            }
-            
-            if (orderResults.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'No orders found for this customer'
+                    error: countError.message
                 });
             }
 
-            // Get order IDs for fetching items
-            const orderIds = orderResults.map(order => order.order_id);
-            
-            // Fetch items for all orders
-            db.query(itemsQuery, [orderIds, company_code], (itemError, itemResults) => {
-                if (itemError) {
-                    console.error('Error fetching order items:', itemError);
+            const totalOrders = countResults[0].total;
+            const totalPages = Math.ceil(totalOrders / limitNum);
+
+            // Then get the paginated orders
+            db.query(ordersQuery, [customerId, company_code, limitNum, offset], (error, orderResults) => {
+                if (error) {
+                    console.error('Error fetching orders:', error);
                     return res.status(500).json({
                         success: false,
                         message: 'Internal server error',
-                        error: itemError.message
+                        error: error.message
+                    });
+                }
+                
+                if (orderResults.length === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'No orders found for this customer',
+                        pagination: {
+                            currentPage: pageNum,
+                            totalPages: 0,
+                            totalOrders: 0,
+                            hasNextPage: false,
+                            hasPreviousPage: false
+                        }
                     });
                 }
 
-                // Group items by order_id
-                const itemsByOrder = {};
-                itemResults.forEach(item => {
-                    if (!itemsByOrder[item.order_id]) {
-                        itemsByOrder[item.order_id] = [];
+                // Get order IDs for fetching items
+                const orderIds = orderResults.map(order => order.order_id);
+                
+                // Fetch items for all orders
+                db.query(itemsQuery, [orderIds, company_code], (itemError, itemResults) => {
+                    if (itemError) {
+                        console.error('Error fetching order items:', itemError);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Internal server error',
+                            error: itemError.message
+                        });
                     }
-                    itemsByOrder[item.order_id].push({
-                        order_item_id: item.order_item_id,
-                        product_name: item.product_name,
-                        image_url: item.image_url,
-                        quantity: item.quantity
+
+                    // Group items by order_id
+                    const itemsByOrder = {};
+                    itemResults.forEach(item => {
+                        if (!itemsByOrder[item.order_id]) {
+                            itemsByOrder[item.order_id] = [];
+                        }
+                        itemsByOrder[item.order_id].push({
+                            order_item_id: item.order_item_id,
+                            product_name: item.product_name,
+                            image_url: item.image_url,
+                            quantity: item.quantity
+                        });
                     });
-                });
 
-                // Add items to each order
-                const ordersWithItems = orderResults.map(order => ({
-                    ...order,
-                    status: order.order_status, // Use the actual order_status from database
-                    items: itemsByOrder[order.order_id] || []
-                }));
+                    // Add items to each order
+                    const ordersWithItems = orderResults.map(order => ({
+                        ...order,
+                        status: order.order_status, 
+                        items: itemsByOrder[order.order_id] || []
+                    }));
 
-                res.json({
-                    success: true,
-                    data: ordersWithItems,
-                    count: ordersWithItems.length
+                    res.json({
+                        success: true,
+                        data: ordersWithItems,
+                        count: ordersWithItems.length,
+                        pagination: {
+                            currentPage: pageNum,
+                            totalPages,
+                            totalOrders,
+                            hasNextPage: pageNum < totalPages,
+                            hasPreviousPage: pageNum > 1,
+                            limit: limitNum
+                        }
+                    });
                 });
             });
         });
     },
 
-    // Get orders by status with items (using order table status directly)
+    // Get orders by status with items 
     getOrdersByStatus: async (req, res) => {
         const customerId = req.user?.id;
-        const { company_code } = req.query;
+        const { company_code, page = 1, limit = 5 } = req.query;
         const status = req.query.status;
 
         if (!status) {
             return res.status(400).json({
                 success: false,
                 message: 'Status parameter is required'
+            });
+        }
+
+        // Parse and validate pagination parameters
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
+
+        if (pageNum < 1 || limitNum < 1 || limitNum > 50) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 50'
             });
         }
 
@@ -125,7 +188,13 @@ const OrdersHistoryController = {
             statuses = status.split(',').map(s => s.trim());
         }
 
-        // Simplified query to filter by order status directly from order table
+        // Count query for pagination
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM orders o
+            WHERE o.customer_id = ? AND o.company_code = ? AND o.order_status IN (${statuses.map(() => '?').join(',')})
+        `;
+
         const ordersQuery = `
             SELECT 
                 o.order_id,
@@ -145,6 +214,7 @@ const OrdersHistoryController = {
             FROM orders o
             WHERE o.customer_id = ? AND o.company_code = ? AND o.order_status IN (${statuses.map(() => '?').join(',')})
             ORDER BY o.created_at DESC
+            LIMIT ? OFFSET ?
         `;
 
         const itemsQuery = `
@@ -163,74 +233,108 @@ const OrdersHistoryController = {
             ORDER BY oi.order_item_id
         `;
 
-        // Build the parameters array correctly
-        const params = [customerId, company_code, ...statuses];
+        // Build the parameters array correctly for count query
+        const countParams = [customerId, company_code, ...statuses];
+        // Build the parameters array correctly for orders query
+        const orderParams = [customerId, company_code, ...statuses, limitNum, offset];
 
-        db.query(ordersQuery, params, (error, orderResults) => {
-            if (error) {
-                console.error('Error fetching orders by status:', error);
+        // First get the total count
+        db.query(countQuery, countParams, (countError, countResults) => {
+            if (countError) {
+                console.error('Error counting orders by status:', countError);
                 return res.status(500).json({
                     success: false,
                     message: 'Internal server error',
-                    error: error.message
-                });
-            }
-            
-            if (orderResults.length === 0) {
-                return res.status(200).json({
-                    success: true,
-                    message: 'No orders found for this customer with given status',
-                    data: [],
-                    count: 0,
-                    filters: {
-                        statuses
-                    }
+                    error: countError.message
                 });
             }
 
-            // Get order IDs for fetching items
-            const orderIds = orderResults.map(order => order.order_id);
-            
-            // Fetch items for all orders
-            db.query(itemsQuery, [orderIds, company_code], (itemError, itemResults) => {
-                if (itemError) {
-                    console.error('Error fetching order items:', itemError);
+            const totalOrders = countResults[0].total;
+            const totalPages = Math.ceil(totalOrders / limitNum);
+
+            // Then get the paginated orders
+            db.query(ordersQuery, orderParams, (error, orderResults) => {
+                if (error) {
+                    console.error('Error fetching orders by status:', error);
                     return res.status(500).json({
                         success: false,
                         message: 'Internal server error',
-                        error: itemError.message
+                        error: error.message
+                    });
+                }
+                
+                if (orderResults.length === 0) {
+                    return res.status(200).json({
+                        success: true,
+                        message: 'No orders found for this customer with given status',
+                        data: [],
+                        count: 0,
+                        filters: {
+                            statuses
+                        },
+                        pagination: {
+                            currentPage: pageNum,
+                            totalPages: 0,
+                            totalOrders: 0,
+                            hasNextPage: false,
+                            hasPreviousPage: false,
+                            limit: limitNum
+                        }
                     });
                 }
 
-                // Group items by order_id
-                const itemsByOrder = {};
-                itemResults.forEach(item => {
-                    if (!itemsByOrder[item.order_id]) {
-                        itemsByOrder[item.order_id] = [];
+                // Get order IDs for fetching items
+                const orderIds = orderResults.map(order => order.order_id);
+                
+                // Fetch items for all orders
+                db.query(itemsQuery, [orderIds, company_code], (itemError, itemResults) => {
+                    if (itemError) {
+                        console.error('Error fetching order items:', itemError);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Internal server error',
+                            error: itemError.message
+                        });
                     }
-                    itemsByOrder[item.order_id].push({
-                        order_item_id: item.order_item_id,
-                        product_name: item.product_name,
-                        image_url: item.image_url,
-                        quantity: item.quantity,
-                        booking_status: item.booking_status
-                    });
-                });
 
-                // Add items to each order
-                const ordersWithItems = orderResults.map(order => ({
-                    ...order,
-                    status: order.order_status, // Use the actual order_status from database
-                    items: itemsByOrder[order.order_id] || []
-                }));
-            
-                res.json({
-                    success: true,
-                    data: ordersWithItems,
-                    count: ordersWithItems.length,
-                    filters: {
-                        statuses
-                    }
+                    // Group items by order_id
+                    const itemsByOrder = {};
+                    itemResults.forEach(item => {
+                        if (!itemsByOrder[item.order_id]) {
+                            itemsByOrder[item.order_id] = [];
+                        }
+                        itemsByOrder[item.order_id].push({
+                            order_item_id: item.order_item_id,
+                            product_name: item.product_name,
+                            image_url: item.image_url,
+                            quantity: item.quantity,
+                            booking_status: item.booking_status
+                        });
+                    });
+
+                    // Add items to each order
+                    const ordersWithItems = orderResults.map(order => ({
+                        ...order,
+                        status: order.order_status,
+                        items: itemsByOrder[order.order_id] || []
+                    }));
+                
+                    res.json({
+                        success: true,
+                        data: ordersWithItems,
+                        count: ordersWithItems.length,
+                        filters: {
+                            statuses
+                        },
+                        pagination: {
+                            currentPage: pageNum,
+                            totalPages,
+                            totalOrders,
+                            hasNextPage: pageNum < totalPages,
+                            hasPreviousPage: pageNum > 1,
+                            limit: limitNum
+                        }
+                    });
                 });
             });
         });
@@ -263,7 +367,7 @@ const OrdersHistoryController = {
             });
         }
 
-        // Get order details with shipping address and derived booking status
+        // Get order details with shipping address
         const orderQuery = `
             SELECT 
                 o.order_id,
@@ -288,7 +392,6 @@ const OrdersHistoryController = {
             FROM orders o
             LEFT JOIN address a ON o.address_id = a.address_id
             JOIN order_items oi ON o.order_id = oi.order_id
-            LEFT JOIN booking b ON oi.booking_id = b.booking_id
             WHERE o.order_id = ? AND o.customer_id = ? AND o.company_code = ?
             GROUP BY o.order_id, o.order_number, o.order_status, o.order_notes, o.subtotal, 
                      o.tax_amount, o.shipping_fee, o.total_amount, o.total_items, o.created_at, 
