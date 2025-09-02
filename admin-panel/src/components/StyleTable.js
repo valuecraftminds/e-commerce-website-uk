@@ -9,7 +9,7 @@ import {
 import { useMemo, useState } from 'react';
 import DeleteModal from './modals/DeleteModal';
 import Spinner from './Spinner';
-import { FaEdit, FaTrash, FaCogs, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCogs, FaEye, FaEyeSlash, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 import { useRef, useEffect } from 'react';
 
@@ -101,52 +101,63 @@ const StyleTable = ({
           const errorMsg = typeof tableActions.getIsViewError === 'function' ? tableActions.getIsViewError(style.style_id) : '';
           return (
             <div className="table-actions">
-              <button
-                className="action-btn edit-btn"
+              <FaEdit
+                className="action-icon me-2 text-warning"
                 onClick={(e) => {
                   e.stopPropagation();
                   tableActions.handleEditStyle(style);
                 }}
-                title="Edit"
-              >
-                <FaEdit size={14} />
-              </button>
-              <button
-                className="action-btn delete-btn"
+                title="Edit Style"
+                style={{ cursor: 'pointer' }}
+                size={16}
+              />
+              <FaTrash
+                className="action-icon me-2 text-danger"
                 onClick={(e) => {
                   e.stopPropagation();
                   setDeleteModalId(style.style_id);
                 }}
-                title="Delete"
-              >
-                <FaTrash size={14} />
-              </button>
-              <button
-                className="action-btn"
-                style={{ backgroundColor: '#34495e', color: 'white' }}
+                title="Delete Style"
+                style={{ cursor: 'pointer' }}
+                size={16}
+              />
+              <FaCogs
+                className="action-icon me-2 text-secondary"
                 onClick={(e) => {
                   e.stopPropagation();
                   tableActions.handleManageAttributes(style);
                 }}
                 title="Manage Attributes"
-              >
-                <FaCogs size={14} />
-              </button>
-              <button
-                className={`action-btn view-btn${isView ? ' on' : ''}`}
-                style={{
-                  backgroundColor: isView ? '#27ae60' : '#bdc3c7',
-                }}
-                title={isView ? 'Set Not Viewable' : 'Set Viewable'}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  if (typeof tableActions.handleToggleIsView === 'function') {
-                    await tableActions.handleToggleIsView(style, !isView);
-                  }
-                }}
-              >
-                {isView ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
-              </button>
+                style={{ cursor: 'pointer' }}
+                size={16}
+              />
+              {isView ? (
+                <FaEye
+                  className="action-icon me-2 text-success"
+                  title="Set Not Viewable"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (typeof tableActions.handleToggleIsView === 'function') {
+                      await tableActions.handleToggleIsView(style, !isView);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  size={16}
+                />
+              ) : (
+                <FaEyeSlash
+                  className="action-icon me-2 text-muted"
+                  title="Set Viewable"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (typeof tableActions.handleToggleIsView === 'function') {
+                      await tableActions.handleToggleIsView(style, !isView);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  size={16}
+                />
+              )}
               {errorMsg && (
                 <div style={{ color: 'red', fontSize: 12, marginTop: 2 }}>{errorMsg}</div>
               )}
@@ -262,10 +273,11 @@ const StyleTable = ({
         <button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          className="btn btn-outline-secondary btn-sm me-2"
         >
-          Previous
+          <FaChevronLeft className="me-1" /> Previous
         </button>
-        <span>
+        <span className="pagination-info">
           Page{' '}
           <strong>
             {table.getState().pagination.pageIndex + 1} of{' '}
@@ -275,8 +287,9 @@ const StyleTable = ({
         <button
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          className="btn btn-outline-secondary btn-sm ms-2"
         >
-          Next
+          Next <FaChevronRight className="ms-1" />
         </button>
       </div>
       <DeleteModal

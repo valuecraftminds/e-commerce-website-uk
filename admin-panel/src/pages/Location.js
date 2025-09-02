@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { Alert, Button, Card, Container, Form, Table } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import axios from 'axios';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
  
@@ -22,12 +23,13 @@ const Location = () => {
   const fetchlocations = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/locations/get-locations?company_code=${userData.company_code}`);
-      const data = await response.json();
-      if (data.success) {
-        setLocations(data.locations);
+      const response = await axios.get(`${BASE_URL}/api/admin/locations/get-locations`, {
+        params: { company_code: userData.company_code }
+      });
+      if (response.data.success) {
+        setLocations(response.data.locations);
       } else {
-        setError(data.message);
+        setError(response.data.message);
       }
     } catch (err) {
       setError('Error fetching locations');
@@ -47,25 +49,22 @@ const Location = () => {
         ? `${BASE_URL}/api/admin/locations/update-locations/${editingId}`
         : `${BASE_URL}/api/admin/locations/add-locations`;
       
-      const response = await fetch(url, {
-        method: isEditing ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          company_code: userData.company_code
-        }),
-      });
-
-      const data = await response.json();
+      const response = isEditing 
+        ? await axios.put(url, {
+            ...formData,
+            company_code: userData.company_code
+          })
+        : await axios.post(url, {
+            ...formData,
+            company_code: userData.company_code
+          });
       
-      if (data.success) {
+      if (response.data.success) {
         setSuccess(isEditing ? 'Location updated successfully' : 'Location added successfully');
         fetchlocations();
         resetForm();
       } else {
-        setError(data.message);
+        setError(response.data.message);
       }
     } catch (err) {
       setError('Error saving location');
@@ -85,15 +84,12 @@ const Location = () => {
   const handleDelete = async (locationId) => {
     if (window.confirm('Are you sure you want to delete this location?')) {
       try {
-        const response = await fetch(`${BASE_URL}/api/admin/locations/delete-locations/${locationId}`, {
-          method: 'DELETE'
-        });
-        const data = await response.json();
-        if (data.success) {
+        const response = await axios.delete(`${BASE_URL}/api/admin/locations/delete-locations/${locationId}`);
+        if (response.data.success) {
           setSuccess('Location deleted successfully');
           fetchlocations();
         } else {
-          setError(data.message);
+          setError(response.data.message);
         }
       } catch (err) {
         setError('Error deleting location');
@@ -175,20 +171,18 @@ const Location = () => {
                   <td>{location.description}</td>
                   <td>
                     <div className="d-flex gap-2">
-                      <Button 
-                        variant="info" 
-                        size="sm"
+                      <FaEdit
+                        className="action-icon me-2 text-warning"
                         onClick={() => handleEdit(location)}
-                      >
-                        <FaEdit />
-                      </Button>
-                      <Button 
-                        variant="danger" 
-                        size="sm"
+                        title="Edit"
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <FaTrash
+                        className="action-icon text-danger"
                         onClick={() => handleDelete(location.location_id)}
-                      >
-                        <FaTrash />
-                      </Button>
+                        title="Delete"
+                        style={{ cursor: 'pointer' }}
+                      />
                     </div>
                   </td>
                 </tr>

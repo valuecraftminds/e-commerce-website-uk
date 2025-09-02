@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
+import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import '../../styles/CompanySettings.css';
 

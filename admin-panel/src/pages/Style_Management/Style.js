@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { StyleFormModal, VariantFormModal } from '../../components/modals/StyleModals';
 import StyleTable from '../../components/StyleTable';
 import Spinner from '../../components/Spinner';
@@ -27,8 +28,8 @@ export default function Style() {
   const fetchCompanyCurrency = useCallback(async () => {
     if (!company_code) return;
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/companies-by-code/${company_code}`);
-      const data = await response.json();
+      const response = await axios.get(`${BASE_URL}/api/admin/companies-by-code/${company_code}`);
+      const data = response.data;
       if (data.success && data.company && data.company.currency) {
         setCompanyCurrency(data.company.currency);
       }
@@ -83,18 +84,15 @@ export default function Style() {
     try {
       console.log('Fetching styles for company:', company_code); // Debug log
       
-      const response = await fetch(`${BASE_URL}/api/admin/styles/get-styles?company_code=${company_code}`, {
+      const response = await axios.get(`${BASE_URL}/api/admin/styles/get-styles`, {
+        params: { company_code },
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       console.log('Received data:', data); // Debug log
 
       if (data.success) {

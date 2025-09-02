@@ -1,5 +1,5 @@
 import { Button, Card, Form, Table } from 'react-bootstrap';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
 
 const StyleAttributeTable = ({ 
@@ -86,31 +86,13 @@ const StyleAttributeTable = ({
                     <td key={column.key} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item[column.key]}</td>
                   ))}
                   <td>
-                    <div className="d-flex gap-2">
-                      <Button 
-                        variant="info" 
-                        size="sm"
-                        className="py-0 px-2"
-                        style={{ fontSize: '0.9rem', lineHeight: 1 }}
-                        onClick={() => handleEdit(item)}
-                      >
-                        <FaEdit />
-                      </Button>
-                      {/*
-                      <Button 
-                        variant="danger" 
-                        size="sm"
-                        className="py-0 px-2"
-                        style={{ fontSize: '0.9rem', lineHeight: 1 }}
-                        onClick={() => {
-                          const itemId = item.color_id || item.size_id || item.material_id || item.fit_id || item.id;
-                          setDeleteModalId(itemId);
-                        }}
-                      >
-                        <FaTrash />
-                      </Button>
-                      */}
-                    </div>
+                    <FaEdit 
+                      className="action-icon me-2 text-warning"
+                      onClick={() => handleEdit(item)}
+                      title="Edit Item"
+                      style={{ cursor: 'pointer' }}
+                      size={16}
+                    />
                   </td>
                 </tr>
               ))}

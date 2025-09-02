@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Container, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { Container, Card, Spinner, Alert } from 'react-bootstrap';
+import axios from 'axios';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -21,9 +22,11 @@ export default function VerifyCompanyAdmin() {
     }
     const verify = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/api/admin/auth/verify-company-admin?token=${token}`);
-        const data = await res.json();
-        if (res.ok && data.success) {
+        const res = await axios.get(`${BASE_URL}/api/admin/auth/verify-company-admin`, {
+          params: { token }
+        });
+        const data = res.data;
+        if (res.status === 200 && data.success) {
           setStatus('success');
           setMessage(data.message || 'Email verified and admin account created successfully.');
         } else {
@@ -52,13 +55,13 @@ export default function VerifyCompanyAdmin() {
           {status === 'success' && (
             <Alert variant="success" className="text-center">
               <div>{message}</div>
-              <Button href="/login" variant="primary" className="mt-3">Go to Login</Button>
+              <a href="/login" className="btn btn-primary mt-3">Go to Login</a>
             </Alert>
           )}
           {status === 'error' && (
             <Alert variant="danger" className="text-center">
               <div>{message}</div>
-              <Button href="/" variant="secondary" className="mt-3">Go Home</Button>
+              <a href="/" className="btn btn-secondary mt-3">Go Home</a>
             </Alert>
           )}
         </Card.Body>

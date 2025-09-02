@@ -1,5 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container, Button, Modal, Form, InputGroup } from 'react-bootstrap';
+import { FaEye, FaPalette } from 'react-icons/fa';
+import axios from 'axios';
 import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -29,8 +31,8 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
     setCssColorsLoading(true);
     setCssColorsError('');
     try {
-      const res = await fetch('https://www.csscolorsapi.com/api/colors/');
-      const data = await res.json();
+      const res = await axios.get('https://www.csscolorsapi.com/api/colors/');
+      const data = res.data;
       if (data && data.colors) {
         setCssColors(data.colors);
       } else {
@@ -67,8 +69,10 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
   const fetchColors = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/colors/get-colors?company_code=${userData.company_code}`);
-      const data = await response.json();
+      const response = await axios.get(`${BASE_URL}/api/admin/colors/get-colors`, {
+        params: { company_code: userData.company_code }
+      });
+      const data = response.data;
       if (data.success) {
         setColors(data.colors);
       } else {
@@ -187,9 +191,15 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
     <Container>
       {/* Add from CSS Colors Button */}
       <div className="mb-2" style={{ textAlign: 'right' }}>
-        <Button variant="outline-primary" size="sm" onClick={handleOpenCssColorsModal}>
+        <FaPalette 
+          className="action-icon me-2 text-primary"
+          onClick={handleOpenCssColorsModal}
+          title="Add from CSS Colors"
+          style={{ cursor: 'pointer' }}
+        />
+        <span className="text-primary" style={{ cursor: 'pointer' }} onClick={handleOpenCssColorsModal}>
           Add from CSS Colors
-        </Button>
+        </span>
       </div>
       <StyleAttributeTable 
         title="Colors"

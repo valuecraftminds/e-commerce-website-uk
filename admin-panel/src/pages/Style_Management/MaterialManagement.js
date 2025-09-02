@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
+import axios from 'axios';
 import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -26,8 +27,10 @@ const MaterialManagement = ({ embedded, styleNumber, companyCode, onSuccess, onC
   const fetchMaterials = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/materials/get-materials?company_code=${userData.company_code}`);
-      const data = await response.json();
+      const response = await axios.get(`${BASE_URL}/api/admin/materials/get-materials`, {
+        params: { company_code: userData.company_code }
+      });
+      const data = response.data;
       if (data.success) {
         setMaterials(data.materials);
       } else {

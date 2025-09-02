@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import Select from 'react-select';
+import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Currency.css';
 
@@ -23,11 +24,9 @@ const user_id = userData?.id;
   // Fetch currency options from backend API
   const fetchCurrencyOptions = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/admin/currencies/get-all-currency-symbols`);
-      if (!res.ok) throw new Error('Currency API error');
-      const data = await res.json();
-      if (data && data.currencies) {
-        setCurrencyOptions(data.currencies);
+      const response = await axios.get(`${BASE_URL}/api/admin/currencies/get-all-currency-symbols`);
+      if (response.data && response.data.currencies) {
+        setCurrencyOptions(response.data.currencies);
       } else {
         throw new Error('Currency API returned no symbols');
       }
@@ -44,17 +43,13 @@ const user_id = userData?.id;
   // Fetch currencies for the company
   const fetchCurrencies = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/currencies/get-currencies?company_code=${company_code}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      const response = await axios.get(`${BASE_URL}/api/admin/currencies/get-currencies`, {
+        params: { company_code }
       });
-      const data = await response.json();
-      if (data.success) {
-        setCurrencies(data.currencies);
+      if (response.data.success) {
+        setCurrencies(response.data.currencies);
       } else {
-        alert(data.message || 'Error fetching currencies');
+        alert(response.data.message || 'Error fetching currencies');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -90,21 +85,16 @@ const user_id = userData?.id;
         ...(editMode ? {} : { created_by: user_id })
       };
 
-      const response = await fetch(url, {
-        method: editMode ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = editMode 
+        ? await axios.put(url, payload)
+        : await axios.post(url, payload);
 
-      const data = await response.json();
-      if (data.success) {
+      if (response.data.success) {
         alert(editMode ? 'Currency updated successfully' : 'Currency added successfully');
         fetchCurrencies();
         resetForm();
       } else {
-        alert(data.message || 'Operation failed');
+        alert(response.data.message || 'Operation failed');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -121,19 +111,13 @@ const user_id = userData?.id;
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this currency?')) {
       try {
-        const response = await fetch(`${BASE_URL}/api/admin/currencies/delete-currencies/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
+        const response = await axios.delete(`${BASE_URL}/api/admin/currencies/delete-currencies/${id}`);
 
-        const data = await response.json();
-        if (data.success) {
+        if (response.data.success) {
           alert('Currency deleted successfully');
           fetchCurrencies();
         } else {
-          alert(data.message || 'Failed to delete currency');
+          alert(response.data.message || 'Failed to delete currency');
         }
       } catch (error) {
         console.error('Error:', error);
@@ -211,18 +195,18 @@ const user_id = userData?.id;
                 <td>{currency.currency_name}</td>
                 <td>{currency.short_name}</td>
                 <td className="action-buttons">
-                  <button
-                    className="btn btn-sm btn-primary"
+                  <FaEdit
+                    className="action-icon me-2 text-warning"
                     onClick={() => handleEdit(currency)}
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
+                    title="Edit"
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <FaTrash
+                    className="action-icon text-danger"
                     onClick={() => handleDelete(currency.currency_id)}
-                  >
-                    <FaTrash />
-                  </button>
+                    title="Delete"
+                    style={{ cursor: 'pointer' }}
+                  />
                 </td>
               </tr>
             ))}

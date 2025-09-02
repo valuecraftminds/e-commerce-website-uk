@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
+import axios from 'axios';
 import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
 

@@ -81,6 +81,7 @@ export default function WarehouseGRN() {
   // PO Search State
   const [searchPO, setSearchPO] = useState('');
   const [poResults, setPOResults] = useState([]);
+  const [allPOResults, setAllPOResults] = useState([]); // Store all POs for initial display
   const [showPODropdown, setShowPODropdown] = useState(false);
   const [poSearchLoading, setPOLoading] = useState(false);
 
@@ -93,14 +94,16 @@ export default function WarehouseGRN() {
           company_code,
           ...grnFilter
         });
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history?${params}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setGrnHistory(data.grns);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history`, {
+          params: {
+            company_code,
+            ...grnFilter
+          }
+        });
+        if (response.data.success) {
+          setGrnHistory(response.data.grns);
         } else {
-          setError(data.message || 'Failed to fetch GRN history');
+          setError(response.data.message || 'Failed to fetch GRN history');
         }
       } catch (err) {
         setError('Error fetching GRN history');
@@ -111,37 +114,54 @@ export default function WarehouseGRN() {
     if (company_code) fetchHistory();
   }, [company_code, grnFilter]);
 
+  // Fetch all PO numbers for initial display
+  const fetchAllPONumbers = useCallback(async () => {
+    if (!company_code) return;
+    
+    setPOLoading(true);
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/search-po`, {
+        params: { company_code, po_number: '' }
+      });
+      if (response.data.success && response.data.purchase_orders?.length > 0) {
+        setAllPOResults(response.data.purchase_orders);
+      } else {
+        setAllPOResults([]);
+      }
+    } catch {
+      setAllPOResults([]);
+    } finally {
+      setPOLoading(false);
+    }
+  }, [company_code]);
+
+  // Load all PO numbers on component mount
+  useEffect(() => {
+    if (company_code) {
+      fetchAllPONumbers();
+    }
+  }, [company_code, fetchAllPONumbers]);
+
   // Autocomplete PO numbers as user types (logic from AddGRN)
   useEffect(() => {
-    if (!searchPO || !company_code) {
+    if (!company_code) {
       setPOResults([]);
       setShowPODropdown(false);
       return;
     }
-    const fetchPOs = async () => {
-      setPOLoading(true);
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/search-po?company_code=${company_code}&po_number=${encodeURIComponent(searchPO)}`
-        );
-        const data = await response.json();
-        if (data.success && data.purchase_orders?.length > 0) {
-          setPOResults(data.purchase_orders);
-          setShowPODropdown(true);
-        } else {
-          setPOResults([]);
-          setShowPODropdown(false);
-        }
-      } catch {
-        setPOResults([]);
-        setShowPODropdown(false);
-      } finally {
-        setPOLoading(false);
-      }
-    };
-    const timeout = setTimeout(fetchPOs, 250);
-    return () => clearTimeout(timeout);
-  }, [searchPO, company_code]);
+
+    // If search is empty, show all POs when dropdown is open
+    if (!searchPO) {
+      setPOResults(allPOResults);
+      return;
+    }
+
+    // Filter from all POs based on PO number only
+    const filteredPOs = allPOResults.filter(po => 
+      po.po_number.toLowerCase().includes(searchPO.toLowerCase())
+    );
+    setPOResults(filteredPOs);
+  }, [searchPO, company_code, allPOResults]);
 
   // Handle PO select (from AddGRN logic)
   // Only navigate when Search button is clicked
@@ -161,14 +181,16 @@ export default function WarehouseGRN() {
         company_code,
         ...grnFilter
       });
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history?${params}`
-      );
-      const data = await response.json();
-      if (data.success) {
-        setGrnHistory(data.grns);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/history`, {
+        params: {
+          company_code,
+          ...grnFilter
+        }
+      });
+      if (response.data.success) {
+        setGrnHistory(response.data.grns);
       } else {
-        setError(data.message || 'Failed to fetch GRN history');
+        setError(response.data.message || 'Failed to fetch GRN history');
       }
     } catch (err) {
       setError('Error fetching GRN history');
@@ -186,7 +208,7 @@ export default function WarehouseGRN() {
               <Form autoComplete="off" onSubmit={e => {
                 e.preventDefault();
                 // Find the PO in the results that matches the entered PO number
-                const found = poResults.find(po => String(po.po_number) === String(searchPO));
+                const found = allPOResults.find(po => String(po.po_number) === String(searchPO));
                 if (found) {
                   handleSelectPO(found.po_number);
                 } else {
@@ -201,7 +223,12 @@ export default function WarehouseGRN() {
                       value={searchPO}
                       onChange={e => setSearchPO(e.target.value)}
                       placeholder="Enter PO number"
-                      onFocus={() => searchPO && poResults.length > 0 && setShowPODropdown(true)}
+                      onFocus={() => {
+                        if (allPOResults.length > 0) {
+                          setPOResults(searchPO ? poResults : allPOResults);
+                          setShowPODropdown(true);
+                        }
+                      }}
                       onBlur={() => setTimeout(() => setShowPODropdown(false), 200)}
                       style={{ flex: 1 }}
                     />
@@ -221,19 +248,42 @@ export default function WarehouseGRN() {
                         overflowY: 'auto',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                       }}>
-                        {poResults.map(po => (
+                        {poResults.slice(0, 10).map(po => (
                           <div
                             key={po.po_number}
-                            style={{ padding: '8px', cursor: 'pointer' }}
+                            style={{ 
+                              padding: '8px', 
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #eee'
+                            }}
+                            className="po-dropdown-item"
                             // Only fill the input, do not navigate
                             onMouseDown={() => {
                               setSearchPO(po.po_number);
                               setShowPODropdown(false);
                             }}
+                            onMouseEnter={(e) => {
+                              e.target.style.backgroundColor = '#f8f9fa';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.backgroundColor = '#fff';
+                            }}
                           >
-                            {po.po_number} - {po.supplier_name || po.supplier_id}
+                            <div style={{ fontWeight: 'bold' }}>{po.po_number}</div>
                           </div>
                         ))}
+                        {poResults.length > 10 && (
+                          <div style={{ 
+                            padding: '8px', 
+                            textAlign: 'center', 
+                            fontSize: '0.85em', 
+                            color: '#999',
+                            borderTop: '1px solid #eee',
+                            backgroundColor: '#f8f9fa'
+                          }}>
+                            Showing 10 of {poResults.length} POs. Type to filter further.
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -261,7 +311,7 @@ export default function WarehouseGRN() {
                     onClick={() => !poLoading && setActiveTab('pending')}
                     style={{ cursor: poLoading ? 'not-allowed' : 'pointer', opacity: poLoading ? 0.6 : 1 }}
                   >
-                    Pending Orders
+                    Pending
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -270,7 +320,7 @@ export default function WarehouseGRN() {
                     onClick={() => !poLoading && setActiveTab('partial')}
                     style={{ cursor: poLoading ? 'not-allowed' : 'pointer', opacity: poLoading ? 0.6 : 1 }}
                   >
-                    Partial Orders
+                    Partial
                   </Nav.Link>
                 </Nav.Item>
               </Nav>

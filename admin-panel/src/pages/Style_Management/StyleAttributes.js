@@ -257,7 +257,7 @@ export default function StyleAttributes() {
               size="sm" 
               onClick={() => handleOpenModal(type)}
             >
-              <FaPlus className="me-2" />
+              <FaPlus size={16} className="me-2" />
               Add Existing Size Range
             </Button>
           </div>
@@ -274,15 +274,13 @@ export default function StyleAttributes() {
                   <Accordion.Header>
                     <div className="d-flex justify-content-between align-items-center w-100">
                       <span>{range.range_name}</span>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        className="ms-2 py-0 px-2"
-                        style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                      <FaTrash 
+                        size={16} 
+                        className="action-icon text-danger ms-2" 
+                        style={{ cursor: 'pointer' }}
                         onClick={e => { e.stopPropagation(); handleRemoveSizeRange(range.size_range_id); }}
-                      >
-                        <FaTrash />
-                      </Button>
+                        title="Remove Size Range"
+                      />
                     </div>
                   </Accordion.Header>
                   <Accordion.Body>
@@ -317,7 +315,7 @@ export default function StyleAttributes() {
                 size="sm" 
                 onClick={() => handleOpenModal(type)}
               >
-                <FaPlus className="me-2" />
+                <FaPlus size={16} className="me-2" />
                 Add Existing {title.slice(0, -1)}
               </Button>
             </Card.Header>
@@ -348,28 +346,24 @@ export default function StyleAttributes() {
                         {(type === 'materials' || type === 'fits') && <td>{item.description || '-'}</td>}
                         <td>
                           {type === 'colors' ? (
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              className="py-0 px-2"
-                              style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                            <FaTrash 
+                              size={16} 
+                              className="action-icon text-danger" 
+                              style={{ cursor: 'pointer' }}
                               onClick={() => handleRemoveAttribute(type, item.color_id)}
-                            >
-                              <FaTrash />
-                            </Button>
+                              title="Remove Color"
+                            />
                           ) : (
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              className="py-0 px-2"
-                              style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                            <FaTrash 
+                              size={16} 
+                              className="action-icon text-danger" 
+                              style={{ cursor: 'pointer' }}
                               onClick={() => handleRemoveAttribute(type, 
                                 type === 'materials' ? item.material_id :
                                 item.fit_id
                               )}
-                            >
-                              <FaTrash />
-                            </Button>
+                              title={`Remove ${type === 'materials' ? 'Material' : 'Fit'}`}
+                            />
                           )}
                         </td>
                       </tr>
@@ -444,7 +438,7 @@ export default function StyleAttributes() {
             onClick={() => navigate('/style')}
             className="me-3"
           >
-            <FaArrowLeft className="me-2" />
+            <FaArrowLeft size={16} className="me-2" />
             Back
           </Button>
           <h2 className="d-inline">
@@ -1002,16 +996,13 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
                   />
                 </td>
                 <td>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    className="px-2 py-0"
-                    style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                  <FaSave 
+                    size={16} 
+                    className="action-icon text-success" 
+                    style={{ cursor: 'pointer' }}
                     onClick={() => handleSaveEdit(variant)}
-                    disabled={saving}
-                  >
-                    <FaSave className=" m-1" />
-                  </Button>
+                    title="Save Changes"
+                  />
                 </td>
               </tr>
             );
@@ -1051,17 +1042,13 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
                   />
                 </td>
                 <td>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="px-2 py-0 me-1"
-                    style={{ fontSize: '0.9rem', lineHeight: 1 }}
+                  <FaSave 
+                    size={16} 
+                    className="action-icon text-success" 
+                    style={{ cursor: 'pointer' }}
                     onClick={() => handleSaveSingle(idx)}
-                    disabled={saving}
-                  >
-                    <FaSave className="m-1" />
-                    
-                  </Button>
+                    title="Save Variant"
+                  />
                 </td>
               </tr>
             );

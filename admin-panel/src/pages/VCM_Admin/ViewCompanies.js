@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Form, Modal, Spinner, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { FaUsers, FaEdit, FaKey } from 'react-icons/fa';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -239,33 +240,27 @@ export default function ViewCompanies() {
                     </span>
                   </td>
                   <td>
-                    <Button 
-                      variant="success" 
-                      size="sm"
-                      className="me-2"
+                    <FaUsers
+                      size={16}
+                      className="action-icon text-primary me-3"
+                      style={{ cursor: 'pointer' }}
                       onClick={() => handleViewAdmins(company.company_code)}
                       title="View Admins"
-                    >
-                      <i className="bi bi-people"></i>
-                    </Button>
-                    <Button 
-                      variant="info" 
-                      size="sm"
-                      className="me-2"
+                    />
+                    <FaEdit
+                      size={16}
+                      className="action-icon text-warning me-3"
+                      style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/vcm-admin/edit-company/${company.company_id || company.id}`)}
                       title="Edit Company"
-                    >
-                      <i className="bi bi-pencil"></i>
-                    </Button>
-                    <Button 
-                      variant="warning" 
-                      size="sm"
-                      className="me-2"
+                    />
+                    <FaKey
+                      size={16}
+                      className="action-icon text-secondary"
+                      style={{ cursor: 'pointer' }}
                       onClick={() => handleManageLicense(company)}
                       title="Manage License"
-                    >
-                      <i className="bi bi-key"></i>
-                    </Button>
+                    />
                   </td>
                 </tr>
               ))}
@@ -285,7 +280,7 @@ export default function ViewCompanies() {
       <Modal show={showLicenseModal} onHide={closeLicenseModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            <i className="bi bi-key me-2"></i>
+            <FaKey className="me-2" />
             Manage License - {selectedCompany?.company_name}
           </Modal.Title>
         </Modal.Header>

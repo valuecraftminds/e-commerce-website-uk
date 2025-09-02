@@ -1,10 +1,10 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Alert, Button, Container, Form, Modal, Spinner } from 'react-bootstrap';
-import { PencilSquare, Trash } from 'react-bootstrap-icons';
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Category.css';
-import { FaPlus } from 'react-icons/fa';
 import DeleteModal from '../components/modals/DeleteModal';
+import axios from 'axios';
 
 
     
@@ -37,11 +37,12 @@ export default function Category() {
   const fetchCategories = useCallback(async () => {
     setFetchLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/categories/get-categories?company_code=${company_code}`);
-      const data = await response.json();
+      const response = await axios.get(`${BASE_URL}/api/admin/categories/get-categories`, {
+        params: { company_code }
+      });
       
-      if (data.success) {
-        setCategories(data.categories);
+      if (response.data.success) {
+        setCategories(response.data.categories);
       } else {
         showMessage('error', 'Failed to fetch categories');
       }
@@ -60,10 +61,9 @@ export default function Category() {
   useEffect(() => {
     const fetchLicense = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/admin/license/get-license/${company_code}`);
-        const data = await response.json();
-        if (data.success) {
-          setLicense(data.license);
+        const response = await axios.get(`${BASE_URL}/api/admin/license/get-license/${company_code}`);
+        if (response.data.success) {
+          setLicense(response.data.license);
         }
       } catch (error) {
         console.error('Error fetching license:', error);
@@ -105,26 +105,18 @@ export default function Category() {
     try {
       if (editingCategory) {
         // Handle editing existing category
-        const url = `${BASE_URL}/api/admin/categories/update-categories/${editingCategory.category_id}`;
-        const response = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            category_name: formData.main_category_name.trim(),
-            parent_id: formData.parent_id || null,
-            company_code
-          }),
+        const response = await axios.put(`${BASE_URL}/api/admin/categories/update-categories/${editingCategory.category_id}`, {
+          category_name: formData.main_category_name.trim(),
+          parent_id: formData.parent_id || null,
+          company_code
         });
 
-        const data = await response.json();
-        if (data.success) {
-          showMessage('success', data.message);
+        if (response.data.success) {
+          showMessage('success', response.data.message);
           resetForm();
           fetchCategories();
         } else {
-          showMessage('error', data.message);
+          showMessage('error', response.data.message);
         }
       } else {
         // Check if this is adding subcategories to existing parent
@@ -134,24 +126,17 @@ export default function Category() {
           
           if (validSubcategories.length > 0) {
             const subPromises = validSubcategories.map(subcategory => 
-              fetch(`${BASE_URL}/api/admin/categories/add-categories`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  category_name: subcategory.trim(),
-                  parent_id: formData.parent_id,
-                  company_code
-                }),
+              axios.post(`${BASE_URL}/api/admin/categories/add-categories`, {
+                category_name: subcategory.trim(),
+                parent_id: formData.parent_id,
+                company_code
               })
             );
 
             const subResponses = await Promise.all(subPromises);
-            const subResults = await Promise.all(subResponses.map(res => res.json()));
             
-            const successfulSubs = subResults.filter(result => result.success);
-            const failedSubs = subResults.filter(result => !result.success);
+            const successfulSubs = subResponses.filter(res => res.data.success);
+            const failedSubs = subResponses.filter(res => !res.data.success);
 
             if (successfulSubs.length === validSubcategories.length) {
               showMessage('success', `Successfully added ${successfulSubs.length} subcategories`);
@@ -171,23 +156,15 @@ export default function Category() {
           const validSubcategories = formData.subcategories.filter(sub => sub.trim());
           
           // Create main category first
-          const mainResponse = await fetch(`${BASE_URL}/api/admin/categories/add-categories`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              category_name: formData.main_category_name.trim(),
-              parent_id: null,
-              company_code
-            }),
+          const mainResponse = await axios.post(`${BASE_URL}/api/admin/categories/add-categories`, {
+            category_name: formData.main_category_name.trim(),
+            parent_id: null,
+            company_code
           });
-
-          const mainData = await mainResponse.json();
           
-          if (mainData.success) {
+          if (mainResponse.data.success) {
             // Get the newly created category ID - handle different response structures
-            const newMainCategoryId = mainData.category_id || mainData.category?.category_id || mainData.data?.category_id;
+            const newMainCategoryId = mainResponse.data.category_id || mainResponse.data.category?.category_id || mainResponse.data.data?.category_id;
             
             if (!newMainCategoryId) {
               showMessage('error', 'Failed to get new category ID');
@@ -197,24 +174,17 @@ export default function Category() {
             if (validSubcategories.length > 0) {
               // Create subcategories under the new main category
               const subPromises = validSubcategories.map(subcategory => 
-                fetch(`${BASE_URL}/api/admin/categories/add-categories`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    category_name: subcategory.trim(),
-                    parent_id: newMainCategoryId,
-                    company_code
-                  }),
+                axios.post(`${BASE_URL}/api/admin/categories/add-categories`, {
+                  category_name: subcategory.trim(),
+                  parent_id: newMainCategoryId,
+                  company_code
                 })
               );
 
               const subResponses = await Promise.all(subPromises);
-              const subResults = await Promise.all(subResponses.map(res => res.json()));
               
-              const successfulSubs = subResults.filter(result => result.success);
-              const failedSubs = subResults.filter(result => !result.success);
+              const successfulSubs = subResponses.filter(res => res.data.success);
+              const failedSubs = subResponses.filter(res => !res.data.success);
 
               if (successfulSubs.length === validSubcategories.length) {
                 showMessage('success', `Successfully created main category with ${successfulSubs.length} subcategories`);
@@ -230,7 +200,7 @@ export default function Category() {
             resetForm();
             fetchCategories();
           } else {
-            showMessage('error', mainData.message || 'Failed to create main category');
+            showMessage('error', mainResponse.data.message || 'Failed to create main category');
           }
         }
       }
@@ -415,15 +385,17 @@ export default function Category() {
               >
                 {cat.category_name}
                 <span className="main-category-actions">
-                  <PencilSquare
-                    className="category-action-icon"
+                  <FaEdit
+                    className="action-icon me-2 text-warning"
                     title="Edit"
                     onClick={e => { e.stopPropagation(); handleEdit(cat); }}
+                    style={{ cursor: 'pointer' }}
                   />
-                  <Trash
-                    className="category-action-icon"
+                  <FaTrash
+                    className="action-icon text-danger"
                     title="Delete"
                     onClick={e => { e.stopPropagation(); handleDelete(cat.category_id); }}
+                    style={{ cursor: 'pointer' }}
                   />
                 </span>
               </div>
@@ -446,15 +418,17 @@ export default function Category() {
                     <div key={subcat.category_id} className="subcategory-item">
                       <span>{subcat.category_name}</span>
                       <span className="subcategory-actions-inline">
-                        <PencilSquare
-                          className="category-action-icon"
+                        <FaEdit
+                          className="action-icon me-2 text-warning"
                           title="Edit"
                           onClick={() => handleEdit(subcat)}
+                          style={{ cursor: 'pointer' }}
                         />
-                        <Trash
-                          className="category-action-icon"
+                        <FaTrash
+                          className="action-icon text-danger"
                           title="Delete"
                           onClick={() => handleDelete(subcat.category_id)}
+                          style={{ cursor: 'pointer' }}
                         />
                       </span>
                     </div>

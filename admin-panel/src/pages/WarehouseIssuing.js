@@ -3,6 +3,7 @@ import { Button, Table, Spinner, Alert, Nav } from 'react-bootstrap';
 import { FaEye, FaShippingFast } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import axios from 'axios';
 import '../styles/WarehouseIssuing.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -22,10 +23,11 @@ export default function WarehouseIssuing() {
   useEffect(() => {
     if (!company_code) return;
     setLoading(true);
-    fetch(`${BASE_URL}/api/admin/issuing/orders?company_code=${company_code}`)
-      .then(res => res.json())
-      .then(data => {
-        const ordersData = Array.isArray(data) ? data : [];
+    axios.get(`${BASE_URL}/api/admin/issuing/orders`, {
+      params: { company_code }
+    })
+      .then(response => {
+        const ordersData = Array.isArray(response.data) ? response.data : [];
         setOrders(ordersData);
         setLoading(false);
       })
@@ -70,7 +72,7 @@ export default function WarehouseIssuing() {
             onClick={() => handleTabChange('pending')}
             style={{ cursor: 'pointer' }}
           >
-            Pending Orders
+            Pending
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>

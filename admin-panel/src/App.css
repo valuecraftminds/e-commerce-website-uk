@@ -189,3 +189,68 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
+
+/* Universal Modal Styles */
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 0.5rem 0.5rem 0 0;
+  border: none;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  color: white;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-header .btn-close {
+  filter: invert(1);
+  opacity: 1;
+}
+
+.modal-header .btn-close:hover {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* Modal title variations for different heading tags */
+.modal-header h1,
+.modal-header h2,
+.modal-header h3,
+.modal-header h4,
+.modal-header h5,
+.modal-header h6 {
+  color: white;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Close button styling for all modals */
+.modal-header .close,
+.modal-header .close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 1;
+  filter: none;
+}
+
+.modal-header .close:hover,
+.modal-header .close-btn:hover {
+  opacity: 0.8;
+}

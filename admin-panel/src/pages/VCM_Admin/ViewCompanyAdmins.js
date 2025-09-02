@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, Badge, Button, Table } from 'react-bootstrap';
+import { Alert, Badge, Table } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import axios from 'axios';
 import DeleteModal from '../../components/modals/DeleteModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -27,12 +29,12 @@ export default function ViewCompanyAdmins() {
         }
 
         // Fetch all admins and filter by company
-        const response = await fetch(`${BASE_URL}/api/admin/auth/get-company-admins`, {
+        const response = await axios.get(`${BASE_URL}/api/admin/auth/get-company-admins`, {
           headers: headers
         });
-        const data = await response.json();
+        const data = response.data;
 
-        if (response.ok && data.success) {
+        if (response.status === 200 && data.success) {
           // Filter admins for the selected company
           const filteredAdmins = data.admins.filter(admin => admin.Company_Code === companyCode);
           setCompanyAdmins(filteredAdmins);
@@ -61,12 +63,12 @@ export default function ViewCompanyAdmins() {
           headers.Authorization = `Bearer ${token}`;
         }
 
-        const companyResponse = await fetch(`${BASE_URL}/api/admin/companies`, {
+        const companyResponse = await axios.get(`${BASE_URL}/api/admin/companies`, {
           headers: headers
         });
-        const companyData = await companyResponse.json();
+        const companyData = companyResponse.data;
 
-        if (companyResponse.ok && companyData.success) {
+        if (companyResponse.status === 200 && companyData.success) {
           const company = companyData.companies.find(c => c.company_code === companyCode);
           if (company) {
             setCompanyDetails(company);
@@ -115,14 +117,13 @@ export default function ViewCompanyAdmins() {
     <div className="admin-container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center">
-          <Button 
-            variant="outline-secondary" 
-            size="sm" 
-            className="me-3"
+          <span 
+            className="btn btn-outline-secondary btn-sm me-3"
+            style={{ cursor: 'pointer' }}
             onClick={handleBackToCompanies}
           >
             <i className="bi-arrow-left"></i> Back to Companies
-          </Button>
+          </span>
           <div>
             <h5 className="admin-title m-0">
               {companyDetails?.company_name || companyCode} - Company admins
@@ -131,12 +132,12 @@ export default function ViewCompanyAdmins() {
           </div>
         </div>
         <div>
-          <Button 
-            variant="success"
+          <FaPlus 
+            className="action-icon me-2 text-success"
             onClick={handleCreateAdmin}
-          >
-            <i className="bi-person-plus"></i> Add Admin
-          </Button>
+            title="Add Admin"
+            style={{ cursor: 'pointer' }}
+          />
         </div>
       </div>
 
@@ -198,21 +199,18 @@ export default function ViewCompanyAdmins() {
                       <Badge bg="info">{admin.role || 'Company_Admin'}</Badge>
                     </td>
                     <td>
-                      <Button 
-                        variant="warning" 
-                        size="sm"
-                        className="me-2"
+                      <FaEdit 
+                        className="action-icon me-2 text-warning"
                         onClick={() => navigate(`/vcm-admin/edit-company-admins/${admin.user_id}`)}
-                      >
-                        <i className="bi-pencil"></i>
-                      </Button>
-                      <Button 
-                        variant="danger"
-                        size="sm"
+                        title="Edit Admin"
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <FaTrash 
+                        className="action-icon me-2 text-danger"
                         onClick={() => setDeleteModalId(admin.user_id)}
-                      >
-                        <i className="bi-trash"></i>
-                      </Button>
+                        title="Delete Admin"
+                        style={{ cursor: 'pointer' }}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -223,13 +221,15 @@ export default function ViewCompanyAdmins() {
               <i className="bi-people" style={{ fontSize: '4rem', color: '#6c757d' }}></i>
               <h4 className="mt-3 text-muted">No Admins Found</h4>
               <p className="text-muted mb-4">This company doesn't have any administrators yet.</p>
-              <Button 
-                variant="primary"
-                size="lg"
+              <FaPlus 
+                className="action-icon text-primary"
                 onClick={handleCreateAdmin}
-              >
-                <i className="bi-person-plus"></i> Create First Admin
-              </Button>
+                title="Create First Admin"
+                style={{ cursor: 'pointer', fontSize: '2rem' }}
+              />
+              <div className="mt-2">
+                <span className="text-primary">Create First Admin</span>
+              </div>
             </div>
           )}
         </div>

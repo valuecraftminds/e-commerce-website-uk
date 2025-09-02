@@ -2,7 +2,8 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Table, Spinner as RBSpinner, Alert } from 'react-bootstrap';
 import { AuthContext } from '../../context/AuthContext';
-import { FaPlus, FaEdit } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import axios from 'axios';
 
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -28,15 +29,22 @@ const SizeManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCance
     setError('');
     try {
       const company_code = companyCode || userData.company_code;
-      const res = await fetch(`${BASE_URL}/api/admin/sizes/get-size-ranges?company_code=${company_code}`);
-      const data = await res.json();
+      const res = await axios.get(`${BASE_URL}/api/admin/sizes/get-size-ranges`, {
+        params: { company_code }
+      });
+      const data = res.data;
       if (data.success) {
         setSizeRanges(data.size_ranges);
         // Fetch sizes for each range
         const sizesObj = {};
         for (const range of data.size_ranges) {
-          const res2 = await fetch(`${BASE_URL}/api/admin/sizes/get-sizes?company_code=${company_code}&size_range_id=${range.size_range_id}`);
-          const data2 = await res2.json();
+          const res2 = await axios.get(`${BASE_URL}/api/admin/sizes/get-sizes`, {
+            params: { 
+              company_code,
+              size_range_id: range.size_range_id 
+            }
+          });
+          const data2 = res2.data;
           if (data2.success) {
             sizesObj[range.size_range_id] = data2.sizes;
           } else {
