@@ -220,7 +220,7 @@ export default function StockManagement() {
             case 'stock-summary':
                 return (
                     <div className="stock-summary-table">
-                        <div className="table-header">
+                        <div className="ss-table-header">
                             <h2>Stock Summary</h2>
                             <div className="search-container">
                                 <input
