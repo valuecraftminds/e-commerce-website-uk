@@ -34,13 +34,15 @@ export default function OrderDetails() {
           // Extract shipping address from order details
           if (data.order) {
             setShippingAddress({
+              shipping_first_name: data.order.shipping_first_name,
+              shipping_last_name: data.order.shipping_last_name,
               address_line_1: data.order.address_line_1,
               address_line_2: data.order.address_line_2,
               city: data.order.city,
               state: data.order.state,
               postal_code: data.order.postal_code,
               country: data.order.country,
-              phone: data.order.address_phone
+              phone: data.order.shipping_phone
             });
           }
           // Fetch stock data for all items
@@ -221,6 +223,12 @@ export default function OrderDetails() {
                   <strong>Email:</strong><br />
                   {order.customer_email}
                 </Col>
+              <Row className='mt-2'>
+                <Col sm={6}>
+                  <strong>Phone:</strong><br />
+                  {order.customer_phone}
+                </Col>
+              </Row>
               </Row>
               <hr />
               <Row>
@@ -267,15 +275,19 @@ export default function OrderDetails() {
           </Card>
         </Col>
 
-        {/* Shipping Address */}
+        {/* Shipping Details */}
         <Col lg={6}>
           <Card>
             <Card.Header>
-              <h5 className="mb-0">Shipping Address</h5>
+              <h5 className="mb-0">Shipping Details</h5>
             </Card.Header>
             <Card.Body>
               {shippingAddress ? (
                 <>
+                <div className="mb-2">
+                    <strong>Full Name:</strong><br />
+                    {shippingAddress.shipping_first_name} {shippingAddress.shipping_last_name}
+                  </div>
                   <div className="mb-2">
                     <strong>Address Line 1:</strong><br />
                     {shippingAddress.address_line_1}

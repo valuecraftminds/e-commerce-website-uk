@@ -42,7 +42,8 @@ class IssuingController {
         o.order_status,
         o.created_at,
         CONCAT(c.first_name, ' ', c.last_name) as customer_name,
-        c.email as customer_email
+        c.email as customer_email,
+        c.phone as customer_phone
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.customer_id
       WHERE o.company_code = ?
@@ -87,6 +88,9 @@ class IssuingController {
         CONCAT(c.first_name, ' ', c.last_name) as customer_name,
         c.email as customer_email,
         c.phone as customer_phone,
+        a.phone as shipping_phone,
+        a.first_name as shipping_first_name,
+        a.last_name as shipping_last_name,
         a.address_line_1,
         a.address_line_2,
         a.city,
