@@ -59,6 +59,7 @@ const GRNRoutes = require('./routes/admin/GRN');
 const LocationRoutes = require('./routes/admin/Location');
 const StockRoutes = require('./routes/admin/Stock');
 const IssuingRoutes = require('./routes/admin/Issuing');
+const ProductOffersRoutes = require('./routes/admin/ProductOffers');
 
 
 // Route bindings
@@ -95,7 +96,7 @@ app.use('/api/admin/grn', GRNRoutes);
 app.use('/api/admin/locations', LocationRoutes);
 app.use('/api/admin/stock', StockRoutes);
 app.use('/api/admin/issuing', IssuingRoutes);
-
+app.use('/api/admin/offers', ProductOffersRoutes);
 
 
 // Default route
