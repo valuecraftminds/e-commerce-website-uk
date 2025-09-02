@@ -458,3 +458,23 @@
     height: 50px;
   }
 }
+
+.feedback-load-more-container, .feedback-end-message {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+.feedback-load-more-btn{
+  background-color: #ff6b35;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.feedback-load-more-btn:hover {
+  background-color: #e65c2f;
+}

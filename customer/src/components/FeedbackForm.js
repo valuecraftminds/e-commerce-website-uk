@@ -71,7 +71,7 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
       
       // Notify parent component
       if (onSubmissionComplete) {
-        onSubmissionComplete(item.style_id);
+        onSubmissionComplete(item.style_number);
       }
     } catch (err) {
       console.error('Error submitting review:', err.response?.data || err);
@@ -159,7 +159,7 @@ function FeedbackForm({ items, customer_id, onSubmissionComplete }) {
       
       {items.map((item, index) => (
         <SingleItemFeedback
-          key={item.style_id || index}
+          key={item.style_number || index}
           item={item}
           customer_id={customer_id}
           onSubmissionComplete={handleSubmissionComplete}

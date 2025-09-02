@@ -215,7 +215,7 @@ return (
                                 src={`${BASE_URL}/uploads/styles/${item.image}`}
                                 alt={item.style_name}
                                 className="cart-item-square-image"
-                                onClick={() => handleRedirect(item.style_id)}
+                                onClick={() => handleRedirect(item.style_number)}
                               />
                             </div>
                           </Col> 
@@ -248,7 +248,7 @@ return (
                                 </small>
                               )}
                               <small className={`d-block mt-1 ${item.stock_qty <= 5 ? 'text-warning' : 'text-success'}`}>
-                                <strong>Stock:</strong> {item.stock_qty} available
+                                
                                 {item.stock_qty <= 5 && item.stock_qty > 0 && (
                                   <span className="text-warning ms-1">(Low stock)</span>
                                 )}
@@ -415,8 +415,11 @@ return (
                         <Button 
                           variant="primary" 
                           size="lg"
-                          // disabled={cart.length === 0 || cart.some(item => item.stock_quantity === 0)}
-                          disabled={cart.length ===0}
+                          disabled={
+                            cart.length === 0 || 
+                            summary.out_of_stock_items > 0 ||
+                            cart.some(item => item.stock_qty === 0 || item.stock_qty === null)
+                          }
                           onClick={() => handleBuyNow()}
                         >
                           🚀 Proceed to Checkout
@@ -436,7 +439,7 @@ return (
                     </Card.Body>
                   </Card>
                    <div>
-                      <span className='d-flex text-danger text-muted mt-3' > {summary.out_of_stock_items} items are unavailable at the moment. </span>
+                      <span className='d-flex text-danger text-muted mt-3' style={{fontSize: '1rem'}} > ⚠️ {summary.out_of_stock_items} item(s) are unavailable at the moment. Please remove unavailable items before proceeding to checkout. </span>
                     </div>
                 </Col>
               </Row>

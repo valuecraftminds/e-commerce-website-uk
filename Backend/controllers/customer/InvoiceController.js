@@ -1,6 +1,6 @@
 const db = require('../../config/database');
 const PDFDocument = require('pdfkit');
-const { sendInvoiceEmail } = require('../../services/emailService');
+const { sendInvoiceEmail } = require('../../services/customer/emailService');
 const fs = require('fs');
 const path = require('path');
 const { generateUniqueInvoiceNumber, generateInvoiceFileName } = require('../../utils/invoiceUtils');
@@ -470,6 +470,7 @@ const InvoiceController = {
       const customer_id = req.user?.id;
       const { company_code } = req.query;
       const { order_id } = req.params;
+      const { frontend_url } = req.body; // Get frontend URL from request body
 
       // Validate required fields
       if (!customer_id) {
@@ -663,7 +664,8 @@ const InvoiceController = {
                     customer_id: order.customer_id,
                     company_code: order.company_code
                   },
-                  invoiceFilePath
+                  invoiceFilePath,
+                  frontend_url // Pass frontend URL from request
                 );
 
                 // Store invoice record in database for tracking

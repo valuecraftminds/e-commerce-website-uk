@@ -2,8 +2,8 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const QRCode = require('qrcode');
-const db = require('../config/database');
-const { generateInvoiceFileName } = require('../utils/invoiceUtils');
+const db = require('../../config/database');
+const { generateInvoiceFileName } = require('../../utils/invoiceUtils');
 
 // Helper function to fetch company details
 const getCompanyDetails = (companyCode) => {
@@ -119,13 +119,13 @@ const createTransporter = () => {
     };
 
      // Send invoice email with order confirmation
-    const sendInvoiceEmail = async (customerEmail, customerName, orderData, invoicePath) => {
+    const sendInvoiceEmail = async (customerEmail, customerName, orderData, invoicePath, frontendUrl) => {
     try {
         const transporter = createTransporter();
 
         // Generate order details link
-        const frontendUrl = process.env.FRONTEND_URL;
-        const orderDetailsLink = `${frontendUrl}/orders/${orderData.orderId || orderData.order_id}?customer_id=${orderData.customer_id}&company_code=${orderData.company_code}`;
+        const baseUrl = frontendUrl || 'http://localhost:3000';
+        const orderDetailsLink = `${baseUrl}/orders/${orderData.orderId || orderData.order_id}?customer_id=${orderData.customer_id}&company_code=${orderData.company_code}`;
 
         // Combined email template for order confirmation and invoice
         const emailTemplate = `
@@ -201,7 +201,7 @@ const createTransporter = () => {
     };
 
     // Generate and send invoice email with PDF attachment
-    const generateAndSendInvoice = async (orderData, customerData, invoiceData, companyData) => {
+    const generateAndSendInvoice = async (orderData, customerData, invoiceData, companyData, frontendUrl) => {
     try {
         const PDFDocument = require('pdfkit');
 
@@ -272,7 +272,7 @@ const createTransporter = () => {
         doc.pipe(fs.createWriteStream(invoiceFilePath));
 
         // Generate PDF content with company information
-        await generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails);
+        await generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails, frontendUrl);
 
         // Finalize PDF
         doc.end();
@@ -291,7 +291,8 @@ const createTransporter = () => {
             ...orderData,
             company_name: companyInfo.company_name
         },
-        invoiceFilePath
+        invoiceFilePath,
+        frontendUrl
         );
 
         return {
@@ -312,7 +313,7 @@ const createTransporter = () => {
     };
 
     // Helper function to generate PDF content for invoice
-    const generateInvoicePDFContent = async (doc, orderData, customerData, invoiceData, companyInfo, shippingAddressDetails) => {
+    const generateInvoicePDFContent = async (doc, orderData, customerData, invoiceData, companyInfo, shippingAddressDetails, frontendUrl) => {
     // Define colors
     const primaryColor = '#2E5090';
     const secondaryColor = '#E8F0FE';
@@ -326,8 +327,8 @@ const createTransporter = () => {
     const contentWidth = pageWidth - (margin * 2);
     
     // Generate QR code for order details link
-    const frontendUrl = process.env.FRONTEND_URL;
-    const orderDetailsLink = `${frontendUrl}/orders/${orderData.orderId || orderData.order_id}?customer_id=${orderData.customer_id}&company_code=${orderData.company_code}`;
+    const baseUrl = frontendUrl || 'http://localhost:3000';
+    const orderDetailsLink = `${baseUrl}/orders/${orderData.orderId || orderData.order_id}?customer_id=${orderData.customer_id}&company_code=${orderData.company_code}`;
     const qrCodeBuffer = await generateQRCodeForPDF(orderDetailsLink);
     
     // Header with company branding
