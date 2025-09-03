@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter, FaCheckCircle, FaTimesCircle, FaUserPlus } from 'react-icons/fa';
 import { Eye, EyeOff } from 'lucide-react';
@@ -6,6 +6,8 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { useNavigate } from 'react-router-dom';
 
+import { AuthContext } from '../context/AuthContext';
+import SocialLogin from '../components/SocialLogin';
 import '../styles/RegisterPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -13,6 +15,7 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -111,6 +114,25 @@ export default function RegisterPage() {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSocialLoginSuccess = (token, user, provider) => {
+    // For social login, authenticate the user and redirect to home since account is created automatically
+    login(token, user);
+    console.log(`${provider} registration/login successful:`, user);
+    console.log('token:', token);
+    
+    // You might want to show a success message here
+    setSuccessMsg(`Welcome! Your account has been created successfully via ${provider}.`);
+    
+    // Redirect to home page after a short delay
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 1500);
+  };
+
+  const handleSocialLoginError = (errorMessage) => {
+    setErrorMsg(errorMessage);
   };
 
   const handleSubmit = async (e) => {
@@ -423,28 +445,11 @@ export default function RegisterPage() {
                     </p>
                     
                     <div className="social-register">
-                      <h6 className="social-title">Or register with</h6>
-                     
-                      <div className="social-buttons d-flex justify-content-center">
-                         <Row>
-
-                        <Col>
-                          <Button variant="outline-danger" className="social-btn-modern google p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
-                            <FaGoogle size={16} style={{ color: '#db4437' }} />
-                          </Button>
-                        </Col>
-                        <Col>
-                          <Button variant="outline-primary" className="social-btn-modern facebook p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
-                            <FaFacebookF size={16} style={{ color: '#4267B2' }} />
-                          </Button>
-                        </Col>
-                        <Col>
-                          <Button variant="outline-info" className="social-btn-modern twitter p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
-                            <FaTwitter size={16} style={{ color: '#1DA1F2' }} />
-                          </Button>
-                        </Col>
-                      </Row>
-                      </div>
+                      <SocialLogin 
+                        onSocialLoginSuccess={handleSocialLoginSuccess}
+                        onSocialLoginError={handleSocialLoginError}
+                        isRegister={true}
+                      />
                     </div>
                     
                       <h5 className="divider-text">Already a member?</h5>

@@ -270,4 +270,63 @@ ALTER DATABASE database_name CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_c
 GRANT INSERT, UPDATE ON your_db.stock_summary TO 'your_user'@'localhost';
 FLUSH PRIVILEGES;
 
-SHOW GRANTS FOR 'u658538868_uk'@'193.203.184.93';
+
+
+
+# Social Login Setup Guide
+
+
+
+## 1. Google OAuth Setup
+
+### Step 1: Create Google Cloud Project
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the Google+ API
+
+### Step 2: Create OAuth 2.0 Credentials
+1. Go to "Credentials" in the Google Cloud Console
+2. Click "Create Credentials" → "OAuth 2.0 Client IDs"
+3. Select "Web application"
+4. Add authorized origins:
+   - `http://localhost:3000` (for development)
+   - Your production domain
+5. Add authorized redirect URIs:
+   - `http://localhost:3000` (for development)
+   - Your production domain
+6. Copy the Client ID and Client Secret
+
+### Step 3: Configure Environment Variables
+Backend (.env):
+```
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+```
+
+Frontend (.env):
+```
+REACT_APP_GOOGLE_CLIENT_ID=your-google-client-id-here
+```
+
+
+### **Google Login Flow:**
+```
+1. User clicks Google button
+   ↓
+2. Google OAuth popup opens
+   ↓
+3. User selects Google account
+   ↓
+4. Google returns user data and access token
+   ↓
+5. Frontend sends data to Backend API
+   ↓
+6. Backend verifies with Google servers
+   ↓
+7. Backend checks if user exists in database
+   ↓
+8a. IF USER EXISTS: Generate JWT token & login
+8b. IF NEW USER: Create account automatically & login
+   ↓
+9. User is logged in and redirected to home page
+```
