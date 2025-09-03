@@ -253,3 +253,22 @@
   border-color: #86b7fe;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+
+.cart-item-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #918e8e;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+}
+
+.cart-item-checkbox input[type="checkbox"]:checked {
+  background-color: #35ca18;
+}
