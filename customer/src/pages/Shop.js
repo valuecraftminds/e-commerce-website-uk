@@ -260,9 +260,17 @@ export default function Shop() {
                         <span className="text-muted text-decoration-line-through small">
                           {formatPrice(product.sale_price)}
                         </span>
+                        <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
+                          Starting from (best offer)
+                        </small>
                       </>
                     ) : (
-                      <span>{formatPrice(product.sale_price)}</span>
+                      <>
+                        <span>{formatPrice(product.sale_price)}</span>
+                        <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
+                          Starting from
+                        </small>
+                      </>
                     )}
                   </div>
                   
