@@ -119,7 +119,7 @@ const createTransporter = () => {
     };
 
      // Send invoice email with order confirmation
-    const sendInvoiceEmail = async (customerEmail, customerName, orderData, invoicePath, frontendUrl) => {
+    const sendInvoiceEmail = async (customerEmail, customerName, orderData, pdfBuffer, invoiceFileName, frontendUrl) => {
     try {
         const transporter = createTransporter();
 
@@ -175,8 +175,8 @@ const createTransporter = () => {
         html: emailTemplate,
         attachments: [
             {
-            filename: path.basename(invoicePath), 
-            path: invoicePath,
+            filename: invoiceFileName, 
+            content: pdfBuffer,
             contentType: 'application/pdf'
             }
         ]
@@ -249,27 +249,35 @@ const createTransporter = () => {
         shippingAddressDetails = orderData.shippingAddress;
         }
 
-        // Create invoices directory if it doesn't exist
-        const invoicesDir = path.join(__dirname, '../invoices');
-        if (!fs.existsSync(invoicesDir)) {
-        fs.mkdirSync(invoicesDir, { recursive: true });
-        }
+        // Create invoices directory if it doesn't exist - COMMENTED OUT TO PREVENT FILE STORAGE
+        // const invoicesDir = path.join(__dirname, '../invoices');
+        // if (!fs.existsSync(invoicesDir)) {
+        //   fs.mkdirSync(invoicesDir, { recursive: true });
+        // }
 
         // Use the invoice number passed from checkout controller
         const invoiceNumber = invoiceData.invoiceNumber;
         
         // Generate unique PDF filename using utility function
         const invoiceFileName = generateInvoiceFileName(orderData.orderNumber, invoiceNumber);
-        const invoiceFilePath = path.join(invoicesDir, invoiceFileName);
+        
+        // Generate PDF file path - COMMENTED OUT TO PREVENT FILE STORAGE
+        // const invoiceFilePath = path.join(invoicesDir, invoiceFileName);
 
-        // Create PDF document
+        // Create PDF document in memory
         const doc = new PDFDocument({ 
         size: 'A4', 
         margin: 50 
         });
 
-        // Pipe PDF to file
-        doc.pipe(fs.createWriteStream(invoiceFilePath));
+        // Pipe PDF to file - COMMENTED OUT TO PREVENT FILE STORAGE
+        // doc.pipe(fs.createWriteStream(invoiceFilePath));
+
+        // Collect PDF buffer chunks
+        const pdfBuffers = [];
+        doc.on('data', (chunk) => {
+            pdfBuffers.push(chunk);
+        });
 
         // Generate PDF content with company information
         await generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails, frontendUrl);
@@ -277,13 +285,20 @@ const createTransporter = () => {
         // Finalize PDF
         doc.end();
 
-        // Wait for PDF to be written
-        await new Promise((resolve, reject) => {
-        doc.on('end', resolve);
-        doc.on('error', reject);
+        // Wait for PDF to be completed and get buffer
+        // const pdfBuffer = await new Promise((resolve, reject) => {
+        //     doc.on('end', resolve);
+        //     doc.on('error', reject);
+        // });
+        const pdfBuffer = await new Promise((resolve, reject) => {
+            doc.on('end', () => {
+                const finalBuffer = Buffer.concat(pdfBuffers);
+                resolve(finalBuffer);
+            });
+            doc.on('error', reject);
         });
 
-        // Send email with PDF attachment
+        // Send email with PDF buffer attachment
         const emailResult = await sendInvoiceEmail(
         customerData.email,
         `${customerData.firstName} ${customerData.lastName}`,
@@ -291,13 +306,14 @@ const createTransporter = () => {
             ...orderData,
             company_name: companyInfo.company_name
         },
-        invoiceFilePath,
+        pdfBuffer,
+        invoiceFileName,
         frontendUrl
         );
 
         return {
         success: emailResult.success,
-        invoiceFilePath: invoiceFilePath,
+        // invoiceFilePath: invoiceFilePath, // COMMENTED OUT - NO FILE PATH SINCE NO FILE IS SAVED
         messageId: emailResult.messageId,
         invoiceNumber: invoiceNumber,
         error: emailResult.error
@@ -536,15 +552,14 @@ const createTransporter = () => {
   
   // Items table
   const tableStartY = currentY;
-  const tableHeaders = [
-    { text: 'Item', x: margin + 5, width: 115 },
-    { text: 'SKU', x: margin + 125, width: 150 },
-    { text: 'Size', x: margin + 275, width: 35 },
-    { text: 'Color', x: margin + 315, width: 55 },
-    { text: 'Qty', x: margin + 375, width: 25 },
-    { text: 'Price', x: margin + 405, width: 55 },
-    { text: 'Subtotal', x: margin + 465, width: 55 }
-  ];
+ const tableHeaders = [
+  { text: 'Item',     x: margin + 5,   width: 150, align: 'left' },
+  { text: 'Size',     x: margin + 155, width: 40,  align: 'left' },
+  { text: 'Color',    x: margin + 200, width: 60,  align: 'left' },
+  { text: 'Qty',      x: margin + 260, width: 30,  align: 'right' },
+  { text: 'Price',    x: margin + 290, width: 55,  align: 'right' },
+  { text: 'Subtotal', x: margin + 365, width: 65,  align: 'right' }
+];
   
   // Table header background
   const headerHeight = 30;
@@ -580,14 +595,13 @@ const createTransporter = () => {
     }
     
     // Item data
-    doc.fillColor(textColor);
-    doc.text(item.style_name || item.name || 'Product', margin + 5, currentY + textPadding, { width: 115, ellipsis: true });
-    doc.text(item.sku || 'N/A', margin + 125, currentY + textPadding, { width: 150, ellipsis: true });
-    doc.text(item.size_name || 'N/A', margin + 275, currentY + textPadding, { width: 35, align: 'center' });
-    doc.text(item.color_name || 'N/A', margin + 315, currentY + textPadding, { width: 55, ellipsis: true });
-    doc.text(item.quantity.toString(), margin + 375, currentY + textPadding, { width: 25, align: 'right' });
-    doc.text(`${parseFloat(item.unit_price).toFixed(2)}`, margin + 405, currentY + textPadding, { width: 55, align: 'right' });
-    doc.text(`${parseFloat(item.total_price).toFixed(2)}`, margin + 465, currentY + textPadding, { width: 55, align: 'right' });
+   doc.font('Helvetica').fillColor(textColor);
+  doc.text(item.style_name || item.name || 'Product', margin + 5, currentY + textPadding, { width: 150, ellipsis: true });
+  doc.text(item.size_name || 'N/A',   margin + 155, currentY + textPadding, { width: 40,  align: 'left' });
+  doc.text(item.color_name || 'N/A',  margin + 200, currentY + textPadding, { width: 60,  ellipsis: true, align: 'left' });
+  doc.text(item.quantity.toString(),  margin + 260, currentY + textPadding, { width: 30,  align: 'right' });
+  doc.text(parseFloat(item.unit_price).toFixed(2), margin + 290, currentY + textPadding, { width: 55, align: 'right' });
+  doc.text(parseFloat(item.total_price).toFixed(2), margin + 365, currentY + textPadding, { width: 65, align: 'right' });
 
     currentY += rowHeight;
     rowColor = !rowColor;
