@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Container, Row, Col, Image, Button, Alert } from "react-bootstrap";
+import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import { FaShare } from "react-icons/fa";
 import axios from "axios";
@@ -299,6 +299,22 @@ export default function ProductDetails() {
     return `${symbol}${convertedPrice}`;
   };
 
+  // Function to get the current price based on variant selection
+  const getCurrentPrice = () => {
+    if (selectedVariant) {
+      return {
+        salePrice: selectedVariant.sale_price || product.sale_price,
+        offerPrice: selectedVariant.offer_price && selectedVariant.offer_price !== 0 ? selectedVariant.offer_price : null
+      };
+    }
+    
+    // Fallback to product prices
+    return {
+      salePrice: product.sale_price,
+      offerPrice: product.offer_price && product.offer_price !== 0 ? product.offer_price : null
+    };
+  };
+
   const handleAddToCart = async () => {
     try {
       // Validate stock quantity before adding to cart
@@ -319,6 +335,7 @@ export default function ProductDetails() {
 
       // Use the SKU from the selected variant, fallback to product SKU
       const skuToUse = selectedVariant?.sku || product.sku;
+      const { salePrice, offerPrice } = getCurrentPrice();
       
       const result = await addToCart({
         name: product.name,
@@ -333,9 +350,7 @@ export default function ProductDetails() {
         },
         image: product.image,
         quantity: quantity,
-        sale_price: product.offer_price && product.offer_price !== "" 
-                ? product.offer_price 
-                : product.sale_price
+        sale_price: offerPrice || salePrice
       });
       console.log("Add to cart result:", result);
       showNotify({
@@ -609,18 +624,21 @@ export default function ProductDetails() {
               )}
 
               <h5 className="price">
-                {product.offer_price && product.offer_price !== 0 ? (
-                  <>
-                    <span className="me-2 offer-price">
-                      {formatPrice(product.offer_price)}
-                    </span>
-                    <span className="text-muted text-decoration-line-through small">
-                      {formatPrice(product.sale_price)}
-                    </span>
-                  </>
-                ) : (
-                  <span>{formatPrice(product.sale_price)}</span>
-                )}
+                {(() => {
+                  const { salePrice, offerPrice } = getCurrentPrice();
+                  return offerPrice ? (
+                    <>
+                      <span className="me-2 offer-price">
+                        {formatPrice(offerPrice)}
+                      </span>
+                      <span className="text-muted text-decoration-line-through small">
+                        {formatPrice(salePrice)}
+                      </span>
+                    </>
+                  ) : (
+                    <span>{formatPrice(salePrice)}</span>
+                  );
+                })()}
               </h5>
 
               <div className="mb-3">
@@ -948,9 +966,10 @@ export default function ProductDetails() {
         show={showCheckoutModal}
         value={product ? {
           ...product,
-          price: product.offer_price && product.offer_price !== "" 
-                ? product.offer_price 
-                : product.sale_price,
+          price: (() => {
+            const { salePrice, offerPrice } = getCurrentPrice();
+            return offerPrice || salePrice;
+          })(),
           variant_id: selectedVariant?.variant_id || product.style_id,
           id: product.style_id,
           quantity: quantity,

@@ -241,10 +241,11 @@ export default function Home() {
       {/* Offer Products Section */}
       {!offerLoading && !offerError && offerProducts.length > 0 && (
         <Container fluid className="my-5 homepage-offer-products-container">
+          <p> * Offer prices are valid only for selected size/color combinations. </p>
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h2 className="offer-section-title">
               <i className="fas fa-fire text-danger me-2"></i>
-              Hot Deals & Offers
+              Hot Deals & Offers 
             </h2>
             <button
               className="btn btn-outline-primary btn-sm"

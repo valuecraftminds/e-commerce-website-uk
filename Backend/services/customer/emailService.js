@@ -536,15 +536,14 @@ const createTransporter = () => {
   
   // Items table
   const tableStartY = currentY;
-  const tableHeaders = [
-    { text: 'Item', x: margin + 5, width: 115 },
-    { text: 'SKU', x: margin + 125, width: 150 },
-    { text: 'Size', x: margin + 275, width: 35 },
-    { text: 'Color', x: margin + 315, width: 55 },
-    { text: 'Qty', x: margin + 375, width: 25 },
-    { text: 'Price', x: margin + 405, width: 55 },
-    { text: 'Subtotal', x: margin + 465, width: 55 }
-  ];
+ const tableHeaders = [
+  { text: 'Item',     x: margin + 5,   width: 150, align: 'left' },
+  { text: 'Size',     x: margin + 155, width: 40,  align: 'left' },
+  { text: 'Color',    x: margin + 200, width: 60,  align: 'left' },
+  { text: 'Qty',      x: margin + 260, width: 30,  align: 'right' },
+  { text: 'Price',    x: margin + 290, width: 55,  align: 'right' },
+  { text: 'Subtotal', x: margin + 365, width: 65,  align: 'right' }
+];
   
   // Table header background
   const headerHeight = 30;
@@ -580,14 +579,13 @@ const createTransporter = () => {
     }
     
     // Item data
-    doc.fillColor(textColor);
-    doc.text(item.style_name || item.name || 'Product', margin + 5, currentY + textPadding, { width: 115, ellipsis: true });
-    doc.text(item.sku || 'N/A', margin + 125, currentY + textPadding, { width: 150, ellipsis: true });
-    doc.text(item.size_name || 'N/A', margin + 275, currentY + textPadding, { width: 35, align: 'center' });
-    doc.text(item.color_name || 'N/A', margin + 315, currentY + textPadding, { width: 55, ellipsis: true });
-    doc.text(item.quantity.toString(), margin + 375, currentY + textPadding, { width: 25, align: 'right' });
-    doc.text(`${parseFloat(item.unit_price).toFixed(2)}`, margin + 405, currentY + textPadding, { width: 55, align: 'right' });
-    doc.text(`${parseFloat(item.total_price).toFixed(2)}`, margin + 465, currentY + textPadding, { width: 55, align: 'right' });
+   doc.font('Helvetica').fillColor(textColor);
+  doc.text(item.style_name || item.name || 'Product', margin + 5, currentY + textPadding, { width: 150, ellipsis: true });
+  doc.text(item.size_name || 'N/A',   margin + 155, currentY + textPadding, { width: 40,  align: 'left' });
+  doc.text(item.color_name || 'N/A',  margin + 200, currentY + textPadding, { width: 60,  ellipsis: true, align: 'left' });
+  doc.text(item.quantity.toString(),  margin + 260, currentY + textPadding, { width: 30,  align: 'right' });
+  doc.text(parseFloat(item.unit_price).toFixed(2), margin + 290, currentY + textPadding, { width: 55, align: 'right' });
+  doc.text(parseFloat(item.total_price).toFixed(2), margin + 365, currentY + textPadding, { width: 65, align: 'right' });
 
     currentY += rowHeight;
     rowColor = !rowColor;

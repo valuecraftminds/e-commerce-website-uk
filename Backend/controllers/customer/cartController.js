@@ -471,7 +471,7 @@ const cartController = {
             item.tax || 0.00,
             item.shipping_fee || 0.00,
             item.is_available !== undefined ? item.is_available : true,
-            style_number
+            item.sku || null
           ]);
 
           mergedItems.push({

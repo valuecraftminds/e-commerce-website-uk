@@ -33,8 +33,14 @@ const withSyncedTotals = (item) => {
 const calculateSummary = (items, exchangeRate = 1, currencySymbol = '$') => {
   // Helper function to check if item is in stock
   const isInStock = (item) => {
-    const stockQty = Number(item?.stock_qty ?? 0);
-    return stockQty > 0;
+    // Primary check: if is_available is explicitly set to false, item is out of stock
+    if (item?.is_available === false) return false;
+    
+    // Secondary check: if stock_qty is provided and is 0 or less, item is out of stock
+    if (item?.stock_qty !== undefined && Number(item.stock_qty) <= 0) return false;
+    
+    // If is_available is true or undefined, and stock_qty is either undefined or > 0, consider in stock
+    return true;
   };
 
   // Separate in-stock and out-of-stock items
@@ -148,7 +154,7 @@ export const CartProvider = ({ children }) => {
     return cfg;
   };
 
-  // scan all guest_cart_* keys and combine items (defensive)
+  // scan all guest_cart_* keys and combine items 
   const scanAllGuestCarts = () => {
     const combined = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -189,13 +195,10 @@ export const CartProvider = ({ children }) => {
     });
     localStorage.setItem(ACTIVE_KEY, JSON.stringify(merged));
     console.log('[GuestCart][migrate] merged into ACTIVE_KEY:', ACTIVE_KEY, 'count:', merged.length);
-    // Optional: clean up legacy keys except active
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
       if (k.startsWith('guest_cart_') && k !== ACTIVE_KEY) {
-        // leave them for safety, or uncomment to clean:
-        // localStorage.removeItem(k);
       }
     }
   };
@@ -268,7 +271,7 @@ export const CartProvider = ({ children }) => {
     const { rate, symbol } = getCurrentCurrency();
     console.log('[Currency] update', { rate, symbol });
     dispatch({ type: 'UPDATE_CURRENCY', payload: { rate, symbol } });
-  }, [country, exchangeRates, state.items]); // eslint-disable-line
+  }, [country, exchangeRates, state.items]); 
 
   const formatPrice = (sale_price) => {
     const base = Number(sale_price ?? 0);
@@ -298,10 +301,9 @@ export const CartProvider = ({ children }) => {
   // run once at app start to migrate legacy keys into ACTIVE_KEY
   useEffect(() => {
     migrateGuestCartKeys();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // merge on login (never skip if guest cart exists anywhere)
+  // merge on login (never skip if guest cart exists)
   useEffect(() => {
     (async () => {
       const t = localStorage.getItem('authToken');
@@ -309,7 +311,7 @@ export const CartProvider = ({ children }) => {
       if (isLoggedIn && t) {
         dispatch({ type: 'SET_LOADING', payload: true });
         try {
-          const guest = getGuestCart(); // now scans if needed
+          const guest = getGuestCart(); 
           const rawFlag = sessionStorage.getItem(MERGE_FLAG_KEY);
           const already = rawFlag === '1';
           console.log('[Merge]', { MERGE_FLAG_KEY, already, guestLen: guest.length });
@@ -362,7 +364,6 @@ export const CartProvider = ({ children }) => {
         loadMemo();
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, userKey]);
 
   const loadCart = async () => {
@@ -412,6 +413,11 @@ export const CartProvider = ({ children }) => {
 
       const current = getGuestCart();
       const unitPrice = getUnitPrice(item);
+      
+      // Safely handle stock information without making unsafe assumptions
+      const stockQty = item.stock_qty !== undefined ? Number(item.stock_qty) : undefined;
+      const isAvailable = item.is_available !== undefined ? item.is_available : true;
+      
       const cartItem = withSyncedTotals({
         cart_id: `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         cart_key: buildCartKey(item),
@@ -424,7 +430,7 @@ export const CartProvider = ({ children }) => {
         price: unitPrice,
         unit_price: unitPrice,
         quantity: item.quantity || 1,
-        stock_qty: item.stock_qty,
+        stock_qty: stockQty, 
         sku: item.sku,
         color_name: item.color?.name,
         color_code: item.color?.code,
@@ -437,7 +443,7 @@ export const CartProvider = ({ children }) => {
         product_url: item.product_url,
         tax: item.tax || 0.0,
         shipping_fee: item.shipping_fee || 0.0,
-        is_available: item.is_available !== undefined ? item.is_available : true,
+        is_available: isAvailable,
         size: item.size,
         color: item.color,
       });
