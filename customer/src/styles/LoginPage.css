@@ -5,7 +5,7 @@
 }
 
 .login-card {
-  max-width: 1000px;
+  max-width: fit-content !important;
   margin: 1rem auto;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 45px;
+  width: fit-content !important;
   height: 45px;
   border-radius: 50%;
   transition: all 0.3s ease;

@@ -47,9 +47,9 @@ export default function ProductDetails() {
   // Single state for wishlist status
   const [isWishlisted, setIsWishlisted] = useState(false);
   
-  // State for expandable sections
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
-  const [showMaterial, setShowMaterial] = useState(false);
+  // State for expandable sections - remove these states
+  // const [showSizeGuide, setShowSizeGuide] = useState(false);
+  // const [showMaterial, setShowMaterial] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
@@ -774,63 +774,62 @@ export default function ProductDetails() {
                 </Button>
               </div>
 
-               {/* Material Section */}
-              <div className="expandable-section material">
-                <div 
-                  className="section-header"
-                  onClick={() => setShowMaterial(!showMaterial)}
-                >
-                  <h5>Material </h5>
-                  <span className="toggle-icon">
-                    {showMaterial ? '−' : '+'}
+              {/* Material and Size Guide with Tooltips */}
+              <div className="product-info-tooltips mt-3">
+                <div className="tooltip-container">
+                  <span className="info-link material-link">
+                    Material
                   </span>
-                </div>
-                {showMaterial && (
-                  <div className="section-content">
+                  <div className="tooltip-content material-tooltip">
+                    <div className="tooltip-arrow"></div>
                     <div className="material-info">
-                      <div className="material-composition">
-                        <ul>
-                          <li className="material-name">{product?.material?.material_name || 'Material details will be available soon'}</li>
-                          {product?.material?.material_description && (
-                            <li className="material-description">{product.material.material_description}</li>
-                          )}
-                        </ul>
+                      {/* <h6>Material</h6> */}
+                      <p>{product?.material?.material_name || 'Material details will be available soon'}</p>
+                      {product?.material?.material_description && (
+                        <p className="material-description">{product.material.material_description}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <span className="separator">|</span>
+
+                <div className="tooltip-container">
+                  <span className="info-link size-guide-link">
+                    Size Guide
+                  </span>
+                  <div className="tooltip-content size-guide-tooltip">
+                    <div className="tooltip-arrow"></div>
+                    <div className="size-guide-info">
+                      <h6>Size Guide</h6>
+                      <div className="size-guide-image">
+                        <img 
+                          src={`${BASE_URL}/uploads/size-chart.png`}
+                          alt="Size Guide Chart" 
+                        />
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          
-            {/* Size Guide Section */}
-            <div className="expandable-section size-guide">
-              <div 
-                className="section-header"
-                onClick={() => setShowSizeGuide(!showSizeGuide)}
-              >
-                <h5>Size Guide</h5>
-                <span className="toggle-icon">
-                  {showSizeGuide ? '−' : '+'}
-                </span>
-              </div>
-              {showSizeGuide && (
-                <div className="section-content">
-                  <div className="size-guide-image">
-                    <img 
-                      src={`${BASE_URL}/uploads/size-chart.png`}
-                      alt="Size Guide Chart" 
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/500x300/f8f9fa/6c757d?text=Size+Chart+Coming+Soon';
-                      }}
-                    />
-                    <p className="size-guide-instructions">
-                      <strong>How to measure:</strong> For the most accurate fit, measure your body wearing only undergarments. Keep the measuring tape level and snug but not tight.
-                    </p>
+                </div>
+
+                <span className="separator">|</span>
+
+                <div className="tooltip-container">
+                  <span className="info-link howtomeasure-link">
+                    How To Measure
+                  </span>
+                  <div className="tooltip-content howtomeasure-tooltip">
+                    <div className="tooltip-arrow"></div>
+                    <div className="howtomeasure-info">
+                      <h6>How To Measure</h6>
+                      <p>For the most accurate fit, measure your body wearing only undergarments. Keep the measuring tape level and snug but not tight.</p>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </Col>
+
 
           {/* Column 3: Reviews */}
           <Col lg={4} md={6} className="reviews-col">
