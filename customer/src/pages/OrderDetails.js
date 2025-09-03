@@ -3,7 +3,7 @@ import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Button, Modal } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 
 import '../styles/OrderDetails.css';
 import { CountryContext } from "../context/CountryContext";
@@ -357,12 +357,13 @@ export default function OrderDetails() {
 
     // Handle feedback submission completion
     const handleFeedbackSubmissionComplete = (style_number) => {
+        setShowFeedbackModal(false);
+        setSelectedItem(null);
+        
         // Update the reviewed items set
         setReviewedItems(prev => new Set([...prev, style_number]));
 
         console.log(`Review submitted for style_number: ${style_number}`);
-        setShowFeedbackModal(false);
-        setSelectedItem(null);
     };
 
     return (
@@ -582,26 +583,19 @@ export default function OrderDetails() {
                 </div>
             </div>
 
-            {/* Feedback Modal */}
-            <Modal 
-                show={showFeedbackModal} 
-                onHide={handleCloseFeedbackModal}
-                size="lg"
-                centered
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Add Review</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selectedItem && (
+            {/* Feedback Form Popup */}
+            {showFeedbackModal && selectedItem && (
+                <div className="feedback-modal-overlay" onClick={handleCloseFeedbackModal}>
+                    <div className="feedback-modal-content" onClick={(e) => e.stopPropagation()}>
                         <FeedbackForm 
                             items={selectedItem}
                             customer_id={orderDetails?.customer_id}
                             onSubmissionComplete={handleFeedbackSubmissionComplete}
+                            onClose={handleCloseFeedbackModal}
                         />
-                    )}
-                </Modal.Body>
-            </Modal>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
