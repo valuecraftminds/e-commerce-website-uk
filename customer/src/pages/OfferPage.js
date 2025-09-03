@@ -37,7 +37,24 @@ export default function OfferPage() {
           params: {company_code: COMPANY_CODE}
         });
 
-        setOfferProducts(response.data);
+        // Group products by style_id and select the best offer (minimum offer_price)
+        const groupedProducts = {};
+        response.data.forEach(product => {
+          const styleId = product.style_id;
+          
+          if (!groupedProducts[styleId]) {
+            groupedProducts[styleId] = product;
+          } else {
+            // If current product has lower offer_price, replace it
+            if (product.offer_price < groupedProducts[styleId].offer_price) {
+              groupedProducts[styleId] = product;
+            }
+          }
+        });
+
+        // Convert back to array
+        const uniqueProducts = Object.values(groupedProducts);
+        setOfferProducts(uniqueProducts);
       } catch (error) {
         console.error('Error fetching offer products:', error);
         setOfferError('Failed to load offer products');
@@ -185,6 +202,9 @@ export default function OfferPage() {
                           <span className="original-price">
                     {formatPrice(product.sale_price)}
                   </span>
+                          <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
+                    Starting from (best offer)
+                  </small>
                         </div>
 
                         {/* Countdown Timer */}

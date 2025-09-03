@@ -308,10 +308,10 @@ export default function ProductDetails() {
       };
     }
     
-    // Fallback to product prices
+    // show only sale price until variant is selected
     return {
       salePrice: product.sale_price,
-      offerPrice: product.offer_price && product.offer_price !== 0 ? product.offer_price : null
+      offerPrice: null 
     };
   };
 

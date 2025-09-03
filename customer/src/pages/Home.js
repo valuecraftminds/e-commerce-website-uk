@@ -147,7 +147,24 @@ export default function Home() {
           params: {company_code: COMPANY_CODE}
         });
 
-        setOfferProducts(response.data);
+        // Group products by style_id and select the best offer (minimum offer_price)
+        const groupedProducts = {};
+        response.data.forEach(product => {
+          const styleId = product.style_id;
+          
+          if (!groupedProducts[styleId]) {
+            groupedProducts[styleId] = product;
+          } else {
+            // If current product has lower offer_price, replace it
+            if (product.offer_price < groupedProducts[styleId].offer_price) {
+              groupedProducts[styleId] = product;
+            }
+          }
+        });
+
+        // Convert back to array
+        const uniqueProducts = Object.values(groupedProducts);
+        setOfferProducts(uniqueProducts);
       } catch (error) {
         console.error('Error fetching offer products:', error);
         setOfferError('Failed to load offer products');
@@ -241,12 +258,16 @@ export default function Home() {
       {/* Offer Products Section */}
       {!offerLoading && !offerError && offerProducts.length > 0 && (
         <Container fluid className="my-5 homepage-offer-products-container">
-          <p> * Offer prices are valid only for selected size/color combinations. </p>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="offer-section-title">
-              <i className="fas fa-fire text-danger me-2"></i>
-              Hot Deals & Offers 
-            </h2>
+            <div className="homepage-offer-title-section">
+              <h2 className="homepage-offer-title">
+                <i className="fas fa-fire text-danger me-2 "></i>
+                Hot Deals & Offers
+              </h2>
+              <p className="hp-offer-des">
+                * Offer prices are valid only for selected size/color combinations.{" "}
+              </p>
+          </div>
             <button
               className="btn btn-outline-primary btn-sm"
               onClick={() => {
@@ -257,17 +278,17 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="offer-products-grid">
+          <div className="homepage-offer-products-grid">
             {displayedProducts.map((product) => {
               const timeLeft = calculateTimeLeft(product.offer_end_date);
 
               return (
                 <div
                   key={product.style_id}
-                  className="offer-product-card"
+                  className="homepage-offer-product-card"
                   onClick={() => getProductDetails(product.style_number)}
                 >
-                  <div className="offer-product-image-container">
+                  <div className="homepage-offer-product-image-container">
                     <div className="discount-badge">
                       {product.discount_percentage > 0 && (
                         <span className="discount-percentage">
@@ -298,6 +319,9 @@ export default function Home() {
                       <span className="original-price">
                         {formatPrice(product.sale_price)}
                       </span>
+                      <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
+                        Starting from (best offer)
+                      </small>
                     </div>
 
                     <div className="countdown-timer">

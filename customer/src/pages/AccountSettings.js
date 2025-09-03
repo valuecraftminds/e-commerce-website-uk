@@ -824,7 +824,7 @@ useEffect(() => {
                   Cancel
                 </button>
               </div>
-              <div className="p-3 mt-4 border border-danger rounded bg-light">
+              {/* <div className="p-3 mt-4 border border-danger rounded bg-light">
                 <h5 className="text-danger">Delete Account</h5>
                 <p className="mb-3">
                   Deleting your account is permanent and cannot be undone. 
@@ -833,7 +833,7 @@ useEffect(() => {
                 <Button onClick={handleDeleteAccount} variant="danger">
                   Delete Account
                 </Button>
-              </div>
+              </div> */}
             </div>
           
           )}
