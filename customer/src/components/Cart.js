@@ -309,6 +309,7 @@ return (
                                   updatingItems.has(item.cart_id) ||
                                   removingItems.has(item.cart_id)
                                 }
+                                className='cart-item-checkbox'
                               />
                             ) : (
                               <div className="text-muted">⚠️</div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Form } from "react-bootstrap";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -10,11 +10,24 @@ const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 export default function SearchSidebar({ show, onClose }) {
   const navigate = useNavigate();
+  const searchInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Focus the search input when the sidebar opens
+  useEffect(() => {
+    if (show && searchInputRef.current) {
+      // Small delay to ensure the sidebar is fully rendered before focusing
+      const timeoutId = setTimeout(() => {
+        searchInputRef.current.focus();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [show]);
 
   useEffect(() => {
     if (searchTerm.length > 2 && COMPANY_CODE) {
@@ -83,12 +96,13 @@ export default function SearchSidebar({ show, onClose }) {
       <Form>
         <Form.Group controlId="searchInput">
           <Form.Control
+            ref={searchInputRef}
             type="text"
             placeholder="Search styles..."
             autoFocus
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
+            className="sb-search-input"
           />
         </Form.Group>
       </Form>
