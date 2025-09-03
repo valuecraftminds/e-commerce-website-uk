@@ -111,6 +111,37 @@ class ProductOffersController{
             res.json({ success: true, message: 'Offer created/updated successfully.' });
         });
     }
+
+    //remove offer
+    removeOffer(req, res) {
+        const { company_code, sku } = req.body;
+
+        // Validate input
+        if (!sku || !company_code) {
+            return res.status(400).json({ error: 'Missing required fields: sku and company_code are required.' });
+        }
+
+        const sql = `
+            UPDATE style_variants
+            SET offer_price = NULL,
+                offer_start_date = NULL,
+                offer_end_date = NULL
+            WHERE sku = ? AND company_code = ?
+        `;
+
+        db.query(sql, [sku, company_code], (error, results) => {
+            if (error) {
+                console.error('Error removing offer:', error);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            if (results.affectedRows === 0) {
+                return res.status(404).json({ error: 'Product not found or no changes made.' });
+            }
+
+            res.json({ success: true, message: 'Offer removed successfully.' });
+        });
+    }
 }
 
 module.exports = new ProductOffersController();
