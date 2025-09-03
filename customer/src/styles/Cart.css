@@ -223,3 +223,33 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
 }
+
+/* Selected Item Styling */
+.cart-item-square.selected-item {
+  border: 2px solid #0d6efd;
+  background: linear-gradient(135deg, #f8f9ff, #ffffff);
+  box-shadow: 0 4px 20px rgba(13, 110, 253, 0.15);
+}
+
+.cart-item-square.selected-item .square-image-container {
+  border: 2px solid #0d6efd;
+}
+
+/* Selection Controls */
+.select-all-container {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Checkbox Styling */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
