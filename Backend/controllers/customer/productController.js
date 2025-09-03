@@ -50,8 +50,8 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        sv.sale_price,
-        sv.offer_price,
+        MIN(sv.sale_price) as sale_price,
+        MIN(sv.offer_price) as offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
@@ -94,8 +94,8 @@ const productController = {
         c.category_name,
         c.category_id,
         parent_cat.category_name as parent_category_name,
-        sv.sale_price,
-        sv.offer_price,
+        MIN(sv.sale_price) as sale_price,
+        MIN(sv.offer_price) as offer_price,
         COUNT(DISTINCT sv.variant_id) as variant_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
@@ -374,12 +374,12 @@ console.log(getAllSizesQuery);
         parent_cat.category_name as parent_category_name,
         ss.stock_qty,
         sv.sku,
-        sv.sale_price,
-        sv.offer_price,
+        MIN(sv.sale_price) as sale_price,
+        MIN(sv.offer_price) as offer_price,
         sv.offer_start_date,
         sv.offer_end_date,
         COUNT(DISTINCT sv.variant_id) as variant_count,
-        ROUND(((sv.sale_price - sv.offer_price) / sv.sale_price) * 100, 2) as discount_percentage
+        ROUND(((MIN(sv.sale_price) - MIN(sv.offer_price)) / MIN(sv.sale_price)) * 100, 2) as discount_percentage
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
