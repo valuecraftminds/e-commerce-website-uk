@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
@@ -10,6 +10,7 @@ import ProductDetails from './pages/ProductDetails';
 import ProductCategory from './pages/ProductCategory';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import VerifyCustomerPage from './pages/VerifyCustomerPage';
 import Cart from './components/Cart';
 import UserMenu from './components/UserMenu';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -51,7 +52,12 @@ import './App.css';
 // );
 
 function App() {
+    const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Hide navbar and footer on specific routes
+    const hideNavbarRoutes = ['/verify-customer'];
+    const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
     // Listen for sidebar state changes from NavBar
     useEffect(() => {
@@ -70,7 +76,7 @@ function App() {
         <AuthProvider>
             <CartProvider>
                 <div className="App">
-                    <NavBar onSidebarStateChange={setSidebarOpen} />
+                    {!hideNavbar && <NavBar onSidebarStateChange={setSidebarOpen} />}
                     <NotifyModalProvider>
                     {/* Main Content Wrapper */}
                     <div className={`main-content-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -83,6 +89,7 @@ function App() {
                                 <Route path="/shop/:category/:productType" element={<ProductCategory />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/login" element={<LoginPage />} />
+                                <Route path="/verify-customer" element={<VerifyCustomerPage />} />
                                 <Route path="/cart" element={<Cart />} />
                                 <Route path="/account-settings" element={<AccountSettings />} />
                                 <Route path="/wishlist" element={<Wishlist />} />
@@ -101,7 +108,7 @@ function App() {
                                 } />
                             </Routes>
                         </main>
-                        <Footer />
+                        {!hideNavbar && <Footer />}
                     </div>
                     </NotifyModalProvider>
                 </div>

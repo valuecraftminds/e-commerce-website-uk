@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { FaFacebookF, FaGoogle, FaTwitter } from 'react-icons/fa';
+import { FaFacebookF, FaGoogle, FaTwitter, FaTimesCircle, FaSignInAlt, FaShieldAlt } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -80,117 +80,152 @@ export default function LoginPage() {
       <Container fluid="xl">
         <Card className="login-card">
           <Card.Body className="p-3 p-md-5">
-            <h2 className="login-title">Welcome</h2>
+            <div className="text-center mb-4">
+              <div className="login-icon mb-3">
+                <FaSignInAlt size={48} className="text-primary" />
+              </div>
+              <h2 className="login-title">Welcome Back!</h2>
+              <p className="login-subtitle">Sign in to your account to continue shopping</p>
+            </div>
 
             {errorMsg && (
-              <Alert variant="danger" className="text-center">
+              <Alert variant="danger" className="modern-alert">
+                <div className="d-flex align-items-center justify-content-center mb-2">
+                  <FaTimesCircle className="me-2" />
+                  <strong>Login Failed</strong>
+                </div>
                 {errorMsg}
+                {errorMsg.toLowerCase().includes('invalid') && (
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      Having trouble? Try{' '}
+                      <span className="link-text">resetting your password</span>
+                    </small>
+                  </div>
+                )}
               </Alert>
             )}
 
-            <Row>
-              <Col lg={8} md={12}>
-                <Form className="login-form" onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter email address"
-                      required
-                    />
-                  </Form.Group>
-
-                  {/* <Form.Group className="mb-4">
-                    <InputGroup>
+            <Row className="g-4">
+              <Col lg={7} md={12} >
+                <div className="form-section">
+                  <h5 className="form-section-title mb-4">Account Login</h5>
+                  <Form className="login-form" onSubmit={handleSubmit}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="form-label">Email Address</Form.Label>
                       <Form.Control
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
+                        type="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleChange}
-                        placeholder="Enter password"
-                        className="password-input"
+                        placeholder="Enter your email address"
+                        className="modern-input"
                         required
                       />
-                      <Button
-                        variant="outline-secondary"
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />} 
-                      </Button>
-                    </InputGroup>
-                  </Form.Group> */}
-                  <Form.Group className="mb-4" style={{ position: "relative" }}>
-                    <Form.Control
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter password"
-                      className="password-input"
-                      style={{ paddingRight: "40px" }} // Space for the button
-                      required
-                    />
+                    </Form.Group>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{
-                        position: "absolute",
-                        right: "10px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "transparent",
-                        border: "none",
-                        padding: 0,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </Form.Group>
-                  <div className="d-flex justify-content-center">
-                    <Button 
-                      type="submit" 
-                      className="login-btn"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Spinner animation="border" size="sm" className="me-2" />
-                          Logging in...
-                        </>
-                      ) : (
-                        'Login'
-                      )}
-                    </Button>
-                  </div>
-                </Form>
+                    <Form.Group className="mb-3" style={{ position: "relative" }}>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <Form.Label className="form-label mb-0">Password</Form.Label>
+                        <small>
+                          <span className="link-text">Forgot password?</span>
+                        </small>
+                      </div>
+                      <div className="password-input-wrapper">
+                        <Form.Control
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="Enter your password"
+                          className="modern-input password-input"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="password-toggle-btn"
+                          title={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </Form.Group>
+                    
+                    <div className="form-actions text-center">
+                      <Button 
+                        type="submit" 
+                        className="login-btn"
+                        disabled={isLoading}
+                        size="lg"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Signing you in...
+                          </>
+                        ) : (
+                          <>
+                            <FaSignInAlt className="me-2" />
+                            Sign In
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </Form>
+                </div>
               </Col>
 
-              <Col lg={4} md={12} className="d-flex flex-column justify-content-center align-items-center mt-4 mt-lg-0">
-                <div className="text-center mb-4">
-                  <p className="mb-3">Or sign in with</p>
-                  <div className="social-login-buttons">
-                    <Button variant="link" className="social-btn google">
-                      <FaGoogle />
-                    </Button>
-                    <Button variant="link" className="social-btn facebook">
-                      <FaFacebookF />
-                    </Button>
-                    <Button variant="link" className="social-btn twitter">
-                      <FaTwitter />
-                    </Button>
-                  </div>
-                  <div className="mt-4 sign-up-wrapper">
-                    <p className="sign-up-text mb-0">
-                      Don't have an account?{' '}
-                      <span className="sign-up-link" onClick={() => navigate('/register')}>
-                        Sign Up
-                      </span>
+              <Col lg={5} md={12}>
+                <div className="side-section">
+                  <div className="welcome-content text-center">
+                    <div className="welcome-icon">
+                      <div className="icon-circle">
+                        <FaShieldAlt size={24} className="text-primary" />
+                      </div>
+                    </div>
+                    <h4 className="welcome-title">Secure Login</h4>
+                    <p className="welcome-text">
+                      Access your account safely with our encrypted login system
                     </p>
+                    
+                    <div className="social-login">
+                      <h6 className="social-title">Or sign in with</h6>
+                      
+                      <div className="social-buttons d-flex justify-content-center">
+                         <Row>
+                       
+                                               <Col>
+                                                 <Button variant="outline-danger" className="social-btn-modern google p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
+                                                   <FaGoogle size={16} style={{ color: '#db4437' }} />
+                                                 </Button>
+                                               </Col>
+                                               <Col>
+                                                 <Button variant="outline-primary" className="social-btn-modern facebook p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
+                                                   <FaFacebookF size={16} style={{ color: '#4267B2' }} />
+                                                 </Button>
+                                               </Col>
+                                               <Col>
+                                                 <Button variant="outline-info" className="social-btn-modern twitter p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
+                                                   <FaTwitter size={16} style={{ color: '#1DA1F2' }} />
+                                                 </Button>
+                                               </Col>
+                                             </Row>
+                      </div>
+                    </div>
+                    
+                      <h5 className="divider-text">New to our platform?</h5>
+                    
+                    <Button 
+                      variant="outline-secondary" 
+                      className="signup-btn"
+                      onClick={() => navigate('/register')}
+                    >
+                      Create New Account
+                    </Button>
+                   
+                    
+                  
                   </div>
                 </div>
               </Col>

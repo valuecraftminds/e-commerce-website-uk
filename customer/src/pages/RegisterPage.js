@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
-import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter, FaCheckCircle, FaTimesCircle, FaUserPlus } from 'react-icons/fa';
+import { Eye, EyeOff } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { useNavigate } from 'react-router-dom';
@@ -130,20 +131,21 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          company_code: COMPANY_CODE, // Updated this line
+          company_code: COMPANY_CODE,
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
-          country: formData.country
+          country: formData.country,
+          frontend_url: window.location.origin // Add frontend URL for verification link
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSuccessMsg('User registered successfully!');
+        setSuccessMsg('Registration successful! Please check your email to verify your account.');
         setFormData({
           first_name: '',
           last_name: '',
@@ -154,7 +156,8 @@ export default function RegisterPage() {
           country: ''
         });
         setPasswordError('');
-        navigate('/login'); // Redirect to login page after successful registration
+        // Don't redirect immediately - let user verify email first
+        // navigate('/login');
       } else {
         setErrorMsg(data.message || 'Registration failed');
       }
@@ -171,201 +174,289 @@ export default function RegisterPage() {
       <Container fluid="xl">
         <Card className="register-card">
           <Card.Body className="p-3 p-md-5">
-            <h2 className="register-title">Create Account</h2>
+            <div className="text-center mb-4">
+              <div className="register-icon mb-3">
+                <FaUserPlus size={48} className="text-primary" />
+              </div>
+              <h2 className="register-title">Join Our Community</h2>
+              <p className="register-subtitle">Create your account and discover amazing products</p>
+            </div>
 
             {successMsg && (
-              <div className="mb-3 text-success text-center fw-semibold">
-                {successMsg}
-              </div>
+              <Alert variant="success" className="modern-alert">
+                <div className="d-flex align-items-center justify-content-center mb-2">
+                  <FaCheckCircle className="me-2" />
+                  <strong>Success!</strong>
+                </div>
+                <p className="mb-2">{successMsg}</p>
+                <small className="text-muted">
+                  Didn't receive the email? Check your spam folder or{' '}
+                  <span 
+                    className="text-primary fw-bold" 
+                    style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                    onClick={() => {
+                      setSuccessMsg('');
+                      setErrorMsg('');
+                    }}
+                  >
+                    try again
+                  </span>
+                </small>
+              </Alert>
             )}
             {errorMsg && (
-              <Alert variant="danger" className="text-center">
+              <Alert variant="danger" className="modern-alert">
+                <div className="d-flex align-items-center justify-content-center mb-2">
+                  <FaTimesCircle className="me-2" />
+                  <strong>Oops!</strong>
+                </div>
                 {errorMsg}
               </Alert>
             )}
 
-            <Row>
-              <Col lg={8} md={12}>
-                <Form className="register-form" onSubmit={handleSubmit}>
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Control
-                          id="first_name"
-                          type="text"
-                          name="first_name"
-                          value={formData.first_name}
-                          onChange={handleNameChange}
-                          placeholder="Enter first name"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Control
-                          id="last_name"
-                          type="text"
-                          name="last_name"
-                          value={formData.last_name}
-                          onChange={handleNameChange}
-                          placeholder="Enter last name"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Control
-                          id="email"
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="Enter email address"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group className="mb-3 phone-input-group">
-                        <PhoneInput
-                          country={'gb'}
-                          value={formData.phone}
-                          onChange={handlePhoneChange}
-                          inputProps={{
-                            name: 'phone',
-                            required: true,
-                            className: phoneError ? 'form-control is-invalid' : 'form-control'
-                          }}
-                          enableSearch={true} // Add search functionality
-                          countryCodeEditable={false} 
-                        />
-                        {phoneError && (
-                          <div className="invalid-feedback d-block">{phoneError}</div>
-                        )}
-                      </Form.Group>
-                    </Col>
-                  </Row>
-
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group className="mb-3 password-input-group">
-                        <InputGroup>
+            <Row className="g-4">
+              <Col lg={7} md={12}>
+                <div className="form-section">
+                  <h5 className="form-section-title mb-4">Personal Information</h5>
+                  <Form className="register-form" onSubmit={handleSubmit}>
+                    <Row className="g-3">
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="form-label">First Name *</Form.Label>
                           <Form.Control
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Enter password"
-                            onFocus={() => setShowRules(true)}
+                            id="first_name"
+                            type="text"
+                            name="first_name"
+                            value={formData.first_name}
+                            onChange={handleNameChange}
+                            placeholder="Enter your first name"
+                            className="modern-input"
                             required
                           />
-                          <Button
-                            variant="outline-secondary"
-                            onClick={() => setShowPassword(!showPassword)}
-                            style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
-                          >
-                            {showPassword ? <FaEyeSlash /> : <FaEye />}
-                          </Button>
-                        </InputGroup>
-                        {showRules && (
-                          <div className='password-rules' ref={passwordRulesRef}>
-                            <small>Password requirements:</small>
-                            <ul className='list-unstyled ms-2 mb-0'>
-                              <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
-                                {passwordRules.length ? '✅' : '❌'} 8-12 characters
-                              </li>
-                              <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
-                                {passwordRules.uppercase ? '✅' : '❌'} Uppercase letter
-                              </li>
-                              <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
-                                {passwordRules.lowercase ? '✅' : '❌'} Lowercase letter
-                              </li>
-                              <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
-                                {passwordRules.number ? '✅' : '❌'} Number
-                              </li>
-                              <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
-                                {passwordRules.specialChar ? '✅' : '❌'} Special character
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <InputGroup>
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="form-label">Last Name *</Form.Label>
                           <Form.Control
-                            id="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            placeholder="Confirm password"
-                            isInvalid={!!passwordError}
+                            id="last_name"
+                            type="text"
+                            name="last_name"
+                            value={formData.last_name}
+                            onChange={handleNameChange}
+                            placeholder="Enter your last name"
+                            className="modern-input"
                             required
                           />
-                          <Button
-                            variant="outline-secondary"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
-                          >
-                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                          </Button>
-                        </InputGroup>
-                        {passwordError && (
-                          <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
-                            {passwordError}
-                          </Form.Control.Feedback>
-                        )}
-                      </Form.Group>
-                    </Col>
-                  </Row>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    
+                    <Row className="g-3">
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="form-label">Email Address *</Form.Label>
+                          <Form.Control
+                            id="email"
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="Enter your email address"
+                            className="modern-input"
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3 phone-input-group">
+                          <Form.Label className="form-label">Phone Number *</Form.Label>
+                          <PhoneInput
+                            country={'gb'}
+                            value={formData.phone}
+                            onChange={handlePhoneChange}
+                            inputProps={{
+                              name: 'phone',
+                              required: true,
+                              className: phoneError ? 'form-control modern-input is-invalid' : 'form-control modern-input'
+                            }}
+                            enableSearch={true}
+                            countryCodeEditable={false} 
+                          />
+                          {phoneError && (
+                            <div className="invalid-feedback d-block">{phoneError}</div>
+                          )}
+                        </Form.Group>
+                      </Col>
+                    </Row>
 
-                  <div className="d-flex justify-content-center">
-                    <Button 
-                      type="submit" 
-                      className="register-btn"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Spinner animation="border" size="sm" className="me-2" />
-                          Registering...
-                        </>
-                      ) : (
-                        'Register'
-                      )}
-                    </Button>
-                  </div>
-                </Form>
+                    
+                    <div className="password-section mb-4">
+                      <h6 className="section-subtitle">Security</h6>
+                      <Row className="g-3">
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label">Password *</Form.Label>
+                            <div className="password-input-wrapper">
+                              <Form.Control
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="Create a strong password"
+                                className="modern-input password-input"
+                                onFocus={() => setShowRules(true)}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="password-toggle-btn"
+                                title={showPassword ? "Hide password" : "Show password"}
+                              >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
+                            </div>
+                            {showRules && (
+                              <div className='password-rules' ref={passwordRulesRef}>
+                                <small className="rules-title">Password requirements:</small>
+                                <ul className='requirements-list'>
+                                  <li className={passwordRules.length ? 'valid' : 'invalid'}>
+                                    {passwordRules.length ? '✓' : '✗'} 8-12 characters long
+                                  </li>
+                                  <li className={passwordRules.uppercase ? 'valid' : 'invalid'}>
+                                    {passwordRules.uppercase ? '✓' : '✗'} One uppercase letter (A-Z)
+                                  </li>
+                                  <li className={passwordRules.lowercase ? 'valid' : 'invalid'}>
+                                    {passwordRules.lowercase ? '✓' : '✗'} One lowercase letter (a-z)
+                                  </li>
+                                  <li className={passwordRules.number ? 'valid' : 'invalid'}>
+                                    {passwordRules.number ? '✓' : '✗'} One number (0-9)
+                                  </li>
+                                  <li className={passwordRules.specialChar ? 'valid' : 'invalid'}>
+                                    {passwordRules.specialChar ? '✓' : '✗'} One special character (!@#$...)
+                                  </li>
+                                </ul>
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label">Confirm Password *</Form.Label>
+                            <div className="password-input-wrapper">
+                              <Form.Control
+                                id="confirmPassword"
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                placeholder="Re-enter your password"
+                                className="modern-input password-input"
+                                isInvalid={!!passwordError}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="password-toggle-btn"
+                                title={showConfirmPassword ? "Hide password" : "Show password"}
+                              >
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
+                            </div>
+                            {passwordError && (
+                              <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
+                                {passwordError}
+                              </Form.Control.Feedback>
+                            )}
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </div>
+
+                    <div className="form-actions text-center">
+                      <Button 
+                        type="submit" 
+                        className="register-btn"
+                        disabled={isLoading}
+                        size="lg"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Creating Your Account...
+                          </>
+                        ) : (
+                          <>
+                            <FaUserPlus className="me-2" />
+                            Create My Account
+                          </>
+                        )}
+                      </Button>
+                      
+                      <div className="terms-text mt-3">
+                        <small className="text-muted">
+                          By creating an account, you agree to our{' '}
+                          <span className="link-text">Terms of Service</span>{' '}
+                          and{' '}
+                          <span className="link-text">Privacy Policy</span>
+                        </small>
+                      </div>
+                    </div>
+                  </Form>
+                </div>
               </Col>
 
-              <Col lg={4} md={12} className="d-flex flex-column justify-content-center align-items-center mt-4 mt-lg-0">
-                <div className="text-center mb-4">
-                  <p className="mb-3">Or sign up with</p>
-                  <div className="social-login-buttons">
-                    <Button variant="link" className="social-btn google">
-                      <FaGoogle />
-                    </Button>
-                    <Button variant="link" className="social-btn facebook">
-                      <FaFacebookF />
-                    </Button>
-                    <Button variant="link" className="social-btn twitter">
-                      <FaTwitter />
-                    </Button>
-                  </div>
-                  <div className="mt-4 sign-in-wrapper">
-                    <p className="sign-in-text mb-0">
-                      Already have an account?{' '}
-                      <span className="sign-in-link" onClick={() => navigate('/login')}>
-                        Sign In
-                      </span>
+              <Col lg={5} md={12}>
+                <div className="side-section">
+                  <div className="welcome-content text-center">
+                    <div className="welcome-icon mb-4">
+                      <div className="icon-circle">
+                        <FaGoogle size={24} className="text-primary" />
+                      </div>
+                    </div>
+                    <h4 className="welcome-title">Quick & Easy Registration</h4>
+                    <p className="welcome-text">
+                      Join thousands of satisfied customers and start your shopping journey today
                     </p>
+                    
+                    <div className="social-register">
+                      <h6 className="social-title">Or register with</h6>
+                     
+                      <div className="social-buttons d-flex justify-content-center">
+                         <Row>
+
+                        <Col>
+                          <Button variant="outline-danger" className="social-btn-modern google p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
+                            <FaGoogle size={16} style={{ color: '#db4437' }} />
+                          </Button>
+                        </Col>
+                        <Col>
+                          <Button variant="outline-primary" className="social-btn-modern facebook p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
+                            <FaFacebookF size={16} style={{ color: '#4267B2' }} />
+                          </Button>
+                        </Col>
+                        <Col>
+                          <Button variant="outline-info" className="social-btn-modern twitter p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
+                            <FaTwitter size={16} style={{ color: '#1DA1F2' }} />
+                          </Button>
+                        </Col>
+                      </Row>
+                      </div>
+                    </div>
+                    
+                      <h5 className="divider-text">Already a member?</h5>
+                    
+                    <Button 
+                      variant="outline-secondary" 
+                      className="signin-btn"
+                      onClick={() => navigate('/login')}
+                    >
+                      Sign In to Your Account
+                    </Button>
+                    
                   </div>
                 </div>
               </Col>

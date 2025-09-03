@@ -1,170 +1,123 @@
-.react-tel-input .form-control {
-  width: 100% !important;
-  height: 38px;
-}
-
-.react-tel-input .flag-dropdown {
-  border-color: #ced4da;
-}
-
+/* Modern Register Page Styles */
 .register-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
-  padding: clamp(1rem, 5vw, 3rem);
+  background: #f8fafc;
+  padding: 2rem 1rem;
+  position: relative;
 }
 
 .register-card {
-  max-width: 1000px;
-  margin: 1rem auto;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-  transition: transform 0.3s ease;
+  max-width: 1100px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
-.register-card:hover {
-  transform: translateY(-5px);
+.register-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: #667eea;
+  border-radius: 20px;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
 .register-title {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  background: linear-gradient(45deg, #2563eb, #4f46e5);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.5rem;
 }
 
-.social-login-buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: center;
+.register-subtitle {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin-bottom: 0;
+}
+
+.modern-alert {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.form-section {
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.form-section-title {
+  color: #374151;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.section-subtitle {
+  color: #6b7280;
+  font-weight: 500;
   margin-bottom: 1rem;
 }
 
-.social-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
+.form-label {
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.modern-input {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
-  font-size: 1.2rem;
-  padding: 0;
-  border: none;
+  background: white;
+  height: 50px;
+  width: 100%;
 }
 
-.social-btn.google {
-  color: #DB4437;
-  background: rgba(219, 68, 55, 0.1);
+.modern-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background: white;
 }
 
-.social-btn.facebook {
-  color: #4267B2;
-  background: rgba(66, 103, 178, 0.1);
-}
-
-.social-btn.twitter {
-  color: #1DA1F2;
-  background: rgba(29, 161, 242, 0.1);
-}
-
-.social-btn:hover {
-  transform: translateY(-2px);
-}
-
-.social-btn.google:hover {
-  background: rgba(219, 68, 55, 0.15);
-}
-
-.social-btn.facebook:hover {
-  background: rgba(66, 103, 178, 0.15);
-}
-
-.social-btn.twitter:hover {
-  background: rgba(29, 161, 242, 0.15);
-}
-
-.divider {
-  text-align: center;
-  margin: 2rem 0;
+.password-input-wrapper {
   position: relative;
 }
 
-.divider::before,
-.divider::after {
-  content: "";
+.password-input {
+  padding-right: 3rem;
+  height: 50px;
+}
+
+.password-toggle-btn {
   position: absolute;
+  right: 1rem;
   top: 50%;
-  width: 45%;
-  height: 1px;
-  background-color: #ddd;
-}
-
-.divider::before {
-  left: 0;
-}
-
-.divider::after {
-  right: 0;
-}
-
-.divider span {
-  background-color: white;
-  padding: 0 1rem;
-  color: #666;
-}
-
-.sign-in-text {
-  color: #666;
-}
-
-.sign-in-link {
-  color: #2563eb;
-  font-weight: 600;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #6b7280;
   cursor: pointer;
-  text-decoration: underline;
-}
-
-.sign-in-link:hover {
-  color: #1d4ed8;
-}
-
-.form-control, .react-tel-input .form-control {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
+  padding: 0.5rem;
   border-radius: 8px;
   transition: all 0.3s ease;
-  font-size: 1rem;
 }
 
-.form-control:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-}
-
-.register-btn {
-  background: linear-gradient(45deg, #2563eb, #4f46e5);
-  padding: 1rem 2rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.register-btn:hover:not(:disabled) {
-  background: linear-gradient(45deg, #1d4ed8, #4338ca);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
-}
-
-.password-input-group {
-  position: relative;
+.password-toggle-btn:hover {
+  background: #e5e7eb;
+  color: #667eea;
 }
 
 .password-rules {
@@ -173,133 +126,275 @@
   left: 0;
   right: 0;
   margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: #ffffff;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  pointer-events: auto; /* Ensure clicks are detected */
 }
 
-.password-rules ul {
-  margin-bottom: 0;
+.rules-title {
+  color: #374151;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.5rem;
 }
 
-.password-rules li {
-  font-size: 0.7rem;
-  line-height: 1.5;
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirements-list li {
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+  transition: all 0.2s ease;
+}
+
+.requirements-list li.valid {
+  color: #10b981;
+}
+
+.requirements-list li.invalid {
+  color: #ef4444;
+}
+
+.register-btn {
+  background: #667eea;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2.5rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  min-width: 200px;
+}
+
+.register-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  background: #5a67d8;
+}
+
+.register-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.terms-text {
+  margin-top: 1rem;
+}
+
+.link-text {
+  color: #667eea;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.link-text:hover {
+  text-decoration: underline;
+  color: #5a67d8;
+}
+
+/* Side Section Styles */
+.side-section {
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: 20px;
+  height: 100%;
+  border: 1px solid #e5e7eb;
+}
+
+.welcome-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.welcome-icon {
+  margin-bottom: 1.5rem;
+}
+
+.icon-circle {
+  width: 80px;
+  height: 80px;
+  background: white;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
 }
 
-@media (max-width: 768px) {
-  .password-rules {
-    position: static;
-    margin-top: 0.5rem;
-  }
+.welcome-title {
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
-.password-rules {
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background: #f8fafc;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  border: 1px solid #e5e7eb;
-  max-width: 250px;
+.welcome-text {
+  color: #6b7280;
+  line-height: 1.6;
 }
 
-/* Phone Input Specific Styles */
+
+
+.social-title {
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.social-btn-modern {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.social-btn-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.social-btn-modern.google:hover {
+  border-color: #ea4335;
+  color: #ea4335;
+}
+
+.social-btn-modern.facebook:hover {
+  border-color: #1877f2;
+  color: #1877f2;
+}
+
+.social-btn-modern.twitter:hover {
+  border-color: #1da1f2;
+  color: #1da1f2;
+}
+
+
+
+
+.divider-text {
+  padding: 0 1rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.signin-btn, .signup-btn {
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  padding: 0.75rem 2rem;
+  font-weight: 500;
+  color: #667eea;
+  background: white;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.signin-btn:hover, .signup-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+
+
+/* Phone Input Styles */
 .react-tel-input {
   width: 100% !important;
 }
 
 .react-tel-input .form-control {
-  width: 100% !important;
-  height: 45px !important;
-  padding-left: 50px !important;
   border: 2px solid #e5e7eb !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
+  padding: 0.875rem 1rem 0.875rem 3.5rem !important;
+  font-size: 1rem !important;
+  background: white !important;
+  transition: all 0.3s ease !important;
+  height: 50px !important;
+  width: 100% !important;
+}
+
+.react-tel-input .form-control:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+  background: white !important;
 }
 
 .react-tel-input .flag-dropdown {
   border: none !important;
   background: transparent !important;
-  border-radius: 8px 0 0 8px !important;
+  border-radius: 12px 0 0 12px !important;
 }
 
 .react-tel-input .selected-flag {
   padding: 0 0 0 12px !important;
-  border-radius: 8px 0 0 8px !important;
   background: transparent !important;
 }
 
-.react-tel-input .selected-flag:hover,
-.react-tel-input .selected-flag:focus {
-  background: transparent !important;
-}
-
-.react-tel-input .country-list {
-  margin: 8px 0 10px -1px;
-  border-radius: 8px;
-  border: 2px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.react-tel-input .country-list .country:hover {
-  background: #f8fafc;
-}
-
-.react-tel-input .country-list .country.highlight {
-  background: #f1f5f9;
-}
-
-.sign-in-wrapper {
-  padding: 1rem 0;
-  border-top: 1px solid #eee;
-  margin-top: 1rem;
-}
-
+/* Responsive Design */
 @media (max-width: 991px) {
+  .register-container {
+    padding: 1rem;
+  }
+  
   .register-card {
-    max-width: 100%;
-    margin: 0.5rem;
+    margin: 0;
   }
   
-  .register-card .card-body {
+  .form-section, .side-section {
     padding: 1.5rem;
+    margin-bottom: 1rem;
   }
   
-  .social-login-buttons {
-    margin-bottom: 0.5rem;
+  .register-title {
+    font-size: 2rem;
   }
-
-  .password-rules {
-    max-width: 100%;
-    margin-top: 1rem;
+  
+  .social-buttons {
+    flex-direction: row;
+    gap: 0.5rem;
   }
-
-  .register-btn {
-    width: 100%;
-    margin-bottom: 1rem;
+  
+  .social-btn-modern {
+    flex: 1;
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 768px) {
-  .register-card {
-    max-width: 100%;
-    margin: 1rem;
+  .register-title {
+    font-size: 1.75rem;
   }
   
-  .register-card .card-body {
+  .form-section, .side-section {
     padding: 1rem;
   }
   
-  .social-login-buttons {
-    gap: 0.75rem;
+  .password-rules {
+    position: static;
+    margin-top: 1rem;
+  }
+  
+  .social-buttons {
+    flex-direction: column;
   }
 }
 
@@ -307,21 +402,18 @@
   .register-container {
     padding: 0.5rem;
   }
-
-  .register-card {
-    margin: 0;
-  }
-
-  .register-card .card-body {
-    padding: 1rem;
-  }
-
+  
   .register-title {
     font-size: 1.5rem;
-    margin-bottom: 1rem;
   }
-
-  .form-control, .react-tel-input .form-control {
-    padding: 0.5rem;
+  
+  .register-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .icon-circle {
+    width: 60px;
+    height: 60px;
   }
 }
