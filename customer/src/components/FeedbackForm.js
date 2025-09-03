@@ -120,7 +120,7 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
 }
 
 // Main feedback form component that handles multiple items
-function FeedbackForm({ items, customer_id, onSubmissionComplete }) {
+function FeedbackForm({ items, customer_id, onSubmissionComplete, onClose }) {
   const [completedReviews, setCompletedReviews] = useState([]);
 
   const handleSubmissionComplete = (styleId) => {
@@ -143,6 +143,14 @@ function FeedbackForm({ items, customer_id, onSubmissionComplete }) {
     };
     return (
       <div className="feedback-container">
+        {onClose && (
+          <div className="feedback-header">
+            <h5 className="feedback-title">Add Review</h5>
+            <button type="button" className="close-btn" onClick={onClose}>
+              ✕
+            </button>
+          </div>
+        )}
         <SingleItemFeedback 
           item={singleItem} 
           customer_id={customer_id}
@@ -154,7 +162,14 @@ function FeedbackForm({ items, customer_id, onSubmissionComplete }) {
 
   return (
     <div className="feedback-container">
-      <h3>Order Feedback</h3>
+      {onClose && (
+        <div className="feedback-header">
+          <h5 className="feedback-title">Order Feedback</h5>
+          <button type="button" className="close-btn" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+      )}
       <p>Please review each item in your order:</p>
       
       {items.map((item, index) => (
