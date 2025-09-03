@@ -89,7 +89,7 @@ export default function LoginPage() {
             )}
 
             <Row>
-              <Col lg={8} md={12}>
+              <Col md={12}>
                 <Form className="login-form" onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Control
@@ -102,26 +102,6 @@ export default function LoginPage() {
                     />
                   </Form.Group>
 
-                  {/* <Form.Group className="mb-4">
-                    <InputGroup>
-                      <Form.Control
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Enter password"
-                        className="password-input"
-                        required
-                      />
-                      <Button
-                        variant="outline-secondary"
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />} 
-                      </Button>
-                    </InputGroup>
-                  </Form.Group> */}
                   <Form.Group className="mb-4" style={{ position: "relative" }}>
                     <Form.Control
                       type={showPassword ? "text" : "password"}
@@ -168,29 +148,29 @@ export default function LoginPage() {
                     </Button>
                   </div>
                 </Form>
-              </Col>
 
-              <Col lg={4} md={12} className="d-flex flex-column justify-content-center align-items-center mt-4 mt-lg-0">
-                <div className="text-center mb-4">
-                  <p className="mb-3">Or sign in with</p>
-                  <div className="social-login-buttons">
-                    <Button variant="link" className="social-btn google">
-                      <FaGoogle />
-                    </Button>
-                    <Button variant="link" className="social-btn facebook">
-                      <FaFacebookF />
-                    </Button>
-                    <Button variant="link" className="social-btn twitter">
-                      <FaTwitter />
-                    </Button>
-                  </div>
-                  <div className="mt-4 sign-up-wrapper">
-                    <p className="sign-up-text mb-0">
-                      Don't have an account?{' '}
-                      <span className="sign-up-link" onClick={() => navigate('/register')}>
-                        Sign Up
-                      </span>
-                    </p>
+                <div className="d-flex flex-column justify-content-center align-items-center mt-4">
+                  <div className="text-center mb-4">
+                    <p className="mb-3">Or sign in with</p>
+                    <div className="social-login-buttons">
+                      <Button variant="link" className="social-btn google">
+                        <FaGoogle />
+                      </Button>
+                      <Button variant="link" className="social-btn facebook">
+                        <FaFacebookF />
+                      </Button>
+                      <Button variant="link" className="social-btn twitter">
+                        <FaTwitter />
+                      </Button>
+                    </div>
+                    <div className="mt-4 sign-up-wrapper">
+                      <p className="sign-up-text mb-0">
+                        Don't have an account?{' '}
+                        <span className="sign-up-link" onClick={() => navigate('/register')}>
+                          Sign Up
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </Col>
