@@ -119,7 +119,7 @@ const createTransporter = () => {
     };
 
      // Send invoice email with order confirmation
-    const sendInvoiceEmail = async (customerEmail, customerName, orderData, invoicePath, frontendUrl) => {
+    const sendInvoiceEmail = async (customerEmail, customerName, orderData, pdfBuffer, invoiceFileName, frontendUrl) => {
     try {
         const transporter = createTransporter();
 
@@ -175,8 +175,8 @@ const createTransporter = () => {
         html: emailTemplate,
         attachments: [
             {
-            filename: path.basename(invoicePath), 
-            path: invoicePath,
+            filename: invoiceFileName, 
+            content: pdfBuffer,
             contentType: 'application/pdf'
             }
         ]
@@ -249,27 +249,35 @@ const createTransporter = () => {
         shippingAddressDetails = orderData.shippingAddress;
         }
 
-        // Create invoices directory if it doesn't exist
-        const invoicesDir = path.join(__dirname, '../invoices');
-        if (!fs.existsSync(invoicesDir)) {
-        fs.mkdirSync(invoicesDir, { recursive: true });
-        }
+        // Create invoices directory if it doesn't exist - COMMENTED OUT TO PREVENT FILE STORAGE
+        // const invoicesDir = path.join(__dirname, '../invoices');
+        // if (!fs.existsSync(invoicesDir)) {
+        //   fs.mkdirSync(invoicesDir, { recursive: true });
+        // }
 
         // Use the invoice number passed from checkout controller
         const invoiceNumber = invoiceData.invoiceNumber;
         
         // Generate unique PDF filename using utility function
         const invoiceFileName = generateInvoiceFileName(orderData.orderNumber, invoiceNumber);
-        const invoiceFilePath = path.join(invoicesDir, invoiceFileName);
+        
+        // Generate PDF file path - COMMENTED OUT TO PREVENT FILE STORAGE
+        // const invoiceFilePath = path.join(invoicesDir, invoiceFileName);
 
-        // Create PDF document
+        // Create PDF document in memory
         const doc = new PDFDocument({ 
         size: 'A4', 
         margin: 50 
         });
 
-        // Pipe PDF to file
-        doc.pipe(fs.createWriteStream(invoiceFilePath));
+        // Pipe PDF to file - COMMENTED OUT TO PREVENT FILE STORAGE
+        // doc.pipe(fs.createWriteStream(invoiceFilePath));
+
+        // Collect PDF buffer chunks
+        const pdfBuffers = [];
+        doc.on('data', (chunk) => {
+            pdfBuffers.push(chunk);
+        });
 
         // Generate PDF content with company information
         await generateInvoicePDFContent(doc, orderData, billingCustomerDetails, invoiceData, companyInfo, shippingAddressDetails, frontendUrl);
@@ -277,13 +285,20 @@ const createTransporter = () => {
         // Finalize PDF
         doc.end();
 
-        // Wait for PDF to be written
-        await new Promise((resolve, reject) => {
-        doc.on('end', resolve);
-        doc.on('error', reject);
+        // Wait for PDF to be completed and get buffer
+        // const pdfBuffer = await new Promise((resolve, reject) => {
+        //     doc.on('end', resolve);
+        //     doc.on('error', reject);
+        // });
+        const pdfBuffer = await new Promise((resolve, reject) => {
+            doc.on('end', () => {
+                const finalBuffer = Buffer.concat(pdfBuffers);
+                resolve(finalBuffer);
+            });
+            doc.on('error', reject);
         });
 
-        // Send email with PDF attachment
+        // Send email with PDF buffer attachment
         const emailResult = await sendInvoiceEmail(
         customerData.email,
         `${customerData.firstName} ${customerData.lastName}`,
@@ -291,13 +306,14 @@ const createTransporter = () => {
             ...orderData,
             company_name: companyInfo.company_name
         },
-        invoiceFilePath,
+        pdfBuffer,
+        invoiceFileName,
         frontendUrl
         );
 
         return {
         success: emailResult.success,
-        invoiceFilePath: invoiceFilePath,
+        // invoiceFilePath: invoiceFilePath, // COMMENTED OUT - NO FILE PATH SINCE NO FILE IS SAVED
         messageId: emailResult.messageId,
         invoiceNumber: invoiceNumber,
         error: emailResult.error
