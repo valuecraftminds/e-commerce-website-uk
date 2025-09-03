@@ -49,6 +49,22 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
             return false;
         }
 
+        const offerPrice = parseFloat(formData.offer_price);
+        const unitPrice = parseFloat(product.unit_price);
+        const salePrice = parseFloat(product.sale_price);
+
+        // Check if offer price is less than unit price
+        if (offerPrice < unitPrice) {
+            setError(`Offer price cannot be less than unit price ($${unitPrice})`);
+            return false;
+        }
+
+        // Check if offer price is greater than or equal to sale price
+        if (offerPrice >= salePrice) {
+            setError(`Offer price must be less than sale price ($${salePrice})`);
+            return false;
+        }
+
         if (formData.offer_start_date && formData.offer_end_date) {
             const startDate = new Date(formData.offer_start_date);
             const endDate = new Date(formData.offer_end_date);
@@ -57,12 +73,6 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                 setError('End date must be after start date');
                 return false;
             }
-        }
-
-        // Check if offer price is not higher than sale price
-        if (product.sale_price && parseFloat(formData.offer_price) >= parseFloat(product.sale_price)) {
-            setError('Offer price should be lower than sale price');
-            return false;
         }
 
         return true;
@@ -122,10 +132,11 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
         setError('');
 
         try {
-            const response = await axios.delete(
-                `${BASE_URL}/api/admin/offers/remove/${product.id}`,
+            const response = await axios.put(
+                `${BASE_URL}/api/admin/offers/remove/${product.sku}`,
                 {
-                    params: { company_code: userData?.company_code }
+                    company_code: userData?.company_code,
+                    sku: product.sku
                 }
             );
 

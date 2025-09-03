@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { AuthContext } from '../context/AuthContext';
+import SocialLogin from '../components/SocialLogin';
 import '../styles/LoginPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -31,6 +32,24 @@ export default function LoginPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSocialLoginSuccess = (token, user, provider) => {
+    login(token, user);
+    console.log(`${provider} login successful:`, user);
+    console.log('token:', token);
+    
+    // Redirect logic same as regular login
+    if (from && location.state?.from) {
+      const fullPath = from + (location.state.from.search || '');
+      navigate(fullPath, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  };
+
+  const handleSocialLoginError = (errorMessage) => {
+    setErrorMsg(errorMessage);
   };
 
   const handleSubmit = async (e) => {
@@ -84,7 +103,7 @@ export default function LoginPage() {
               <div className="login-icon mb-3">
                 <FaSignInAlt size={48} className="text-primary" />
               </div>
-              <h2 className="login-title">Welcome Back!</h2>
+              <h2 className="login-title">Welcome!</h2>
               <p className="login-subtitle">Sign in to your account to continue shopping</p>
             </div>
 
@@ -190,28 +209,10 @@ export default function LoginPage() {
                     </p>
                     
                     <div className="social-login">
-                      <h6 className="social-title">Or sign in with</h6>
-                      
-                      <div className="social-buttons d-flex justify-content-center">
-                         <Row>
-                       
-                                               <Col>
-                                                 <Button variant="outline-danger" className="social-btn-modern google p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
-                                                   <FaGoogle size={16} style={{ color: '#db4437' }} />
-                                                 </Button>
-                                               </Col>
-                                               <Col>
-                                                 <Button variant="outline-primary" className="social-btn-modern facebook p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
-                                                   <FaFacebookF size={16} style={{ color: '#4267B2' }} />
-                                                 </Button>
-                                               </Col>
-                                               <Col>
-                                                 <Button variant="outline-info" className="social-btn-modern twitter p-2" style={{ borderRadius: '50%', width: '45px', height: '45px' }}>
-                                                   <FaTwitter size={16} style={{ color: '#1DA1F2' }} />
-                                                 </Button>
-                                               </Col>
-                                             </Row>
-                      </div>
+                      <SocialLogin 
+                        onSocialLoginSuccess={handleSocialLoginSuccess}
+                        onSocialLoginError={handleSocialLoginError}
+                      />
                     </div>
                     
                       <h5 className="divider-text">New to our platform?</h5>
