@@ -58,7 +58,7 @@ const isExpiryInFuture = ({ month, year }) => {
   return year > thisYear || (year === thisYear && month >= thisMonth);
 };
 
-const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) => {
+const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, selectedItems = [], selectedItemsSummary = null }) => {
   const api = useMemo(() => createAxios(), []);
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
@@ -364,7 +364,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
   };
 
   /** STEP 2 → Pay & Submit */
-  const { cart, summary, clearCart } = useCart();
+  const { cart, summary, clearCart, removeMultipleFromCart } = useCart();
 
   // 1. Calculate shipping fee function
   const calculateShippingFee = () => {
@@ -411,16 +411,33 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
       subtotal = unit * qty;
 
     } else if (itemsFromCart && itemsFromCart.length > 0) {
-      // Normal cart checkout
-      cartItems = itemsFromCart;
+      // Checkout only selected items
+      if (selectedItems && selectedItems.length > 0) {
+        cartItems = itemsFromCart.filter(item => selectedItems.includes(item.cart_id));
+      } else {
+        // Checkout all cart items (fallback to previous behavior)
+        cartItems = itemsFromCart;
+      }
 
-      // Use pre-calculated summary values from cart's Order Summary
-      if (summary?.original_amount || summary?.total_amount || summary?.subtotal) {
-        // Use the subtotal from cart summary
-        subtotal = Number(summary.subtotal ?? summary.original_amount ?? summary.total_amount ?? 0);
+      // Use selectedItemsSummary if provided from Cart component
+      if (selectedItemsSummary && selectedItems && selectedItems.length > 0) {
+        subtotal = Number(selectedItemsSummary.total_amount ?? 0);
+      } else if (summary?.original_amount || summary?.total_amount || summary?.subtotal) {
+        if (selectedItems && selectedItems.length > 0) {
+          // Calculate subtotal for selected items only
+          subtotal = cartItems.reduce((acc, it) => {
+            const unit = Number(it.unit_price ?? it.price ?? 0);
+            const qty = Number(it.quantity ?? 0);
+            const total = Number(it.total_price ?? unit * qty);
+            return acc + total;
+          }, 0);
+        } else {
+          // Use the subtotal from cart summary for all items
+          subtotal = Number(summary.subtotal ?? summary.original_amount ?? summary.total_amount ?? 0);
+        }
       } else {
         // Fallback: calculate from cart items if summary not available
-        subtotal = itemsFromCart.reduce((acc, it) => {
+        subtotal = cartItems.reduce((acc, it) => {
           const unit = Number(it.unit_price ?? it.price ?? 0);
           const qty = Number(it.quantity ?? 0);
           const total = Number(it.total_price ?? unit * qty);
@@ -447,6 +464,14 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
     try {
       setIsLoading(true);
 
+      // Log checkout details for debugging
+      console.log('Checkout Details:', {
+        isDirectBuy,
+        selectedItems: selectedItems || [],
+        cartItemsToCheckout: cartItems.length,
+        totalCartItems: itemsFromCart.length
+      });
+
       const payload = {
         address_id: selectedAddressId,
         payment_method,
@@ -472,7 +497,16 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy }) 
       if (status === 200 || status === 201) {
         // Clear cart only when user is checking out from cart
         if (!isDirectBuy && itemsFromCart.length > 0) {
-          clearCart();
+          if (selectedItems && selectedItems.length > 0) {
+            // Remove only selected items
+            console.log('Removing selected items from cart:', selectedItems);
+            await removeMultipleFromCart(selectedItems);
+            console.log(`Successfully removed ${selectedItems.length} selected items from cart`);
+          } else {
+            // Remove all cart items (fallback to previous behavior)
+            console.log('Clearing entire cart');
+            clearCart();
+          }
         }
 
         // Show success message with invoice option
@@ -917,6 +951,33 @@ return (
                   </Row>
                 )}
 
+                {/* show selected items summary when checking out from cart */}
+                {!isDirectBuy && selectedItems && selectedItems.length > 0 && Array.isArray(cart) && cart.length > 0 && (
+                  <Row className="mb-3">
+                    <Col>
+                      <div className="alert alert-info">
+                        <h6 className="mb-2">Selected Items for Checkout ({selectedItems.length})</h6>
+                        {cart
+                          .filter(item => selectedItems.includes(item.cart_id))
+                          .map((item, index) => (
+                            <div key={item.cart_id} className="d-flex justify-content-between align-items-center mb-1">
+                              <small>
+                                <strong>{item.product_name}</strong>
+                                {item.color_name && ` - ${item.color_name}`}
+                                {item.size_name && ` - ${item.size_name}`}
+                                {` (x${item.quantity})`}
+                              </small>
+                              <small className="fw-bold">
+                                {formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}
+                              </small>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </Col>
+                  </Row>
+                )}
+
                 {/* Order Summary */}
                 <Row className="mb-4">
                   <Col>
@@ -930,12 +991,17 @@ return (
                         const quantity = Number(product.quantity || 1);
                         subtotal = price * quantity;
                       } else if (Array.isArray(cart) && cart.length > 0) {
-                        // Cart checkout: prioritize summary data
-                        if (summary?.subtotal || summary?.original_amount || summary?.total_amount) {
+                        // Cart checkout: use selectedItemsSummary if provided
+                        if (selectedItemsSummary && selectedItems && selectedItems.length > 0) {
+                          subtotal = Number(selectedItemsSummary.total_amount ?? 0);
+                        } else if (summary?.subtotal || summary?.original_amount || summary?.total_amount) {
                           subtotal = Number(summary.subtotal ?? summary.original_amount ?? summary.total_amount ?? 0);
                         } else {
                           // Fallback calculation
-                          subtotal = cart.reduce((sum, item) => {
+                          const itemsToCalculate = selectedItems && selectedItems.length > 0 
+                            ? cart.filter(item => selectedItems.includes(item.cart_id))
+                            : cart;
+                          subtotal = itemsToCalculate.reduce((sum, item) => {
                             const price = Number(item.price || 0);
                             const quantity = Number(item.quantity || 1);
                             return sum + (price * quantity);

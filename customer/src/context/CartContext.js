@@ -513,6 +513,47 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const removeMultipleFromCart = async (cart_ids) => {
+    try {
+      const t = localStorage.getItem('authToken');
+      const { rate, symbol } = getCurrentCurrency();
+
+      if (t) {
+        // Remove multiple items from server cart
+        const promises = cart_ids.map(cart_id => 
+          axios.delete(`${BASE_URL}/api/customer/cart/${cart_id}`, getAxiosConfig())
+        );
+        
+        const results = await Promise.allSettled(promises);
+        const failures = results.filter(result => result.status === 'rejected');
+        
+        if (failures.length === 0) {
+          await fetchCartItems();
+          return { success: true, message: 'Selected items removed from cart successfully' };
+        } else {
+          dispatch({ type: 'SET_ERROR', payload: 'Some items could not be removed' });
+          return { success: false, message: 'Some items could not be removed' };
+        }
+      }
+
+      // For guest cart
+      const current = getGuestCart();
+      const next = current.filter((it) => !cart_ids.includes(String(it.cart_id)));
+      setGuestCart(next);
+      
+      // Dispatch remove action for each item
+      cart_ids.forEach(cart_id => {
+        dispatch({ type: 'REMOVE_FROM_CART', payload: { cart_id, exchangeRate: rate, currencySymbol: symbol } });
+      });
+      
+      return { success: true, message: 'Selected items removed from cart successfully' };
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to remove selected items from cart';
+      dispatch({ type: 'SET_ERROR', payload: msg });
+      return { success: false, message: msg };
+    }
+  };
+
   const clearCart = async () => {
     try {
       const t = localStorage.getItem('authToken');
@@ -576,6 +617,7 @@ export const CartProvider = ({ children }) => {
     addToCart,
     updateQuantity,
     removeFromCart,
+    removeMultipleFromCart,
     clearCart,
     loadCart,
     mergeCartOnLogin,

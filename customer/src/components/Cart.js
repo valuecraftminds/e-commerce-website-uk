@@ -31,7 +31,60 @@ const Cart = () => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [updatingItems, setUpdatingItems] = useState(new Set());
   const [removingItems, setRemovingItems] = useState(new Set());
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
   const {showNotify} = useNotifyModal();
+
+  // Get available cart items (in stock)
+  const availableCartItems = cart.filter(item => 
+    item.stock_qty > 0 && item.stock_qty !== null
+  );
+
+  // Handle individual item selection
+  const handleItemSelection = (cart_id, isSelected) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (isSelected) {
+        newSet.add(cart_id);
+      } else {
+        newSet.delete(cart_id);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle select all toggle
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems(new Set());
+    } else {
+      const availableItemIds = availableCartItems.map(item => item.cart_id);
+      setSelectedItems(new Set(availableItemIds));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Update selectAll state when individual items are selected/deselected
+  React.useEffect(() => {
+    const availableItemIds = availableCartItems.map(item => item.cart_id);
+    const allSelected = availableItemIds.length > 0 && 
+                       availableItemIds.every(id => selectedItems.has(id));
+    setSelectAll(allSelected);
+  }, [selectedItems, availableCartItems]);
+
+  // Calculate summary for selected items only
+  const selectedItemsSummary = React.useMemo(() => {
+    const selectedCartItems = cart.filter(item => selectedItems.has(item.cart_id));
+    const totalItems = selectedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalAmount = selectedCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    return {
+      total_items: totalItems,
+      total_amount: totalAmount.toFixed(2),
+      currency_symbol: summary.currency_symbol || '£',
+      selected_count: selectedCartItems.length
+    };
+  }, [cart, selectedItems, summary.currency_symbol]);
 
   const handleQuantityChange = async (cart_id, newQuantity) => {
     if (newQuantity < 1) return;
@@ -131,6 +184,16 @@ const Cart = () => {
       navigate('/login');
       return;
     }
+    
+    if (selectedItems.size === 0) {
+      showNotify({
+        title: 'No Items Selected',
+        message: 'Please select at least one item to proceed to checkout.',
+        type: 'warning'
+      });
+      return;
+    }
+    
     setShowCheckoutModal(true);
   };
 
@@ -199,17 +262,61 @@ return (
             </Card>
           ) : (
             <>
+              {/* Select All Section */}
+              {availableCartItems.length > 0 && (
+                <Card className="mb-3">
+                  <Card.Body className="py-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Form.Check
+                        type="checkbox"
+                        id="select-all"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                        label={
+                          <span className="fw-bold">
+                            Select All Available Items ({availableCartItems.length})
+                          </span>
+                        }
+                      />
+                      <small className="text-muted" style={{ fontSize: '1rem' }}>
+                        {selectedItems.size} of {availableCartItems.length} items selected
+                      </small>
+                    </div>
+                  </Card.Body>
+                </Card>
+              )}
+
               <Row>
                 <Col lg={8}>
                   {cart.map((item) => (
                     <Card 
                       key={item.cart_id} 
-                      className={`cart-item-square ${removingItems.has(item.cart_id) ? 'removing' : ''}`}
+                      className={`cart-item-square ${removingItems.has(item.cart_id) ? 'removing' : ''} ${
+                        selectedItems.has(item.cart_id) ? 'selected-item' : ''
+                      }`}
                     >
                       <Card.Body className="cart-item-square-body">
                         <Row className="h-100">
+                          {/* Selection Checkbox */}
+                          <Col md={1} className="d-flex align-items-center justify-content-center">
+                            {item.stock_qty > 0 && item.stock_qty !== null ? (
+                              <Form.Check
+                                type="checkbox"
+                                id={`select-${item.cart_id}`}
+                                checked={selectedItems.has(item.cart_id)}
+                                onChange={(e) => handleItemSelection(item.cart_id, e.target.checked)}
+                                disabled={
+                                  updatingItems.has(item.cart_id) ||
+                                  removingItems.has(item.cart_id)
+                                }
+                              />
+                            ) : (
+                              <div className="text-muted">⚠️</div>
+                            )}
+                          </Col>
+
                           {/* Product Image */}
-                          <Col md={3} className="d-flex align-items-center justify-content-center">
+                          <Col md={2} className="d-flex align-items-center justify-content-center">
                             <div className="square-image-container">
                               <img
                                 src={`${BASE_URL}/uploads/styles/${item.image}`}
@@ -221,7 +328,7 @@ return (
                           </Col> 
                           
                           {/* Product Details */}
-                          <Col md={5} className="d-flex flex-column justify-content-center">
+                          <Col md={4} className="d-flex flex-column justify-content-center">
                             <h5 className="mb-2">{item.product_name}</h5>
 
                             <div className="product-details">
@@ -390,10 +497,28 @@ return (
                       <h5 className="mb-0">📋 Order Summary</h5>
                     </Card.Header>
                     <Card.Body>
-                      <div className="d-flex justify-content-between mb-3">
-                        <span> Available Items ({summary.total_items}):</span>
-                        <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
+                      {selectedItems.size > 0 ? (
+                        <>
+                        <div className="d-flex justify-content-between mb-3 text-muted" style={{fontSize: '0.9rem'}}>
+                          <span>🛒 Total Cart Items ({summary.total_items}):</span>
+                          <span className="fw-bold">{summary.currency_symbol}{summary.total_amount}</span>
                       </div>
+                          <div className="d-flex justify-content-between mb-2">
+                            <span>✅ Selected Items ({selectedItemsSummary.selected_count}):</span>
+                            <span className="fw-bold">{selectedItemsSummary.total_items}</span>
+                          </div>
+                          <div className="d-flex justify-content-between mb-3">
+                            <span>💰 Selected Total:</span>
+                            <span className="fw-bold">{selectedItemsSummary.currency_symbol}{selectedItemsSummary.total_amount}</span>
+                          </div>
+                          <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
+                        </>
+                      ) : (
+                        <div className="text-center mb-3">
+                          <small className="text-muted">Select items to see checkout summary</small>
+                        </div>
+                      )}
+                      
                       {isLoggedIn && (
                         <div className="d-flex justify-content-between mb-3">
                           <span>💸 Discount:</span>
@@ -405,28 +530,35 @@ return (
                         </div>
                       )}
                       
-                      <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
-                      <div className="d-flex justify-content-between mb-4">
-                        <strong style={{fontSize: '1.3rem'}}>💰 Subtotal:</strong>
-                        <strong style={{fontSize: '1.3rem'}}>{summary.currency_symbol}{summary.total_amount}</strong>
-                      </div>
+                      {selectedItems.size > 0 && (
+                        <>
+                          <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
+                          <div className="d-flex justify-content-between mb-4">
+                            <strong style={{fontSize: '1.3rem'}}>💰 Checkout Total:</strong>
+                            <strong style={{fontSize: '1.3rem'}}>{selectedItemsSummary.currency_symbol}{selectedItemsSummary.total_amount}</strong>
+                          </div>
+                        </>
+                      )}
                       
                       <div className="d-grid gap-3">
                         <Button 
                           variant="primary" 
                           size="lg"
                           disabled={
+                            selectedItems.size === 0 ||
                             cart.length === 0 || 
                             summary.out_of_stock_items > 0 ||
-                            cart.some(item => item.stock_qty === 0 || item.stock_qty === null)
+                            cart.some(item => selectedItems.has(item.cart_id) && (item.stock_qty === 0 || item.stock_qty === null))
                           }
                           onClick={() => handleBuyNow()}
                         >
-                          🚀 Proceed to Checkout
+                          🚀 Checkout Selected Items ({selectedItems.size})
                         </Button>
                         <CheckoutModal 
                           show={showCheckoutModal} 
                           isDirectBuy={false}
+                          selectedItems={Array.from(selectedItems)}
+                          selectedItemsSummary={selectedItemsSummary}
                           onHide={() => setShowCheckoutModal(false)}  
                         />
 
@@ -439,7 +571,10 @@ return (
                     </Card.Body>
                   </Card>
                    <div>
-                      <span className='d-flex text-danger text-muted mt-3' style={{fontSize: '1rem'}} > ⚠️ {summary.out_of_stock_items} item(s) are unavailable at the moment. Please remove unavailable items before proceeding to checkout. </span>
+                      <span className='d-flex text-danger text-muted mt-3' style={{fontSize: '1rem'}} > 
+                        ⚠️ {summary.out_of_stock_items} item(s) are unavailable. 
+                        {selectedItems.size > 0 ? ' Selected items are ready for checkout.' : ' Select available items to proceed.'}
+                      </span>
                     </div>
                 </Col>
               </Row>
