@@ -43,13 +43,7 @@ export default function ProductDetails() {
   const [stockStatus, setStockStatus] = useState(null);
   const [stockError, setStockError] = useState(null);
   const [checkingStock, setCheckingStock] = useState(false);
-  
-  // Single state for wishlist status
   const [isWishlisted, setIsWishlisted] = useState(false);
-  
-  // State for expandable sections - remove these states
-  // const [showSizeGuide, setShowSizeGuide] = useState(false);
-  // const [showMaterial, setShowMaterial] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);

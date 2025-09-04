@@ -143,22 +143,26 @@ const Wishlist = () => {
                         className="wishlist-item" 
                         key={item.style_number}
                     >
-                        <img
-                            src={`${BASE_URL}/uploads/styles/${item.image}`}
-                            alt={item.name}
-                            onClick={() => handleRedirect(item.style_number)} 
-                        />
-                        <h2>{item.name}</h2>
-                        <p className="wishlist-description">{item.description}</p>
+                        <div className="wishlist-image-container">
+                            <img
+                                src={`${BASE_URL}/uploads/styles/${item.image}`}
+                                alt={item.name}
+                                onClick={() => handleRedirect(item.style_number)} 
+                            />
+                        </div>
+                        <div className="wishlist-item-info">
+                            <h2>{item.name}</h2>
+                            <p className="wishlist-description">{item.description}</p>
 
-                        <div className="wishlist-footer-row">
-                            <button
-                                className="remove-btn"
-                                onClick={() => handleRemove(item.style_number)}
-                            >
-                                <BsTrash3 className="wishlist-bin" />
-                                <h7 className="remove-text"> Remove from Wishlist </h7>
-                            </button>
+                            <div className="wishlist-footer-row">
+                                <button
+                                    className="remove-btn"
+                                    onClick={() => handleRemove(item.style_number)}
+                                >
+                                    <BsTrash3 className="wishlist-bin" />
+                                    <span className="remove-text">Remove</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}
