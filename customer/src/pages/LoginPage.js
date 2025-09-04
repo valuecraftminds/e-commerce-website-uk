@@ -210,6 +210,7 @@ export default function LoginPage() {
                     
                     <div className="social-login">
                       <SocialLogin 
+                        className="social-button"
                         onSocialLoginSuccess={handleSocialLoginSuccess}
                         onSocialLoginError={handleSocialLoginError}
                       />
