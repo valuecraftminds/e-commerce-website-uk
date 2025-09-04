@@ -68,7 +68,6 @@ export default function NavigationBar({ onSidebarStateChange }) {
       }
     })
         .then((response) => {
-          console.log('Company logo fetched:', response.data);
           if (response.data.company_logo) {
             // Construct the full URL for the company logo
             const logoUrl = `${BASE_URL}/uploads/company_logos/${response.data.company_logo}`;
@@ -90,7 +89,6 @@ export default function NavigationBar({ onSidebarStateChange }) {
         .then((response) => {
           setCategories(response.data);
           setLoading(false);
-          console.log('Categories fetched:', response.data);
         })
         .catch((error) => {
           console.error('Error fetching categories:', error);

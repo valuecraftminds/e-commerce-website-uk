@@ -1,0 +1,279 @@
+.footer {
+  background-color: #343a40 !important;
+  color: white;
+  margin-top: auto;
+  height: fit-content !important;
+}
+
+.footer h5 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer ul li a {
+  color: #d1d5db;
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.2s ease;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+.footer ul li a:hover {
+  color: #fff;
+  text-decoration: none;
+  transform: translateX(5px);
+}
+
+.footer .social-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.footer .social-links li {
+  margin-bottom: 0;
+}
+
+.footer .social-links a {
+  font-size: 1.5rem;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.footer .social-links a:hover {
+  color: #007bff;
+  transform: scale(1.2);
+}
+
+.footer hr {
+  border-color: #6c757d;
+  margin: 2rem 0 1rem 0;
+}
+
+.footer .copyright {
+  font-size: 0.9rem;
+  color: #adb5bd;
+  margin: 0;
+  padding: 1rem 0;
+}
+
+/* Responsive Design */
+
+/* Large screens (desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .footer {
+    padding: 3rem 0 2rem 0;
+  }
+  
+  .footer h5 {
+    font-size: 1.3rem;
+  }
+  
+  .footer ul li a {
+    font-size: 1rem;
+  }
+}
+
+/* Medium screens (tablets, 768px to 1199px) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .footer {
+    padding: 2.5rem 0 1.5rem 0;
+  }
+  
+  .footer .social-links {
+    justify-content: flex-start;
+  }
+}
+
+/* Small screens (tablets, 576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .footer {
+    padding: 2rem 0 1rem 0;
+  }
+  
+  .footer h5 {
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .footer .social-links {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .footer .social-links a {
+    font-size: 1.3rem;
+  }
+}
+
+/* Extra small screens (phones, less than 576px) */
+@media (max-width: 575px) {
+  .footer {
+    padding: 1.5rem 0 1rem 0;
+  }
+  
+  .footer h5 {
+    font-size: 1rem;
+    margin-bottom: 0.7rem;
+    text-align: center;
+  }
+  
+  .footer ul {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .footer ul li a {
+    font-size: 0.85rem;
+  }
+  
+  .footer .social-links {
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .footer .social-links a {
+    font-size: 1.8rem;
+  }
+  
+  .footer hr {
+    margin: 1.5rem 0 1rem 0;
+  }
+  
+  .footer .copyright {
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.5rem 0;
+  }
+}
+
+/* Very small screens (phones, less than 380px) */
+@media (max-width: 379px) {
+  .footer {
+    padding: 1rem 0 0.5rem 0;
+  }
+  
+  .footer h5 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer ul li a {
+    font-size: 0.8rem;
+  }
+  
+  .footer .social-links a {
+    font-size: 1.5rem;
+  }
+  
+  .footer .copyright {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+}
+
+/* Landscape orientation for mobile devices */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .footer {
+    padding: 1rem 0;
+  }
+  
+  .footer h5 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer ul li {
+    margin-bottom: 0.3rem;
+  }
+  
+  .footer ul li a {
+    font-size: 0.8rem;
+  }
+  
+  .footer hr {
+    margin: 1rem 0 0.5rem 0;
+  }
+}
+
+/* Print styles */
+@media print {
+  .footer {
+    background-color: white !important;
+    color: black !important;
+    border-top: 2px solid #000;
+  }
+  
+  .footer h5 {
+    color: black !important;
+  }
+  
+  .footer ul li a {
+    color: black !important;
+  }
+  
+  .footer .social-links {
+    display: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .footer {
+    border-top: 3px solid #fff;
+  }
+  
+  .footer ul li a {
+    color: #fff;
+    font-weight: 600;
+  }
+  
+  .footer ul li a:hover {
+    background-color: #fff;
+    color: #000;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .footer ul li a,
+  .footer .social-links a {
+    transition: none;
+  }
+  
+  .footer ul li a:hover {
+    transform: none;
+  }
+  
+  .footer .social-links a:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  .footer {
+    background-color: #1a1a1a !important;
+    border-top: 1px solid #333;
+  }
+  
+  .footer hr {
+    border-color: #444;
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Alert, Button, Card, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
-import { FaEye, FaEyeSlash, FaFacebookF, FaGoogle, FaTwitter, FaCheckCircle, FaTimesCircle, FaUserPlus } from 'react-icons/fa';
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { FaGoogle, FaCheckCircle, FaTimesCircle, FaUserPlus } from 'react-icons/fa';
 import { Eye, EyeOff } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { AuthContext } from '../context/AuthContext';
 import SocialLogin from '../components/SocialLogin';
+import { useNotifyModal } from "../context/NotifyModalProvider";
 import '../styles/RegisterPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -42,9 +43,8 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const passwordRulesRef = useRef(null);
+  const { showNotify } = useNotifyModal();
 
-  console.log("Company Code:", COMPANY_CODE);
-  
   useEffect(() => {
     function handleClickOutside(event) {
       if (passwordRulesRef.current && !passwordRulesRef.current.contains(event.target)) {
@@ -119,11 +119,13 @@ export default function RegisterPage() {
   const handleSocialLoginSuccess = (token, user, provider) => {
     // For social login, authenticate the user and redirect to home since account is created automatically
     login(token, user);
-    console.log(`${provider} registration/login successful:`, user);
     console.log('token:', token);
-    
-    // You might want to show a success message here
-    setSuccessMsg(`Welcome! Your account has been created successfully via ${provider}.`);
+
+    showNotify({
+      title: "Registration Successful",
+      message: `Welcome! Your account has been created successfully via ${provider}.`,
+      type: "success"
+    });
     
     // Redirect to home page after a short delay
     setTimeout(() => {
@@ -145,8 +147,6 @@ export default function RegisterPage() {
     }
     
     setIsLoading(true);
-
-    console.log("Form Data:", formData);
 
     try {
       const response = await fetch(`${BASE_URL}/api/customer/auth/register`, {

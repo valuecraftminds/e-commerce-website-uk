@@ -36,7 +36,6 @@ export default function Sidebar({
       }
     })
       .then(res => {
-        console.log("Categories fetched:", res.data);
         setCategories(res.data);
       })
       .catch(err => console.error("Failed to fetch categories:", err));
@@ -63,7 +62,6 @@ export default function Sidebar({
         }
       })
         .then(res => {
-          console.log("Product types fetched:", res.data);
           setProductTypes(res.data.categories || []);
           setLoading(false);
         })

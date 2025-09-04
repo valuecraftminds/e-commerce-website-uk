@@ -134,14 +134,11 @@ useEffect(() => {
   const fetchAddresses = async () => {
   setAddressesLoading(true);
   setAddressError(null);
-  console.log('Fetching addresses...');
   try {
     const config = getAxiosConfig();
     const response = await axios.get(`${BASE_URL}/api/customer/address/get-address`, config);
 
-    console.log('Fetched addresses:', response.data);
     const formattedAddresses = response.data.map((addr, idx) => {
-      console.log('Formatting address:', addr);
       const reactKeyBase =
         addr.id ??
         `${addr.address_line_1 || ''}-${addr.city || ''}-${addr.postal_code || ''}-${idx}`;
@@ -922,7 +919,6 @@ useEffect(() => {
                               <button 
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => {
-                                  console.log('Editing address:', address);
                                   setSelectedAddress(address);
                                   setShowEditAddress(true);
                                 }}
@@ -1093,9 +1089,6 @@ useEffect(() => {
         show={showAddNewAddress}
         onHide={() => setShowAddNewAddress(false)}
         onSubmit={(result) => {
-          // Handle the new address creation
-          console.log('New address created:', result);
-          
           // Add the new address
           const newFormattedAddress = {
             id: result.addressId,
@@ -1130,9 +1123,6 @@ useEffect(() => {
           setSelectedAddress(null);
         }}
         onSubmit={(result) => {
-          // Handle the address editing
-          console.log('Address edited:', result);
-
           // Update the address
           const updatedAddress = {
             id: result.addressId,

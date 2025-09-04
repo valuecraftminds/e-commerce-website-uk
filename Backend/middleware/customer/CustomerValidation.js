@@ -8,7 +8,6 @@ const checkCompanyCode = (req, res, next) => {
       error: 'company_code is required' 
     });
   }
-  // console.log('Company code:', company_code);
   next();
 };
 

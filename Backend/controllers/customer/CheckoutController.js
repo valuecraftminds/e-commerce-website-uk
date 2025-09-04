@@ -6,8 +6,6 @@ const CheckoutController = {
   submitCheckout: (req, res) => {
     const customer_id = req.user?.id;
     const { company_code } = req.query;
-    console.log('Company Code:', company_code);
-    console.log('Customer ID:', req.user);
 
     const {
       first_name,

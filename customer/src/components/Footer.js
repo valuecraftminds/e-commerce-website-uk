@@ -3,6 +3,8 @@ import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
+import '../styles/Footer.css';
+
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
@@ -26,7 +28,6 @@ export default function Footer() {
       if (res.data.company_name) {
         setCompanyName(res.data.company_name);
       }
-      console.log('Company Name:', res.data.company_name);
     } catch (err) {
       console.error('Error fetching company details:', err);
     }
@@ -42,7 +43,6 @@ export default function Footer() {
       .then((response) => {
         setCategories(response.data);
         setLoadingCategories(false);
-        console.log('Categories fetched:', response.data);
       })
       .catch((error) => {
         console.error('Error fetching categories:', error);
@@ -93,7 +93,7 @@ export default function Footer() {
 
           <Col md={3} sm={6} xs={12} className="mb-3">
             <h5>Follow Us</h5>
-            <ul className="list-unstyled d-flex gap-3">
+            <ul className="list-unstyled social-links">
               <li><Link to="https://facebook.com" className="text-white">
                 <i className='bi bi-facebook'></i> 
               </Link></li>
@@ -108,7 +108,7 @@ export default function Footer() {
         </Row>
 
         <hr className="bg-light" />
-        <p className="text-center mb-0"> &copy;  2025 {companyName}. All rights reserved.</p>
+        <p className="text-center copyright"> &copy;  2025 {companyName}. All rights reserved.</p>
       </Container>
     </footer>
   );

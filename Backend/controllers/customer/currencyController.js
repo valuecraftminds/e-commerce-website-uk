@@ -17,7 +17,6 @@ const getCurrencyRates = (req, res) => {
     Object.keys(exchangeRatesCache.rates).length > 0 &&
     (now - exchangeRatesCache.lastUpdated) < exchangeRatesCache.cacheDuration
   ) {
-    console.log('Returning cached exchange rates');
     return res.json({
       success: true,
       rates: exchangeRatesCache.rates,
@@ -27,8 +26,6 @@ const getCurrencyRates = (req, res) => {
   }
 
   // Fetch from API
-  console.log('Fetching fresh exchange rates from API');
-
   axios.get('https://api.currencyapi.com/v3/latest?apikey=cur_live_bg90WLPOcxTMNyqVUvbF5UfedrK9qHnw8WwOve3E', {
     params: {
       base_currency: 'USD',
@@ -66,7 +63,6 @@ const getCurrencyRates = (req, res) => {
 
       // Return stale cached data if available
       if (exchangeRatesCache.rates && Object.keys(exchangeRatesCache.rates).length > 0) {
-        console.log('API failed, returning stale cached data');
         return res.json({
           success: true,
           rates: exchangeRatesCache.rates,

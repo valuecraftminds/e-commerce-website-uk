@@ -101,8 +101,7 @@ export default function Home() {
       
       setTotalProducts(total);
       setHasMoreProducts(hasMore);
-      
-      console.log('Fetched products:', newProducts);
+
     } catch (error) {
       console.error('Error fetching product listings:', error);
       setError('Failed to load products');

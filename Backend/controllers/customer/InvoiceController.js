@@ -1023,14 +1023,6 @@ function storeInvoiceRecord(order, invoiceNumber, company_code) {
     invoiceNumber,
     order.total_amount
   ];
-
-  db.query(invoiceQuery, values, (err) => {
-    if (err) {
-      console.error('Error storing invoice record:', err);
-    } else {
-      console.log('Invoice record stored successfully');
-    }
-  });
 }
 
 // Helper function to format shipping address for display

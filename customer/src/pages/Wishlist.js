@@ -56,7 +56,6 @@ const Wishlist = () => {
                     config
                 );
                 setWishlistItems(response.data);
-                console.log('Wishlist fetched:', response.data);
             } catch (error) {
                 console.error('Error fetching wishlist:', error);
             }
@@ -84,9 +83,7 @@ const Wishlist = () => {
                                     data: {style_number: style_number}
                                 }
                             );
-                            console.log('style_number:', style_number);
                             setWishlistItems(prev => prev.filter(item => item.style_number !== style_number));
-                            console.log('Item removed from wishlist:', style_number);
                         } catch (error) {
                             console.error('Error removing wishlist item:', error);
                         }
