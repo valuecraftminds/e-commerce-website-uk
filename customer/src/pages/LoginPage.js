@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { FaFacebookF, FaGoogle, FaTwitter, FaTimesCircle, FaSignInAlt, FaShieldAlt } from 'react-icons/fa';
+import { FaTimesCircle, FaSignInAlt, FaShieldAlt } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 

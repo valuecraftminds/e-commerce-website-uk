@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, MapPin, Plus, Eye, EyeOff, Mail, Phone, Lock, Camera } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-
 
 import '../styles/AccountSettings.css';
 import ProfilePictureModal from '../components/ProfileImageModal';
 import AddNewAddress from '../components/AddNewAddress';
 import EditAddress from '../components/EditAddress';
 import { useNotifyModal } from "../context/NotifyModalProvider";
-import { Button } from 'react-bootstrap';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -35,8 +32,6 @@ export default function AccountSettings() {
   
   const fileInputRef = useRef(null);
   const passwordInputRef = useRef(null);
-
-    const navigate = useNavigate();
 
   const passwordRules = {
   length: newPassword.length >= 8 && newPassword.length <= 12,
@@ -78,13 +73,13 @@ useEffect(() => {
   ];
 
   // Get auth token from logged in user
-  const getAuthToken = () => {
+  const getAuthToken = useCallback(() => {
     const token = localStorage.getItem('authToken');
     return token;
-  };
+  }, []);
 
   // Get axios config with auth token
-  const getAxiosConfig = () => {
+  const getAxiosConfig = useCallback(() => {
     const token = getAuthToken();
     const config = {
       params: { company_code: COMPANY_CODE },
@@ -98,7 +93,7 @@ useEffect(() => {
     }
     
     return config;
-  };
+  }, [getAuthToken]);
 
   // Fetch payment methods separately
   // const fetchPaymentMethods = async () => {
@@ -131,7 +126,7 @@ useEffect(() => {
   //   }
   // };
 
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
   setAddressesLoading(true);
   setAddressError(null);
   try {
@@ -166,7 +161,7 @@ useEffect(() => {
   } finally {
     setAddressesLoading(false);
   }
-};
+}, [getAxiosConfig]);
 
 
   const [loadingDefault, setLoadingDefault] = React.useState(null); // track which address is updating
@@ -464,56 +459,56 @@ useEffect(() => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    showNotify({
-      title: "Deleting Account",
-      message: "Are you sure you want to delete your account?",
-      type: "warning",
-      customButtons: [
-        {
-          label: "Yes, Delete",
-          onClick: async () => {
-            try {
-              const config = getAxiosConfig();
-              await axios.delete(`${BASE_URL}/api/customer/user/delete-account`, config);
+  // const handleDeleteAccount = async () => {
+  //   showNotify({
+  //     title: "Deleting Account",
+  //     message: "Are you sure you want to delete your account?",
+  //     type: "warning",
+  //     customButtons: [
+  //       {
+  //         label: "Yes, Delete",
+  //         onClick: async () => {
+  //           try {
+  //             const config = getAxiosConfig();
+  //             await axios.delete(`${BASE_URL}/api/customer/user/delete-account`, config);
 
-              showNotify({
-                title: "Done",
-                message: "Your account has been deleted successfully.",
-                type: "success",
-                customButtons: [
-                  {
-                    label: "OK",
-                    onClick: () => {}
-                  }
-                ]
-              });
-            } catch (error) {
-              console.error('Error deleting account:', error);
-              showNotify({
-                title: "Delete Failed",
-                message: 'Failed to delete account. Please try again.',
-                type: "error",
-                customButtons: [
-                  {
-                    label: "OK",
-                    onClick: () => {
-                      // Navigate to home
-                      navigate('/');
-                    }
-                  }
-                ]
-              });
-            }
-          }
-        },
-        {
-          label: "No, Cancel",
-          onClick: () => {}
-        }
-      ]
-    });
-  };
+  //             showNotify({
+  //               title: "Done",
+  //               message: "Your account has been deleted successfully.",
+  //               type: "success",
+  //               customButtons: [
+  //                 {
+  //                   label: "OK",
+  //                   onClick: () => {}
+  //                 }
+  //               ]
+  //             });
+  //           } catch (error) {
+  //             console.error('Error deleting account:', error);
+  //             showNotify({
+  //               title: "Delete Failed",
+  //               message: 'Failed to delete account. Please try again.',
+  //               type: "error",
+  //               customButtons: [
+  //                 {
+  //                   label: "OK",
+  //                   onClick: () => {
+  //                     // Navigate to home
+  //                     navigate('/');
+  //                   }
+  //                 }
+  //               ]
+  //             });
+  //           }
+  //         }
+  //       },
+  //       {
+  //         label: "No, Cancel",
+  //         onClick: () => {}
+  //       }
+  //     ]
+  //   });
+  // };
 
   const handleUpdateProfileDetails = async () => {
     const { firstName, lastName, email, phone, password } = profileData;
@@ -602,14 +597,14 @@ useEffect(() => {
     };
 
     fetchData();
-  }, []);
+  }, [getAxiosConfig]);
 
   // Fetch addresses when addresses tab is active
   useEffect(() => {
     if (activeTab === 'addresses' && addresses.length === 0) {
       fetchAddresses();
     }
-  }, [activeTab]);
+  }, [activeTab, addresses.length, fetchAddresses]);
 
   // Fetch payment methods when payment tab is active
   // useEffect(() => {
@@ -1142,8 +1137,6 @@ useEffect(() => {
           // Close the modal
           setShowEditAddress(false);
           setSelectedAddress(null);
-
-          // alert('Address updated successfully!');
         }}
       />
     </>

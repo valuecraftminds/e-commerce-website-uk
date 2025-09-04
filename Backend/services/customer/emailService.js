@@ -106,17 +106,17 @@ const createTransporter = () => {
     }
     
     // Alternative for other SMTP services
-    /*
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-    */
+    
+    // host: process.env.SMTP_HOST,
+    // port: process.env.SMTP_PORT,
+    // secure: process.env.SMTP_SECURE === 'true',
+    // auth: {
+    //   user: process.env.SMTP_USER,
+    //   pass: process.env.SMTP_PASS
+    // }
+    
     });
-    };
+};
 
      // Send invoice email with order confirmation
     const sendInvoiceEmail = async (customerEmail, customerName, orderData, pdfBuffer, invoiceFileName, frontendUrl) => {
@@ -313,7 +313,6 @@ const createTransporter = () => {
 
         return {
         success: emailResult.success,
-        // invoiceFilePath: invoiceFilePath, // COMMENTED OUT - NO FILE PATH SINCE NO FILE IS SAVED
         messageId: emailResult.messageId,
         invoiceNumber: invoiceNumber,
         error: emailResult.error

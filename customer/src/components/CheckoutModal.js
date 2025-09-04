@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import { CountryContext } from "../context/CountryContext";
 import '../styles/CheckoutModal.css';
+import { useCallback } from 'react';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -89,14 +90,14 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
   // 'select' (use saved) or 'new' (add new)
   const [mode, setMode] = useState('new');
 
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     setAddressesLoading(true);
     setAddressesError('');
     try {
       const { data } = await api.get(`${BASE_URL}/api/customer/address/get-address`);
       const sorted = [...data].sort((a, b) => {
-        const aDef = a.is_default === 1 || a.is_default === true;
-        const bDef = b.is_default === 1 || b.is_default === true;
+      const aDef = a.is_default === 1 || a.is_default === true;
+      const bDef = b.is_default === 1 || b.is_default === true;
         if (aDef === bDef) return 0;
         return aDef ? -1 : 1;
       });
@@ -120,7 +121,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
     } finally {
       setAddressesLoading(false);
     }
-  };
+  }, [api]);
 
   const prefillFromAddress = (addr) => {
     if (!addr) return;
@@ -198,7 +199,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
     setMode('new');
     setStep('address');
     fetchAddresses();
-  }, [show]);
+  }, [show, fetchAddresses]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -251,12 +252,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
 
   const validatePayment = () => {
     const fe = {};
-    // if (shippingData.payment_method !== 'card') {
-    //   fe.payment_method = 'Choose a payment method';
-    // } else {
-      // if (!shippingData.card_number || !luhnValid(shippingData.card_number)) {
-      //   fe.card_number = 'Card number looks invalid';
-      // }
     if (!shippingData.card_number || !/^\d{13,19}$/.test(shippingData.card_number)) {
       fe.card_number = 'Card number looks invalid';
     }
@@ -498,10 +493,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
           }
         }
 
-        // Show success message with invoice option
-        const invoiceAvailable = data.invoice_number;
-        const orderNumber = data.order_number || data.order_id;
-
         onSubmit?.(data);
         onHide?.();
       } else {
@@ -520,55 +511,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
       }
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Function to download invoice for an order
-  const downloadInvoiceForOrder = async (orderId) => {
-    try {
-      const api = createAxios();
-      const downloadUrl = `${BASE_URL}/api/customer/invoices/generate/${orderId}`;
-      const params = new URLSearchParams({ company_code: COMPANY_CODE }).toString();
-      const fullUrl = `${downloadUrl}?${params}`;
-      
-      const token = getAuthToken();
-      
-      if (token) {
-        // Use fetch to download with authorization
-        const response = await fetch(fullUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          // Create blob from response
-          const blob = await response.blob();
-          
-          // Create download link
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `invoice-${orderId}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to generate invoice');
-        }
-      } else {
-        // For non-authenticated users, open in new window
-        window.open(fullUrl, '_blank');
-      }
-
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
-      throw error; // Re-throw to handle in calling function
     }
   };
 

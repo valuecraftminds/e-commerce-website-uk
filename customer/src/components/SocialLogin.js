@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Button, Col, Row } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { FaGoogle } from 'react-icons/fa';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -80,10 +80,6 @@ const SocialLogin = ({ onSocialLoginSuccess, onSocialLoginError, isRegister = fa
       console.error('Google login error:', error);
       onSocialLoginError('Something went wrong with Google login');
     }
-  };
-
-  const handleGoogleError = () => {
-    onSocialLoginError('Google login was cancelled or failed');
   };
 
   return (

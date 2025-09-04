@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
@@ -67,7 +67,7 @@ export default function OrderDetails() {
     };
 
     // Fetch order details
-    const fetchOrderDetails = async (id) => {
+    const fetchOrderDetails = useCallback(async (id) => {
         try {
             setLoading(true);
             setError(null);
@@ -88,7 +88,7 @@ export default function OrderDetails() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     // Check if items in this order have been reviewed
     const checkExistingReviews = async (orderData) => {
@@ -165,17 +165,6 @@ export default function OrderDetails() {
         return `${symbol}${convertedPrice}`;
     };
 
-    // Format date
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
     // Format shipping address
     const formatShippingAddress = (address) => {
         if (!address) return 'No shipping address available';
@@ -212,7 +201,7 @@ export default function OrderDetails() {
         if (orderId && isLoggedIn) {
             fetchOrderDetails(orderId);
         }
-    }, [orderId, isLoggedIn]);
+    }, [orderId, isLoggedIn, fetchOrderDetails]);
 
     if (loading) {
         return (
@@ -262,7 +251,7 @@ export default function OrderDetails() {
     
     const handleConfirmDelivery = async () => {
         try {
-            const response = await axios.post(
+            await axios.post(
             `${BASE_URL}/api/customer/confirm-delivery/${orderDetails.order_id}`,
             {}, 
                 getAxiosConfig()
