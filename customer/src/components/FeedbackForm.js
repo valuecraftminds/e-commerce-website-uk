@@ -51,7 +51,7 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
     };
 
     try {
-      const res = await axios.post(`${BASE_URL}/api/customer/feedback/reviews`, reviewData, getAxiosConfig());
+      await axios.post(`${BASE_URL}/api/customer/feedback/reviews`, reviewData, getAxiosConfig());
       
       // Show success notification
       showNotify({

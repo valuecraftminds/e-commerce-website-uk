@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,7 +29,7 @@ const FeedbackHistory = () => {
   };
 
   // Get axios config with auth token
-  const getAxiosConfig = (page = 1, limit = 5) => {
+  const getAxiosConfig = useCallback((page = 1, limit = 5) => {
     const token = getAuthToken();
     const config = {
       params: { 
@@ -47,14 +47,14 @@ const FeedbackHistory = () => {
     }
     
     return config;
-  };
+  }, []);
 
   const handleRedirect = (style_id) => {
     navigate(`/product/${style_id}`);
   };
 
   // Fetch feedback history
-  const fetchFeedbackHistory = async (page = 1) => {
+  const fetchFeedbackHistory = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -74,11 +74,11 @@ const FeedbackHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAxiosConfig, pagination.limit]);
 
   useEffect(() => {
     fetchFeedbackHistory(1);
-  }, []);
+  }, [fetchFeedbackHistory]);
 
   // Render star rating
   const renderStars = (rating) => {

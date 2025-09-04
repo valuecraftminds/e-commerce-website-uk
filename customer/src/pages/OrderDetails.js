@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import axios from 'axios';
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { BsCart3, BsGeoAlt } from "react-icons/bs";
@@ -50,7 +50,7 @@ export default function OrderDetails() {
     };
 
     // Get axios config with auth token
-    const getAxiosConfig = () => {
+    const getAxiosConfig = useCallback(() => {
         const token = getAuthToken();
         const config = {
             params: { company_code: COMPANY_CODE },
@@ -64,34 +64,10 @@ export default function OrderDetails() {
         }
         
         return config;
-    };
+    }, []);
 
-    // Fetch order details
-    const fetchOrderDetails = async (id) => {
-        try {
-            setLoading(true);
-            setError(null);
-            
-            const config = getAxiosConfig();
-            const response = await axios.get(`${BASE_URL}/api/customer/orders/order-details/${id}`, config);
-
-            if (response.data && response.data.success) {
-                setOrderDetails(response.data.data);
-                // After setting order details, check for existing reviews
-                checkExistingReviews(response.data.data);
-            } else {
-                setError(response.data?.message || 'Failed to fetch order details');
-            }
-        } catch (err) {
-            console.error('Error fetching order details:', err);
-            setError(err.response?.data?.message || 'Failed to fetch order details');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Check if items in this order have been reviewed
-    const checkExistingReviews = async (orderData) => {
+     // Check if items in this order have been reviewed
+    const checkExistingReviews = useCallback(async (orderData) => {
         try {
             const config = getAxiosConfig();
             const response = await axios.get(`${BASE_URL}/api/customer/feedback/history`, config);
@@ -116,7 +92,32 @@ export default function OrderDetails() {
             // Don't show error to user, just log it and keep empty set
             setReviewedItems(new Set());
         }
-    };
+    }, [getAxiosConfig]);
+
+    // Fetch order details
+    const fetchOrderDetails = useCallback(async (id) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const config = getAxiosConfig();
+            const response = await axios.get(`${BASE_URL}/api/customer/orders/order-details/${id}`, config);
+
+            if (response.data && response.data.success) {
+                setOrderDetails(response.data.data);
+                // After setting order details, check for existing reviews
+                checkExistingReviews(response.data.data);
+            } else {
+                setError(response.data?.message || 'Failed to fetch order details');
+            }
+        } catch (err) {
+            console.error('Error fetching order details:', err);
+            setError(err.response?.data?.message || 'Failed to fetch order details');
+        } finally {
+            setLoading(false);
+        }
+    }, [getAxiosConfig, checkExistingReviews]);
+
 
     // Check if a specific item has been reviewed
     const isItemReviewed = (item) => {
@@ -165,17 +166,6 @@ export default function OrderDetails() {
         return `${symbol}${convertedPrice}`;
     };
 
-    // Format date
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
     // Format shipping address
     const formatShippingAddress = (address) => {
         if (!address) return 'No shipping address available';
@@ -212,7 +202,7 @@ export default function OrderDetails() {
         if (orderId && isLoggedIn) {
             fetchOrderDetails(orderId);
         }
-    }, [orderId, isLoggedIn]);
+    }, [orderId, isLoggedIn, fetchOrderDetails]);
 
     if (loading) {
         return (
@@ -262,7 +252,7 @@ export default function OrderDetails() {
     
     const handleConfirmDelivery = async () => {
         try {
-            const response = await axios.post(
+            await axios.post(
             `${BASE_URL}/api/customer/confirm-delivery/${orderDetails.order_id}`,
             {}, 
                 getAxiosConfig()

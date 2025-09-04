@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import axios from 'axios';
 
 import { PiPackage, PiArrowCounterClockwiseBold } from "react-icons/pi";
-import { AiOutlineClockCircle, AiOutlineCheckCircle, AiOutlineStar } from "react-icons/ai";
+import { AiOutlineClockCircle, AiOutlineCheckCircle } from "react-icons/ai";
 import { useNavigate } from 'react-router-dom';
 
 import '../styles/OrdersHistory.css';
@@ -39,7 +39,7 @@ export default function OrdersHistory() {
     };
 
     // Get axios config with auth token
-    const getAxiosConfig = () => {
+    const getAxiosConfig = useCallback(() => {
         const token = getAuthToken();
         const config = {
             params: { company_code: COMPANY_CODE },
@@ -53,7 +53,7 @@ export default function OrdersHistory() {
         }
         
         return config;
-    };
+    }, []);
     
     const sidebarItems = [
         { id: 'all', label: 'All Orders', icon: PiPackage },
@@ -66,7 +66,7 @@ export default function OrdersHistory() {
     ];
 
     // Fetch all orders
-    const fetchAllOrders = async (page = 1) => {
+    const fetchAllOrders = useCallback(async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
@@ -102,7 +102,7 @@ export default function OrdersHistory() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getAxiosConfig, ordersPerPage]);
 
     // Fetch orders by status
     const fetchOrdersByStatus = async (statuses, page = 1) => {
@@ -242,17 +242,6 @@ export default function OrdersHistory() {
         });
     };
 
-    // Get status display text
-    const getStatusDisplayText = (status) => {
-        const statusMap = {
-           'pending': ['Pending'],
-            'in-transit': ['In Transit'],
-            'delivered': ['Delivered'],
-            'cancelled': ['Cancelled']
-        };
-        return statusMap[status] || status;
-    };
-
     // Get image URL from item
     const getItemImageUrl = (item) => {
         // Try different possible image paths
@@ -360,8 +349,11 @@ export default function OrdersHistory() {
     };
 
     useEffect(() => {
-        fetchAllOrders(1);
-    }, []);
+        const fetchInitialOrders = async () => {
+            await fetchAllOrders(1);
+        };
+        fetchInitialOrders();
+    }, [fetchAllOrders]);
 
     // Render order card
     const renderOrderCard = (order) => (

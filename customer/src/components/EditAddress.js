@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Modal, Form, Row, Col, Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 
@@ -49,7 +49,7 @@ const EditAddress = ({ show, address, onHide, onSubmit }) => {
   const [fieldErrors, setFieldErrors] = useState({});
 
   // Function to fetch specific address details by ID
-  const fetchAddressById = async (addressId) => {
+  const fetchAddressById = useCallback(async (addressId) => {
     setIsFetching(true);
     setError('');
     try {
@@ -70,7 +70,7 @@ const EditAddress = ({ show, address, onHide, onSubmit }) => {
     } finally {
       setIsFetching(false);
     }
-  };
+  }, [api]);
 
   // Prefill form with address data
   const prefillFromAddress = (addr) => {
@@ -139,7 +139,7 @@ const EditAddress = ({ show, address, onHide, onSubmit }) => {
         prefillFromAddress(address);
       }
     }
-  }, [show, address]);
+  }, [show, address, fetchAddressById]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

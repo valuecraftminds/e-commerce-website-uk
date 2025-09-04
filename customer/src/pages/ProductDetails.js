@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
@@ -41,8 +41,8 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [stockStatus, setStockStatus] = useState(null);
-  const [stockError, setStockError] = useState(null);
-  const [checkingStock, setCheckingStock] = useState(false);
+  const [, setStockError] = useState(null);
+  const [, setCheckingStock] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
@@ -78,7 +78,7 @@ export default function ProductDetails() {
   };
 
  // Function to get variant info based on selected color and size
-  const getVariantInfo = async (colorCode, sizeName) => {
+  const getVariantInfo = useCallback(async (colorCode, sizeName) => {
     if (!colorCode || !sizeName || !product.style_number) {
       return null;
     }
@@ -87,8 +87,13 @@ export default function ProductDetails() {
       setCheckingStock(true);
       setStockError(null);
       
+      // Get available colors for the selected size
+      const availableColors = (!selectedSize || !product.colors_by_size) 
+        ? (product.available_colors || [])
+        : (product.colors_by_size[selectedSize] || []);
+      
       // Get color_id from the color code
-      const selectedColorObj = getAvailableColors().find(color => color.code === colorCode);
+      const selectedColorObj = availableColors.find(color => color.code === colorCode);
       if (!selectedColorObj?.color_id) return null;
       
       // Get size_id from the size name
@@ -134,7 +139,7 @@ export default function ProductDetails() {
     } finally {
       setCheckingStock(false);
     }
-  };
+  }, [product, selectedSize]);
 
   // Fetch exchange rates
   useEffect(() => {
@@ -156,7 +161,7 @@ export default function ProductDetails() {
   }, []);
 
   // Fetch product reviews
-  const fetchProductReviews = async () => {
+  const fetchProductReviews = useCallback(async () => {
     if (!product?.style_id) return;
     
     try {
@@ -173,10 +178,10 @@ export default function ProductDetails() {
     } finally {
       setLoadingReviews(false);
     }
-  };
+  }, [product?.style_id]);
 
   // Fetch similar products
-  const fetchSimilarProducts = async () => {
+  const fetchSimilarProducts = useCallback(async () => {
     try {
       setLoadingSimilar(true);
       const response = await axios.get(`${BASE_URL}/api/customer/similar-products/${product?.style_id}`, {
@@ -189,7 +194,7 @@ export default function ProductDetails() {
     } finally {
       setLoadingSimilar(false);
     }
-  };
+  }, [product?.style_id]);
 
   // Fetch product details from backend
   useEffect(() => {
@@ -220,7 +225,7 @@ export default function ProductDetails() {
       fetchProductReviews();
       fetchSimilarProducts();
     }
-  }, [product?.style_id]);
+  }, [product?.style_id, fetchProductReviews, fetchSimilarProducts]);
 
   const getRate = () => {
     switch (country) {
@@ -261,7 +266,7 @@ export default function ProductDetails() {
     if (product?.style_id) {
       checkWishlist();
     }
-  }, [product?.style_id, COMPANY_CODE]);
+  }, [product?.style_id]);
 
   // Update variant info when color or size changes
   useEffect(() => {
@@ -271,8 +276,8 @@ export default function ProductDetails() {
         setSelectedVariant(variant);
         
         // Reset quantity to 1 when variant changes, but check if current quantity exceeds new stock
-        if (variant?.stock_qty && quantity > variant.stock_qty) {
-          setQuantity(Math.min(quantity, variant.stock_qty));
+        if (variant?.stock_qty) {
+          setQuantity(prevQuantity => Math.min(prevQuantity, variant.stock_qty));
         }
       } else {
         setSelectedVariant(null);
@@ -281,7 +286,7 @@ export default function ProductDetails() {
     };
 
     updateVariantInfo();
-  }, [selectedColor, selectedSize, product]);
+  }, [selectedColor, selectedSize, product, getVariantInfo]);
 
 
   const formatPrice = (sale_price) => {
@@ -330,7 +335,7 @@ export default function ProductDetails() {
       const skuToUse = selectedVariant?.sku || product.sku;
       const { salePrice, offerPrice } = getCurrentPrice();
       
-      const result = await addToCart({
+      await addToCart({
         name: product.name,
         sku: skuToUse,
         style_id: product.style_id,
