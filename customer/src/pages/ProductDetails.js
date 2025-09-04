@@ -87,8 +87,13 @@ export default function ProductDetails() {
       setCheckingStock(true);
       setStockError(null);
       
+      // Get available colors for the selected size
+      const availableColors = (!selectedSize || !product.colors_by_size) 
+        ? (product.available_colors || [])
+        : (product.colors_by_size[selectedSize] || []);
+      
       // Get color_id from the color code
-      const selectedColorObj = getAvailableColors().find(color => color.code === colorCode);
+      const selectedColorObj = availableColors.find(color => color.code === colorCode);
       if (!selectedColorObj?.color_id) return null;
       
       // Get size_id from the size name
@@ -134,7 +139,7 @@ export default function ProductDetails() {
     } finally {
       setCheckingStock(false);
     }
-  }, [product]);
+  }, [product, selectedSize]);
 
   // Fetch exchange rates
   useEffect(() => {

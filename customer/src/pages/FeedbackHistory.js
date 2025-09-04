@@ -29,7 +29,7 @@ const FeedbackHistory = () => {
   };
 
   // Get axios config with auth token
-  const getAxiosConfig = (page = 1, limit = 5) => {
+  const getAxiosConfig = useCallback((page = 1, limit = 5) => {
     const token = getAuthToken();
     const config = {
       params: { 
@@ -47,7 +47,7 @@ const FeedbackHistory = () => {
     }
     
     return config;
-  };
+  }, []);
 
   const handleRedirect = (style_id) => {
     navigate(`/product/${style_id}`);
@@ -74,7 +74,7 @@ const FeedbackHistory = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.limit]);
+  }, [getAxiosConfig, pagination.limit]);
 
   useEffect(() => {
     fetchFeedbackHistory(1);
