@@ -225,8 +225,6 @@ const Cart = () => {
     );
   }
 
-  console.log('Cart data:', cart);
-
 return (
   <div className="cart-container">
     <Container className="my-5">

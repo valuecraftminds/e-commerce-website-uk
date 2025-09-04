@@ -81,13 +81,11 @@ const cartReducer = (state, action) => {
     case 'SET_LOADING': return { ...state, loading: action.payload };
     case 'SET_CART': {
       const items = (action.payload.cart || []).map(withSyncedTotals);
-      const summary = action.payload.summary || calculateSummary(items, 1, '$');
-      console.log('[SET_CART]', { items, summary });
+      const summary = action.payload.summary || calculateSummary(items, 1, '$')
       return { ...state, items, summary, loading: false };
     }
     case 'UPDATE_CURRENCY': {
       const summary = calculateSummary(state.items, action.payload.rate, action.payload.symbol);
-      console.log('[UPDATE_CURRENCY]', action.payload, summary);
       return { ...state, summary };
     }
     case 'ADD_TO_CART': {
@@ -98,26 +96,22 @@ const cartReducer = (state, action) => {
         ? state.items.map((it, idx) => idx === i ? withSyncedTotals({ ...it, quantity: Number(it.quantity || 0) + Number(itemToAdd.quantity || 1) }) : it)
         : [...state.items, itemToAdd];
       const summary = calculateSummary(nextItems, exchangeRate, currencySymbol);
-      console.log('[ADD_TO_CART]', { itemToAdd, nextItems, summary });
       return { ...state, items: nextItems, summary };
     }
     case 'UPDATE_QUANTITY': {
       const { cart_id, quantity, exchangeRate, currencySymbol } = action.payload;
       const nextItems = state.items.map((it) => String(it.cart_id) === String(cart_id) ? withSyncedTotals({ ...it, quantity: Number(quantity) }) : it);
       const summary = calculateSummary(nextItems, exchangeRate, currencySymbol);
-      console.log('[UPDATE_QUANTITY]', { cart_id, quantity, summary });
       return { ...state, items: nextItems, summary };
     }
     case 'REMOVE_FROM_CART': {
       const { cart_id, exchangeRate, currencySymbol } = action.payload;
       const nextItems = state.items.filter((it) => String(it.cart_id) !== String(cart_id));
       const summary = calculateSummary(nextItems, exchangeRate, currencySymbol);
-      console.log('[REMOVE_FROM_CART]', { cart_id, summary });
       return { ...state, items: nextItems, summary };
     }
     case 'CLEAR_CART': {
       const summary = { total_items: 0, total_amount: '0.00', currency_symbol: action.payload?.currencySymbol || '$' };
-      console.log('[CLEAR_CART]', summary);
       return { ...state, items: [], summary };
     }
     case 'SET_ERROR': console.error('[SET_ERROR]', action.payload); return { ...state, error: action.payload, loading: false };
@@ -164,7 +158,6 @@ export const CartProvider = ({ children }) => {
       try {
         const arr = JSON.parse(localStorage.getItem(k) || '[]');
         if (Array.isArray(arr)) {
-          console.log('[GuestCart][scan] key:', k, 'len:', arr.length);
           combined.push(...arr);
         }
       } catch (e) {
@@ -178,7 +171,6 @@ export const CartProvider = ({ children }) => {
   const migrateGuestCartKeys = () => {
     const all = scanAllGuestCarts();
     if (all.length === 0) {
-      console.log('[GuestCart][migrate] nothing to migrate');
       return;
     }
     // keep active items + append any unique items
@@ -194,7 +186,6 @@ export const CartProvider = ({ children }) => {
       }
     });
     localStorage.setItem(ACTIVE_KEY, JSON.stringify(merged));
-    console.log('[GuestCart][migrate] merged into ACTIVE_KEY:', ACTIVE_KEY, 'count:', merged.length);
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
@@ -208,12 +199,10 @@ export const CartProvider = ({ children }) => {
       const raw = localStorage.getItem(ACTIVE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        console.log('[GuestCart][read] ACTIVE_KEY:', ACTIVE_KEY, 'len:', Array.isArray(parsed) ? parsed.length : 0);
         return Array.isArray(parsed) ? parsed.map(withSyncedTotals) : [];
       }
       // fallback: scan all keys if active empty
       const scanned = scanAllGuestCarts();
-      console.log('[GuestCart][fallback-scan] len:', scanned.length);
       return scanned;
     } catch (e) {
       console.error('[GuestCart][read] error ->', e);
@@ -225,14 +214,12 @@ export const CartProvider = ({ children }) => {
     try {
       const safe = (cart || []).map(withSyncedTotals);
       localStorage.setItem(ACTIVE_KEY, JSON.stringify(safe));
-      console.log('[GuestCart][write] ACTIVE_KEY:', ACTIVE_KEY, 'len:', safe.length);
     } catch (e) {
       console.error('[GuestCart][write] error ->', e);
     }
   };
 
   const clearGuestCart = () => {
-    console.log('[GuestCart][clear] ACTIVE_KEY:', ACTIVE_KEY);
     localStorage.removeItem(ACTIVE_KEY);
   };
 
@@ -251,11 +238,9 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     (async () => {
       try {
-        console.log('[Rates] fetching...');
         const res = await axios.get(`${BASE_URL}/api/customer/currency/rates`);
         if (res.data?.success) {
           setExchangeRates(res.data.rates || {});
-          console.log('[Rates] ok');
         } else {
           console.warn('[Rates] bad payload', res.data);
         }
@@ -269,7 +254,6 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     if (state.items.length === 0) return;
     const { rate, symbol } = getCurrentCurrency();
-    console.log('[Currency] update', { rate, symbol });
     dispatch({ type: 'UPDATE_CURRENCY', payload: { rate, symbol } });
   }, [country, exchangeRates, state.items]); 
 
@@ -281,13 +265,11 @@ export const CartProvider = ({ children }) => {
 
   const fetchCartItems = async () => {
     try {
-      console.log('[ServerCart] GET /get-cart');
       const res = await axios.get(`${BASE_URL}/api/customer/cart/get-cart`, getAxiosConfig());
       if (res.data?.success) {
         const items = (res.data.cart || []).map(withSyncedTotals);
         const { rate, symbol } = getCurrentCurrency();
         const summary = calculateSummary(items, rate, symbol);
-        console.log('[ServerCart] ok', { itemsLen: items.length });
         dispatch({ type: 'SET_CART', payload: { cart: items, summary } });
         return res.data;
       }
@@ -303,18 +285,16 @@ export const CartProvider = ({ children }) => {
     migrateGuestCartKeys();
   }, []);
 
-  // merge on login (never skip if guest cart exists)
+  // merge on login 
   useEffect(() => {
     (async () => {
       const t = localStorage.getItem('authToken');
-      console.log('[AuthEffect]', { isLoggedIn, userKey, hasToken: !!t });
       if (isLoggedIn && t) {
         dispatch({ type: 'SET_LOADING', payload: true });
         try {
           const guest = getGuestCart(); 
           const rawFlag = sessionStorage.getItem(MERGE_FLAG_KEY);
           const already = rawFlag === '1';
-          console.log('[Merge]', { MERGE_FLAG_KEY, already, guestLen: guest.length });
 
           if (guest.length > 0) {
             const payload = guest.map((item) => ({
@@ -332,11 +312,9 @@ export const CartProvider = ({ children }) => {
               sku: item.sku || null,
               size: item.size_name || item.size || null,
             }));
-            console.log('[Merge] POST /merge payload', payload);
 
             try {
               const res = await axios.post(`${BASE_URL}/api/customer/cart/merge`, { guest_cart: payload }, getAxiosConfig());
-              console.log('[Merge] response', res.data);
               if (res.data?.success) {
                 clearGuestCart();
                 sessionStorage.setItem(MERGE_FLAG_KEY, '1');
@@ -350,9 +328,7 @@ export const CartProvider = ({ children }) => {
           } else {
             if (!already) {
               sessionStorage.setItem(MERGE_FLAG_KEY, '1');
-              console.log('[Merge] no guest items -> set flag');
             } else {
-              console.log('[Merge] already flagged and still no guest items');
             }
           }
 
@@ -379,7 +355,6 @@ export const CartProvider = ({ children }) => {
     const { rate, symbol } = getCurrentCurrency();
     const items = guest.map(withSyncedTotals);
     const summary = calculateSummary(items, rate, symbol);
-    console.log('[MemoCart]', { itemsLen: items.length, summary });
     dispatch({ type: 'SET_CART', payload: { cart: items, summary } });
   };
 

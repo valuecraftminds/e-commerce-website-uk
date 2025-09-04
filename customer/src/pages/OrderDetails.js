@@ -107,7 +107,6 @@ export default function OrderDetails() {
                 });
                 
                 setReviewedItems(reviewedStyleIds);
-                console.log('Reviewed items for this order:', Array.from(reviewedStyleIds));
             } else {
                 // No reviews found, keep empty set
                 setReviewedItems(new Set());
@@ -190,8 +189,7 @@ export default function OrderDetails() {
             address.postal_code,
             address.country
         ].filter(part => part && part.trim() !== '');
-        
-        console.log('address', addressParts);
+
         return addressParts.join(', ');
     };
 
@@ -276,9 +274,6 @@ export default function OrderDetails() {
                 message: `Your delivery for order ${orderDetails.order_id} has been confirmed.`,
                 type: 'success'
             });
-
-            console.log('Response:', response.data);
-
         } catch (error) {
             console.error('Error confirming delivery:', error);
             showNotify({
@@ -321,7 +316,6 @@ export default function OrderDetails() {
                     message: 'Failed to cancel order',
                     type: 'error'
                 });
-                console.log(response.data.message || 'Failed to cancel order');
             }
         } catch (error) {
             console.error('Error cancelling order:', error);
@@ -344,7 +338,6 @@ export default function OrderDetails() {
             order_id: orderDetails?.order_id // Add order_id to the selected item
         };
         
-        console.log('Selected item data for review:', selectedItemData); // Debug log
         setSelectedItem(selectedItemData);
         setShowFeedbackModal(true);
     };
@@ -362,8 +355,6 @@ export default function OrderDetails() {
         
         // Update the reviewed items set
         setReviewedItems(prev => new Set([...prev, style_number]));
-
-        console.log(`Review submitted for style_number: ${style_number}`);
     };
 
     return (

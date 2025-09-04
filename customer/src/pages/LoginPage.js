@@ -36,7 +36,6 @@ export default function LoginPage() {
 
   const handleSocialLoginSuccess = (token, user, provider) => {
     login(token, user);
-    console.log(`${provider} login successful:`, user);
     console.log('token:', token);
     
     // Redirect logic same as regular login
@@ -80,7 +79,6 @@ export default function LoginPage() {
         } else {
           navigate('/', { replace: true });
         }
-        console.log('Login successful:', data);
         console.log('token:', data.token);
         
       } else {

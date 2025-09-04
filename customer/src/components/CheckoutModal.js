@@ -464,14 +464,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
     try {
       setIsLoading(true);
 
-      // Log checkout details for debugging
-      console.log('Checkout Details:', {
-        isDirectBuy,
-        selectedItems: selectedItems || [],
-        cartItemsToCheckout: cartItems.length,
-        totalCartItems: itemsFromCart.length
-      });
-
       const payload = {
         address_id: selectedAddressId,
         payment_method,
@@ -499,12 +491,9 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
         if (!isDirectBuy && itemsFromCart.length > 0) {
           if (selectedItems && selectedItems.length > 0) {
             // Remove only selected items
-            console.log('Removing selected items from cart:', selectedItems);
             await removeMultipleFromCart(selectedItems);
-            console.log(`Successfully removed ${selectedItems.length} selected items from cart`);
           } else {
             // Remove all cart items (fallback to previous behavior)
-            console.log('Clearing entire cart');
             clearCart();
           }
         }
@@ -512,9 +501,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
         // Show success message with invoice option
         const invoiceAvailable = data.invoice_number;
         const orderNumber = data.order_number || data.order_id;
-        
-        console.log(` Payment successful! Order Number: ${orderNumber}`);
-    
 
         onSubmit?.(data);
         onHide?.();
@@ -529,7 +515,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
         setError(message);
       } else if (err.request) {
         setError('Network error. Please check your connection.');
-        console.log('Request error:', err.request);
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
@@ -572,7 +557,6 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
 
-          console.log('Invoice downloaded successfully for order:', orderId);
         } else {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to generate invoice');

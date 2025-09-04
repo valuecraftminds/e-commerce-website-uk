@@ -252,7 +252,6 @@ export default function ProductDetails() {
           },
         });
         setIsWishlisted(res.data.in_wishlist);
-        console.log("Wishlist status checked:", res.data.in_wishlist);
       } catch (err) {
         console.error("Error checking wishlist:", err);
         setIsWishlisted(false);
@@ -346,7 +345,6 @@ export default function ProductDetails() {
         quantity: quantity,
         sale_price: offerPrice || salePrice
       });
-      console.log("Add to cart result:", result);
       showNotify({
         title: "Added to Cart",
         message: (
@@ -461,7 +459,6 @@ export default function ProductDetails() {
     }
 
     try {
-      console.log("Toggling wishlist for:", product.style_id);
       if (isWishlisted) {
         // Remove from wishlist
         await axios.delete(
@@ -472,7 +469,6 @@ export default function ProductDetails() {
                 }
         );
         setIsWishlisted(false);
-        console.log("Removed from wishlist:", product.style_id);
       } else {
         // Add to wishlist
         await axios.post(
@@ -486,7 +482,6 @@ export default function ProductDetails() {
           getAxiosConfig()
         );
         setIsWishlisted(true);
-        console.log("Added to wishlist:", product.style_number);
       }
     } catch (error) {
       console.error("Error adding to wishlist:", error);
@@ -509,7 +504,6 @@ export default function ProductDetails() {
 
     const handleShare = async () => {
       navigator.clipboard.writeText(productURL);
-      console.log("Product link copied to clipboard");
       showNotify({
         title: "Link Copied",
         message: "Product link has been copied to clipboard.",
@@ -973,7 +967,6 @@ export default function ProductDetails() {
         } : null}
         onHide={() => setShowCheckoutModal(false)}
         onSubmit={(data) => {
-          console.log('Order submitted:', data);
           setShowCheckoutModal(false);
         }}
         isDirectBuy={true}

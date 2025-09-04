@@ -3,13 +3,9 @@ const db = require('../../config/database');
 const productController = {
   // GET main categories
   getMainCategories: (req, res) => {
-    console.log('getMainCategories called');
-    console.log('Query params:', req.query);
-
     const { company_code } = req.query;
 
-    if (!company_code) {
-      console.log('ERROR: No company_code provided');
+    if (!company_code) {;
       return res.status(400).json({ error: 'Company code is required' });
     }
 
@@ -19,7 +15,6 @@ const productController = {
         console.error('Error retrieving main categories:', err);
         return res.status(500).json({ error: 'Server error' });
       }
-      console.log('Query successful. Results count:', results.length);
       res.status(200).json(results);
     });
   },
@@ -78,13 +73,9 @@ const productController = {
 
   // GET all styles
   getAllStyles: (req, res) => {
-    console.log('=== getAllStyles called ===');
-    console.log('Query params:', req.query);
-
     const { company_code } = req.query;
 
     if (!company_code) {
-      console.log('ERROR: No company_code provided');
       return res.status(400).json({ error: 'Company code is required' });
     }
 
@@ -115,7 +106,6 @@ const productController = {
         console.error('Error retrieving all styles:', err);
         return res.status(500).json({ error: 'Server error' });
       }
-      console.log('Query successful. Results count:', results.length);
       res.status(200).json(results);
     });
   },
@@ -141,8 +131,6 @@ const productController = {
       WHERE ssr.style_number = ?
         AND ssr.company_code = ?;
     `;
-console.log('=== getAllSizesQuery ===');
-console.log(getAllSizesQuery);
 
     db.query(getAllSizesQuery, [style_number, company_code], (err, allSizesResult) => {
       if (err) {
