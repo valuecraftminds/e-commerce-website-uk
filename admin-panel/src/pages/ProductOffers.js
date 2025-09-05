@@ -23,7 +23,7 @@ export default function ProductOffers() {
         currentPage: 1,
         totalPages: 0,
         totalItems: 0,
-        itemsPerPage: 15,
+        itemsPerPage: 10,
         hasNextPage: false,
         hasPreviousPage: false
     });
@@ -163,7 +163,7 @@ export default function ProductOffers() {
           params: { 
             company_code: userData?.company_code,
             page: page,
-            limit: 15
+            limit: 10
           }
         });
         setData(response.data.products || []);

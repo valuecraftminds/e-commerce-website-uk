@@ -314,6 +314,50 @@ export default function Style() {
     ];
     const allFieldsFilled = requiredFields.every(f => f !== null && f !== undefined && f !== '' && f !== false && f !== 'null');
 
+    // Validate image aspect ratios before saving
+    if (styleForm.images && styleForm.images.length > 0) {
+      try {
+        const validateImageRatio = (file) => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const actualRatio = img.width / img.height; // width:height ratio
+              const expectedRatio = 2 / 3; // width:height = 2:3 = 0.667 (since height:width = 3:2)
+              const tolerance = 0.05; // Allow small tolerance for rounding
+              
+              const isValidRatio = Math.abs(actualRatio - expectedRatio) <= tolerance;
+              resolve({
+                isValid: isValidRatio,
+                actualRatio: actualRatio,
+                fileName: file.name,
+                heightToWidthRatio: img.height / img.width
+              });
+            };
+            img.onerror = () => resolve({ isValid: false, fileName: file.name });
+            img.src = URL.createObjectURL(file);
+          });
+        };
+
+        const validationResults = await Promise.all(
+          styleForm.images.map(file => validateImageRatio(file))
+        );
+
+        const invalidImages = validationResults.filter(result => !result.isValid);
+        if (invalidImages.length > 0) {
+          const errorMessages = invalidImages.map(result => 
+            `${result.fileName}: Invalid aspect ratio (H:W = ${result.heightToWidthRatio?.toFixed(2) || 'unknown'}:1). Required: height:width = 3:2`
+          );
+          setError(`Please upload images with height:width = 3:2 aspect ratio:\n${errorMessages.join('\n')}`);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        setError('Error validating images. Please try again.');
+        setLoading(false);
+        return;
+      }
+    }
+
     // Set is_view based on required fields
     const formData = new FormData();
     Object.keys(styleForm).forEach(key => {

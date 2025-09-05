@@ -6,10 +6,41 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {  Modal, Row } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import '../../styles/StyleModals.css';
+
+// Function to validate image aspect ratio (height:width = 3:2)
+const validateImageRatio = (file) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const actualRatio = img.width / img.height; // width:height ratio
+      const expectedRatio = 2 / 3; // width:height = 2:3 = 0.667 (since height:width = 3:2)
+      const tolerance = 0.05; // Allow small tolerance for rounding
+      
+      const isValidRatio = Math.abs(actualRatio - expectedRatio) <= tolerance;
+      resolve({
+        isValid: isValidRatio,
+        actualRatio: actualRatio,
+        expectedRatio: expectedRatio,
+        width: img.width,
+        height: img.height,
+        fileName: file.name,
+        heightToWidthRatio: img.height / img.width // For display purposes
+      });
+    };
+    img.onerror = () => {
+      resolve({
+        isValid: false,
+        error: 'Failed to load image',
+        fileName: file.name
+      });
+    };
+    img.src = URL.createObjectURL(file);
+  });
+};
 
 export const StyleFormModal = ({ 
 show, 
@@ -24,7 +55,83 @@ getSubcategoriesForMainCategory,
 handleSaveStyle,
 loading,
 BASE_URL
-}) => (
+}) => {
+  const [imageValidationError, setImageValidationError] = useState('');
+  const [isValidatingImages, setIsValidatingImages] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+  // Clean up object URLs when component unmounts or images change
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  // Clean up URLs when modal closes
+  useEffect(() => {
+    if (!show) {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      setPreviewUrls([]);
+      setImageValidationError('');
+      setIsValidatingImages(false);
+    }
+  }, [show, previewUrls]);
+
+  const handleImageChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) {
+      // Clean up previous URLs
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      setPreviewUrls([]);
+      return;
+    }
+
+    setIsValidatingImages(true);
+    setImageValidationError('');
+
+    // Clean up previous URLs
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+
+    try {
+      const validationResults = await Promise.all(
+        files.map(file => validateImageRatio(file))
+      );
+
+      const invalidImages = validationResults.filter(result => !result.isValid);
+
+      if (invalidImages.length > 0) {
+        const errorMessages = invalidImages.map(result => {
+          if (result.error) {
+            return `${result.fileName}: ${result.error}`;
+          }
+          return `${result.fileName}: Invalid aspect ratio (H:W = ${result.heightToWidthRatio.toFixed(2)}:1). Required: height:width = 3:2`;
+        });
+        
+        setImageValidationError(`Please upload images with height:width = 3:2 aspect ratio:\n${errorMessages.join('\n')}`);
+        e.target.value = ''; // Clear the file input
+        setPreviewUrls([]);
+        setIsValidatingImages(false);
+        return;
+      }
+
+      // All images are valid - create preview URLs
+      const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls(newPreviewUrls);
+      
+      setStyleForm({
+        ...styleForm,
+        images: files
+      });
+    } catch (error) {
+      setImageValidationError('Error validating images. Please try again.');
+      e.target.value = '';
+      setPreviewUrls([]);
+    }
+    
+    setIsValidatingImages(false);
+  };
+
+  return (
 <Modal show={show} onHide={onHide} size="large" >
   <Modal.Header closeButton>
     <Modal.Title>
@@ -103,26 +210,71 @@ BASE_URL
 
         <div className="form-group col-md-12">
           <label className="form-label">Images</label>
+          <div className="image-upload-note">
+            <small className="text-muted">
+              📸 Please upload images with height:width ratio of 3:2 (e.g., 300x200px, 600x400px, etc.)
+            </small>
+          </div>
           <input
             type="file"
             className="form-input"
             accept="image/*"
             multiple
-            onChange={(e) => setStyleForm({
-              ...styleForm,
-              images: Array.from(e.target.files)
-            })}
+            onChange={handleImageChange}
+            disabled={isValidatingImages}
           />
+          {isValidatingImages && (
+            <div className="validation-message validating">
+              Validating image aspect ratios...
+            </div>
+          )}
+          {imageValidationError && (
+            <div className="validation-message error">
+              {imageValidationError.split('\n').map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+          {!imageValidationError && !isValidatingImages && styleForm.images && styleForm.images.length > 0 && (
+            <div className="validation-message success">
+              ✓ {styleForm.images.length} image(s) validated with correct height:width = 3:2 aspect ratio
+            </div>
+          )}
+          
+          {/* Preview of newly selected images */}
+          {styleForm.images && styleForm.images.length > 0 && previewUrls.length > 0 && (
+            <div className="new-images-preview">
+              <p className="preview-label">Selected Images:</p>
+              <div className="image-previews">
+                {styleForm.images.map((file, idx) => (
+                  <div key={idx} className="image-preview-item">
+                    <img
+                      src={previewUrls[idx]}
+                      alt={`Preview ${idx + 1}`}
+                      className="preview-thumbnail"
+                    />
+                    <span className="image-name">{file.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {editingStyle && editingStyle.image && (
             <div className="existing-images">
-              {editingStyle.image.split(',').map((img, idx) => (
-                <img
-                  key={idx}
-                  src={`${BASE_URL}/uploads/styles/${img.trim()}`}
-                  alt={`Existing ${idx + 1}`}
-                  className="existing-thumbnail"
-                />
-              ))}
+              <p className="existing-label">Existing Images:</p>
+              <div className="image-previews">
+                {editingStyle.image.split(',').map((img, idx) => (
+                  <div key={idx} className="image-preview-item">
+                    <img
+                      src={`${BASE_URL}/uploads/styles/${img.trim()}`}
+                      alt={`Existing ${idx + 1}`}
+                      className="existing-thumbnail"
+                    />
+                    <span className="image-name">{img.trim()}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -156,6 +308,7 @@ BASE_URL
   </Modal.Footer>
 </Modal>
 );
+};
 
 export const VariantFormModal = ({
   show,
