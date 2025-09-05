@@ -154,6 +154,93 @@ class BannerController {
       });
     });
   }
+
+  // Get banners by category name or special "home" category
+  static getBanners(req, res) {
+    const { category } = req.query;
+    const { company_code } = req.query;
+    
+    console.log('getBanners called with:', { category, company_code });
+    
+    if (!company_code) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Company code is required' 
+      });
+    }
+
+    let sql, params;
+
+    if (category === 'home') {
+      // Special case for home page - get banners where category_id IS NULL
+      console.log('Fetching home banners (category_id IS NULL)');
+      sql = `
+        SELECT 
+          banner_id as id,
+          banner_url as image_url,
+          'Home page banner' as alt_text,
+          created_at
+        FROM custom_banners 
+        WHERE category_id IS NULL 
+          AND company_code = ?
+        ORDER BY created_at DESC
+      `;
+      params = [company_code];
+    } else if (category) {
+      // Get banners for specific category by name
+      sql = `
+        SELECT 
+          cb.banner_id as id,
+          cb.banner_url as image_url,
+          CONCAT(c.category_name, ' banner') as alt_text,
+          cb.created_at,
+          c.category_name,
+          c.category_id
+        FROM custom_banners cb
+        INNER JOIN categories c ON cb.category_id = c.category_id
+        WHERE LOWER(c.category_name) = LOWER(?) 
+          AND cb.company_code = ? 
+          AND c.parent_id IS NULL
+        ORDER BY cb.created_at DESC
+      `;
+      params = [category, company_code];
+    } else {
+      // Get all banners if no category specified
+      sql = `
+        SELECT 
+          cb.banner_id as id,
+          cb.banner_url as image_url,
+          CONCAT(IFNULL(c.category_name, 'General'), ' banner') as alt_text,
+          cb.created_at,
+          c.category_name,
+          c.category_id
+        FROM custom_banners cb
+        LEFT JOIN categories c ON cb.category_id = c.category_id
+        WHERE cb.company_code = ?
+        ORDER BY cb.created_at DESC
+      `;
+      params = [company_code];
+    }
+
+    db.query(sql, params, (err, results) => {
+      if (err) {
+        console.error('Error fetching banners:', err);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Error fetching banners' 
+        });
+      }
+      
+      console.log('Banner query results:', results);
+      console.log('Number of banners found:', results.length);
+      
+      res.json({ 
+        success: true, 
+        banners: results,
+        category: category
+      });
+    });
+  }
 }
 
 module.exports = BannerController;

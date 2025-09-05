@@ -26,6 +26,10 @@ export default function Home() {
   const [displayLimit, ] = useState(7);
   const [currentTime, setCurrentTime] = useState(new Date());
   
+  // Banner state
+  const [banners, setBanners] = useState([]);
+  const [bannersLoading, setBannersLoading] = useState(false);
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
@@ -115,6 +119,44 @@ export default function Home() {
   useEffect(() => {
     fetchProducts(currentPage, false);
   }, [currentPage, fetchProducts]);
+
+  // Fetch banners for home page
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        setBannersLoading(true);
+        console.log('Fetching home banners with COMPANY_CODE:', COMPANY_CODE);
+        const response = await axios.get(`${BASE_URL}/api/customer/banners`, {
+          params: {
+            company_code: COMPANY_CODE,
+            category: 'home' // Fetch banners for home category (where category_id IS NULL)
+          }
+        });
+        
+        console.log('Banner API response:', response.data);
+        
+        if (response.data.success) {
+          console.log('Found banners:', response.data.banners);
+          setBanners(response.data.banners);
+        } else {
+          console.log('API returned success: false');
+          setBanners([]);
+        }
+      } catch (error) {
+        console.error('Error fetching banners:', error);
+        setBanners([]); // Fall back to empty array
+      } finally {
+        setBannersLoading(false);
+      }
+    };
+
+    if (COMPANY_CODE) {
+      fetchBanners();
+    } else {
+      console.warn('COMPANY_CODE is not defined');
+      setBannersLoading(false);
+    }
+  }, []);
 
   // Load more products
   const handleLoadMore = () => {
@@ -247,11 +289,29 @@ export default function Home() {
     <>
       {/* Banner Section */}
       <div className="home-banner mb-4">
-        <img
-          src={DataFile.banner[3].image}
-          className="home-banner-img"
-          alt={`${DataFile.banner[3].category} banner`}
-        />
+        {bannersLoading ? (
+          <div className="home-banner-loading">
+            <div className="home-banner-skeleton"></div>
+          </div>
+        ) : banners.length > 0 ? (
+          <div className="home-banner-carousel">
+            {banners.map((banner, index) => (
+              <img
+                key={banner.id}
+                src={`${BASE_URL}/uploads/banners/${banner.image_url}`}
+                className="home-banner-img"
+                alt={banner.alt_text || `Home banner ${index + 1}`}
+                style={{ display: index === 0 ? 'block' : 'none' }} // Show only first banner for now
+              />
+            ))}
+          </div>
+        ) : (
+          <img
+            src={DataFile.banner[3].image}
+            className="home-banner-img"
+            alt={`${DataFile.banner[3].category} banner`}
+          />
+        )}
       </div>
 
       {/* Offer Products Section */}

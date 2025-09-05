@@ -33,11 +33,17 @@ class BannerController {
     const sql = `
       SELECT 
         cb.*,
-        c.category_name as category_name
+        CASE 
+          WHEN cb.category_id IS NULL THEN 'Home Page'
+          ELSE c.category_name
+        END as category_name
       FROM custom_banners cb
       LEFT JOIN categories c ON cb.category_id = c.category_id
       WHERE cb.company_code = ?
-      ORDER BY c.category_name ASC, cb.created_at DESC
+      ORDER BY 
+        CASE WHEN cb.category_id IS NULL THEN 0 ELSE 1 END,
+        c.category_name ASC, 
+        cb.created_at DESC
     `;
 
     db.query(sql, [company_code], (err, results) => {
@@ -64,11 +70,27 @@ class BannerController {
       });
     }
 
-    const sql = `
-      SELECT * FROM custom_banners 
-      WHERE category_id = ? AND company_code = ?
-      ORDER BY created_at DESC
-    `;
+    let sql;
+    if (category_id === 'home' || category_id === '0' || category_id === 0) {
+      sql = `
+        SELECT 
+          *,
+          'Home Page' as category_name
+        FROM custom_banners 
+        WHERE category_id IS NULL AND company_code = ?
+        ORDER BY created_at DESC
+      `;
+    } else {
+      sql = `
+        SELECT 
+          cb.*,
+          c.category_name
+        FROM custom_banners cb
+        LEFT JOIN categories c ON cb.category_id = c.category_id
+        WHERE cb.category_id = ? AND cb.company_code = ?
+        ORDER BY cb.created_at DESC
+      `;
+    }
 
     db.query(sql, [category_id, company_code], (err, results) => {
       if (err) {
@@ -94,10 +116,37 @@ class BannerController {
       });
     }
 
-    // Check if category exists and belongs to the company
-    db.query(
-      'SELECT category_id FROM categories WHERE category_id = ? AND company_code = ? AND parent_id IS NULL',
-      [category_id, company_code],
+    // Check if category exists and belongs to the company (or is special "home" category)
+    if (category_id === 'home' || category_id === '0' || category_id === 0) {
+      // Special case for home page banners - use category_id = NULL
+      const sql = `
+        INSERT INTO custom_banners (company_code, category_id, banner_url, created_at, updated_at)
+        VALUES (?, ?, ?, NOW(), NOW())
+      `;
+
+      db.query(sql, [company_code, null, bannerImage], (err, result) => {
+        if (err) {
+          console.error('Error adding home banner:', err);
+          // Clean up uploaded file if database insert fails
+          BannerController.deleteImageFile(bannerImage, 'cleanup');
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Error adding banner' 
+          });
+        }
+
+        res.json({ 
+          success: true, 
+          message: 'Home banner added successfully',
+          banner_id: result.insertId,
+          banner_url: bannerImage
+        });
+      });
+    } else {
+      // Regular category validation
+      db.query(
+        'SELECT category_id FROM categories WHERE category_id = ? AND company_code = ? AND parent_id IS NULL',
+        [category_id, company_code],
       (err, categoryResults) => {
         if (err) {
           console.error('Error checking category:', err);
@@ -140,6 +189,7 @@ class BannerController {
         });
       }
     );
+    } // Close the else block
   }
 
   // Update banner

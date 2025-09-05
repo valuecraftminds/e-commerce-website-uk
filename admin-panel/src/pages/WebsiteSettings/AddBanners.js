@@ -262,7 +262,13 @@ export default function AddBanners() {
 
   // Group banners by category
   const bannersByCategory = banners.reduce((acc, banner) => {
-    const categoryName = banner.category_name || 'Unknown Category';
+    let categoryName;
+    if (banner.category_id === null || banner.category_id === undefined || banner.category_name === 'Home Page') {
+      categoryName = 'Home Page';
+    } else {
+      categoryName = banner.category_name || 'Unknown Category';
+    }
+    
     if (!acc[categoryName]) {
       acc[categoryName] = [];
     }
@@ -296,6 +302,7 @@ export default function AddBanners() {
                 required
               >
                 <option value="">Select a main category</option>
+                <option value="0">Home Page</option>
                 {mainCategories.map((category) => (
                   <option key={category.category_id} value={category.category_id}>
                     {category.category_name}
