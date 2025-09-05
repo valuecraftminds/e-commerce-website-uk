@@ -14,7 +14,9 @@ export default function Shop() {
   const { category: currentCategory } = useParams();
   const [styles, setStyles] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bannersLoading, setBannersLoading] = useState(false);
   const [error, setError] = useState(null);
   const [exchangeRates, setExchangeRates] = useState({});
   const navigate = useNavigate();
@@ -66,6 +68,39 @@ export default function Shop() {
     };
     fetchCategories();
   }, []);
+
+  // Fetch banners when category changes
+  useEffect(() => {
+    const fetchBanners = async () => {
+      if (!currentCategory || !COMPANY_CODE) {
+        setBanners([]);
+        return;
+      }
+
+      setBannersLoading(true);
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/api/customer/banners/category-name/${currentCategory}`,
+          {
+            params: { company_code: COMPANY_CODE }
+          }
+        );
+        
+        if (response.data.success) {
+          setBanners(response.data.banners);
+        } else {
+          setBanners([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch banners:', err);
+        setBanners([]);
+      } finally {
+        setBannersLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, [currentCategory]);
 
   // Fetch styles when category changes
   useEffect(() => {
@@ -201,19 +236,37 @@ export default function Shop() {
 
   return (
     <>
-      {/* banner */}
+      {/* Dynamic Banner Section */}
       {currentCategory && (
         <div className="shop-banner mb-4">
-          {DataFile.banner
-            .filter((item) => item.category === currentCategory)
-            .map((item) => (
-              <img
-                key={item.id}
-                src={item.image}
-                className="shop-banner-img"
-                alt={`${currentCategory} banner`}
-              />  
-            ))}
+          {bannersLoading ? (
+            <div className="shop-banner-loading">
+              <div className="shop-banner-skeleton"></div>
+            </div>
+          ) : banners.length > 0 ? (
+            <div className="shop-banner-carousel">
+              {banners.map((banner) => (
+                <img
+                  key={banner.banner_id}
+                  src={`${BASE_URL}/uploads/banners/${banner.banner_url}`}
+                  className="shop-banner-img"
+                  alt={`${currentCategory} banner`}
+                />
+              ))}
+            </div>
+          ) : (
+            // Fallback to static banners from DataFile if no admin banners exist
+            DataFile.banner
+              .filter((item) => item.category === currentCategory)
+              .map((item) => (
+                <img
+                  key={item.id}
+                  src={item.image}
+                  className="shop-banner-img"
+                  alt={`${currentCategory} banner`}
+                />  
+              ))
+          )}
         </div>
       )}
       

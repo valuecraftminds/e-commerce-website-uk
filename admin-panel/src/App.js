@@ -42,6 +42,8 @@ import OrderDetails from './pages/OrderDetails';
 import VerifyCompanyAdmin from './pages/VCM_Admin/VerifyCompanyAdmin';
 import StockManagement from './pages/StockManagement';
 import ProductOffers from './pages/ProductOffers';
+import AddBanners from './pages/WebsiteSettings/AddBanners';
+import AddFooter from './pages/WebsiteSettings/AddFooter';
 
 // Create Sidebar Context for global sidebar state management
 export const SidebarContext = createContext();
@@ -224,6 +226,8 @@ function App() {
           <Route path="/merchandising/po/:po_number/view" element={<ViewPurchaseOrder />} />
 
           <Route path="/company-settings" element={<CompanySettings />} />
+          <Route path="/website-settings/banners" element={<AddBanners />} />
+          <Route path="/website-settings/footer" element={<AddFooter />} />
           <Route path="/approve-po" element={<ApprovePO />} />
           <Route path="/warehouse/issuing" element={<WarehouseIssuing />} />
           <Route path="/order-details/:order_id" element={<OrderDetails />} />

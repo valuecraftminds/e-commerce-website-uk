@@ -1,11 +1,114 @@
-.shop-banner img {
+/* Banner Styles */
+.shop-banner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1), width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shop-banner-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.shop-banner img,
+.shop-banner-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  top: 0;
-  left: 0;
-  z-index: -1;
+}
+
+/* Banner Loading State */
+.shop-banner-loading {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-banner-skeleton {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Multiple Banners Carousel (if multiple banners exist) */
+.shop-banner-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 1rem;
+}
+
+.shop-banner-carousel img {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+.shop-banner-carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.shop-banner-carousel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.shop-banner-carousel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.shop-banner-carousel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive Banner */
+@media (max-width: 768px) {
+  .shop-banner {
+    height: 250px;
+    border-radius: 8px;
+  }
+  
+  .shop-banner-skeleton {
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-banner {
+    height: 200px;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+  
+  .shop-banner-skeleton {
+    border-radius: 6px;
+  }
 }
 
 .shop-product-container {
@@ -13,6 +116,19 @@
   margin: 0 auto;
   height: 100%;
   min-height: 100vh;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Adjust layout when sidebar is open on desktop */
+@media (min-width: 769px) {
+  .main-content-wrapper.sidebar-open .shop-product-container {
+    margin-left: 20%;
+  }
+  
+  .main-content-wrapper.sidebar-open .shop-banner {
+    margin-left: 20%;
+    width: 80%;
+  }
 }
 
 /* Loading Spinner */
@@ -61,6 +177,14 @@
   padding: 20px;
   max-width: 100%;
   margin: 0 auto;
+}
+
+/* Adjust grid when sidebar is open on desktop */
+@media (min-width: 769px) {
+  .main-content-wrapper.sidebar-open .shop-products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
 }
 
 .shop-product-card {

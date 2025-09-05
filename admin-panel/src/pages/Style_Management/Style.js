@@ -319,6 +319,20 @@ export default function Style() {
       try {
         const validateImageRatio = (file) => {
           return new Promise((resolve) => {
+            // Check file size first (2MB = 2 * 1024 * 1024 bytes)
+            const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+            const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            
+            if (file.size > maxSizeInBytes) {
+              resolve({
+                isValid: false,
+                error: `File size too large (${fileSizeInMB}MB). Maximum allowed: 2MB`,
+                fileName: file.name,
+                fileSize: fileSizeInMB
+              });
+              return;
+            }
+
             const img = new Image();
             img.onload = () => {
               const actualRatio = img.width / img.height; // width:height ratio
@@ -330,10 +344,16 @@ export default function Style() {
                 isValid: isValidRatio,
                 actualRatio: actualRatio,
                 fileName: file.name,
+                fileSize: fileSizeInMB,
                 heightToWidthRatio: img.height / img.width
               });
             };
-            img.onerror = () => resolve({ isValid: false, fileName: file.name });
+            img.onerror = () => resolve({ 
+              isValid: false, 
+              fileName: file.name,
+              fileSize: fileSizeInMB,
+              error: 'Failed to load image'
+            });
             img.src = URL.createObjectURL(file);
           });
         };
@@ -344,10 +364,13 @@ export default function Style() {
 
         const invalidImages = validationResults.filter(result => !result.isValid);
         if (invalidImages.length > 0) {
-          const errorMessages = invalidImages.map(result => 
-            `${result.fileName}: Invalid aspect ratio (H:W = ${result.heightToWidthRatio?.toFixed(2) || 'unknown'}:1). Required: height:width = 3:2`
-          );
-          setError(`Please upload images with height:width = 3:2 aspect ratio:\n${errorMessages.join('\n')}`);
+          const errorMessages = invalidImages.map(result => {
+            if (result.error) {
+              return `${result.fileName} (${result.fileSize}MB): ${result.error}`;
+            }
+            return `${result.fileName} (${result.fileSize}MB): Invalid aspect ratio (H:W = ${result.heightToWidthRatio?.toFixed(2) || 'unknown'}:1). Required: height:width = 3:2`;
+          });
+          setError(`Please upload images with height:width = 3:2 aspect ratio and max 2MB size:\n${errorMessages.join('\n')}`);
           setLoading(false);
           return;
         }

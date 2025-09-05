@@ -41,6 +41,7 @@ const wishlistRoutes = require('./routes/customer/WishlistRoutes');
 const OrdersHistoryRoutes = require('./routes/customer/OrdersHistoryRoutes');
 const FeedbackRoutes = require('./routes/customer/FeedbackRoutes');
 const InvoiceRoutes = require('./routes/customer/InvoiceRoutes');
+const customerBannerRoutes = require('./routes/customer/Banner');
 
 // Admin
 const adminAuthRoutes = require('./routes/admin/AdminAuth');
@@ -60,6 +61,7 @@ const LocationRoutes = require('./routes/admin/Location');
 const StockRoutes = require('./routes/admin/Stock');
 const IssuingRoutes = require('./routes/admin/Issuing');
 const ProductOffersRoutes = require('./routes/admin/ProductOffers');
+const bannerRoutes = require('./routes/admin/Banner');
 
 
 // Route bindings
@@ -77,6 +79,7 @@ app.use('/api/customer/wishlist', wishlistRoutes);
 app.use('/api/customer/orders', OrdersHistoryRoutes);
 app.use('/api/customer/feedback', FeedbackRoutes);
 app.use('/api/customer/invoices', InvoiceRoutes);
+app.use('/api/customer/banners', customerBannerRoutes);
 
 
 // Admin routes
@@ -97,6 +100,7 @@ app.use('/api/admin/locations', LocationRoutes);
 app.use('/api/admin/stock', StockRoutes);
 app.use('/api/admin/issuing', IssuingRoutes);
 app.use('/api/admin/offers', ProductOffersRoutes);
+app.use('/api/admin/banners', bannerRoutes);
 
 
 // Default route

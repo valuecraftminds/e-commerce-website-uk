@@ -11,9 +11,23 @@ import {  Modal, Row } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import '../../styles/StyleModals.css';
 
-// Function to validate image aspect ratio (height:width = 3:2)
+// Function to validate image aspect ratio (height:width = 3:2) and file size
 const validateImageRatio = (file) => {
   return new Promise((resolve) => {
+    // Check file size first (2MB = 2 * 1024 * 1024 bytes)
+    const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+    const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+    
+    if (file.size > maxSizeInBytes) {
+      resolve({
+        isValid: false,
+        error: `File size too large (${fileSizeInMB}MB). Maximum allowed: 2MB`,
+        fileName: file.name,
+        fileSize: fileSizeInMB
+      });
+      return;
+    }
+
     const img = new Image();
     img.onload = () => {
       const actualRatio = img.width / img.height; // width:height ratio
@@ -28,6 +42,7 @@ const validateImageRatio = (file) => {
         width: img.width,
         height: img.height,
         fileName: file.name,
+        fileSize: fileSizeInMB,
         heightToWidthRatio: img.height / img.width // For display purposes
       });
     };
@@ -35,7 +50,8 @@ const validateImageRatio = (file) => {
       resolve({
         isValid: false,
         error: 'Failed to load image',
-        fileName: file.name
+        fileName: file.name,
+        fileSize: fileSizeInMB
       });
     };
     img.src = URL.createObjectURL(file);
@@ -102,12 +118,12 @@ BASE_URL
       if (invalidImages.length > 0) {
         const errorMessages = invalidImages.map(result => {
           if (result.error) {
-            return `${result.fileName}: ${result.error}`;
+            return `${result.fileName} (${result.fileSize}MB): ${result.error}`;
           }
-          return `${result.fileName}: Invalid aspect ratio (H:W = ${result.heightToWidthRatio.toFixed(2)}:1). Required: height:width = 3:2`;
+          return `${result.fileName} (${result.fileSize}MB): Invalid aspect ratio (H:W = ${result.heightToWidthRatio.toFixed(2)}:1). Required: height:width = 3:2`;
         });
         
-        setImageValidationError(`Please upload images with height:width = 3:2 aspect ratio:\n${errorMessages.join('\n')}`);
+        setImageValidationError(`Please upload images with height:width = 3:2 aspect ratio and max 2MB size:\n${errorMessages.join('\n')}`);
         e.target.value = ''; // Clear the file input
         setPreviewUrls([]);
         setIsValidatingImages(false);
@@ -212,7 +228,7 @@ BASE_URL
           <label className="form-label">Images</label>
           <div className="image-upload-note">
             <small className="text-muted">
-              📸 Please upload images with height:width ratio of 3:2 (e.g., 300x200px, 600x400px, etc.)
+              📸 Please upload images with height:width ratio of 3:2 (e.g., 300x200px, 600x400px) and maximum file size of 2MB
             </small>
           </div>
           <input
@@ -237,7 +253,7 @@ BASE_URL
           )}
           {!imageValidationError && !isValidatingImages && styleForm.images && styleForm.images.length > 0 && (
             <div className="validation-message success">
-              ✓ {styleForm.images.length} image(s) validated with correct height:width = 3:2 aspect ratio
+              ✓ {styleForm.images.length} image(s) validated with correct height:width = 3:2 aspect ratio and file size ≤ 2MB
             </div>
           )}
           

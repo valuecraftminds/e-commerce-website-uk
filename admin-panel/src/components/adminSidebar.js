@@ -83,7 +83,12 @@ const roleBasedMenuItems = {
         items: [
           { label: 'Profile settings', path: '/settings', icon: 'bi bi-person-gear me-2' },
           { label: 'Company settings', path: '/company-settings', icon: 'bi bi-building-gear me-2' },
-          { label: 'Website settings', path: '/website-settings', icon: 'bi bi-globe2 me-2' }
+          { label: 'Website settings', path: '/website-settings', icon: 'bi bi-globe2 me-2', dropdown: true,
+            items: [
+              { label: 'Add banners', path: '/website-settings/banners', icon: 'bi-wallet' },
+              { label: 'Add footer', path: '/website-settings/footer', icon: 'bi-people' },
+            ]
+           }
         ]
       },
     ],
