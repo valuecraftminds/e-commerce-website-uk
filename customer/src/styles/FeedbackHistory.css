@@ -58,6 +58,70 @@
   letter-spacing: 0.5px;
 }
 
+.feedback-filter-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.feedback-filter-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.feedback-filter-select {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  min-width: 150px;
+}
+
+.feedback-filter-select:focus {
+  outline: none;
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.feedback-filter-select:hover {
+  border-color: #ff6b35;
+}
+
+/* Controls Row Layout */
+.feedback-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.feedback-controls-row .feedback-stats {
+  margin: 0;
+  justify-content: flex-start;
+}
+
+.feedback-controls-row .feedback-filter-section {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
 /* Loading State */
 .feedback-loading-container {
   display: flex;
@@ -466,6 +530,26 @@
     gap: 2rem;
   }
 
+  .feedback-controls-row {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .feedback-controls-row .feedback-stats {
+    justify-content: center;
+  }
+
+  .feedback-filter-group {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .feedback-filter-select {
+    min-width: 100%;
+  }
+
   .feedback-controls {
     flex-direction: column;
     align-items: stretch;
@@ -529,6 +613,26 @@
   .feedback-stats {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .feedback-controls-row {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.75rem;
+  }
+
+  .feedback-controls-row .feedback-stats {
+    justify-content: center;
+  }
+
+  .feedback-filter-group {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .feedback-filter-select {
+    min-width: 100%;
   }
 
   .search-box {
