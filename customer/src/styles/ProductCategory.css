@@ -734,3 +734,33 @@
     animation: none;
   }
 }
+
+/* Star Rating Styles */
+.stars-container {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.star {
+  font-size: 14px;
+  color: #ddd;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #ffc107;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rating-text {
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}

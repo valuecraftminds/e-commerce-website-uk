@@ -34,6 +34,7 @@
 .navbar-logo{
     height: 40px;
     margin-right: 10px;
+    border: none !important;
 }
 
 /* User menu mobile responsive styles */
