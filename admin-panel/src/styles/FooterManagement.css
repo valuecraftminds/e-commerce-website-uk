@@ -1,0 +1,146 @@
+/* Footer Management Styles */
+.footer-management {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.footer-section-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.footer-section-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.footer-item-table {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.footer-item-table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.footer-item-table td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+.footer-item-table code {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.modal-form .form-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.modal-form .form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn-action {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-action:hover {
+  transform: translateY(-1px);
+}
+
+.badge-custom {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 12px;
+}
+
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.section-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.section-header h5 {
+  color: white;
+  margin-bottom: 0;
+}
+
+.items-container {
+  background-color: #ffffff;
+  border-radius: 0 0 8px 8px;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .footer-section-card {
+    margin-bottom: 1rem;
+  }
+  
+  .btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .footer-item-table {
+    font-size: 0.85rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .footer-management {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .footer-section-card {
+    background-color: #2d2d2d;
+    border-color: #404040;
+  }
+  
+  .footer-item-table th {
+    background-color: #404040;
+    color: #ffffff;
+  }
+}
