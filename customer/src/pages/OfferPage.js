@@ -4,6 +4,7 @@ import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { CountryContext } from "../context/CountryContext";
+import StarRating from "../components/StarRating";
 
 import "../styles/OfferPage.css";
 
@@ -24,22 +25,6 @@ export default function OfferPage() {
 
   const getProductDetails = (styleNumber) => {
     navigate(`/product/${styleNumber}`);
-  };
-
-  // Render stars for rating display
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          className={`star ${i <= rating ? 'filled' : ''}`}
-        >
-          ★
-        </span>
-      );
-    }
-    return <div className="stars-container">{stars}</div>;
   };
 
 // fetch items with offer_price
@@ -211,15 +196,15 @@ export default function OfferPage() {
                           }
                         </p>
 
-                        {/* Rating Display */}
-                      {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
-                        <div className="product-rating mb-2">
-                          {renderStars(Math.round(parseFloat(product.average_rating)))}
-                          <span className="rating-text ms-2">
-                            {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
-                          </span>
-                        </div>
-                      )}
+                         {/* Rating Display */}
+                        {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
+                          <div className="product-rating mb-2">
+                            <StarRating rating={Math.round(parseFloat(product.average_rating))} size="medium" />
+                            <span className="rating-text ms-2">
+                              {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
+                            </span>
+                          </div>
+                        )}
 
                         <div className="offer-product-price">
                           <span className="current-price">
@@ -228,9 +213,6 @@ export default function OfferPage() {
                                   <span className="original-price">
                             {formatPrice(product.sale_price)}
                           </span>
-                                  <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
-                            Starting from (best offer)
-                          </small>
                         </div>
 
                         {/* Countdown Timer */}

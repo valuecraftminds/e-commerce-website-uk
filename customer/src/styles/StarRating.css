@@ -1,0 +1,91 @@
+.stars-container {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.star {
+  color: #ddd;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #ffc107;
+}
+
+/* Size variations */
+.stars-container.small .star {
+  font-size: 12px;
+}
+
+.stars-container.medium .star {
+  font-size: 14px;
+}
+
+.stars-container.large .star {
+  font-size: 16px;
+}
+
+.stars-container.extra-large .star {
+  font-size: 18px;
+}
+
+/* Rating value display */
+.rating-value {
+  margin-left: 8px;
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stars-container.small .star {
+    font-size: 10px;
+  }
+
+  .stars-container.medium .star {
+    font-size: 12px;
+  }
+
+  .stars-container.large .star {
+    font-size: 14px;
+  }
+
+  .stars-container.extra-large .star {
+    font-size: 16px;
+  }
+
+  .rating-value {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stars-container {
+    gap: 1px;
+  }
+
+  .stars-container.small .star {
+    font-size: 9px;
+  }
+
+  .stars-container.medium .star {
+    font-size: 11px;
+  }
+
+  .stars-container.large .star {
+    font-size: 13px;
+  }
+
+  .stars-container.extra-large .star {
+    font-size: 15px;
+  }
+}
+
+/* Accessibility - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .star {
+    transition: none;
+  }
+}
