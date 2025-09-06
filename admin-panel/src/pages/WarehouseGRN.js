@@ -27,7 +27,7 @@ export default function WarehouseGRN() {
   });
   const [poLoading, setPoLoading] = useState(false);
   const [poError, setPoError] = useState('');
-  const [activeTab, setActiveTab] = useState('pending'); // New state for tabs
+  const [activeTab, setActiveTab] = useState('all'); // New state for tabs
 
   // Fetch purchase orders
   const fetchPurchaseOrders = useCallback(async () => {
@@ -37,7 +37,7 @@ export default function WarehouseGRN() {
       const params = { 
         company_code, 
         ...poFilter,
-        status: activeTab // Add status filter based on active tab
+        ...(activeTab !== 'all' && { status: activeTab }) // Only add status filter if not 'all'
       };
       const response = await axios.get(`${BASE_URL}/api/admin/grn/purchase-orders-with-status`, { params });
       setPurchaseOrders(response.data.purchase_orders || []);
@@ -46,7 +46,27 @@ export default function WarehouseGRN() {
     } finally {
       setPoLoading(false);
     }
-  }, [company_code, poFilter, activeTab]); // Add activeTab to dependencies
+  }, [company_code, poFilter, activeTab]);
+
+  // Fetch all PO numbers for dropdown (independent of filters)
+  const fetchAllPONumbers = useCallback(async () => {
+    if (!company_code) return;
+    
+    try {
+      const response = await axios.get(`${BASE_URL}/api/admin/grn/purchase-orders-with-status`, {
+        params: { company_code } // No filters, get all POs
+      });
+      if (response.data.purchase_orders?.length > 0) {
+        const poNumbers = response.data.purchase_orders.map(po => po.po_number);
+        setAllPONumbers([...new Set(poNumbers)]); // Remove duplicates
+      } else {
+        setAllPONumbers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching PO numbers:', error);
+      setAllPONumbers([]);
+    }
+  }, [company_code]); // Add activeTab to dependencies
 
   // Fetch suppliers for PO filter
   const fetchPoSuppliers = useCallback(async () => {
@@ -67,7 +87,14 @@ export default function WarehouseGRN() {
     }
   }, [company_code, fetchPurchaseOrders, fetchPoSuppliers]);
 
-  // GRN history and PO search logic (existing)
+  // Separate useEffect for fetching PO numbers only once
+  useEffect(() => {
+    if (company_code) {
+      fetchAllPONumbers();
+    }
+  }, [company_code]); // Only depend on company_code
+
+  // GRN history logic
   const [grnHistory, setGrnHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -78,12 +105,9 @@ export default function WarehouseGRN() {
     to_date: ''
   });
 
-  // PO Search State
-  const [searchPO, setSearchPO] = useState('');
-  const [poResults, setPOResults] = useState([]);
-  const [allPOResults, setAllPOResults] = useState([]); // Store all POs for initial display
+  // PO Number dropdown state
+  const [allPONumbers, setAllPONumbers] = useState([]);
   const [showPODropdown, setShowPODropdown] = useState(false);
-  const [poSearchLoading, setPOLoading] = useState(false);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -114,61 +138,8 @@ export default function WarehouseGRN() {
     if (company_code) fetchHistory();
   }, [company_code, grnFilter]);
 
-  // Fetch all PO numbers for initial display
-  const fetchAllPONumbers = useCallback(async () => {
-    if (!company_code) return;
-    
-    setPOLoading(true);
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/admin/grn/search-po`, {
-        params: { company_code, po_number: '' }
-      });
-      if (response.data.success && response.data.purchase_orders?.length > 0) {
-        setAllPOResults(response.data.purchase_orders);
-      } else {
-        setAllPOResults([]);
-      }
-    } catch {
-      setAllPOResults([]);
-    } finally {
-      setPOLoading(false);
-    }
-  }, [company_code]);
-
-  // Load all PO numbers on component mount
-  useEffect(() => {
-    if (company_code) {
-      fetchAllPONumbers();
-    }
-  }, [company_code, fetchAllPONumbers]);
-
-  // Autocomplete PO numbers as user types (logic from AddGRN)
-  useEffect(() => {
-    if (!company_code) {
-      setPOResults([]);
-      setShowPODropdown(false);
-      return;
-    }
-
-    // If search is empty, show all POs when dropdown is open
-    if (!searchPO) {
-      setPOResults(allPOResults);
-      return;
-    }
-
-    // Filter from all POs based on PO number only
-    const filteredPOs = allPOResults.filter(po => 
-      po.po_number.toLowerCase().includes(searchPO.toLowerCase())
-    );
-    setPOResults(filteredPOs);
-  }, [searchPO, company_code, allPOResults]);
-
-  // Handle PO select (from AddGRN logic)
-  // Only navigate when Search button is clicked
+  // Handle PO select - navigate to add GRN page
   const handleSelectPO = (po_number) => {
-    setSearchPO('');
-    setPOResults([]);
-    setShowPODropdown(false);
     navigate(`/warehouse/add-grn/${po_number}`);
   };
 
@@ -201,101 +172,7 @@ export default function WarehouseGRN() {
 
   return (
     <Container className="py-4">
-      <Row className="mb-4">
-        <Col md={8} lg={6} xl={5}>
-          <Card>
-            <Card.Body>
-              <Form autoComplete="off" onSubmit={e => {
-                e.preventDefault();
-                // Find the PO in the results that matches the entered PO number
-                const found = allPOResults.find(po => String(po.po_number) === String(searchPO));
-                if (found) {
-                  handleSelectPO(found.po_number);
-                } else {
-                  setError('No PO found matching the entered PO number');
-                }
-              }}>
-                <Form.Group>
-                  <Form.Label>Search PO Number</Form.Label>
-                  <div style={{ position: 'relative', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Form.Control
-                      type="text"
-                      value={searchPO}
-                      onChange={e => setSearchPO(e.target.value)}
-                      placeholder="Enter PO number"
-                      onFocus={() => {
-                        if (allPOResults.length > 0) {
-                          setPOResults(searchPO ? poResults : allPOResults);
-                          setShowPODropdown(true);
-                        }
-                      }}
-                      onBlur={() => setTimeout(() => setShowPODropdown(false), 200)}
-                      style={{ flex: 1 }}
-                    />
-                    <Button type="submit" variant="primary" disabled={!searchPO || poSearchLoading || poLoading}>
-                      {poSearchLoading ? 'Searching...' : 'Search'}
-                    </Button>
-                    {showPODropdown && poResults.length > 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: '100%',
-                        zIndex: 10,
-                        background: '#fff',
-                        border: '1px solid #ccc',
-                        width: '100%',
-                        maxHeight: 200,
-                        overflowY: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                      }}>
-                        {poResults.slice(0, 10).map(po => (
-                          <div
-                            key={po.po_number}
-                            style={{ 
-                              padding: '8px', 
-                              cursor: 'pointer',
-                              borderBottom: '1px solid #eee'
-                            }}
-                            className="po-dropdown-item"
-                            // Only fill the input, do not navigate
-                            onMouseDown={() => {
-                              setSearchPO(po.po_number);
-                              setShowPODropdown(false);
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.backgroundColor = '#f8f9fa';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.backgroundColor = '#fff';
-                            }}
-                          >
-                            <div style={{ fontWeight: 'bold' }}>{po.po_number}</div>
-                          </div>
-                        ))}
-                        {poResults.length > 10 && (
-                          <div style={{ 
-                            padding: '8px', 
-                            textAlign: 'center', 
-                            fontSize: '0.85em', 
-                            color: '#999',
-                            borderTop: '1px solid #eee',
-                            backgroundColor: '#f8f9fa'
-                          }}>
-                            Showing 10 of {poResults.length} POs. Type to filter further.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Form.Group>
-              </Form>
-              
-             
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      {/* PO Search Card */}
+      
       {/* Purchase Orders Table & Filters */}
       <Row className="mb-4">
         <Col>
@@ -305,6 +182,15 @@ export default function WarehouseGRN() {
               
               {/* Status Tabs */}
               <Nav variant="tabs" className="mb-3">
+                <Nav.Item>
+                  <Nav.Link 
+                    active={activeTab === 'all'} 
+                    onClick={() => !poLoading && setActiveTab('all')}
+                    style={{ cursor: poLoading ? 'not-allowed' : 'pointer', opacity: poLoading ? 0.6 : 1 }}
+                  >
+                    All
+                  </Nav.Link>
+                </Nav.Item>
                 <Nav.Item>
                   <Nav.Link 
                     active={activeTab === 'pending'} 
@@ -323,6 +209,15 @@ export default function WarehouseGRN() {
                     Partial
                   </Nav.Link>
                 </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link 
+                    active={activeTab === 'completed'} 
+                    onClick={() => !poLoading && setActiveTab('completed')}
+                    style={{ cursor: poLoading ? 'not-allowed' : 'pointer', opacity: poLoading ? 0.6 : 1 }}
+                  >
+                    Completed
+                  </Nav.Link>
+                </Nav.Item>
               </Nav>
 
               {/* Filters */}
@@ -331,12 +226,57 @@ export default function WarehouseGRN() {
                   <Col md={3}>
                     <Form.Group>
                       <Form.Label>PO Number</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={poFilter.po_number}
-                        onChange={e => setPoFilter({ ...poFilter, po_number: e.target.value })}
-                        disabled={poLoading}
-                      />
+                      <div style={{ position: 'relative' }}>
+                        <Form.Control
+                          type="text"
+                          value={poFilter.po_number}
+                          onChange={e => setPoFilter({ ...poFilter, po_number: e.target.value })}
+                          onFocus={() => setShowPODropdown(true)}
+                          onBlur={() => setTimeout(() => setShowPODropdown(false), 200)}
+                          placeholder="Select or type PO number"
+                          disabled={poLoading}
+                        />
+                        {showPODropdown && allPONumbers.length > 0 && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            zIndex: 10,
+                            background: '#fff',
+                            border: '1px solid #ccc',
+                            borderTop: 'none',
+                            maxHeight: 200,
+                            overflowY: 'auto',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                          }}>
+                            {allPONumbers
+                              .filter(po => po.toLowerCase().includes(poFilter.po_number.toLowerCase()))
+                              .map(po => (
+                                <div
+                                  key={po}
+                                  style={{ 
+                                    padding: '8px 12px', 
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #eee'
+                                  }}
+                                  onMouseDown={() => {
+                                    setPoFilter({ ...poFilter, po_number: po });
+                                    setShowPODropdown(false);
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.backgroundColor = '#f8f9fa';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.backgroundColor = '#fff';
+                                  }}
+                                >
+                                  {po}
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
@@ -402,14 +342,14 @@ export default function WarehouseGRN() {
                         <th>Total Styles</th>
                         <th>Total Cost</th>
                         <th>Tolerance Limit (%)</th>
-                        {activeTab !== 'pending' && <th>Latest GRN Date</th>}
+                        {(activeTab === 'partial' || activeTab === 'completed') && <th>Latest GRN Date</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {purchaseOrders.length === 0 ? (
                         <tr>
-                          <td colSpan={activeTab === 'pending' ? '6' : '7'} className="text-center">
-                            No {activeTab} purchase orders found
+                          <td colSpan={(['partial', 'completed'].includes(activeTab)) ? '7' : '6'} className="text-center">
+                            No {activeTab === 'all' ? '' : activeTab} purchase orders found
                           </td>
                         </tr>
                       ) : (
@@ -422,7 +362,7 @@ export default function WarehouseGRN() {
                             <td>${parseFloat(po.total_cost || 0).toFixed(2)}</td>
                             <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}%</td>
                            
-                            {activeTab !== 'pending' && <td>{po.latest_grn_date ? new Date(po.latest_grn_date).toLocaleDateString() : '-'}</td>}
+                            {(activeTab === 'partial' || activeTab === 'completed') && <td>{po.latest_grn_date ? new Date(po.latest_grn_date).toLocaleDateString() : '-'}</td>}
                           </tr>
                         ))
                       )}
