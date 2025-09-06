@@ -7,7 +7,7 @@
 }
 
 .checkout-modal .modal-header {
-  background: #545b62;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 150%);
   color: #fff;
   padding-top: 20px !important;
   padding-bottom: 20px !important;
@@ -23,7 +23,6 @@
   flex-grow: 1;
   padding-left: 20px;
 }
-
 
 .checkout-modal .modal-body {
   padding: 30px;
@@ -117,6 +116,10 @@
   user-select: none;
 }
 
+.add-new-address-btn:hover{
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
 /* Footer buttons */
 .checkout-modal .modal-footer .btn {
   font-weight: 500;
@@ -139,13 +142,14 @@
 }
 
 .checkout-modal .continue-btn {
-  background-color: #000 !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s ease !important;
   border: none;
   color: #fff;
 }
 
 .checkout-modal .continue-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-4px) !important;
 }
 
 /* Payment Method  */

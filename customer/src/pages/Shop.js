@@ -7,6 +7,7 @@ import DataFile from "../assets/DataFile";
 import '../styles/Shop.css';
 import { CountryContext } from "../context/CountryContext";
 import StarRating from "../components/StarRating";
+import BackToTop from "../components/BackToTop";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -360,6 +361,8 @@ export default function Shop() {
           </div>
         )}
       </Container>
+
+      <BackToTop />
     </>
   );
 }

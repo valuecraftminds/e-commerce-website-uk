@@ -5,6 +5,7 @@ import axios from 'axios';
 import '../styles/ProductCategory.css';
 import { CountryContext } from "../context/CountryContext";
 import StarRating from "../components/StarRating";
+import BackToTop from "../components/BackToTop";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -387,6 +388,8 @@ const ProductCategory = () => {
           </div>
         )}
       </div>
+      
+      <BackToTop />
     </div>
   );
 };

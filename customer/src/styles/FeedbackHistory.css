@@ -1,4 +1,3 @@
-/* Feedback History Page Styles */
 .feedback-history {
   max-width: 1200px;
   margin: 0 auto;
@@ -47,7 +46,9 @@
 .feedback-stat-number {
   font-size: 2rem;
   font-weight: bold;
-  color: #ff6b35;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 0.25rem;
 }
 
@@ -87,12 +88,12 @@
 
 .feedback-filter-select:focus {
   outline: none;
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .feedback-filter-select:hover {
-  border-color: #ff6b35;
+  border-color: #667eea;
 }
 
 /* Controls Row Layout */
@@ -136,7 +137,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #ff6b35;
+  border-top: 4px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -231,8 +232,8 @@
 
 .feedback-search-input:focus {
   outline: none;
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .feedback-search-icon {
@@ -265,7 +266,7 @@
 .feedback-sort-select:focus,
 .feedback-filter-select:focus {
   outline: none;
-  border-color: #ff6b35;
+  border-color: #667eea;
 }
 
 /* Feedback List */
@@ -379,7 +380,7 @@
   background: #f8f9fa;
   padding: 1rem;
   border-radius: 8px;
-  border-left: 4px solid #ff6b35;
+  border-left: 4px solid #667eea;
 }
 
 .feedback-review-text p {
@@ -489,8 +490,8 @@
 
 .feedback-pagination-btn:hover:not(:disabled) {
   background: #f8f9fa;
-  border-color: #ff6b35;
-  color: #ff6b35;
+  border-color: #667eea;
+  color: #667eea;
 }
 
 .feedback-pagination-btn:disabled {
@@ -501,9 +502,9 @@
 }
 
 .feedback-pagination-btn.active {
-  background: #ff6b35;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-color: #ff6b35;
+  border-color: #667eea;
 }
 
 .feedback-pagination-numbers {
@@ -675,7 +676,7 @@
 }
 
 .feedback-load-more-btn{
-  background-color: #ff6b35;
+  background-color: #667eea;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -685,5 +686,5 @@
 }
 
 .feedback-load-more-btn:hover {
-  background-color: #e65c2f;
+  background-color: #5a67d8;
 }

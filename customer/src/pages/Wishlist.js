@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import '../styles/Wishlist.css';
 import { useNotifyModal } from "../context/NotifyModalProvider";
+import BackToTop from "../components/BackToTop";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -125,6 +126,8 @@ const Wishlist = () => {
                     </div>
                 ))}
             </div>
+            
+            <BackToTop />
         </div>
     );
 };

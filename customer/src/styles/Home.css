@@ -20,7 +20,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transition: none; /* Remove hover effects */
+  transition: none;
 }
 
 /* Banner Loading State */
@@ -44,6 +44,23 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
   border-radius: 12px;
+}
+
+.view-all-offers-btn {
+  cursor: pointer !important;
+  border: 2px solid #dc3545 !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  background: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  color: #dc3545 !important;
+  transition: all 0.3s ease !important;
+}
+
+.view-all-offers-btn:hover {
+  text-decoration: underline !important;
+  transform: translateY(5px) !important;
 }
 
 @keyframes shimmer {
@@ -319,11 +336,11 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);
-  color: white;
+  background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%) !important;
+  color: white !important;
   padding: 5px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 10px !important;
   font-weight: 700;
   z-index: 2;
   box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
@@ -857,14 +874,14 @@
   font-size: 1rem;
   font-weight: 500;
   border-radius: 25px;
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
 .load-more-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(5px) !important;
   box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
 }
 
@@ -878,28 +895,6 @@
 .end-of-results {
   padding: 2rem;
   border-radius: 10px;
-}
-
-/* Back to Top Button */
-.back-to-top-btn {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: none !important;
-  background: linear-gradient(135deg, #074281, #13477e);
-  color: white;
-  cursor: pointer;
-  z-index: 1000;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-}
-
-.back-to-top-btn:hover {
-  transform: translateY(-5px);
-  background: linear-gradient(135deg, #0056b3, #003d82);
 }
 
 /* Loading spinner */
@@ -917,14 +912,6 @@
   
   .filter-info {
     font-size: 0.8rem;
-  }
-  
-  .back-to-top-btn {
-    bottom: 20px;
-    right: 20px;
-    width: 45px;
-    height: 45px;
-    font-size: 1rem;
   }
   
   .load-more-btn {
