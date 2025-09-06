@@ -927,10 +927,21 @@ export default function ProductDetails() {
                     : similarProduct.description
                   }
                 </p>
-                    <div className="home-product-price">
-                      {similarProduct.offer_price && similarProduct.offer_price !== 0 ? (
-                        <>
-                          <span className="me-2">
+                
+                {/* Rating Display */}
+                {parseFloat(similarProduct.average_rating) > 0 && parseInt(similarProduct.review_count) > 0 && (
+                  <div className="product-rating mb-2">
+                    {renderStars(Math.round(parseFloat(similarProduct.average_rating)))}
+                    <span className="rating-text ms-2">
+                      {parseFloat(similarProduct.average_rating).toFixed(1)} ({parseInt(similarProduct.review_count)} {parseInt(similarProduct.review_count) === 1 ? 'review' : 'reviews'})
+                    </span>
+                  </div>
+                )}
+                
+                <div className="home-product-price">
+                  {similarProduct.offer_price && similarProduct.offer_price !== 0 ? (
+                    <>
+                      <span className="me-2">
                         {formatPrice(similarProduct.offer_price)}
                       </span>
                       <span className="text-muted text-decoration-line-through small">

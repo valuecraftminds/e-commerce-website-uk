@@ -47,12 +47,15 @@ const productController = {
         parent_cat.category_name as parent_category_name,
         MIN(sv.sale_price) as sale_price,
         MIN(sv.offer_price) as offer_price,
-        COUNT(DISTINCT sv.variant_id) as variant_count
+        COUNT(DISTINCT sv.variant_id) as variant_count,
+        COALESCE(AVG(r.rating), 0) as average_rating,
+        COUNT(DISTINCT r.review_id) as review_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       LEFT JOIN stock_summary ss ON sv.sku = ss.sku
+      LEFT JOIN reviews r ON s.style_id = r.style_id AND r.company_code = s.company_code
       WHERE (c.parent_id = ? OR c.category_id = ?) 
       AND s.approved = 'yes' 
       AND s.is_view = 'yes'
@@ -87,12 +90,15 @@ const productController = {
         parent_cat.category_name as parent_category_name,
         MIN(sv.sale_price) as sale_price,
         MIN(sv.offer_price) as offer_price,
-        COUNT(DISTINCT sv.variant_id) as variant_count
+        COUNT(DISTINCT sv.variant_id) as variant_count,
+        COALESCE(AVG(r.rating), 0) as average_rating,
+        COUNT(DISTINCT r.review_id) as review_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       LEFT JOIN stock_summary ss ON sv.sku = ss.sku
+      LEFT JOIN reviews r ON s.style_id = r.style_id AND r.company_code = s.company_code
       WHERE s.approved = 'yes' 
       AND s.is_view = 'yes'
       AND s.company_code = ?
@@ -367,12 +373,15 @@ const productController = {
         sv.offer_start_date,
         sv.offer_end_date,
         COUNT(DISTINCT sv.variant_id) as variant_count,
-        ROUND(((MIN(sv.sale_price) - MIN(sv.offer_price)) / MIN(sv.sale_price)) * 100, 2) as discount_percentage
+        ROUND(((MIN(sv.sale_price) - MIN(sv.offer_price)) / MIN(sv.sale_price)) * 100, 2) as discount_percentage,
+        COALESCE(AVG(r.rating), 0) as average_rating,
+        COUNT(DISTINCT r.review_id) as review_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       INNER JOIN style_variants sv ON s.style_number = sv.style_number 
       INNER JOIN stock_summary ss ON sv.sku = ss.sku
+      LEFT JOIN reviews r ON s.style_id = r.style_id AND r.company_code = s.company_code
       WHERE sv.is_active = 1 
       AND sv.offer_price IS NOT NULL 
       AND sv.offer_price > 0
@@ -436,12 +445,15 @@ getSimilarProducts: (req, res) => {
         parent_cat.category_name as parent_category_name,
         sv.sale_price,
         sv.offer_price,
-        COUNT(DISTINCT sv.variant_id) as variant_count
+        COUNT(DISTINCT sv.variant_id) as variant_count,
+        COALESCE(AVG(r.rating), 0) as average_rating,
+        COUNT(DISTINCT r.review_id) as review_count
       FROM styles s
       LEFT JOIN categories c ON s.category_id = c.category_id
       LEFT JOIN categories parent_cat ON c.parent_id = parent_cat.category_id
       LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
       LEFT JOIN stock_summary ss ON sv.sku = ss.sku
+      LEFT JOIN reviews r ON s.style_id = r.style_id AND r.company_code = s.company_code
       WHERE s.category_id = ? 
       AND s.style_id != ?
       AND s.approved = 'yes' 
