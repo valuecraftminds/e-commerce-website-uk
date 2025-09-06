@@ -125,6 +125,8 @@
 .password-toggle-btn:hover {
   background: #e5e7eb;
   color: #667eea;
+  transform: translateY(5px) !important;
+
 }
 
 .login-btn {
@@ -141,7 +143,7 @@
 }
 
 .login-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(5px) !important;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   background: #5a67d8;
 }
@@ -161,6 +163,7 @@
 .link-text:hover {
   text-decoration: underline;
   color: #5a67d8;
+  transform: translateY(5px) !important;
 }
 
 /* Side Section Styles */
@@ -254,7 +257,7 @@
 }
 
 .social-btn-modern:hover {
-  transform: translateY(-1px);
+  transform: translateY(5px) !important;;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-decoration: none;
 }
@@ -262,6 +265,7 @@
 .social-btn-modern.google:hover {
   border-color: #ea4335;
   color: #ea4335;
+  transform: translateY(5px) !important;
 }
 
 .divider-text {
@@ -286,7 +290,7 @@
 .signup-btn:hover {
   background: #667eea;
   color: white;
-  transform: translateY(-1px);
+  transform: translateY(5px) !important;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 

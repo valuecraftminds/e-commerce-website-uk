@@ -859,9 +859,6 @@ export default function ProductDetails() {
         </Row>
       </Container>
       
-      {/* Spacer to prevent overlap when expandable sections are open */}
-      <div className="layout-spacer"></div>
-      
       {/* Similar Products Section */}
     <Container fluid className="similar-products-container">
       <h2 className="mb-4">You May Also Like</h2>

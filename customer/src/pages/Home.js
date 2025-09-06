@@ -2,11 +2,11 @@ import axios from "axios";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FaRegArrowAltCircleUp } from 'react-icons/fa';
 
 import DataFile from "../assets/DataFile";
 import { CountryContext } from "../context/CountryContext";
 import StarRating from "../components/StarRating";
+import BackToTop from "../components/BackToTop";
 import "../styles/Home.css";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -35,7 +35,6 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
@@ -45,16 +44,6 @@ export default function Home() {
     const page = parseInt(searchParams.get('page')) || 1;
     setCurrentPage(page);
   }, [searchParams]);
-
-  // Back to top visibility handler
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 400);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const getProductDetails = (style_number) => {
     navigate(`/product/${style_number}`);
@@ -168,14 +157,6 @@ export default function Home() {
     setSearchParams({ page: nextPage.toString() });
     
     fetchProducts(nextPage, true);
-  };
-
-  // Back to top function
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
   };
 
   // fetch items with offer_price
@@ -329,12 +310,12 @@ export default function Home() {
               </p>
           </div>
             <button
-              className="btn btn-outline-primary btn-sm"
+              className="btn btn-outline-primary btn-sm view-all-offers-btn"
               onClick={() => {
                 navigate('/offers');
               }}
             >
-              View All Offers <i className="fas fa-arrow-right ms-1"></i>
+              View All Offers
             </button>
           </div>
 
@@ -375,7 +356,7 @@ export default function Home() {
                     {/* Rating Display */}
                   {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
                     <div className="product-rating mb-2">
-                      <StarRating rating={Math.round(parseFloat(product.average_rating))} size="medium" />
+                       <StarRating rating={Math.round(parseFloat(product.average_rating))} size="medium" />
                        <span className="rating-text ms-2">
                         {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
                       </span>
@@ -510,7 +491,7 @@ export default function Home() {
                     {/* Rating Display */}
                     {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
                       <div className="product-rating mb-2">
-                        <StarRating rating={Math.round(parseFloat(product.average_rating))} size="medium" />
+                         <StarRating rating={Math.round(parseFloat(product.average_rating))} size="medium" />
                         <span className="rating-text ms-2">
                           {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
                         </span>
@@ -584,10 +565,7 @@ export default function Home() {
         )}
       </Container>
 
-      {/* Back to Top Button */}
-      {showBackToTop && (
-          <FaRegArrowAltCircleUp className="back-to-top-btn" onClick={scrollToTop} aria-label="Back to top"/>
-      )}
+      <BackToTop />
     </>
   );
 }

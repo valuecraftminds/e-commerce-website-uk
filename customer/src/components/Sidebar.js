@@ -80,7 +80,7 @@ export default function Sidebar({
     } else {
       setLoading(false);
     }
-  }, [category, categories, currentCategory]);
+  }, [category, categories, currentCategory, productTypes]);
 
   // Function to toggle category expansion and fetch product types
   const toggleCategory = async (categoryItem) => {

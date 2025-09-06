@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { CountryContext } from "../context/CountryContext";
 import StarRating from "../components/StarRating";
+import BackToTop from "../components/BackToTop";
 
 import "../styles/OfferPage.css";
 
@@ -265,6 +266,8 @@ export default function OfferPage() {
               </div>
           )}
         </Container>
+
+        <BackToTop />
      </>
   );
 }

@@ -539,6 +539,7 @@ return (
                       <Button
                         variant="outline-primary"
                         size="sm"
+                        className='add-new-address-btn'
                         onClick={() => {
                           setMode('new');
                           setShippingData((p) => ({
@@ -551,7 +552,7 @@ return (
                           setSelectedAddressId(null); // Clear selection when switching to new mode
                         }}
                       >
-                        + Add new address
+                        +
                       </Button>
                     </div>
 

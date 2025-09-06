@@ -251,7 +251,7 @@ const FeedbackHistory = () => {
                   </div>
                   <div className="feedback-rating-display">
                     <div className="feedback-stars">
-                      <StarRating rating={item.rating} size="medium" showValue={false} />
+                      <StarRating rating={item.rating} size="large" showValue={false} />
                     </div>
                     <span className="feedback-rating-number">({item.rating}/5)</span>
                   </div>
@@ -271,9 +271,11 @@ const FeedbackHistory = () => {
                       />
                     )}
                   </div>
-                  <div className="feedback-review-text">
-                    <p>{item.review}</p>
-                  </div>
+                  {item.review && item.review.trim() && (
+                    <div className="feedback-review-text">
+                      <p>{item.review}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="feedback-footer">

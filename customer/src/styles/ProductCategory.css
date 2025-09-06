@@ -122,6 +122,7 @@
 
 .clear-filters-btn:hover {
   background: #444343;
+  transform: translateY(5px) !important;
 }
 
 /* Products Grid */
@@ -644,6 +645,7 @@
 .pcbtn:hover {
   background: #0056b3;
   color: white;
+  transform: translateY(5px) !important;
 }
 
 .pcbtn-outline-primary {
