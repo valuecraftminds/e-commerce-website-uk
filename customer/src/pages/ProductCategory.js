@@ -192,6 +192,22 @@ const ProductCategory = () => {
     navigate(`/product/${product.style_number}`);
   };
 
+  // Render stars for rating display
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span
+          key={i}
+          className={`star ${i <= rating ? 'filled' : ''}`}
+        >
+          ★
+        </span>
+      );
+    }
+    return <div className="stars-container">{stars}</div>;
+  };
+
   const handleBackToCategory = () => {
     navigate(`/shop/${category}`);
   };
@@ -325,6 +341,17 @@ const ProductCategory = () => {
                       : product.description
                     }
                   </p>
+                  
+                  {/* Rating Display */}
+                  {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
+                    <div className="product-rating mb-2">
+                      {renderStars(Math.round(parseFloat(product.average_rating)))}
+                       <span className="rating-text ms-2">
+                        {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="product-price">
                      {product.offer_price && product.offer_price !== 0 ? (
                       <>
@@ -334,9 +361,6 @@ const ProductCategory = () => {
                         <span className="text-muted text-decoration-line-through small">
                           {formatPrice(product.sale_price)}
                         </span>
-                        <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
-                          Starting from (best offer)
-                        </small>
                       </>
                     ) : (
                       <>

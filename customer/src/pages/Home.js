@@ -59,6 +59,22 @@ export default function Home() {
     navigate(`/product/${style_number}`);
   };
 
+  // Render stars for rating display
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span
+          key={i}
+          className={`star ${i <= rating ? 'filled' : ''}`}
+        >
+          ★
+        </span>
+      );
+    }
+    return <div className="stars-container">{stars}</div>;
+  };
+
   // Fetch products with pagination
   const fetchProducts = useCallback(async (page = 1, append = false) => {
     try {
@@ -371,6 +387,16 @@ export default function Home() {
                         : product.description}
                     </p>
 
+                    {/* Rating Display */}
+                  {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
+                    <div className="product-rating mb-2">
+                      {renderStars(Math.round(parseFloat(product.average_rating)))}
+                       <span className="rating-text ms-2">
+                        {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
+                      </span>
+                    </div>
+                  )}
+
                     <div className="offer-product-price">
                       <span className="current-price">
                         {formatPrice(product.offer_price)}
@@ -495,6 +521,17 @@ export default function Home() {
                         : product.description
                       }
                     </p>
+                    
+                    {/* Rating Display */}
+                    {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
+                      <div className="product-rating mb-2">
+                        {renderStars(Math.round(parseFloat(product.average_rating)))}
+                        <span className="rating-text ms-2">
+                          {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="home-product-price">
                       {product.offer_price && product.offer_price !== 0 ? (
                         <>
