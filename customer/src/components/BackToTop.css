@@ -1,0 +1,31 @@
+.back-to-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.back-to-top-btn:hover {
+  transform: translateY(-5px);
+  background: linear-gradient(135deg, #0056b3, #003d82);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .back-to-top-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+}
