@@ -95,7 +95,7 @@ export default function WarehouseIssuing() {
               <th>Customer Name</th>
               <th>Total Amount</th>
               <th>Total Items</th>
-              <th>Created At</th>
+              <th>{activeTab === 'pending' ? 'Created At' : 'Issued At'}</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -113,7 +113,14 @@ export default function WarehouseIssuing() {
                 <td>{order.customer_name}</td>
                 <td>${parseFloat(order.total_amount || 0).toFixed(2)}</td>
                 <td>{order.total_items}</td>
-                <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                <td>
+                  {activeTab === 'pending' 
+                    ? new Date(order.created_at).toLocaleDateString()
+                    : order.issued_at 
+                      ? new Date(order.issued_at).toLocaleDateString()
+                      : 'N/A'
+                  }
+                </td>
                 <td>
                   {activeTab === 'pending' ? (
                     <Button 

@@ -42,13 +42,19 @@ class IssuingController {
         o.order_notes,
         o.order_status,
         o.created_at,
+        o.issued_at,
         CONCAT(c.first_name, ' ', c.last_name) as customer_name,
         c.email as customer_email,
         c.phone as customer_phone
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.customer_id
       WHERE o.company_code = ?
-      ORDER BY o.created_at DESC
+      ORDER BY 
+        CASE 
+          WHEN o.order_status = 'Pending' THEN o.created_at
+          WHEN o.order_status = 'In Transit' THEN o.issued_at
+          ELSE o.created_at
+        END DESC
     `;
 
     db.query(sql, [company_code], (err, results) => {
@@ -280,7 +286,7 @@ class IssuingController {
                   callback(null);
                 });
               } else {
-                // Create new booking record with Issued status
+                // Create new booking record with Issued status and issued_date
                 const createBookingSql = `
                   INSERT INTO booking (company_code, order_item_id, sku, style_number, ordered_qty, status) 
                   VALUES (?, ?, ?, ?, ?, 'Issued')
@@ -315,9 +321,9 @@ class IssuingController {
           
           // Check if all items are processed
           if (completedIssues === issuing_items.length && !hasError) {
-            // Update order status to 'In Transit' after all items are processed
+            // Update order status to 'In Transit' and set issued_at timestamp
             const updateOrderSql = `
-              UPDATE orders SET order_status = 'In Transit' WHERE order_id = ? AND company_code = ?
+              UPDATE orders SET order_status = 'In Transit', issued_at = NOW() WHERE order_id = ? AND company_code = ?
             `;
             
             db.query(updateOrderSql, [order_id, company_code], (err) => {
