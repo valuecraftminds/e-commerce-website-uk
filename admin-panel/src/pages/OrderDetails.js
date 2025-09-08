@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Spinner, Alert, Card, Row, Col, Table, Badge } from 'react-bootstrap';
-import { FaArrowLeft } from 'react-icons/fa';
+import { Button, Spinner, Alert, Card, Row, Col, Table, Badge, ButtonGroup } from 'react-bootstrap';
+import { FaArrowLeft, FaDownload, FaFileAlt, FaBoxOpen } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/WarehouseIssuing.css';
 
@@ -160,6 +160,32 @@ export default function OrderDetails() {
         setError('Failed to issue all items.');
         setLoading(false);
       });
+  };
+
+  // Handle download picking list
+  const handleDownloadPickingList = () => {
+    if (!company_code || !order_id) return;
+    
+    const url = `${BASE_URL}/api/admin/issuing/orders/${order_id}/picking-list?company_code=${company_code}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PickingList-${order.order_number}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Handle download packing label
+  const handleDownloadPackingLabel = () => {
+    if (!company_code || !order_id) return;
+    
+    const url = `${BASE_URL}/api/admin/issuing/orders/${order_id}/packing-label?company_code=${company_code}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PackingLabel-${order.order_number}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleBackToOrders = () => {
@@ -337,22 +363,44 @@ export default function OrderDetails() {
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Order Items</h5>
-          <Button 
-            variant="success" 
-            size="sm"
-            onClick={handleIssueAllItems}
-            disabled={
-              orderItems.length === 0 || 
-              orderItems.every(item => item.booking_status === 'Issued') ||
-              orderItems.some(item => 
-                item.booking_status !== 'Issued' && 
-                stockData[item.sku] !== undefined && 
-                stockData[item.sku] < item.quantity
-              )
-            }
-          >
-            Issue All Items
-          </Button>
+          <div className="d-flex gap-2">
+            <Button 
+              variant="success" 
+              size="sm"
+              onClick={handleIssueAllItems}
+              disabled={
+                orderItems.length === 0 || 
+                orderItems.every(item => item.booking_status === 'Issued') ||
+                orderItems.some(item => 
+                  item.booking_status !== 'Issued' && 
+                  stockData[item.sku] !== undefined && 
+                  stockData[item.sku] < item.quantity
+                )
+              }
+            >
+              Issue All Items
+            </Button>
+            <ButtonGroup size="sm">
+              <Button 
+                variant="outline-primary"
+                onClick={handleDownloadPickingList}
+                disabled={orderItems.length === 0}
+                title="Download Picking List"
+              >
+                <FaFileAlt className="me-1" />
+                Picking List
+              </Button>
+              <Button 
+                variant="outline-secondary"
+                onClick={handleDownloadPackingLabel}
+                disabled={orderItems.length === 0}
+                title="Download Packing Label"
+              >
+                <FaBoxOpen className="me-1" />
+                Packing Label
+              </Button>
+            </ButtonGroup>
+          </div>
         </Card.Header>
         <Card.Body>
           <div className="table-responsive">
@@ -368,6 +416,7 @@ export default function OrderDetails() {
                   <th>Material</th>
                   <th>Quantity</th>
                   <th>Unit Price</th>
+                  <th>Sale Price</th>
                   <th>Total Price</th>
                   <th>Available Stock</th>
                 </tr>
@@ -375,7 +424,7 @@ export default function OrderDetails() {
               <tbody>
                 {orderItems.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="text-center">No order items found.</td>
+                    <td colSpan={13} className="text-center">No order items found.</td>
                   </tr>
                 ) : orderItems.map((item, idx) => (
                   <tr key={item.order_item_id}>
@@ -385,10 +434,11 @@ export default function OrderDetails() {
                     <td>{item.color_name || 'N/A'}</td>
                     <td>{item.size_name || 'N/A'}</td>
                     <td>{item.fit_name || 'N/A'}</td>
-                    <td>{item.material_name || 'N/A'}</td>
+                    <td>{item.material_name || 'N/A'}</td>  
                     <td>{item.quantity}</td>
                     <td>${parseFloat(item.unit_price || 0).toFixed(2)}</td>
-                    <td>${parseFloat(item.total_price || 0).toFixed(2)}</td>
+                    <td>${parseFloat(item.sale_price || 0).toFixed(2)}</td>
+                    <td>${(parseFloat(item.sale_price || 0) * parseInt(item.quantity || 0)).toFixed(2)}</td>
                     <td>
                       <Badge bg={
                         stockData[item.sku] === undefined ? 'secondary' :
