@@ -1,23 +1,16 @@
-/* =========================
-   Modal (transparent backdrop)
-   ========================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  /* Transparent background so page is visible */
   background: rgba(0, 0, 0, 0.25) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Some padding so content doesn't touch edges on small screens */
   padding: 16px;
-  /* Still catches outside clicks to close */
   pointer-events: auto;
 }
 
 .modal-panel {
-  /* Keep the panel transparent so your form’s own styling shows */
   background: transparent;
   box-shadow: none;
   border-radius: 0;
@@ -27,23 +20,9 @@
 }
 
 .modal-content {
-  /* No extra padding so the embedded .feedback-form spacing is used */
   padding: 0;
 }
 
-/* Optional: If you want a subtle pop effect without a dark backdrop,
-   you can add a soft drop shadow to the form itself (uncomment to use) */
-/*
-.feedback-form {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-}
-*/
-
-/* =========================
-   Your existing styles below
-   ========================= */
-
-/* Container for multiple feedback forms */
 .feedback-container {
   max-width: 100%;
   margin: 0;

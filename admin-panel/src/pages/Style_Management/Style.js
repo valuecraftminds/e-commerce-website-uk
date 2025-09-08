@@ -4,6 +4,7 @@ import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { StyleFormModal, VariantFormModal } from '../../components/modals/StyleModals';
+import MeasureGuideModal from '../../components/modals/MeasureGuideModal';
 import StyleTable from '../../components/StyleTable';
 import Spinner from '../../components/Spinner';
 import { AuthContext } from '../../context/AuthContext';
@@ -47,6 +48,7 @@ export default function Style() {
   const [variants, setVariants] = useState([]);
   const [isEditingVariant, setIsEditingVariant] = useState(false);
   const [editingVariantId, setEditingVariantId] = useState(null);
+  const [showMeasureGuideModal, setShowMeasureGuideModal] = useState(false);
 
   // company_code is now initialized above
 
@@ -295,6 +297,9 @@ export default function Style() {
         setError('Error updating view status');
         setTimeout(() => setError(''), 2500);
       }
+    },
+    handleMeasureGuide: () => {
+      setShowMeasureGuideModal(true);
     },
     getIsViewError: () => '' // No longer used, but keep for compatibility
   }), [company_code, subCategories, fetchStyles, navigate, BASE_URL]);
@@ -623,6 +628,16 @@ export default function Style() {
         setIsEditing={setIsEditingVariant}
         setEditingId={setEditingVariantId}
         companyCurrency={companyCurrency}
+      />
+
+      <MeasureGuideModal
+        show={showMeasureGuideModal}
+        onHide={() => setShowMeasureGuideModal(false)}
+        companyCode={company_code}
+        onSave={(data) => {
+          setSuccess('Measure guide added successfully!');
+          setTimeout(() => setSuccess(''), 3000);
+        }}
       />
     </div>
   );

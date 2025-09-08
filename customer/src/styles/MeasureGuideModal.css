@@ -1,0 +1,104 @@
+.modal.measure-guide .modal-dialog {
+  width: auto;                  
+  max-width: 95vw;                  
+  display: inline-block;
+}
+
+.modal.measure-guide .modal-content {
+  width: fit-content;               
+  max-width: 95vw;                 
+  margin: auto;                     
+  border-radius: 18px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.modal.measure-guide .modal-header {
+  border: none;
+  padding: 20px 24px 0 24px;
+}
+.modal.measure-guide .modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color:white;
+}
+
+.modal.measure-guide .modal-body {
+  padding: 8px 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+  width: fit-content;
+  max-width: 90vw;                  
+}
+
+.modal.measure-guide .modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+.modal.measure-guide .modal-body::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 999px;
+}
+.modal.measure-guide .modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal.measure-guide .modal-footer {
+  border: none;
+  padding: 12px 24px 24px 24px;
+}
+
+.measure-guides-modal {
+  display: grid;
+  grid-template-columns: repeat(2, auto); 
+  justify-content: center;
+  gap: 18px;
+}
+@media (max-width: 768px) {
+  .measure-guides-modal {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.measure-guide-item-modal {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  padding: 14px;
+  transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+  width: fit-content;
+  max-width: 100%;
+}
+.measure-guide-item-modal:hover {
+  box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+  border-color: rgba(0,0,0,0.1);
+}
+
+.measure-guide-item-modal h6 {
+  margin: 0 0 10px 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.measure-guide-item-modal img {
+  width: auto;                      
+  max-width: 100%;                 
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: transform .35s ease, box-shadow .2s ease;
+}
+.measure-guide-item-modal img:hover {
+  transform: scale(1.015);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.15);
+}
+
+.measure-guide-item-modal small.text-muted {
+  display: inline-block;
+  margin-top: 4px;
+}
