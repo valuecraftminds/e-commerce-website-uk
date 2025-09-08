@@ -6,11 +6,11 @@ import { AuthContext } from '../../context/AuthContext';
 import DeleteModal from '../../components/modals/DeleteModal';
 import '../../styles/Style.css';
 
-
 import ColorManagement from './ColorManagement';
 import SizeManagement from './SizeManagement';
 import MaterialManagement from './MaterialManagement';
 import FitManagement from './FitManagement';
+import SizeGuideModal from '../../components/modals/SizeGuideModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -49,7 +49,9 @@ export default function StyleAttributes() {
   // Delete modal state for each attribute type
   const [deleteModalInfo, setDeleteModalInfo] = useState({ type: '', id: null });
 
-
+  // Size Guide Modal state
+  const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
+  const [sizeGuideContent, setSizeGuideContent] = useState('');
 
   const [activeTab, setActiveTab] = useState('colors');
   const company_code = userData?.company_code;
@@ -66,6 +68,19 @@ export default function StyleAttributes() {
       }
     } catch (err) {
       setError('Error fetching style details');
+    }
+  }, [styleNumber, company_code]);
+
+  // Fetch existing size guide content
+  const fetchSizeGuide = useCallback(async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/styles/size-guide/${styleNumber}?company_code=${company_code}`);
+      const data = await response.json();
+      if (data.success && data.size_guide_content) {
+        setSizeGuideContent(data.size_guide_content);
+      }
+    } catch (err) {
+      console.log('No existing size guide found');
     }
   }, [styleNumber, company_code]);
 
@@ -134,7 +149,8 @@ export default function StyleAttributes() {
     fetchStyleDetails();
     fetchAllAttributes();
     fetchStyleAttributes();
-  }, [fetchStyleDetails, fetchAllAttributes, fetchStyleAttributes]);
+    fetchSizeGuide();
+  }, [fetchStyleDetails, fetchAllAttributes, fetchStyleAttributes, fetchSizeGuide]);
 
   const handleOpenModal = (type) => {
     setModalType(type);
@@ -202,6 +218,42 @@ export default function StyleAttributes() {
     setDeleteModalInfo({ type: 'sizes', id: size_range_id });
   };
 
+  // Size Guide Modal handlers
+  const handleOpenSizeGuideModal = () => {
+    setShowSizeGuideModal(true);
+  };
+
+  const handleCloseSizeGuideModal = () => {
+    setShowSizeGuideModal(false);
+  };
+
+  const handleSaveSizeGuide = async (content) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/styles/size-guide`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          style_number: styleNumber,
+          company_code: company_code,
+          size_guide_content: content
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSizeGuideContent(content);
+        setSuccess('Size guide saved successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        throw new Error(data.message || 'Failed to save size guide');
+      }
+    } catch (err) {
+      throw new Error(err.message || 'Failed to save size guide');
+    }
+  };
+
   // Render two-column layout: left = Add New, right = Add Existing (table + assign)
   const renderAttributeSection = (title, items, type) => (
     <Row className="mb-4">
@@ -248,15 +300,23 @@ export default function StyleAttributes() {
       </Col>
       {/* Right: Assigned Size Ranges (Accordion) or Table for others */}
       <Col md={6}>
-       {/* Add Existing button for sizes is outside accordion */}
         {type === 'sizes' && (
-          <div className="d-flex justify-content-end mb-2">
+          <div className="d-flex justify-content-end mb-2 gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleOpenSizeGuideModal}
+            >
+              <FaPlus size={14} className="me-2" />
+              Add Size Guide
+            </Button>
             <Button 
               variant="primary" 
               className='add-style-btn'
               size="sm" 
               onClick={() => handleOpenModal(type)}
             >
+               {/* Add Existing button for sizes is outside accordion */}
               <FaPlus size={16} className="me-2" />
               Add Existing Size Range
             </Button>
@@ -638,6 +698,16 @@ export default function StyleAttributes() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Size Guide Modal */}
+      <SizeGuideModal
+        isOpen={showSizeGuideModal}
+        onClose={handleCloseSizeGuideModal}
+        onSave={handleSaveSizeGuide}
+        initialContent={sizeGuideContent}
+        title={`Size Guide - ${style?.style_number || styleNumber}`}
+        assignedRangeSizes={assignedRangeSizes}
+      />
     </Container>
   );
 }

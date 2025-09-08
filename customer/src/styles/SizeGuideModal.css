@@ -1,0 +1,306 @@
+.size-guide-modal .modal-dialog {
+    max-width: 50%;
+    width: 50%;
+    margin: 1rem auto;
+}
+
+.size-guide-modal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+/* Modal Header */
+.size-guide-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: none;
+    padding: 1.5rem;
+    color: white;
+}
+
+.size-guide-modal .modal-header .modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    margin: 0;
+}
+
+.size-guide-modal .modal-header .btn-close {
+    background: none;
+    border: none;
+    color: white;
+    opacity: 1;
+    font-size: 1.5rem;
+    filter: invert(1);
+}
+
+.size-guide-modal .modal-header .btn-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* Modal Body */
+.size-guide-modal .modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Size Guide Content */
+.size-guide-modal .size-guide-content {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Table Styling */
+.size-guide-modal .size-guide-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.size-guide-modal .size-guide-content table th,
+.size-guide-modal .size-guide-content table td {
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.size-guide-modal .size-guide-content table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.size-guide-modal .size-guide-content table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.size-guide-modal .size-guide-content table tbody tr:hover {
+    background-color: #f3f4f6;
+}
+
+/* Loading State */
+.size-guide-modal .spinner-border {
+    color: #667eea;
+}
+
+/* Alert Styles */
+.size-guide-modal .alert {
+    border-radius: 8px;
+    border: none;
+    font-size: 0.875rem;
+}
+
+.size-guide-modal .alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-left: 4px solid #f59e0b;
+}
+
+.size-guide-modal .alert-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-left: 4px solid #3b82f6;
+}
+
+/* Modal Footer */
+.size-guide-modal .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+.size-guide-modal .modal-footer .btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.size-guide-modal .modal-footer .btn-secondary {
+    background-color: #6b7280;
+    border-color: #6b7280;
+    color: white;
+}
+
+.size-guide-modal .modal-footer .btn-secondary:hover {
+    background-color: #4b5563;
+    border-color: #4b5563;
+    transform: translateY(-1px);
+}
+
+/* Custom Scrollbar */
+.size-guide-modal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.size-guide-modal .modal-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.size-guide-modal .modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.size-guide-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+    .size-guide-modal .modal-dialog {
+        max-width: 95vw;
+        width: 95vw;
+        margin: 0.5rem auto;
+    }
+    
+    .size-guide-modal .modal-header {
+        padding: 1rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .size-guide-modal .modal-header .modal-title {
+        font-size: 1.25rem;
+    }
+    
+    .size-guide-modal .modal-body {
+        padding: 1rem;
+        max-height: 65vh;
+    }
+    
+    .size-guide-modal .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .size-guide-modal .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Table Mobile Optimization */
+    .size-guide-modal .size-guide-content table {
+        font-size: 0.8rem;
+        margin: 0.5rem 0;
+    }
+    
+    .size-guide-modal .size-guide-content table th,
+    .size-guide-modal .size-guide-content table td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    .size-guide-modal .size-guide-content table th {
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    
+    /* Make table horizontally scrollable on very small screens */
+    .size-guide-modal .size-guide-content {
+        overflow-x: auto;
+    }
+    
+    .size-guide-modal .size-guide-content table {
+        min-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .size-guide-modal .modal-dialog {
+        max-width: 98vw;
+        width: 98vw;
+        margin: 0.25rem auto;
+    }
+    
+    .size-guide-modal .modal-header {
+        padding: 0.75rem;
+    }
+    
+    .size-guide-modal .modal-header .modal-title {
+        font-size: 1.1rem;
+    }
+    
+    .size-guide-modal .modal-body {
+        padding: 0.75rem;
+        max-height: 60vh;
+    }
+    
+    .size-guide-modal .modal-footer {
+        padding: 0.75rem;
+    }
+    
+    /* Further optimize table for very small screens */
+    .size-guide-modal .size-guide-content table th,
+    .size-guide-modal .size-guide-content table td {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.7rem;
+    }
+    
+    .size-guide-modal .size-guide-content table th {
+        font-size: 0.65rem;
+    }
+    
+    /* Alert text size adjustment */
+    .size-guide-modal .alert {
+        font-size: 0.8rem;
+        padding: 0.75rem;
+    }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .size-guide-modal .modal-body {
+        max-height: 50vh;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .size-guide-modal .modal-header .btn-close {
+        padding: 0.5rem;
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .size-guide-modal .modal-footer .btn {
+        min-height: 44px;
+        font-size: 1rem;
+    }
+}
+
+/* Focus states for accessibility */
+.size-guide-modal .modal-header .btn-close:focus,
+.size-guide-modal .modal-footer .btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .size-guide-modal .modal-header,
+    .size-guide-modal .modal-footer {
+        display: none;
+    }
+    
+    .size-guide-modal .modal-body {
+        max-height: none;
+        overflow: visible;
+    }
+    
+    .size-guide-modal .size-guide-content table {
+        font-size: 0.8rem;
+    }
+}
