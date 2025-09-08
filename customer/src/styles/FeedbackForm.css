@@ -1,3 +1,48 @@
+/* =========================
+   Modal (transparent backdrop)
+   ========================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  /* Transparent background so page is visible */
+  background: rgba(0, 0, 0, 0.25) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Some padding so content doesn't touch edges on small screens */
+  padding: 16px;
+  /* Still catches outside clicks to close */
+  pointer-events: auto;
+}
+
+.modal-panel {
+  /* Keep the panel transparent so your form’s own styling shows */
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  width: min(720px, 92vw);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modal-content {
+  /* No extra padding so the embedded .feedback-form spacing is used */
+  padding: 0;
+}
+
+/* Optional: If you want a subtle pop effect without a dark backdrop,
+   you can add a soft drop shadow to the form itself (uncomment to use) */
+/*
+.feedback-form {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+*/
+
+/* =========================
+   Your existing styles below
+   ========================= */
+
 /* Container for multiple feedback forms */
 .feedback-container {
   max-width: 100%;
@@ -117,7 +162,7 @@
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .feedback-container > p {
     margin-bottom: 1rem;
     font-size: 0.9rem;
@@ -129,7 +174,7 @@
     font-size: 1.25rem;
     margin-bottom: 0.375rem;
   }
-  
+
   .feedback-container > p {
     margin-bottom: 0.75rem;
     font-size: 0.85rem;
@@ -140,7 +185,7 @@
   .feedback-container > h3 {
     font-size: 1.125rem;
   }
-  
+
   .feedback-container > p {
     font-size: 0.8rem;
   }
@@ -221,12 +266,12 @@
   .feedback-form h4 {
     font-size: 1.1rem;
   }
-  
+
   .feedback-form h3 {
     font-size: 1.25rem;
     margin-bottom: 1rem;
   }
-  
+
   .feedback-form .item-name {
     font-size: 0.8rem;
     margin-bottom: 0.625rem;
@@ -237,12 +282,12 @@
   .feedback-form h4 {
     font-size: 1rem;
   }
-  
+
   .feedback-form h3 {
     font-size: 1.125rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .feedback-form .item-name {
     font-size: 0.75rem;
     margin-bottom: 0.5rem;
@@ -253,11 +298,11 @@
   .feedback-form h4 {
     font-size: 0.95rem;
   }
-  
+
   .feedback-form h3 {
     font-size: 1rem;
   }
-  
+
   .feedback-form .item-name {
     font-size: 0.7rem;
   }
@@ -294,7 +339,7 @@
     padding: 1.25rem;
     border-radius: 8px;
   }
-  
+
   .all-reviews-complete h4 {
     font-size: 1.25rem;
   }
@@ -307,11 +352,11 @@
     padding: 0.875rem;
     border-radius: 6px;
   }
-  
+
   .all-reviews-complete h4 {
     font-size: 1.125rem;
   }
-  
+
   .all-reviews-complete p {
     font-size: 0.85rem;
   }
@@ -324,11 +369,11 @@
     padding: 0.625rem;
     border-radius: 4px;
   }
-  
+
   .all-reviews-complete h4 {
     font-size: 1rem;
   }
-  
+
   .all-reviews-complete p {
     font-size: 0.8rem;
   }
@@ -603,7 +648,7 @@
   .feedback-container {
     padding: 1.25rem;
   }
-  
+
   .feedback-form {
     max-width: 85%;
   }
@@ -614,13 +659,13 @@
   .feedback-container {
     padding: 0.75rem;
   }
-  
+
   .feedback-form {
     margin: 0.75rem auto;
     padding: 1.25rem;
     max-width: 95%;
   }
-  
+
   .close-btn {
     width: 26px;
     height: 26px;
@@ -633,12 +678,12 @@
   .feedback-container {
     padding: 0.625rem;
   }
-  
+
   .feedback-form {
     max-width: 98%;
     padding: 1rem;
   }
-  
+
   .feedback-header {
     margin-bottom: 0.625rem;
     padding-bottom: 0.625rem;
@@ -650,19 +695,19 @@
   .feedback-container {
     padding: 0.5rem;
   }
-  
+
   .feedback-form {
     padding: 0.875rem;
     margin: 0.5rem auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   .close-btn {
     width: 24px;
     height: 24px;
     font-size: 1rem;
   }
-  
+
   .feedback-header {
     margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
@@ -674,7 +719,7 @@
   .feedback-container {
     padding: 0.375rem;
   }
-  
+
   .feedback-form {
     max-width: 100%;
     padding: 0.75rem;
@@ -687,14 +732,14 @@
   .feedback-container {
     padding: 0.25rem;
   }
-  
+
   .feedback-form {
     max-width: 100%;
     padding: 0.625rem;
     margin: 0.25rem auto;
     border-radius: 4px;
   }
-  
+
   .close-btn {
     width: 22px;
     height: 22px;
@@ -708,15 +753,15 @@
     margin: 0.25rem auto;
     padding: 0.75rem;
   }
-  
+
   .star-rating {
     margin: 0.5rem 0;
   }
-  
+
   .feedback_star {
     font-size: 2rem;
   }
-  
+
   .feedback-form textarea {
     min-height: 50px;
   }
@@ -734,11 +779,11 @@
   .feedback_star {
     transition: none;
   }
-  
+
   .feedback-form button[type="submit"] {
     transition: none;
   }
-  
+
   .feedback-form {
     animation: none;
   }
@@ -766,12 +811,12 @@
     padding: 0.25rem;
     margin: 0.125rem;
   }
-  
+
   .close-btn {
     min-width: 44px;
     min-height: 44px;
   }
-  
+
   .feedback-form button[type="submit"] {
     min-height: 48px;
     padding: 0.875rem 1rem;
@@ -798,11 +843,11 @@
     border: 1px solid #ccc;
     break-inside: avoid;
   }
-  
+
   .close-btn {
     display: none;
   }
-  
+
   .feedback-form button[type="submit"] {
     display: none;
   }
