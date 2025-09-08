@@ -1,0 +1,313 @@
+.size-guide-modal .modal-dialog {
+    max-width: 90vw;
+    width: 90vw;
+}
+
+.size-guide-modal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Modal Header */
+.size-guide-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.size-guide-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.size-guide-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #ffffff;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.size-guide-modal-close-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.size-guide-modal-close-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal Body */
+.size-guide-modal-body {
+    padding: 0 24px 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Editor Section */
+.size-guide-editor-section {
+    margin-bottom: 20px;
+}
+
+.editor-toolbar-extra {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.editor-toolbar-extra .btn {
+    font-size: 0.875rem;
+}
+
+/* Quill Editor Customization */
+.quill-editor-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.quill-editor-container .ql-toolbar {
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+.quill-editor-container .ql-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.quill-editor-container .ql-editor {
+    min-height: 350px;
+    padding: 16px;
+}
+
+.quill-editor-container .ql-editor.ql-blank::before {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Table Styling in Editor */
+.quill-editor-container .ql-editor table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+}
+
+.quill-editor-container .ql-editor table td,
+.quill-editor-container .ql-editor table th {
+    border: 1px solid #d1d5db;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.quill-editor-container .ql-editor table th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+}
+
+.quill-editor-container .ql-editor table tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+/* Better Table Module Styles */
+.qlbt-operation-menu {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 9999;
+}
+
+.qlbt-operation-menu .qlbt-operation-menu-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.qlbt-operation-menu .qlbt-operation-menu-item:hover {
+    background-color: #f3f4f6;
+}
+
+.qlbt-operation-menu .qlbt-operation-menu-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 4px 0;
+}
+
+/* Help Section */
+.size-guide-editor-help {
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.size-guide-editor-help h6 {
+    color: #0369a1;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.help-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #0f172a;
+}
+
+.help-list li {
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.help-list strong {
+    color: #0369a1;
+}
+
+/* Modal Footer */
+.size-guide-modal .modal-footer {
+    padding: 20px 24px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.size-guide-modal .modal-footer .btn {
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.size-guide-modal .modal-footer .btn-secondary {
+    background-color: #6b7280;
+    border-color: #6b7280;
+}
+
+.size-guide-modal .modal-footer .btn-secondary:hover {
+    background-color: #4b5563;
+    border-color: #4b5563;
+}
+
+.size-guide-modal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.size-guide-modal .modal-footer .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+}
+
+.size-guide-modal .modal-footer .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Alert Styles */
+.size-guide-modal-body .alert {
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+}
+
+.size-guide-modal-body .alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border-left: 4px solid #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .size-guide-modal .modal-dialog {
+        max-width: 95vw;
+        width: 95vw;
+        margin: 10px auto;
+    }
+    
+    .size-guide-modal .modal-header,
+    .size-guide-modal-body,
+    .size-guide-modal .modal-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .size-guide-modal .modal-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .quill-editor-container .ql-editor {
+        min-height: 250px;
+        padding: 12px;
+    }
+    
+    .editor-toolbar-extra {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .size-guide-modal .modal-footer {
+        flex-direction: column;
+    }
+    
+    .size-guide-modal .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Loading State */
+.size-guide-modal .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Focus States for Accessibility */
+.size-guide-modal-close-btn:focus,
+.size-guide-modal .btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Custom Scrollbar for Modal Body */
+.size-guide-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.size-guide-modal-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.size-guide-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.size-guide-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

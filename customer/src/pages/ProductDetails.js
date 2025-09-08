@@ -6,6 +6,7 @@ import { FaShare } from "react-icons/fa";
 import axios from "axios";
 
 import CheckoutModal from "../components/CheckoutModal";
+import SizeGuideModal from "../components/SizeGuideModal";
 import StarRating from "../components/StarRating";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
@@ -41,6 +42,7 @@ export default function ProductDetails() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
   const [stockStatus, setStockStatus] = useState(null);
   const [, setStockError] = useState(null);
   const [, setCheckingStock] = useState(false);
@@ -774,21 +776,13 @@ export default function ProductDetails() {
                 <span className="separator">|</span>
 
                 <div className="tooltip-container">
-                  <span className="info-link size-guide-link">
+                  <span 
+                    className="info-link size-guide-link"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setShowSizeGuideModal(true)}
+                  >
                     Size Guide
                   </span>
-                  <div className="tooltip-content size-guide-tooltip">
-                    <div className="tooltip-arrow"></div>
-                    <div className="size-guide-info">
-                      <h6>Size Guide</h6>
-                      <div className="size-guide-image">
-                        <img 
-                          src={`${BASE_URL}/uploads/size-chart.png`}
-                          alt="Size Guide Chart" 
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <span className="separator">|</span>
@@ -969,6 +963,12 @@ export default function ProductDetails() {
           setShowCheckoutModal(false);
         }}
         isDirectBuy={true}
+      />
+      
+      <SizeGuideModal
+        show={showSizeGuideModal}
+        onHide={() => setShowSizeGuideModal(false)}
+        styleNumber={style_number}
       />
     </div>
   );

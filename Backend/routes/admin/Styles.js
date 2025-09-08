@@ -25,5 +25,9 @@ router.get('/get-style-attributes/:style_number', StyleAttributesController.getS
 router.post('/add-style-attributes', StyleAttributesController.addStyleAttributes);
 router.delete('/remove-style-attribute', StyleAttributesController.removeStyleAttribute);
 
+// Size Guide routes
+router.get('/size-guide/:style_number', StyleAttributesController.getSizeGuide);
+router.post('/size-guide', StyleAttributesController.saveSizeGuide);
+
 
 module.exports = router;
