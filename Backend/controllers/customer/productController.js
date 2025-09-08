@@ -1,4 +1,5 @@
 const db = require('../../config/database'); 
+const path = require('path');
 
 const productController = {
   // GET main categories
@@ -577,6 +578,62 @@ getVariantInfo: (req, res) => {
       res.status(200).json({
         success: true,
         size_guide: results[0]
+      });
+    });
+  },
+
+  // get measure guides
+  getMeasureGuides: (req, res) => {
+    const { style_number } = req.params;
+    const { company_code } = req.query;
+
+    if (!style_number || !company_code) {
+      return res.status(400).json({ error: 'Style number and company code are required' });
+    }
+
+    const sql = `
+      WITH s AS (
+        SELECT category_id
+        FROM styles
+        WHERE style_number = ?
+        LIMIT 1
+      )
+      SELECT
+        mg.id,
+        mg.company_code,
+        mg.sub_category_id,
+        mg.image_path,
+        mg.created_at,
+        mg.updated_at,
+        c.category_name AS category_name
+      FROM measure_guides mg
+      JOIN s ON mg.sub_category_id = s.category_id
+      JOIN categories c ON c.category_id = mg.sub_category_id
+      WHERE mg.company_code = ?
+      ORDER BY c.category_name
+    `;
+
+     const resolvePublicImageUrl = (raw) => {
+      if (!raw) return null;
+      const filename = path.basename(raw); 
+      return `/uploads/measure-guides/${filename}`;
+    };
+
+
+    db.query(sql, [style_number, company_code], (err, rows) => {
+      if (err) {
+        console.error('Error fetching measure guides:', err);
+        return res.status(500).json({ success: false, message: 'Database error' });
+      }
+
+      const measure_guides = (rows || []).map(r => ({
+        ...r,
+        full_image_url: resolvePublicImageUrl(r.image_path),
+      }));
+
+      return res.json({
+        success: true,
+        measure_guides
       });
     });
   }

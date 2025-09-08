@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Container, Row, Col, Image, Button } from "react-bootstrap";
+import { Container, Row, Col, Image, Button, Modal } from "react-bootstrap";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import { FaShare } from "react-icons/fa";
 import axios from "axios";
@@ -11,6 +11,7 @@ import StarRating from "../components/StarRating";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
 import { useNotifyModal } from "../context/NotifyModalProvider";
+import MeasureGuideModal from "../components/MeasureGuideModal";
 import "../styles/ProductDetails.css"; 
 
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -46,10 +47,15 @@ export default function ProductDetails() {
   const [stockStatus, setStockStatus] = useState(null);
   const [, setStockError] = useState(null);
   const [, setCheckingStock] = useState(false);
+  // Modal state for How to Measure
+  const [showMeasureModal, setShowMeasureModal] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
+
+  const [measureGuides, setMeasureGuides] = useState([]);
+  const [loadingMeasureGuides, setLoadingMeasureGuides] = useState(false);
 
   const getAxiosConfig = () => {
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -143,6 +149,29 @@ export default function ProductDetails() {
       setCheckingStock(false);
     }
   }, [product, selectedSize]);
+
+  // Fetch Measure Guide
+  const fetchMeasureGuides = useCallback(async () => {
+    try {
+      setLoadingMeasureGuides(true);
+      const response = await axios.get(`${BASE_URL}/api/customer/measure-guide/${style_number}`, {
+        params: { company_code: COMPANY_CODE }
+      });
+      console.log('Measure guides response:', response.data);
+      if (response.data.success) {
+        setMeasureGuides(response.data.measure_guides || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch measure guides:', error);
+      setMeasureGuides([]);
+    } finally {
+      setLoadingMeasureGuides(false);
+    }
+  }, [style_number]);
+
+  useEffect(() => {
+    fetchMeasureGuides();
+  }, [fetchMeasureGuides]);
 
   // Fetch exchange rates
   useEffect(() => {
@@ -764,7 +793,6 @@ export default function ProductDetails() {
                   <div className="tooltip-content material-tooltip">
                     <div className="tooltip-arrow"></div>
                     <div className="material-info">
-                      {/* <h6>Material</h6> */}
                       <p>{product?.material?.material_name || 'Material details will be available soon'}</p>
                       {product?.material?.material_description && (
                         <p className="material-description">{product.material.material_description}</p>
@@ -788,16 +816,13 @@ export default function ProductDetails() {
                 <span className="separator">|</span>
 
                 <div className="tooltip-container">
-                  <span className="info-link howtomeasure-link">
+                  <span 
+                    className="info-link howtomeasure-link"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setShowMeasureModal(true)}
+                  >
                     How To Measure
                   </span>
-                  <div className="tooltip-content howtomeasure-tooltip">
-                    <div className="tooltip-arrow"></div>
-                    <div className="howtomeasure-info">
-                      <h6>How To Measure</h6>
-                      <p>For the most accurate fit, measure your body wearing only undergarments. Keep the measuring tape level and snug but not tight.</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -964,12 +989,23 @@ export default function ProductDetails() {
         }}
         isDirectBuy={true}
       />
-      
+
+      {/* Size Guide Modal */}
       <SizeGuideModal
         show={showSizeGuideModal}
         onHide={() => setShowSizeGuideModal(false)}
         styleNumber={style_number}
       />
+
+      {/* How to Measure Modal */}
+      <MeasureGuideModal
+        show={showMeasureModal}
+        onHide={() => setShowMeasureModal(false)}
+        measureGuides={measureGuides}
+        loading={loadingMeasureGuides}
+        baseUrl={BASE_URL}
+      />
+
     </div>
   );
 }

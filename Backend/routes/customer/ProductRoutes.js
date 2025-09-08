@@ -12,7 +12,9 @@ router.get('/product/:style_number', checkCompanyCode, productController.getProd
 router.get('/product-listings', checkCompanyCode, productController.getProductListings);
 router.get('/search', checkCompanyCode, productController.searchProducts);
 router.get('/variant-info', checkCompanyCode, productController.getVariantInfo);
+
 router.get('/size-guide/:style_number', checkCompanyCode, productController.getSizeGuide);
+router.get('/measure-guide/:style_number', checkCompanyCode, productController.getMeasureGuides);
 
 router.get('/offers', checkCompanyCode, productController.getStylesWithOfferPrice);
 router.get('/similar-products/:style_id', checkCompanyCode, productController.getSimilarProducts);
