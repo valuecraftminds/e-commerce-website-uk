@@ -183,12 +183,12 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
     const hasExistingOffer = product.offer_price && parseFloat(product.offer_price) > 0;
 
     return (
-        <div className="modal-backdrop" onClick={handleBackdropClick}>
-            <div className="modal-container">
-                <div className="modal-header">
+        <div className="offer-modal-backdrop" onClick={handleBackdropClick}>
+            <div className="offer-modal-container">
+                <div className="offer-modal-header">
                     <h2>{hasExistingOffer ? 'Edit Offer' : 'Add Offer'}</h2>
                     <button 
-                        className="modal-close-btn"
+                        className="offer-modal-close-btn"
                         onClick={handleClose}
                         disabled={loading}
                     >
@@ -196,16 +196,16 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                     </button>
                 </div>
 
-                <div className="modal-body">
+                <div className="offer-modal-body">
                     {/* Product Information */}
-                    <div className="product-info-section">
+                    <div className="offer-product-info-section">
                         <h3>Product Details</h3>
-                        <div className="product-info-grid">
-                            <div className="info-item">
+                        <div className="offer-product-info-grid">
+                            <div className="offer-info-item">
                                 <label>Style Number:</label>
                                 <span>{product.style_number}</span>
                             </div>
-                            <div className="info-item">
+                            <div className="offer-info-item">
                                 <label>SKU:</label>
                                 <span>{product.sku}</span>
                             </div>
@@ -213,15 +213,15 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                                 <label>Style Name:</label>
                                 <span>{product.style_name}</span>
                             </div>
-                            <div className="info-item">
+                            <div className="offer-info-item">
                                 <label>Unit Price:</label>
                                 <span>${product.unit_price}</span>
                             </div>
-                            <div className="info-item">
+                            <div className="offer-info-item">
                                 <label>Sale Price:</label>
                                 <span>${product.sale_price}</span>
                             </div>
-                            <div className="info-item">
+                            <div className="offer-info-item">
                                 <label>Stock:</label>
                                 <span>{product.main_stock_qty}</span>
                             </div>
@@ -230,8 +230,8 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
 
                     {/* Offer Form */}
                     <form onSubmit={handleSubmit} className="offer-form">
-                        <div className="form-row">
-                            <div className="form-group">
+                        <div className="offer-form-row">
+                            <div className="offer-form-group">
                                 <label htmlFor="offer_price">
                                     Offer Price *
                                 </label>
@@ -250,8 +250,8 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                             </div>
                         </div>
 
-                        <div className="form-row">
-                            <div className="form-group">
+                        <div className="offer-form-row">
+                            <div className="offer-form-group">
                                 <label htmlFor="offer_start_date">
                                     Start Date
                                 </label>
@@ -264,7 +264,7 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                                     disabled={loading}
                                 />
                             </div>
-                            <div className="form-group">
+                            <div className="offer-form-group">
                                 <label htmlFor="offer_end_date">
                                     End Date
                                 </label>
@@ -280,14 +280,14 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                         </div>
 
                         {/* Error and Success Messages */}
-                        {error && <div className="error-message">{error}</div>}
-                        {success && <div className="success-message">{success}</div>}
+                        {error && <div className="offer-error-message">{error}</div>}
+                        {success && <div className="offer-success-message">{success}</div>}
 
                         {/* Form Actions */}
-                        <div className="form-actions">
+                        <div className="offer-form-actions">
                             <button
                                 type="button"
-                                className="btn-cancel"
+                                className="offer-btn-cancel"
                                 onClick={handleClose}
                                 disabled={loading}
                             >
@@ -297,7 +297,7 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                             {hasExistingOffer && (
                                 <button
                                     type="button"
-                                    className="btn-remove"
+                                    className="offer-btn-remove"
                                     onClick={handleRemoveOffer}
                                     disabled={loading}
                                 >
@@ -307,7 +307,7 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                             
                             <button
                                 type="submit"
-                                className="btn-save"
+                                className="offer-btn-save"
                                 disabled={loading}
                             >
                                 {loading ? 'Saving...' : 'Save Offer'}
