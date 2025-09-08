@@ -51,7 +51,6 @@ export default function StyleAttributes() {
 
   // Size Guide Modal state
   const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
-  const [sizeGuideContent, setSizeGuideContent] = useState('');
 
   const [activeTab, setActiveTab] = useState('colors');
   const company_code = userData?.company_code;
@@ -68,19 +67,6 @@ export default function StyleAttributes() {
       }
     } catch (err) {
       setError('Error fetching style details');
-    }
-  }, [styleNumber, company_code]);
-
-  // Fetch existing size guide content
-  const fetchSizeGuide = useCallback(async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/admin/styles/size-guide/${styleNumber}?company_code=${company_code}`);
-      const data = await response.json();
-      if (data.success && data.size_guide_content) {
-        setSizeGuideContent(data.size_guide_content);
-      }
-    } catch (err) {
-      console.log('No existing size guide found');
     }
   }, [styleNumber, company_code]);
 
@@ -149,8 +135,7 @@ export default function StyleAttributes() {
     fetchStyleDetails();
     fetchAllAttributes();
     fetchStyleAttributes();
-    fetchSizeGuide();
-  }, [fetchStyleDetails, fetchAllAttributes, fetchStyleAttributes, fetchSizeGuide]);
+  }, [fetchStyleDetails, fetchAllAttributes, fetchStyleAttributes]);
 
   const handleOpenModal = (type) => {
     setModalType(type);
@@ -227,31 +212,9 @@ export default function StyleAttributes() {
     setShowSizeGuideModal(false);
   };
 
-  const handleSaveSizeGuide = async (content) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/admin/styles/size-guide`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          style_number: styleNumber,
-          company_code: company_code,
-          size_guide_content: content
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setSizeGuideContent(content);
-        setSuccess('Size guide saved successfully!');
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        throw new Error(data.message || 'Failed to save size guide');
-      }
-    } catch (err) {
-      throw new Error(err.message || 'Failed to save size guide');
-    }
+  const handleSizeGuideSuccess = (message) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(''), 3000);
   };
 
   // Render two-column layout: left = Add New, right = Add Existing (table + assign)
@@ -703,10 +666,11 @@ export default function StyleAttributes() {
       <SizeGuideModal
         isOpen={showSizeGuideModal}
         onClose={handleCloseSizeGuideModal}
-        onSave={handleSaveSizeGuide}
-        initialContent={sizeGuideContent}
-        title={`Size Guide - ${style?.style_number || styleNumber}`}
+        onSuccess={handleSizeGuideSuccess}
+        title={`Size Guide - ${style?.name || 'Loading...'}`}
         assignedRangeSizes={assignedRangeSizes}
+        styleNumber={styleNumber}
+        companyCode={company_code}
       />
     </Container>
   );

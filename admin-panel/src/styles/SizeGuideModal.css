@@ -1,6 +1,5 @@
 .size-guide-modal .modal-dialog {
-    max-width: 90vw;
-    width: 90vw;
+    width: fit-content;
 }
 
 .size-guide-modal .modal-content {
