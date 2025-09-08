@@ -107,7 +107,7 @@ export default function Footer() {
                 </a>
               ) : (
                 <Link 
-                  to={item.item_url} 
+                  to={item.item_url || `/${item.item_title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').trim()}`} 
                   className="text-white text-decoration-none"
                 >
                   {item.item_title}

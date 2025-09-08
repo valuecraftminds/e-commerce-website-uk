@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { HelmetProvider } from 'react-helmet-async';
 
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
+import FooterPage from './pages/FooterPage';
+
 
 import Shop from './pages/Shop';
 import Home from './pages/Home';
@@ -74,12 +77,13 @@ function App() {
     }, []);
 
     return (
-        <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-            <AuthProvider>
-                <CartProvider>
-                    <div className="App">
-                        {!hideNavbar && <NavBar onSidebarStateChange={setSidebarOpen} />}
-                        <NotifyModalProvider>
+        <HelmetProvider>
+            <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+                <AuthProvider>
+                    <CartProvider>
+                        <div className="App">
+                            {!hideNavbar && <NavBar onSidebarStateChange={setSidebarOpen} />}
+                            <NotifyModalProvider>
                     {/* Main Content Wrapper */}
                     <div className={`main-content-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
                         <main>
@@ -101,6 +105,8 @@ function App() {
                                 <Route path="/feedback" element={<FeedbackForm />} />
                                 <Route path="/order-review/:orderId" element={<FeedbackForm />} />
                                 <Route path="/feedback-history" element={<FeedbackHistory />} />
+                                <Route path="/:slug" element={<FooterPage />} />
+
 
                                 {/* Protected Routes */}
                                 <Route path="/usermenu" element={
@@ -117,6 +123,7 @@ function App() {
             </CartProvider>
         </AuthProvider>
     </GoogleOAuthProvider>
+    </HelmetProvider>
     );
 }
 

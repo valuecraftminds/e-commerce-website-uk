@@ -187,9 +187,18 @@ const deleteFooterSection = (req, res) => {
   });
 };
 
-// Create footer item
+// Create footer item with optional page content
 const createFooterItem = (req, res) => {
-  const { footer_id, item_title, item_url, item_order = 1, is_external_link = false } = req.body;
+  const { 
+    footer_id, 
+    item_title, 
+    item_url, 
+    item_order = 1, 
+    is_external_link = false,
+    page_title,
+    page_description,
+    page_content
+  } = req.body;
 
   if (!footer_id || !item_title) {
     return res.status(400).json({
@@ -198,12 +207,39 @@ const createFooterItem = (req, res) => {
     });
   }
 
-  const query = `
+  // For external links, URL is required
+  if (is_external_link && !item_url) {
+    return res.status(400).json({
+      success: false,
+      message: 'URL is required for external links'
+    });
+  }
+
+  // For internal links, page content should be provided
+  if (!is_external_link && (!page_title || !page_content)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Page title and content are required for internal links'
+    });
+  }
+
+  // Generate slug for internal pages
+  let page_slug = null;
+  if (!is_external_link) {
+    page_slug = item_title.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .trim();
+  }
+
+  const final_url = is_external_link ? item_url : `/${page_slug}`;
+
+  const itemQuery = `
     INSERT INTO custom_footer_items (footer_id, item_title, item_url, item_order, is_external_link)
     VALUES (?, ?, ?, ?, ?)
   `;
 
-  db.query(query, [footer_id, item_title, item_url, item_order, is_external_link], (err, result) => {
+  db.query(itemQuery, [footer_id, item_title, final_url, item_order, is_external_link], (err, result) => {
     if (err) {
       console.error('Error creating footer item:', err);
       return res.status(500).json({
@@ -212,18 +248,57 @@ const createFooterItem = (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      message: 'Footer item created successfully',
-      item_id: result.insertId
-    });
+    const item_id = result.insertId;
+
+    // If it's an internal link, create page content
+    if (!is_external_link) {
+      const pageQuery = `
+        INSERT INTO footer_page_content (item_id, page_title, page_description, page_slug, page_content)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      db.query(pageQuery, [item_id, page_title, page_description, page_slug, page_content], (err, pageResult) => {
+        if (err) {
+          console.error('Error creating page content:', err);
+          // Delete the item if page creation fails
+          db.query('DELETE FROM custom_footer_items WHERE item_id = ?', [item_id]);
+          return res.status(500).json({
+            success: false,
+            message: 'Error creating page content'
+          });
+        }
+
+        res.json({
+          success: true,
+          message: 'Footer item and page content created successfully',
+          item_id: item_id,
+          page_id: pageResult.insertId,
+          page_url: final_url
+        });
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'Footer item created successfully',
+        item_id: item_id
+      });
+    }
   });
 };
 
 // Update footer item
 const updateFooterItem = (req, res) => {
   const { item_id } = req.params;
-  const { item_title, item_url, item_order, is_external_link, is_active } = req.body;
+  const { 
+    item_title, 
+    item_url, 
+    item_order, 
+    is_external_link, 
+    is_active,
+    page_title,
+    page_description,
+    page_content 
+  } = req.body;
 
   if (!item_id) {
     return res.status(400).json({
@@ -232,13 +307,14 @@ const updateFooterItem = (req, res) => {
     });
   }
 
-  const query = `
+  // Update the basic item information
+  const itemQuery = `
     UPDATE custom_footer_items 
     SET item_title = ?, item_url = ?, item_order = ?, is_external_link = ?, is_active = ?
     WHERE item_id = ?
   `;
 
-  db.query(query, [item_title, item_url, item_order, is_external_link, is_active, item_id], (err, result) => {
+  db.query(itemQuery, [item_title, item_url, item_order, is_external_link, is_active, item_id], (err, result) => {
     if (err) {
       console.error('Error updating footer item:', err);
       return res.status(500).json({
@@ -254,10 +330,85 @@ const updateFooterItem = (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      message: 'Footer item updated successfully'
-    });
+    // If it's an internal link, update or create page content
+    if (!is_external_link && page_title && page_content) {
+      // Check if page content exists
+      const checkPageQuery = 'SELECT page_id FROM footer_page_content WHERE item_id = ?';
+      
+      db.query(checkPageQuery, [item_id], (err, pageResults) => {
+        if (err) {
+          console.error('Error checking page content:', err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error checking page content'
+          });
+        }
+
+        if (pageResults.length > 0) {
+          // Update existing page content
+          const updatePageQuery = `
+            UPDATE footer_page_content 
+            SET page_title = ?, page_description = ?, page_content = ?
+            WHERE item_id = ?
+          `;
+          
+          db.query(updatePageQuery, [page_title, page_description, page_content, item_id], (err) => {
+            if (err) {
+              console.error('Error updating page content:', err);
+              return res.status(500).json({
+                success: false,
+                message: 'Error updating page content'
+              });
+            }
+
+            res.json({
+              success: true,
+              message: 'Footer item and page content updated successfully'
+            });
+          });
+        } else {
+          // Create new page content
+          const page_slug = item_title.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .trim();
+
+          const createPageQuery = `
+            INSERT INTO footer_page_content (item_id, page_title, page_description, page_slug, page_content)
+            VALUES (?, ?, ?, ?, ?)
+          `;
+          
+          db.query(createPageQuery, [item_id, page_title, page_description, page_slug, page_content], (err) => {
+            if (err) {
+              console.error('Error creating page content:', err);
+              return res.status(500).json({
+                success: false,
+                message: 'Error creating page content'
+              });
+            }
+
+            res.json({
+              success: true,
+              message: 'Footer item updated and page content created successfully'
+            });
+          });
+        }
+      });
+    } else {
+      // For external links, delete any existing page content
+      if (is_external_link) {
+        db.query('DELETE FROM footer_page_content WHERE item_id = ?', [item_id], (err) => {
+          if (err) {
+            console.error('Error deleting page content:', err);
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Footer item updated successfully'
+      });
+    }
   });
 };
 
@@ -297,6 +448,151 @@ const deleteFooterItem = (req, res) => {
   });
 };
 
+// Get page content by slug
+const getPageContent = (req, res) => {
+  const { slug } = req.params;
+
+  if (!slug) {
+    return res.status(400).json({
+      success: false,
+      message: 'Page slug is required'
+    });
+  }
+
+  const query = `
+    SELECT 
+      fpc.*,
+      cfi.item_title,
+      cfi.is_external_link,
+      cf.company_code
+    FROM footer_page_content fpc
+    JOIN custom_footer_items cfi ON fpc.item_id = cfi.item_id
+    JOIN custom_footer cf ON cfi.footer_id = cf.footer_id
+    WHERE fpc.page_slug = ? AND fpc.is_published = TRUE
+  `;
+
+  db.query(query, [slug], (err, results) => {
+    if (err) {
+      console.error('Error fetching page content:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Error fetching page content'
+      });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Page not found'
+      });
+    }
+
+    const page = results[0];
+
+    res.json({
+      success: true,
+      data: {
+        page_id: page.page_id,
+        page_title: page.page_title,
+        page_description: page.page_description,
+        page_slug: page.page_slug,
+        page_content: page.page_content,
+        company_code: page.company_code,
+        created_at: page.created_at,
+        updated_at: page.updated_at
+      }
+    });
+  });
+};
+
+// Update page content
+const updatePageContent = (req, res) => {
+  const { page_id } = req.params;
+  const { page_title, page_description, page_content, is_published } = req.body;
+
+  if (!page_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'Page ID is required'
+    });
+  }
+
+  const query = `
+    UPDATE footer_page_content 
+    SET page_title = ?, page_description = ?, page_content = ?, is_published = ?
+    WHERE page_id = ?
+  `;
+
+  db.query(query, [page_title, page_description, page_content, is_published, page_id], (err, result) => {
+    if (err) {
+      console.error('Error updating page content:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Error updating page content'
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Page not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Page content updated successfully'
+    });
+  });
+};
+
+// Get page content for editing (admin)
+const getPageContentForEdit = (req, res) => {
+  const { item_id } = req.params;
+
+  if (!item_id) {
+    return res.status(400).json({
+      success: false,
+      message: 'Item ID is required'
+    });
+  }
+
+  const query = `
+    SELECT 
+      fpc.*,
+      cfi.item_title,
+      cfi.item_url,
+      cfi.is_external_link
+    FROM footer_page_content fpc
+    JOIN custom_footer_items cfi ON fpc.item_id = cfi.item_id
+    WHERE fpc.item_id = ?
+  `;
+
+  db.query(query, [item_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching page content for edit:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Error fetching page content'
+      });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Page content not found'
+      });
+    }
+
+    const page = results[0];
+
+    res.json({
+      success: true,
+      data: page
+    });
+  });
+};
+
 module.exports = {
   getFooterSections,
   createFooterSection,
@@ -304,5 +600,8 @@ module.exports = {
   deleteFooterSection,
   createFooterItem,
   updateFooterItem,
-  deleteFooterItem
+  deleteFooterItem,
+  getPageContent,
+  updatePageContent,
+  getPageContentForEdit
 };

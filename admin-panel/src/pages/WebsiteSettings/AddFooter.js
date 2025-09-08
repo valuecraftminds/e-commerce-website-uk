@@ -1,12 +1,34 @@
-import React, { useState, useEffect,useContext } from 'react';
-import { Container, Row, Col, Card, Form, Button, Table, Modal, Alert, Badge } from 'react-bootstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Container, Row, Col, Card, Form, Button, Table, Modal, Alert, Badge, Tabs, Tab } from 'react-bootstrap';
 import axios from 'axios';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaExternalLinkAlt, FaFileAlt } from 'react-icons/fa';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import '../../styles/FooterManagement.css';
 import { AuthContext } from '../../context/AuthContext';
 
-
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+// Quill editor configuration
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    ['blockquote', 'code-block'],
+    ['link', 'image'],
+    [{ 'align': [] }],
+    [{ 'color': [] }, { 'background': [] }],
+    ['clean']
+  ],
+};
+
+const quillFormats = [
+  'header', 'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet', 'indent', 'blockquote', 'code-block',
+  'link', 'image', 'align', 'color', 'background'
+];
 
 export default function AddFooter() {
   const [footerSections, setFooterSections] = useState([]);
@@ -33,14 +55,20 @@ export default function AddFooter() {
     item_url: '',
     item_order: 1,
     is_external_link: false,
-    is_active: true
+    is_active: true,
+    // New fields for internal pages
+    page_title: '',
+    page_description: '',
+    page_content: ''
   });
 
   const { userData } = useContext(AuthContext);
-    const company_code = userData?.company_code;
+  const company_code = userData?.company_code;
 
   // Fetch footer sections
   const fetchFooterSections = async () => {
+    if (!company_code) return;
+    
     try {
       setLoading(true);
       const response = await axios.get(`${BASE_URL}/api/admin/footer/sections`, {
@@ -59,8 +87,10 @@ export default function AddFooter() {
   };
 
   useEffect(() => {
-    fetchFooterSections();
-  }, []);
+    if (company_code) {
+      fetchFooterSections();
+    }
+  }, [company_code]);
 
   // Handle section submission
   const handleSectionSubmit = async (e) => {
@@ -89,7 +119,7 @@ export default function AddFooter() {
     }
   };
 
-  // Handle item submission
+  // Handle item submission with enhanced logic
   const handleItemSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -98,9 +128,31 @@ export default function AddFooter() {
         : `${BASE_URL}/api/admin/footer/items`;
       
       const method = editingItem ? 'put' : 'post';
-      const data = editingItem 
-        ? itemForm 
-        : { ...itemForm, footer_id: selectedFooterId };
+      
+      // Prepare data based on link type
+      let data = { ...itemForm };
+      
+      if (!editingItem) {
+        data.footer_id = selectedFooterId;
+      }
+
+      // For internal links, ensure page content is provided
+      if (!itemForm.is_external_link) {
+        if (!itemForm.page_title || !itemForm.page_content) {
+          setError('Page title and content are required for internal links');
+          return;
+        }
+        // Clear URL for internal links (will be generated from title)
+        data.item_url = '';
+      } else {
+        // For external links, ensure URL is provided and clear page content
+        if (!itemForm.item_url) {
+          setError('URL is required for external links');
+          return;
+        }
+        data.page_title = '';
+        data.page_content = '';
+      }
 
       const response = await axios[method](url, data);
 
@@ -112,7 +164,7 @@ export default function AddFooter() {
       }
     } catch (err) {
       console.error('Error saving item:', err);
-      setError('Failed to save item');
+      setError(err.response?.data?.message || 'Failed to save item');
     }
   };
 
@@ -170,7 +222,10 @@ export default function AddFooter() {
       item_url: '',
       item_order: 1,
       is_external_link: false,
-      is_active: true
+      is_active: true,
+      page_title: '',
+      page_description: '',
+      page_content: ''
     });
     setEditingItem(null);
     setSelectedFooterId(null);
@@ -187,15 +242,43 @@ export default function AddFooter() {
     setShowSectionModal(true);
   };
 
-  const editItem = (item) => {
+  const editItem = async (item) => {
     setEditingItem(item);
-    setItemForm({
-      item_title: item.item_title,
-      item_url: item.item_url,
-      item_order: item.item_order,
-      is_external_link: item.is_external_link,
-      is_active: item.item_active
-    });
+    
+    // If it's an internal link, fetch page content
+    if (!item.is_external_link) {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/admin/footer/page-edit/${item.item_id}`);
+        if (response.data.success) {
+          const pageData = response.data.data;
+          setItemForm({
+            item_title: item.item_title,
+            item_url: item.item_url,
+            item_order: item.item_order,
+            is_external_link: item.is_external_link,
+            is_active: item.item_active,
+            page_title: pageData.page_title || '',
+            page_description: pageData.page_description || '',
+            page_content: pageData.page_content || ''
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching page content:', err);
+        setError('Failed to fetch page content');
+      }
+    } else {
+      setItemForm({
+        item_title: item.item_title,
+        item_url: item.item_url,
+        item_order: item.item_order,
+        is_external_link: item.is_external_link,
+        is_active: item.item_active,
+        page_title: '',
+        page_description: '',
+        page_content: ''
+      });
+    }
+    
     setShowItemModal(true);
   };
 
@@ -203,6 +286,28 @@ export default function AddFooter() {
     setSelectedFooterId(footerId);
     setShowItemModal(true);
   };
+
+  // Handle link type change
+  const handleLinkTypeChange = (isExternal) => {
+    setItemForm({
+      ...itemForm,
+      is_external_link: isExternal,
+      // Clear fields based on type
+      item_url: isExternal ? itemForm.item_url : '',
+      page_title: isExternal ? '' : itemForm.page_title,
+      page_content: isExternal ? '' : itemForm.page_content
+    });
+  };
+
+  if (!company_code) {
+    return (
+      <Container fluid className="p-4">
+        <Alert variant="warning">
+          Please log in to access footer management.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container fluid className="p-4">
@@ -278,7 +383,7 @@ export default function AddFooter() {
                             <thead>
                               <tr>
                                 <th>Title</th>
-                                <th>URL</th>
+                                <th>URL/Page</th>
                                 <th>Order</th>
                                 <th>Type</th>
                                 <th>Status</th>
@@ -290,7 +395,14 @@ export default function AddFooter() {
                                 <tr key={item.item_id}>
                                   <td>{item.item_title}</td>
                                   <td>
-                                    <code>{item.item_url || 'N/A'}</code>
+                                    <div className="d-flex align-items-center">
+                                      {item.is_external_link ? (
+                                        <FaExternalLinkAlt className="me-2 text-warning" />
+                                      ) : (
+                                        <FaFileAlt className="me-2 text-info" />
+                                      )}
+                                      <code>{item.item_url || 'Generated from title'}</code>
+                                    </div>
                                   </td>
                                   <td>{item.item_order}</td>
                                   <td>
@@ -389,63 +501,137 @@ export default function AddFooter() {
         </Form>
       </Modal>
 
-      {/* Item Modal */}
-      <Modal show={showItemModal} onHide={() => { setShowItemModal(false); resetItemForm(); }}>
+      {/* Enhanced Item Modal with Tabs */}
+      <Modal 
+        show={showItemModal} 
+        onHide={() => { setShowItemModal(false); resetItemForm(); }}
+        size="lg"
+      >
         <Modal.Header closeButton>
           <Modal.Title>{editingItem ? 'Edit Item' : 'Add Item'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleItemSubmit}>
           <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Item Title *</Form.Label>
-              <Form.Control
-                type="text"
-                value={itemForm.item_title}
-                onChange={(e) => setItemForm({...itemForm, item_title: e.target.value})}
-                required
-                placeholder="e.g., About Us, FAQ, Facebook"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>URL</Form.Label>
-              <Form.Control
-                type="text"
-                value={itemForm.item_url}
-                onChange={(e) => setItemForm({...itemForm, item_url: e.target.value})}
-                placeholder="e.g., /about, https://facebook.com"
-              />
-              <Form.Text className="text-muted">
-                Use relative paths for internal links (/about) or full URLs for external links
-              </Form.Text>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Display Order</Form.Label>
-              <Form.Control
-                type="number"
-                value={itemForm.item_order}
-                onChange={(e) => setItemForm({...itemForm, item_order: parseInt(e.target.value)})}
-                min="1"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="External Link"
-                checked={itemForm.is_external_link}
-                onChange={(e) => setItemForm({...itemForm, is_external_link: e.target.checked})}
-              />
-              <Form.Text className="text-muted">
-                Check this if the link goes to an external website
-              </Form.Text>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Active"
-                checked={itemForm.is_active}
-                onChange={(e) => setItemForm({...itemForm, is_active: e.target.checked})}
-              />
-            </Form.Group>
+            <Tabs defaultActiveKey="basic" id="item-tabs">
+              <Tab eventKey="basic" title="Basic Info">
+                <div className="pt-3">
+                  <Form.Group className="mb-3">
+                    <Form.Label>Item Title *</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={itemForm.item_title}
+                      onChange={(e) => setItemForm({...itemForm, item_title: e.target.value})}
+                      required
+                      placeholder="e.g., About Us, FAQ, Facebook"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Link Type *</Form.Label>
+                    <div>
+                      <Form.Check
+                        type="radio"
+                        id="internal-link"
+                        name="linkType"
+                        label="Internal Page (with content)"
+                        checked={!itemForm.is_external_link}
+                        onChange={() => handleLinkTypeChange(false)}
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="external-link"
+                        name="linkType"
+                        label="External Link"
+                        checked={itemForm.is_external_link}
+                        onChange={() => handleLinkTypeChange(true)}
+                      />
+                    </div>
+                  </Form.Group>
+
+                  {itemForm.is_external_link && (
+                    <Form.Group className="mb-3">
+                      <Form.Label>External URL *</Form.Label>
+                      <Form.Control
+                        type="url"
+                        value={itemForm.item_url}
+                        onChange={(e) => setItemForm({...itemForm, item_url: e.target.value})}
+                        placeholder="https://facebook.com/yourcompany"
+                        required
+                      />
+                      <Form.Text className="text-muted">
+                        Enter the full URL including https://
+                      </Form.Text>
+                    </Form.Group>
+                  )}
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Display Order</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={itemForm.item_order}
+                      onChange={(e) => setItemForm({...itemForm, item_order: parseInt(e.target.value)})}
+                      min="1"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      label="Active"
+                      checked={itemForm.is_active}
+                      onChange={(e) => setItemForm({...itemForm, is_active: e.target.checked})}
+                    />
+                  </Form.Group>
+                </div>
+              </Tab>
+
+              {!itemForm.is_external_link && (
+                <Tab eventKey="content" title="Page Content">
+                  <div className="pt-3">
+                    <Form.Group className="mb-3">
+                      <Form.Label>Page Title *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={itemForm.page_title}
+                        onChange={(e) => setItemForm({...itemForm, page_title: e.target.value})}
+                        placeholder="Title for the page"
+                        required={!itemForm.is_external_link}
+                      />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>Page Description</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        value={itemForm.page_description}
+                        onChange={(e) => setItemForm({...itemForm, page_description: e.target.value})}
+                        placeholder="Brief description of the page"
+                      />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>Page Content *</Form.Label>
+                      <ReactQuill
+                        theme="snow"
+                        value={itemForm.page_content}
+                        onChange={(content) => setItemForm({...itemForm, page_content: content})}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        placeholder="Write your page content here. Use the toolbar above for formatting."
+                        style={{ 
+                          height: '300px',
+                          marginBottom: '50px'
+                        }}
+                      />
+                      <Form.Text className="text-muted">
+                        Use the rich text editor to format your content. You can add headings, lists, links, and more.
+                      </Form.Text>
+                    </Form.Group>
+                  </div>
+                </Tab>
+              )}
+            </Tabs>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => { setShowItemModal(false); resetItemForm(); }}>
