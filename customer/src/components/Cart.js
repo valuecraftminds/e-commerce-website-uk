@@ -550,6 +550,7 @@ return (
                             cart.some(item => selectedItems.has(item.cart_id) && (item.stock_qty === 0 || item.stock_qty === null))
                           }
                           onClick={() => handleBuyNow()}
+                          className="cart-checkout-btn"
                         >
                           🚀 Checkout Selected Items ({selectedItems.size})
                         </Button>
@@ -562,7 +563,11 @@ return (
                         />
 
                         <Link to="/" className="d-grid">
-                          <Button variant="outline-secondary" size="lg">
+                          <Button
+                            variant="outline-secondary" 
+                            size="lg" 
+                            className="cont-shopping-btn"
+                          >
                             🛍️ Continue Shopping
                           </Button>
                         </Link>

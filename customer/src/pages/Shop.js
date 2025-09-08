@@ -6,6 +6,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import DataFile from "../assets/DataFile";
 import '../styles/Shop.css';
 import { CountryContext } from "../context/CountryContext";
+import StarRating from "../components/StarRating";
+import BackToTop from "../components/BackToTop";
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -26,22 +28,6 @@ export default function Shop() {
 
   const getProductDetails = (styleNumber) => {
     navigate(`/product/${styleNumber}`);
-  };
-
-  // Render stars for rating display
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          className={`star ${i <= rating ? 'filled' : ''}`}
-        >
-          ★
-        </span>
-      );
-    }
-    return <div className="stars-container">{stars}</div>;
   };
 
   // Fetch exchange rates
@@ -324,7 +310,7 @@ export default function Shop() {
                   {/* Rating Display */}
                   {parseFloat(product.average_rating) > 0 && parseInt(product.review_count) > 0 && (
                     <div className="product-rating mb-2">
-                      {renderStars(Math.round(parseFloat(product.average_rating)))}
+                      <StarRating rating={Math.round(parseFloat(product.average_rating))} size="medium" />
                       <span className="rating-text ms-2">
                         {parseFloat(product.average_rating).toFixed(1)}({parseInt(product.review_count)})
                       </span>
@@ -375,6 +361,8 @@ export default function Shop() {
           </div>
         )}
       </Container>
+
+      <BackToTop />
     </>
   );
 }

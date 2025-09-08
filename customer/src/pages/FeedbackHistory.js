@@ -4,15 +4,18 @@ import { useNavigate } from 'react-router-dom';
 
 import '../styles/FeedbackHistory.css';
 import Spinner from '../components/Spinner';
+import StarRating from "../components/StarRating";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
 
 const FeedbackHistory = () => {
   const [feedbackHistory, setFeedbackHistory] = useState([]);
+  const [filteredFeedback, setFilteredFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [starFilter, setStarFilter] = useState('all');
   const [pagination, setPagination] = useState({
     totalPages: 0,
     totalRecords: 0,
@@ -64,6 +67,7 @@ const FeedbackHistory = () => {
       
       if (response.data && response.data.feedback) {
         setFeedbackHistory(response.data.feedback);
+        setFilteredFeedback(response.data.feedback);
         setPagination(response.data.pagination);
         setCurrentPage(page);
       }
@@ -80,20 +84,20 @@ const FeedbackHistory = () => {
     fetchFeedbackHistory(1);
   }, [fetchFeedbackHistory]);
 
-  // Render star rating
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          className={`star ${i <= rating ? 'filled' : 'empty'}`}
-        >
-          ★
-        </span>
-      );
+  // Filter feedback based on star rating
+  useEffect(() => {
+    if (starFilter === 'all') {
+      setFilteredFeedback(feedbackHistory);
+    } else {
+      const filtered = feedbackHistory.filter(item => item.rating === parseInt(starFilter));
+      setFilteredFeedback(filtered);
     }
-    return stars;
+  }, [starFilter, feedbackHistory]);
+
+  // Handle star filter change
+  const handleStarFilterChange = (event) => {
+    setStarFilter(event.target.value);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   // Format date
@@ -154,13 +158,59 @@ const FeedbackHistory = () => {
     <div className="feedback-history">
       <div className="feedback-history-header">
         <h1>My Feedback History</h1>
-        <p>View all your product reviews and feedback</p>
+        <p>View all your reviews and ratings</p>
         
         {pagination.totalRecords > 0 && (
-          <div className="feedback-stats">
-            <div className="feedback-stat-item">
-              <span className="feedback-stat-number">{pagination.totalRecords}</span>
-              <span className="feedback-stat-label">Total Reviews</span>
+          <div className="feedback-controls-row">
+            <div className="feedback-stats">
+              <div className="feedback-stat-item">
+                <span className="feedback-stat-number">{pagination.totalRecords}</span>
+                <span className="feedback-stat-label">Total Reviews</span>
+              </div>
+            </div>
+            
+            <div className="feedback-filter-section">
+              <div className="feedback-filter-group">
+                <label htmlFor="star-filter" className="feedback-filter-label">
+                  Filter by Rating:
+                </label>
+                <select 
+                  id="star-filter"
+                  value={starFilter} 
+                  onChange={handleStarFilterChange}
+                  className="feedback-filter-select"
+                >
+                  <option value="all">All Ratings</option>
+                  <option value="5">5 Stars</option>
+                  <option value="4">4 Stars</option>
+                  <option value="3">3 Stars</option>
+                  <option value="2">2 Stars</option>
+                  <option value="1">1 Star</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {pagination.totalRecords === 0 && (
+          <div className="feedback-filter-section">
+            <div className="feedback-filter-group">
+              <label htmlFor="star-filter" className="feedback-filter-label">
+                Filter by Rating:
+              </label>
+              <select 
+                id="star-filter"
+                value={starFilter} 
+                onChange={handleStarFilterChange}
+                className="feedback-filter-select"
+              >
+                <option value="all">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
             </div>
           </div>
         )}
@@ -182,10 +232,17 @@ const FeedbackHistory = () => {
           <p>You haven't left any product reviews yet.</p>
           <p>Start shopping and share your experience with others!</p>
         </div>
+      ) : !error && filteredFeedback.length === 0 && starFilter !== 'all' ? (
+        <div className="feedback-empty-state">
+          <div className="feedback-empty-icon">⭐</div>
+          <h3>No Reviews Found</h3>
+          <p>No reviews found with {starFilter} star{starFilter === '1' ? '' : 's'} rating.</p>
+          <p>Try selecting a different rating filter.</p>
+        </div>
       ) : (
         <>
           <div className="feedback-list">
-            {feedbackHistory.map((item) => (
+            {filteredFeedback.map((item) => (
               <div key={item.review_id} className="feedback-item">
                 <div className="feedback-header">
                   <div className="feedback-product-info">
@@ -194,7 +251,7 @@ const FeedbackHistory = () => {
                   </div>
                   <div className="feedback-rating-display">
                     <div className="feedback-stars">
-                      {renderStars(item.rating)}
+                      <StarRating rating={item.rating} size="large" showValue={false} />
                     </div>
                     <span className="feedback-rating-number">({item.rating}/5)</span>
                   </div>
@@ -214,9 +271,11 @@ const FeedbackHistory = () => {
                       />
                     )}
                   </div>
-                  <div className="feedback-review-text">
-                    <p>{item.review}</p>
-                  </div>
+                  {item.review && item.review.trim() && (
+                    <div className="feedback-review-text">
+                      <p>{item.review}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="feedback-footer">
@@ -228,8 +287,8 @@ const FeedbackHistory = () => {
             ))}
           </div>
 
-          {/* Pagination Controls */}
-          {pagination.totalPages > 1 && (
+          {/* Pagination Controls - Only show if using "All" filter */}
+          {pagination.totalPages > 1 && starFilter === 'all' && (
             <div className="feedback-pagination">
               <div className="feedback-pagination-info">
                 <p>

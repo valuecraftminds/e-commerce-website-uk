@@ -172,30 +172,36 @@
 }
 
 .save-btn {
-  background-color: #466d5d !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white !important;
+  transition: all 0.3s ease !important;
 }
 
 .save-btn:hover {
-  background-color: #3b5b4a !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 150%);
+  transform: translateY(-4px);
 }
 
 .new-address-btn {
-  background-color: #466d5d !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s ease !important;
   color: white !important;
 }
 
 .new-address-btn:hover {
-  background-color: #3b5b4a !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 150%) !important;
+  transform: translateY(-4px);
 }
 
 .new-card-btn {
-  background-color: #466d5d !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s ease !important;
   color: white !important;
 }
 
 .new-card-btn:hover {
-  background-color: #3b5b4a !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 150%) !important;
+  transform: translateY(-4px);
 }
 
 .modal-overlay {
@@ -391,12 +397,13 @@
 .address-card .btn-outline-success,
 .address-card .btn-outline-danger {
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
+  transition: all 0.2s ease !important;
 }
 
 .address-card .btn:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-} 
+  transform: translateY(-2px) !important;
+}
 
 .address-card {
   border: 1px solid #ddd;

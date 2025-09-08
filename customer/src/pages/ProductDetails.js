@@ -6,6 +6,7 @@ import { FaShare } from "react-icons/fa";
 import axios from "axios";
 
 import CheckoutModal from "../components/CheckoutModal";
+import StarRating from "../components/StarRating";
 import { useCart } from "../context/CartContext";
 import { CountryContext } from "../context/CountryContext";
 import { useNotifyModal } from "../context/NotifyModalProvider";
@@ -518,21 +519,6 @@ export default function ProductDetails() {
     handleShare();
    };
 
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          className={`star ${i <= rating ? 'filled' : ''}`}
-        >
-          ★
-        </span>
-      );
-    }
-    return <div className="stars-container">{stars}</div>;
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -609,7 +595,7 @@ export default function ProductDetails() {
               {/* Rating Display */}
               {reviewStats.total > 0 && (
                 <div className="product-rating mb-3">
-                  {renderStars(Math.round(reviewStats.average))}
+                  <StarRating rating={Math.round(reviewStats.average)} size="medium" />
                   <span className="rating-text">
                     {reviewStats.average.toFixed(1)} ({reviewStats.total} reviews)
                   </span>
@@ -835,7 +821,7 @@ export default function ProductDetails() {
                 <div className="review-summary">
                   <div className="average-rating">
                     <span className="rating-number">{reviewStats.average.toFixed(1)}</span>
-                    {renderStars(Math.round(reviewStats.average))}
+                    <StarRating rating={Math.round(reviewStats.average)} size="large" />
                     <span className="total-reviews">Based on {reviewStats.total} reviews</span>
                   </div>
                 </div>
@@ -853,7 +839,7 @@ export default function ProductDetails() {
                       <div className="review-header">
                         <div className="reviewer-name">{review.user_name || 'Anonymous'}</div>
                         <div className="review-rating">
-                          {renderStars(review.rating)}
+                          <StarRating rating={review.rating} size="small" />
                         </div>
                       </div>
                       <div className="review-date">
@@ -872,9 +858,6 @@ export default function ProductDetails() {
           </Col>
         </Row>
       </Container>
-      
-      {/* Spacer to prevent overlap when expandable sections are open */}
-      <div className="layout-spacer"></div>
       
       {/* Similar Products Section */}
     <Container fluid className="similar-products-container">
@@ -931,7 +914,7 @@ export default function ProductDetails() {
                 {/* Rating Display */}
                 {parseFloat(similarProduct.average_rating) > 0 && parseInt(similarProduct.review_count) > 0 && (
                   <div className="product-rating mb-2">
-                    {renderStars(Math.round(parseFloat(similarProduct.average_rating)))}
+                    <StarRating rating={Math.round(parseFloat(similarProduct.average_rating))} size="medium" />
                     <span className="rating-text ms-2">
                       {parseFloat(similarProduct.average_rating).toFixed(1)} ({parseInt(similarProduct.review_count)} {parseInt(similarProduct.review_count) === 1 ? 'review' : 'reviews'})
                     </span>

@@ -445,17 +445,17 @@
     height: 100% !important;
 }
 .delivery-btn{
-  background-color: #8a18b8 !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   border: none !important;
   border-radius: 5px;
   padding: 5px 10px !important;
   font-size: 0.9rem;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease !important;
 }
 
 .delivery-btn:hover{
-  background-color: #6a0f8f !important;
+  transform: translateY(-4px);
 }
 
 /* Cancel Order Button */
@@ -472,6 +472,7 @@
 .cancel-order-btn:hover {
   background-color: #dc3545 !important;
   color: #fff !important;
+  transform: translateY(5px) !important;
 }
 
 /* Badge for cancelled status */
@@ -488,13 +489,13 @@
   transition: all 0.3s ease !important;
   width: auto !important;
   margin-bottom: 5px !important;
-  background-color: #8a18b8 !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: white !important;
   border: none !important;
 }
 
 .add-review-btn:hover {
-  background-color: #6a0f8f !important;
+  transform: translateY(-4px);
 }
 
 .pricing-row.review-action {
@@ -529,42 +530,4 @@
 .modal-title {
   color: #495057;
   font-weight: 600;
-}
-
-/* Custom Feedback Modal Styles */
-.feedback-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1050;
-  padding: 20px;
-}
-
-.feedback-modal-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
 }

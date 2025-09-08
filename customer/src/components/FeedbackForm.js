@@ -91,9 +91,8 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
   };
 
   return (
-    <form className="feedback-form" onSubmit={handleSubmit}>
+    <form className="feedback-form">
       <h4>Leave your feedback for {item.style_name}</h4>
-      {item.style_name && <p className="item-name">{item.sku}</p>}
       <hr />
       
       <div className="star-rating">
@@ -114,7 +113,11 @@ function SingleItemFeedback({ item, customer_id, onSubmissionComplete }) {
         maxLength={255}
         placeholder="Write your review here..."
       />
-      <button type="submit">Submit</button>
+      <button 
+        onClick={handleSubmit}
+        className="submit-review-btn"
+      >
+      Submit Your Review</button>
     </form>
   );
 }
