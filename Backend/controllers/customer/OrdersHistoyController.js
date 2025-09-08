@@ -673,6 +673,38 @@ const OrdersHistoryController = {
             });
         }
     },
+
+    confirmDelivery: (req, res) => {
+        const customer_id = req.user?.id;
+        const { company_code } = req.query;
+        const { order_id } = req.body;
+        if (!customer_id) {
+        return res.status(401).json({ error: 'BE: User not authenticated' });
+        }
+        if (!company_code) {
+        return res.status(400).json({ error: 'Company code is required' });
+        }
+        if (!order_id) {
+        return res.status(400).json({ error: 'Order ID is required' });
+        }
+        const updateQuery = `
+            UPDATE orders 
+                SET order_status = 'Delivered', 
+                delivered_at = ?
+            WHERE order_id = ?
+            AND customer_id = ? 
+            AND company_code = ? 
+            AND order_status != 'Delivered'
+        `;
+        db.query(updateQuery, [new Date(), order_id, customer_id, company_code], (err, result) => {
+        if (err) {
+            console.error('Error updating order status:', err);
+            return res.status(500).json({ error: 'Failed to update order status' });
+        }
+        // Success response
+        res.status(200).json({ message: 'Order delivered successfully' });
+        });
+  }
 };
 
 module.exports = OrdersHistoryController;
