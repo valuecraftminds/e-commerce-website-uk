@@ -415,7 +415,6 @@ export default function OrderDetails() {
                   <th>Fit</th>
                   <th>Material</th>
                   <th>Quantity</th>
-                  <th>Unit Price</th>
                   <th>Sale Price</th>
                   <th>Total Price</th>
                   <th>Available Stock</th>
@@ -436,9 +435,9 @@ export default function OrderDetails() {
                     <td>{item.fit_name || 'N/A'}</td>
                     <td>{item.material_name || 'N/A'}</td>  
                     <td>{item.quantity}</td>
-                    <td>${parseFloat(item.unit_price || 0).toFixed(2)}</td>
                     <td>${parseFloat(item.sale_price || 0).toFixed(2)}</td>
-                    <td>${(parseFloat(item.sale_price || 0) * parseInt(item.quantity || 0)).toFixed(2)}</td>
+                                        <td>${parseFloat(item.total_price || 0).toFixed(2)}</td>
+
                     <td>
                       <Badge bg={
                         stockData[item.sku] === undefined ? 'secondary' :
