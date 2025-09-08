@@ -542,6 +542,43 @@ getVariantInfo: (req, res) => {
 
       res.status(200).json({ message: 'Delivery confirmed' });
     });
+  },
+
+  // GET size guide by style number
+  getSizeGuide: (req, res) => {
+    const { style_number } = req.params;
+    const { company_code } = req.query;
+
+    if (!style_number || !company_code) {
+      return res.status(400).json({ error: 'Style number and company code are required' });
+    }
+
+    const sql = `
+      SELECT 
+        size_guide_id,
+        style_number,
+        size_guide_content,
+        created_at,
+        updated_at
+      FROM size_guides 
+      WHERE style_number = ? AND company_code = ?
+    `;
+
+    db.query(sql, [style_number, company_code], (err, results) => {
+      if (err) {
+        console.error('Error fetching size guide:', err);
+        return res.status(500).json({ error: 'Server error', details: err.message });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Size guide not found for this product' });
+      }
+
+      res.status(200).json({
+        success: true,
+        size_guide: results[0]
+      });
+    });
   }
 };
 
