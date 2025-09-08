@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import '../../styles/AddOfferModal.css';
+import { Modal } from 'react-bootstrap';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -183,140 +184,128 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
     const hasExistingOffer = product.offer_price && parseFloat(product.offer_price) > 0;
 
     return (
-        <div className="modal-backdrop" onClick={handleBackdropClick}>
-            <div className="modal-container">
-                <div className="modal-header">
-                    <h2>{hasExistingOffer ? 'Edit Offer' : 'Add Offer'}</h2>
-                    <button 
-                        className="modal-close-btn"
-                        onClick={handleClose}
-                        disabled={loading}
-                    >
-                        ×
-                    </button>
+        <Modal show={isOpen} onHide={handleClose} centered size="lg" backdrop="static" className='offer-modal'>
+            <Modal.Header closeButton>
+                <Modal.Title>{hasExistingOffer ? 'Edit Offer' : 'Add Offer'}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                {/* Product Information */}
+                <div className="offer-product-info-section">
+                    <h3>Product Details</h3>
+                    <div className="offer-product-info-grid">
+                        <div className="offer-info-item">
+                            <label>Style Number:</label>
+                            <span>{product.style_number}</span>
+                        </div>
+                        <div className="offer-info-item">
+                            <label>SKU:</label>
+                            <span>{product.sku}</span>
+                        </div>
+                        <div className="offer-info-item">
+                            <label>Style Name:</label>
+                            <span>{product.style_name}</span>
+                        </div>
+                        <div className="offer-info-item">
+                            <label>Unit Price:</label>
+                            <span>${product.unit_price}</span>
+                        </div>
+                        <div className="offer-info-item">
+                            <label>Sale Price:</label>
+                            <span>${product.sale_price}</span>
+                        </div>
+                        <div className="offer-info-item">
+                            <label>Stock:</label>
+                            <span>{product.main_stock_qty}</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="modal-body">
-                    {/* Product Information */}
-                    <div className="product-info-section">
-                        <h3>Product Details</h3>
-                        <div className="product-info-grid">
-                            <div className="info-item">
-                                <label>Style Number:</label>
-                                <span>{product.style_number}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>SKU:</label>
-                                <span>{product.sku}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>Style Name:</label>
-                                <span>{product.style_name}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>Unit Price:</label>
-                                <span>${product.unit_price}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>Sale Price:</label>
-                                <span>${product.sale_price}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>Stock:</label>
-                                <span>{product.main_stock_qty}</span>
-                            </div>
+                {/* Offer Form */}
+                <form onSubmit={handleSubmit} className="offer-form">
+                    <div className="offer-form-row">
+                        <div className="offer-form-group">
+                            <label htmlFor="offer_price">
+                                Offer Price *
+                            </label>
+                            <input
+                                type="number"
+                                id="offer_price"
+                                name="offer_price"
+                                value={formData.offer_price}
+                                onChange={handleInputChange}
+                                placeholder="Enter offer price"
+                                step="0.01"
+                                min="0"
+                                required
+                                disabled={loading}
+                            />
                         </div>
                     </div>
 
-                    {/* Offer Form */}
-                    <form onSubmit={handleSubmit} className="offer-form">
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="offer_price">
-                                    Offer Price *
-                                </label>
-                                <input
-                                    type="number"
-                                    id="offer_price"
-                                    name="offer_price"
-                                    value={formData.offer_price}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter offer price"
-                                    step="0.01"
-                                    min="0"
-                                    required
-                                    disabled={loading}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="offer_start_date">
-                                    Start Date
-                                </label>
-                                <input
-                                    type="date"
-                                    id="offer_start_date"
-                                    name="offer_start_date"
-                                    value={formData.offer_start_date}
-                                    onChange={handleInputChange}
-                                    disabled={loading}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="offer_end_date">
-                                    End Date
-                                </label>
-                                <input
-                                    type="date"
-                                    id="offer_end_date"
-                                    name="offer_end_date"
-                                    value={formData.offer_end_date}
-                                    onChange={handleInputChange}
-                                    disabled={loading}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Error and Success Messages */}
-                        {error && <div className="error-message">{error}</div>}
-                        {success && <div className="success-message">{success}</div>}
-
-                        {/* Form Actions */}
-                        <div className="form-actions">
-                            <button
-                                type="button"
-                                className="btn-cancel"
-                                onClick={handleClose}
+                    <div className="offer-form-row">
+                        <div className="offer-form-group">
+                            <label htmlFor="offer_start_date">
+                                Start Date
+                            </label>
+                            <input
+                                type="date"
+                                id="offer_start_date"
+                                name="offer_start_date"
+                                value={formData.offer_start_date}
+                                onChange={handleInputChange}
                                 disabled={loading}
-                            >
-                                Cancel
-                            </button>
-                            
-                            {hasExistingOffer && (
-                                <button
-                                    type="button"
-                                    className="btn-remove"
-                                    onClick={handleRemoveOffer}
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Removing...' : 'Remove Offer'}
-                                </button>
-                            )}
-                            
-                            <button
-                                type="submit"
-                                className="btn-save"
-                                disabled={loading}
-                            >
-                                {loading ? 'Saving...' : 'Save Offer'}
-                            </button>
+                            />
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                        <div className="offer-form-group">
+                            <label htmlFor="offer_end_date">
+                                End Date
+                            </label>
+                            <input
+                                type="date"
+                                id="offer_end_date"
+                                name="offer_end_date"
+                                value={formData.offer_end_date}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Error and Success Messages */}
+                    {error && <div className="error-message">{error}</div>}
+                    {success && <div className="success-message">{success}</div>}
+                </form>
+            </Modal.Body>
+            <Modal.Footer>
+                <button
+                    type="button"
+                    className="offer-btn-cancel"
+                    onClick={handleClose}
+                    disabled={loading}
+                >
+                    Cancel
+                </button>
+                {hasExistingOffer && (
+                    <button
+                        type="button"
+                        className="offer-btn-remove"
+                        onClick={handleRemoveOffer}
+                        disabled={loading}
+                    >
+                        {loading ? 'Removing...' : 'Remove Offer'}
+                    </button>
+                )}
+                <button
+                    type="submit"
+                    className="offer-btn-save"
+                    form="offer-form"
+                    disabled={loading}
+                    onClick={handleSubmit}
+                >
+                    {loading ? 'Saving...' : 'Save Offer'}
+                </button>
+            </Modal.Footer>
+        </Modal>
     );
 };
 

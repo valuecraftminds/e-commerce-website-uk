@@ -1,0 +1,285 @@
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.offer-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.offer-modal-close-btn:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+.offer-modal-close-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal Body */
+.offer-modal-body {
+    padding: 0 24px 24px;
+}
+
+/* Product Info Section */
+.offer-product-info-section {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.offer-product-info-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.offer-product-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.offer-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+    max-width: 90% !important;
+}
+
+.offer-info-item:last-child {
+    border-bottom: none;
+}
+
+.offer-info-item label {
+    font-weight: 500;
+    color: #374151;
+    margin-right: 12px;
+}
+
+.offer-info-item span {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+/* Form Styles */
+.offer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.offer-form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.offer-form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.offer-form-group.full-width {
+    flex: 1 1 100%;
+}
+
+.offer-form-group label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+/* Modal centering and width for AddOffersModal */
+.offer-modal {
+    width: 40%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+}
+
+.offer-form-group input:focus,
+.offer-form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.offer-form-group input:disabled,
+.offer-form-group textarea:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.offer-form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Messages */
+.error-message {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.success-message {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #16a34a;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Form Actions */
+.offer-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 20px;
+}
+
+/* Buttons */
+.offer-btn-cancel,
+.offer-btn-save,
+.offer-btn-remove {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    min-width: 100px;
+}
+
+.offer-btn-cancel {
+    background-color: white;
+    color: #6b7280;
+    border-color: #d1d5db;
+}
+
+.offer-btn-cancel:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.offer-btn-save {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.offer-btn-save:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.offer-btn-remove {
+    background-color: #dc2626;
+    color: white;
+}
+
+.offer-btn-remove:hover:not(:disabled) {
+    background-color: #b91c1c;
+}
+
+.offer-btn-cancel:disabled,
+.offer-btn-save:disabled,
+.offer-btn-remove:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .offer-modal-backdrop {
+        padding: 10px;
+    }
+
+    .offer-modal-container {
+        max-height: 95vh;
+    }
+
+    .modal-header,
+    .offer-modal-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .offer-form-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .offer-product-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .offer-form-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .offer-btn-cancel,
+    .offer-btn-save,
+    .offer-btn-remove {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .offer-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
