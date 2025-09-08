@@ -261,7 +261,7 @@ export default function OrderDetails() {
             // Notify modal
             showNotify({
                 title: 'Delivery Confirmed',
-                message: `Your delivery for order ${orderDetails.order_id} has been confirmed.`,
+                message: `Your delivery for order ${orderDetails.order_number} has been confirmed.`,
                 type: 'success'
             });
         } catch (error) {
@@ -569,10 +569,11 @@ export default function OrderDetails() {
                 <div className="feedback-modal-overlay" onClick={handleCloseFeedbackModal}>
                     <div className="feedback-modal-content" onClick={(e) => e.stopPropagation()}>
                         <FeedbackForm 
-                            items={selectedItem}
-                            customer_id={orderDetails?.customer_id}
-                            onSubmissionComplete={handleFeedbackSubmissionComplete}
-                            onClose={handleCloseFeedbackModal}
+                            isOpen={showFeedbackModal}
+                                            onClose={handleCloseFeedbackModal}
+                                            items={selectedItem}                       // single item still works
+                                            customer_id={orderDetails?.customer_id}
+                                            onSubmissionComplete={handleFeedbackSubmissionComplete}
                         />
                     </div>
                 </div>

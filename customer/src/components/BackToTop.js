@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaRegArrowAltCircleUp } from 'react-icons/fa';
-import './BackToTop.css';
+import '../styles/BackToTop.css';
 
 const BackToTop = ({ scrollThreshold = 400 }) => {
   const [showBackToTop, setShowBackToTop] = useState(false);

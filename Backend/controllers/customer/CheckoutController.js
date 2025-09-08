@@ -186,9 +186,8 @@ const CheckoutController = {
               total_items,
               order_status, 
               order_notes, 
-              created_at, 
-              updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
 
           const orderValues = [
@@ -505,6 +504,6 @@ const CheckoutController = {
       });
     });
   }
-}
+};
 
 module.exports = CheckoutController;
