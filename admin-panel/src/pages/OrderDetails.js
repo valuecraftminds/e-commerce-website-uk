@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Spinner, Alert, Card, Row, Col, Table, Badge, ButtonGroup } from 'react-bootstrap';
-import { FaArrowLeft, FaDownload, FaFileAlt, FaBoxOpen } from 'react-icons/fa';
+import { Button, Spinner, Alert, Card, Row, Col, Table, Badge, ButtonGroup, Modal, Form } from 'react-bootstrap';
+import { FaArrowLeft, FaDownload, FaFileAlt, FaBoxOpen, FaCog, FaCheck } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/WarehouseIssuing.css';
 
@@ -19,6 +19,13 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [stockData, setStockData] = useState({});
+
+  // Modal states
+  const [showIssuingModal, setShowIssuingModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [availableStocks, setAvailableStocks] = useState([]);
+  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Fetch order details
   useEffect(() => {
@@ -186,6 +193,44 @@ export default function OrderDetails() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Handle opening stock information modal for individual item
+  const handleOpenStockInfoModal = async (item) => {
+    setSelectedItem(item);
+    setShowIssuingModal(true);
+    setModalLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/issuing/available-stock?company_code=${company_code}&style_number=${item.style_number}&sku=${item.sku}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setAvailableStocks(data.data.available_stocks);
+        setSelectedBatch(data.data.selected_stock); // Auto-select first (FIFO)
+      } else {
+        setError(data.message || 'Failed to load stock data');
+        setAvailableStocks([]);
+        setSelectedBatch(null);
+      }
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      setError('Failed to load stock data');
+      setAvailableStocks([]);
+      setSelectedBatch(null);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setShowIssuingModal(false);
+    setSelectedItem(null);
+    setSelectedBatch(null);
+    setAvailableStocks([]);
+    setError('');
   };
 
   const handleBackToOrders = () => {
@@ -418,6 +463,8 @@ export default function OrderDetails() {
                   <th>Sale Price</th>
                   <th>Total Price</th>
                   <th>Available Stock</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -447,6 +494,35 @@ export default function OrderDetails() {
                         {stockData[item.sku] !== undefined ? stockData[item.sku] : 'Loading...'}
                       </Badge>
                     </td>
+                    <td>
+                      <Badge bg={
+                        item.booking_status === 'Issued' ? 'success' :
+                        item.booking_status === 'Not Booked' ? 'secondary' : 'warning'
+                      }>
+                        {item.booking_status || 'Not Booked'}
+                      </Badge>
+                    </td>
+                    <td>
+                      {item.booking_status !== 'Issued' && (
+                        <FaCog
+                          className="action-icon me-2 text-info"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenStockInfoModal(item);
+                          }}
+                          title="View Stock Information"
+                          style={{ cursor: 'pointer' }}
+                          size={16}
+                        />
+                      )}
+                      {item.booking_status === 'Issued' && (
+                        <FaCheck
+                          className="action-icon me-2 text-success"
+                          title="Item Issued"
+                          size={16}
+                        />
+                      )}
+                    </td>
                     
                   </tr>
                 ))}
@@ -455,6 +531,126 @@ export default function OrderDetails() {
           </div>
         </Card.Body>
       </Card>
+
+      {/* Stock Information Modal */}
+      <Modal show={showIssuingModal} onHide={handleCloseModal} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Stock Information - {selectedItem?.sku}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {modalLoading ? (
+            <div className="text-center">
+              <Spinner animation="border" />
+              <p className="mt-2">Loading stock information...</p>
+            </div>
+          ) : (
+            <>
+              {error && <Alert variant="danger">{error}</Alert>}
+              
+              {selectedItem && (
+                <Row className="mb-3">
+                  <Col md={12}>
+                    <Card>
+                      <Card.Body>
+                        <Row>
+                          <Col md={6}>
+                            <strong>Item Details:</strong><br />
+                            SKU: {selectedItem.sku}<br />
+                            Style: {selectedItem.style_name || 'N/A'}<br />
+                            Color: {selectedItem.color_name || 'N/A'}<br />
+                            Size: {selectedItem.size_name || 'N/A'}
+                          </Col>
+                          <Col md={6}>
+                            <strong>Order Information:</strong><br />
+                            Required Quantity: {selectedItem.quantity}<br />
+                            Status: <Badge bg={
+                              selectedItem.booking_status === 'Issued' ? 'success' :
+                              selectedItem.booking_status === 'Not Booked' ? 'secondary' : 'warning'
+                            }>
+                              {selectedItem.booking_status || 'Not Booked'}
+                            </Badge>
+                          </Col>
+                        </Row>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+              )}
+
+              {/* Available Stock Selection */}
+              <Card className="mb-3">
+                <Card.Header>
+                  <h6 className="mb-0">Available Stock - Select Batch for Issuing</h6>
+                </Card.Header>
+                <Card.Body>
+                  <div className="table-responsive">
+                    <Table striped bordered hover size="sm">
+                      <thead>
+                        <tr>
+                          <th>Select</th>
+                          <th>Batch Number</th>
+                          <th>Lot Number</th>
+                          <th>Unit Price</th>
+                                                    <th>Location</th>
+
+                          <th>Available Qty</th>
+                          <th>Received Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {availableStocks.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center">No stock available for this item</td>
+                          </tr>
+                        ) : availableStocks.map((stock, idx) => (
+                          <tr 
+                            key={idx} 
+                            className={selectedBatch?.batch_number === stock.batch_number && 
+                                      selectedBatch?.lot_no === stock.lot_no && 
+                                      selectedBatch?.unit_price === stock.unit_price ? 'table-primary' : ''}
+                          >
+                            <td>
+                              <Form.Check
+                                type="radio"
+                                name="selectedStock"
+                                checked={selectedBatch?.batch_number === stock.batch_number && 
+                                        selectedBatch?.lot_no === stock.lot_no &&
+                                        selectedBatch?.unit_price === stock.unit_price}
+                                onChange={() => setSelectedBatch(stock)}
+                              />
+                            </td>
+                            <td>{stock.batch_number}</td>
+                            <td>{stock.lot_no}</td>
+                            <td>${parseFloat(stock.unit_price).toFixed(2)}</td>
+                             <td>
+                              {stock.location_name || 'N/A'}
+                            </td>
+                            <td>
+                              <Badge bg={stock.main_stock_qty >= (selectedItem?.quantity || 0) ? 'success' : 'warning'}>
+                                {stock.main_stock_qty}
+                              </Badge>
+                            </td>
+                           
+                            <td>{new Date(stock.created_at).toLocaleDateString()}</td>
+                            
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+
+            
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
