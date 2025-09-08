@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Spinner, Alert, Breadcrumb } from 'react-boo
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
+import '../styles/FooterPage.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -168,106 +169,7 @@ export default function FooterPage() {
         </Row>
       </Container>
 
-      {/* Custom CSS for page content */}
-      <style jsx>{`
-        .page-content h1, .page-content h2, .page-content h3, .page-content h4, .page-content h5, .page-content h6 {
-          color: #2c3e50;
-          margin-top: 2rem;
-          margin-bottom: 1rem;
-        }
-        
-        .page-content h1 {
-          font-size: 2.5rem;
-          font-weight: 600;
-        }
-        
-        .page-content h2 {
-          font-size: 2rem;
-          font-weight: 600;
-        }
-        
-        .page-content h3 {
-          font-size: 1.75rem;
-          font-weight: 500;
-        }
-        
-        .page-content p {
-          margin-bottom: 1.5rem;
-        }
-        
-        .page-content ul, .page-content ol {
-          margin-bottom: 1.5rem;
-          padding-left: 2rem;
-        }
-        
-        .page-content li {
-          margin-bottom: 0.5rem;
-        }
-        
-        .page-content blockquote {
-          border-left: 4px solid #007bff;
-          padding-left: 1.5rem;
-          margin: 2rem 0;
-          font-style: italic;
-          background-color: #f8f9fa;
-          padding: 1rem 1.5rem;
-          border-radius: 0.375rem;
-        }
-        
-        .page-content code {
-          background-color: #f1f3f4;
-          padding: 0.2rem 0.4rem;
-          border-radius: 0.25rem;
-          font-size: 0.9em;
-        }
-        
-        .page-content pre {
-          background-color: #f8f9fa;
-          padding: 1rem;
-          border-radius: 0.375rem;
-          overflow-x: auto;
-          margin: 1.5rem 0;
-        }
-        
-        .page-content img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 0.375rem;
-          margin: 1rem 0;
-        }
-        
-        .page-content table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 1.5rem 0;
-        }
-        
-        .page-content th, .page-content td {
-          border: 1px solid #dee2e6;
-          padding: 0.75rem;
-          text-align: left;
-        }
-        
-        .page-content th {
-          background-color: #f8f9fa;
-          font-weight: 600;
-        }
-        
-        .page-content a {
-          color: #007bff;
-          text-decoration: none;
-        }
-        
-        .page-content a:hover {
-          color: #0056b3;
-          text-decoration: underline;
-        }
-        
-        .page-content hr {
-          margin: 2rem 0;
-          border-color: #dee2e6;
-        }
-      `}</style>
+      
     </>
   );
 }
