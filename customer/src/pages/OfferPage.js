@@ -134,6 +134,14 @@ export default function OfferPage() {
     return () => clearInterval(timer);
   }, []);
 
+  const activeOfferProducts = offerProducts.filter(
+  (p) =>
+    p.offer_end_date &&
+    new Date(p.offer_end_date) > currentTime &&
+    Number(p.offer_price) > 0
+);
+
+
   return (
       <>
         <Container fluid className="my-5 offer-products-container">
@@ -155,14 +163,14 @@ export default function OfferPage() {
               <div className="text-center my-3">
                 <h6 className="text-danger">{offerError}</h6>
               </div>
-          ) : offerProducts.length === 0 ? (
+          ) : activeOfferProducts.length === 0 ? (
               <div className="text-center my-3">
                 <i className="fas fa-tag fa-2x text-muted"></i>
                 <p className="text-muted mt-2">No special offers available right now.</p>
               </div>
           ) : (
               <div className="offer-products-grid">
-                {offerProducts.map((product) => {
+                {activeOfferProducts.map((product) => {
                   const timeLeft = calculateTimeLeft(product.offer_end_date);
                   
                   return (

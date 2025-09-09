@@ -119,6 +119,7 @@ export default function ProductDetails() {
       });
 
       const variantData = response.data;
+      console.log('Variant info response:', variantData);
       
       // Check if variantData exists and has stock_qty property
       if (!variantData || variantData.stock_qty === undefined || variantData.stock_qty === null) {
@@ -329,21 +330,38 @@ export default function ProductDetails() {
     return `${symbol}${convertedPrice}`;
   };
 
-  // Function to get the current price based on variant selection
-  const getCurrentPrice = () => {
-    if (selectedVariant) {
-      return {
-        salePrice: selectedVariant.sale_price || product.sale_price,
-        offerPrice: selectedVariant.offer_price && selectedVariant.offer_price !== 0 ? selectedVariant.offer_price : null
-      };
-    }
-    
-    // show only sale price until variant is selected
-    return {
-      salePrice: product.sale_price,
-      offerPrice: null 
-    };
+  // put near other utils
+  const isActiveOffer = (price, startsAt, endsAt) => {
+    if (!price || Number(price) <= 0) return false;
+    const now = new Date();
+    // if your API doesn’t send dates, these checks safely pass
+    const startsOk = !startsAt || new Date(startsAt) <= now;
+    const endsOk = !endsAt || now <= new Date(endsAt);
+    return startsOk && endsOk;
   };
+
+  const getVariantOffer = (v) => ({
+    offerPrice: v?.offer_price ?? null,
+    startsAt: v?.offer_start_date || v?.offer_start || v?.offer_from || null,
+    endsAt:   v?.offer_end_date || v?.offer_end || v?.offer_to || null,
+  });
+
+  
+
+  // Function to get the current price based on variant selection
+const getCurrentPrice = () => {
+  if (selectedVariant) {
+    const { offerPrice, startsAt, endsAt } = getVariantOffer(selectedVariant);
+    const showOffer = isActiveOffer(offerPrice, startsAt, endsAt);
+    return {
+      salePrice: selectedVariant.sale_price || product.sale_price,
+      offerPrice: showOffer ? offerPrice : null
+    };
+  }
+  // No variant chosen yet → don’t show any offer
+  return { salePrice: product.sale_price, offerPrice: null };
+};
+
 
   const handleAddToCart = async () => {
     try {

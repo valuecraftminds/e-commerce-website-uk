@@ -399,7 +399,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
         sku: product.sku ?? product.code,
         style_number: product.style_number ?? product.styleNumber ?? null,
         quantity: qty,
-        unit_price: unit,
+        unit_sale_price: unit,
         total_price: unit * qty
       }];
       // For direct buy, calculate subtotal from product
@@ -421,7 +421,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
         if (selectedItems && selectedItems.length > 0) {
           // Calculate subtotal for selected items only
           subtotal = cartItems.reduce((acc, it) => {
-            const unit = Number(it.unit_price ?? it.price ?? 0);
+            const unit = Number(it.unit_sale_price ?? it.price ?? 0);
             const qty = Number(it.quantity ?? 0);
             const total = Number(it.total_price ?? unit * qty);
             return acc + total;
@@ -433,7 +433,7 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
       } else {
         // Fallback: calculate from cart items if summary not available
         subtotal = cartItems.reduce((acc, it) => {
-          const unit = Number(it.unit_price ?? it.price ?? 0);
+          const unit = Number(it.unit_sale_price ?? it.price ?? 0);
           const qty = Number(it.quantity ?? 0);
           const total = Number(it.total_price ?? unit * qty);
           return acc + total;
@@ -467,8 +467,8 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
           sku: item.sku,
           style_number: item.style_number,
           quantity: item.quantity,
-          unit_price: item.unit_price ?? item.price,   // tolerate both shapes
-          total_price: item.total_price ?? (Number(item.unit_price ?? item.price) * Number(item.quantity))
+          unit_sale_price: item.unit_sale_price ?? item.price,   // tolerate both shapes
+          total_price: item.total_price ?? (Number(item.unit_sale_price ?? item.price) * Number(item.quantity))
         })),
         subtotal,
         shipping_fee: shippingFee,

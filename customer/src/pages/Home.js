@@ -188,7 +188,7 @@ export default function Home() {
         // Convert back to array
         const uniqueProducts = Object.values(groupedProducts);
         setOfferProducts(uniqueProducts);
-      } catch (error) {
+      } catch (error) { 
         console.error('Error fetching offer products:', error);
         setOfferError('Failed to load offer products');
       } finally{
@@ -198,7 +198,16 @@ export default function Home() {
     fetchOfferProducts();
   }, []);
 
-  const displayedProducts = offerProducts.slice(0, displayLimit);
+
+  // Filter and limit displayed offer products
+  const activeOfferProducts = offerProducts.filter(
+    (p) =>
+      p.offer_end_date &&
+      new Date(p.offer_end_date) > currentTime &&
+      Number(p.offer_price) > 0
+  );
+
+  const displayedProducts = activeOfferProducts.slice(0, displayLimit);
 
   // Fetch exchange rates
   useEffect(() => {
@@ -297,7 +306,7 @@ export default function Home() {
       </div>
 
       {/* Offer Products Section */}
-      {!offerLoading && !offerError && offerProducts.length > 0 && (
+      {!offerLoading && !offerError && activeOfferProducts.length > 0 && (
         <Container fluid className="my-5 homepage-offer-products-container">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div className="homepage-offer-title-section">
@@ -499,7 +508,8 @@ export default function Home() {
                     )}
                     
                     <div className="home-product-price">
-                      {product.offer_price && product.offer_price !== 0 ? (
+                      {product.offer_price && product.offer_price !== 0 && 
+                      activeOfferProducts.some(p => p.style_id === product.style_id) ? (
                         <>
                           <span className="me-2">
                             {formatPrice(product.offer_price)}
@@ -509,9 +519,7 @@ export default function Home() {
                           </span>
                         </>
                       ) : (
-                        <>
-                          <span>{formatPrice(product.sale_price)}</span>
-                        </>
+                        <span>{formatPrice(product.sale_price)}</span>
                       )}
                     </div>
                     {product.category_name && (
