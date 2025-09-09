@@ -215,16 +215,23 @@ const StyleTable = ({
 
   return (
     <>
-  <div className="table-controls">
+      <div className="table-controls">
         <input
           type="text"
           placeholder="Search styles..."
           className="search-input"
           onChange={e => table.setGlobalFilter(e.target.value)}
         />
+        {/* add how to measure guide */}
+        <button
+          className="btn btn-primary"
+          onClick={() => tableActions.handleMeasureGuide()}
+        >
+          Add Measure Guide
+        </button>
       </div>
 
-  <table className="styles-table">
+      <table className="styles-table">
         <thead>
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
@@ -269,7 +276,7 @@ const StyleTable = ({
         </tbody>
       </table>
 
-  <div className="pagination">
+      <div className="pagination">
         <button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
