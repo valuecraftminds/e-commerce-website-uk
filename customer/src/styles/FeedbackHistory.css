@@ -143,6 +143,23 @@
   margin-bottom: 1rem;
 }
 
+.feedback-remove-btn{
+  background-color: transparent !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 5px;
+  padding: 5px 10px !important;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.feedback-remove-btn:hover {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+  transform: translateY(5px) !important;
+  
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
