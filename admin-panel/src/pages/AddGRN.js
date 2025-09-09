@@ -14,6 +14,79 @@ import '../styles/WarehouseGRN.css';
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function AddGRN() {
+    // Process multiple selected PO items (bulk action)
+    const processSelectedPOItems = async () => {
+        if (!poDetails || !checkedPOItems.length) {
+            setError('No items selected');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            // Collect selected items' data
+            const selectedItems = poDetails.items.filter(item => checkedPOItems.includes(item.sku));
+            // Example: send all selected items to backend in one request
+            const response = await fetch(`${BASE_URL}/api/admin/grn/process-multiple-items`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    po_number: selectedPO,
+                    items: selectedItems,
+                    company_code: company_code
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                setSuccess('Selected items processed successfully!');
+                // Optionally refresh PO details or update UI
+                await handleSelectPO(selectedPO);
+            } else {
+                setError(data.message || 'Failed to process selected items');
+            }
+        } catch (err) {
+            setError('Error processing selected items');
+        } finally {
+            setLoading(false);
+        }
+    };
+    // Checkbox state for PO items
+    const [checkedPOItems, setCheckedPOItems] = useState([]);
+    // Checkbox state for GRN items
+    const [checkedGRNItems, setCheckedGRNItems] = useState([]);
+
+    // Handler for PO select all
+    const handleSelectAllPO = (e) => {
+        if (e.target.checked) {
+            // Only select items that are enabled (canReceive)
+            const enabledSkus = (poDetails?.items || [])
+                .filter(item => item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading)
+                .map(item => item.sku);
+            setCheckedPOItems(enabledSkus);
+        } else {
+            setCheckedPOItems([]);
+        }
+    };
+    // Handler for individual PO row
+    const handleCheckPO = (sku) => {
+        setCheckedPOItems((prev) =>
+            prev.includes(sku) ? prev.filter((id) => id !== sku) : [...prev, sku]
+        );
+    };
+    // Handler for GRN select all
+    const handleSelectAllGRN = (e) => {
+        if (e.target.checked) {
+            setCheckedGRNItems(grnItems.map((item, idx) => idx));
+        } else {
+            setCheckedGRNItems([]);
+        }
+    };
+    // Handler for individual GRN row
+    const handleCheckGRN = (idx) => {
+        setCheckedGRNItems((prev) =>
+            prev.includes(idx) ? prev.filter((id) => id !== idx) : [...prev, idx]
+        );
+    };
     const navigate = useNavigate();
     const { po_number: poParam } = useParams();
     const { userData } = useContext(AuthContext);
@@ -563,27 +636,42 @@ export default function AddGRN() {
                                             <Table striped bordered hover responsive className="mb-4">
                                                 <thead>
                                                     <tr>
+                                                        <th>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(() => {
+                                                                    const enabledSkus = (poDetails?.items || [])
+                                                                        .filter(item => item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading)
+                                                                        .map(item => item.sku);
+                                                                    return enabledSkus.length > 0 && checkedPOItems.length === enabledSkus.length;
+                                                                })()}
+                                                                indeterminate={(() => {
+                                                                    const enabledSkus = (poDetails?.items || [])
+                                                                        .filter(item => item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading)
+                                                                        .map(item => item.sku);
+                                                                    return checkedPOItems.length > 0 && checkedPOItems.length < enabledSkus.length;
+                                                                })()}
+                                                                onChange={handleSelectAllPO}
+                                                            />
+                                                        </th>
                                                         <th>Style Code</th>
                                                         <th>SKU</th>
-                                                         <th>Unit Price</th>
+                                                        <th>Unit Price</th>
                                                         <th>Ordered Qty</th>
-                                                       
                                                         <th>Max Qty (with tolerance)</th>
                                                         <th>Total Received</th>
                                                         <th>Remaining Qty</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                            {poDetails.items.map((item) => {
+                                            {poDetails.items.map((item, idx) => {
                                                 // Calculate tolerance range
                                                 const orderedQty = item.ordered_qty;
                                                 const toleranceLimit = item.tolerance_limit || 0;
                                                 const minQty = Math.max(0, orderedQty - (orderedQty * toleranceLimit / 100));
                                                 const maxQty = orderedQty + (orderedQty * toleranceLimit / 100);
                                                 const receivedQty = item.total_received || 0;
-                                                
-                                               
-                                                
+                                                                                                
                                                 // Use headerStatus instead of grnHeaderStatus for clickable logic
                                                 const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading;
                                                 return (
@@ -593,6 +681,14 @@ export default function AddGRN() {
                                                         onClick={() => canReceive && handleItemClick(item)}
                                                         style={{ cursor: canReceive ? 'pointer' : 'not-allowed' }}
                                                     >
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={checkedPOItems.includes(item.sku)}
+                                                                onChange={() => handleCheckPO(item.sku)}
+                                                                disabled={!canReceive}
+                                                            />
+                                                        </td>
                                                         <td>{item.style_number}</td>
                                                         <td>{item.sku}</td>
                                                         <td>{item.unit_price}</td>
@@ -609,12 +705,20 @@ export default function AddGRN() {
                                                                 {item.remaining_qty}
                                                             </Badge>
                                                         </td>
-                                                       
                                                     </tr>
                                                 );
                                             })}
                                         </tbody>
                                     </Table>
+                                    <div className="d-flex justify-content-start mb-3">
+                                        <Button
+                                            variant="primary"
+                                            onClick={processSelectedPOItems}
+                                            disabled={checkedPOItems.length === 0 || loading}
+                                        >
+                                            Add Selected Items to GRN
+                                        </Button>
+                                    </div>
                                         </>
                                     )}
                                 </Card.Body>
@@ -630,6 +734,14 @@ export default function AddGRN() {
                                         <Table striped bordered hover responsive>
                                             <thead>
                                                 <tr>
+                                                    <th>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={grnItems.length > 0 && checkedGRNItems.length === grnItems.length}
+                                                            indeterminate={checkedGRNItems.length > 0 && checkedGRNItems.length < grnItems.length}
+                                                            onChange={handleSelectAllGRN}
+                                                        />
+                                                    </th>
                                                     <th>Style Code</th>
                                                     <th>SKU</th>
                                                     <th>Ordered Qty</th>
@@ -643,6 +755,13 @@ export default function AddGRN() {
                                             <tbody>
                                                 {grnItems.map((item, index) => (
                                                     <tr key={`${item.sku}-${item.lot_no || ''}-${index}`}>
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={checkedGRNItems.includes(index)}
+                                                                onChange={() => handleCheckGRN(index)}
+                                                            />
+                                                        </td>
                                                         <td>{item.style_number}</td>
                                                         <td>{item.sku}</td>
                                                         <td>{item.ordered_qty}</td>
