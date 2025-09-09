@@ -253,17 +253,18 @@ export default function OrderDetails() {
     const handleConfirmDelivery = async () => {
         try {
             await axios.post(
-            `${BASE_URL}/api/customer/confirm-delivery/${orderDetails.order_id}`,
-            {}, 
+                `${BASE_URL}/api/customer/orders/confirm-delivery/${orderDetails.order_id}`,
+                {},
                 getAxiosConfig()
             );
-            
             // Notify modal
             showNotify({
                 title: 'Delivery Confirmed',
                 message: `Your delivery for order ${orderDetails.order_number} has been confirmed.`,
                 type: 'success'
             });
+            // Refresh the page after a short delay
+            setTimeout(() => navigate(0), 1500);
         } catch (error) {
             console.error('Error confirming delivery:', error);
             showNotify({
@@ -276,45 +277,55 @@ export default function OrderDetails() {
 
     // Cancel order function
     const handleCancelOrder = async () => {
-        // Show confirmation dialog
-        if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
-            return;
-        }
-
-        try {
-            const config = getAxiosConfig();
-            const response = await axios.post(
-                `${BASE_URL}/api/customer/orders/cancel-order/${orderDetails.order_id}`,
-                {},
-                config
-            );
-
-            if (response.data.success) {
-                showNotify({
-                    title: 'Order Cancelled',
-                    message: `Your order ${orderDetails.order_id} has been cancelled.`,
-                    type: 'success'
-                });
-                // Update the order status in the local state
-                setOrderDetails(prev => ({
-                    ...prev,
-                    order_status: 'Cancelled'
-                }));
-            } else {
-                showNotify({
-                    title: 'Order Cancellation Failed',
-                    message: 'Failed to cancel order',
-                    type: 'error'
-                });
-            }
-        } catch (error) {
-            console.error('Error cancelling order:', error);
-            showNotify({
-                title: 'Order Cancellation Failed',
-                message: 'Failed to cancel order',
-                type: 'error'
-            });
-        }
+        // Show NotifyModal confirmation dialog
+        showNotify({
+            title: 'Cancel Order?',
+            message: 'Are you sure you want to cancel this order? This action cannot be undone.',
+            type: 'warning',
+            customButtons: [
+                {
+                    label: 'No',
+                    variant: 'warning',
+                    closeOnClick: true
+                },
+                {
+                    label: 'Yes, Cancel Order',
+                    variant: 'danger',
+                    closeOnClick: true,
+                    onClick: async () => {
+                        try {
+                            const config = getAxiosConfig();
+                            const response = await axios.post(
+                                `${BASE_URL}/api/customer/orders/cancel-order/${orderDetails.order_id}`,
+                                {},
+                                config
+                            );
+                            if (response.data.success) {
+                                showNotify({
+                                    title: 'Order Cancelled',
+                                    message: `Your order ${orderDetails.order_id} has been cancelled.`,
+                                    type: 'success'
+                                });
+                                setTimeout(() => navigate(0), 1500);
+                            } else {
+                                showNotify({
+                                    title: 'Order Cancellation Failed',
+                                    message: 'Failed to cancel order',
+                                    type: 'error'
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error cancelling order:', error);
+                            showNotify({
+                                title: 'Order Cancellation Failed',
+                                message: 'Failed to cancel order',
+                                type: 'error'
+                            });
+                        }
+                    }
+                }
+            ]
+        });
     };
 
     // Handle opening feedback modal for specific item

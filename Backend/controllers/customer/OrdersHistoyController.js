@@ -674,17 +674,19 @@ const OrdersHistoryController = {
         }
     },
 
+    // cofirm delivery of the order
     confirmDelivery: (req, res) => {
         const customer_id = req.user?.id;
         const { company_code } = req.query;
-        const { order_id } = req.body;
+        const orderId = req.params.orderId;
+
         if (!customer_id) {
         return res.status(401).json({ error: 'BE: User not authenticated' });
         }
         if (!company_code) {
         return res.status(400).json({ error: 'Company code is required' });
         }
-        if (!order_id) {
+        if (!orderId) {
         return res.status(400).json({ error: 'Order ID is required' });
         }
         const updateQuery = `
@@ -696,7 +698,7 @@ const OrdersHistoryController = {
             AND company_code = ? 
             AND order_status != 'Delivered'
         `;
-        db.query(updateQuery, [new Date(), order_id, customer_id, company_code], (err, result) => {
+        db.query(updateQuery, [new Date(), orderId, customer_id, company_code], (err, result) => {
         if (err) {
             console.error('Error updating order status:', err);
             return res.status(500).json({ error: 'Failed to update order status' });
