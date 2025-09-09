@@ -1,33 +1,30 @@
-.modal.measure-guide .modal-dialog {
-  width: auto;                  
-  max-width: 95vw;                  
-  display: inline-block;
+.measure-modal{
+  z-index: 1050;
 }
 
-.modal.measure-guide .modal-content {
-  width: fit-content;               
-  max-width: 95vw;                 
-  margin: auto;                     
-  border-radius: 18px;
-  border: none;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+.mg-body{
+  justify-content: center !important;
 }
 
-.modal.measure-guide .modal-header {
+.mg-header {
   border: none;
   padding: 20px 24px 0 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white;
 }
-.modal.measure-guide .modal-title {
+.mg-header .btn-close {
+  filter: invert(1);
+}
+
+.mg-header .modal-title {
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: .2px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color:white;
 }
 
 .modal.measure-guide .modal-body {
   padding: 8px 24px;
-  max-height: 70vh;
+  max-height: 100%;
   overflow-y: auto;
   width: fit-content;
   max-width: 90vw;                  
@@ -44,9 +41,14 @@
   background: transparent;
 }
 
-.modal.measure-guide .modal-footer {
-  border: none;
-  padding: 12px 24px 24px 24px;
+.mg-footer {
+  padding: 0 !important;
+  border: none !important;
+  background: #f9f9f9;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  justify-content: flex-start !important;
+
 }
 
 .measure-guides-modal {
@@ -62,15 +64,6 @@
   }
 }
 
-.measure-guide-item-modal {
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.06);
-  border-radius: 14px;
-  padding: 14px;
-  transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
-  width: fit-content;
-  max-width: 100%;
-}
 .measure-guide-item-modal:hover {
   box-shadow: 0 10px 28px rgba(0,0,0,0.12);
   transform: translateY(-2px);
