@@ -63,7 +63,7 @@ export default function NotifyModal({
 
                     {customButtons.length === 0 && (
                         <Button
-                            variant="secondary"
+                            variant="warning"
                             className="notify-modal-close-btn"
                             onClick={onClose}
                         >
