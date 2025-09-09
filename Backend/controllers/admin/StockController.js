@@ -1,7 +1,6 @@
 const db = require('../../config/database');
 
 const StockController = {
-  // GET /api/admin/stock/get-stock-summary?company_code=...&style_number=...&sku=...
   async getStockSummary(req, res) {
     const { company_code, style_number, sku } = req.query;
     if (!company_code || !style_number || !sku) {

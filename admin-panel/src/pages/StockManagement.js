@@ -6,6 +6,7 @@ import { PiPackage, PiArrowUp, PiArrowDown } from "react-icons/pi";
 import { AuthContext } from '../context/AuthContext';
 import '../styles/StockManagement.css';
 import Spinner from '../components/Spinner';
+import Pagination from '../components/modals/Pagination';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -36,11 +37,12 @@ export default function StockManagement() {
     const [grnStockPagination, setGrnStockPagination] = useState(null);
 
     // stock summary
+    const pageSize = 10; 
     const columns = [
         columnHelper.display({
             id: 'index',
             header: '#',
-            cell: info => info.row.index + 1
+            cell: info => (stockSummaryPage - 1) * pageSize + info.row.index + 1
         }),
         columnHelper.accessor('style_number', {
             header: 'Style Number',
@@ -69,7 +71,7 @@ export default function StockManagement() {
         columnHelper.display({
             id: 'index',
             header: '#',
-            cell: info => info.row.index + 1
+            cell: info => (issuedStockPage - 1) * pageSize + info.row.index + 1
         }),
         columnHelper.accessor('style_number', {
             header: 'Style Number',
@@ -106,7 +108,7 @@ export default function StockManagement() {
         columnHelper.display({
             id: 'index',
             header: '#',
-            cell: info => info.row.index + 1
+            cell: info => (grnStockPage - 1) * pageSize + info.row.index + 1
         }),
         columnHelper.accessor('grn_id', {
             header: 'GRN ID',
@@ -182,6 +184,19 @@ export default function StockManagement() {
         onGlobalFilterChange: setGrnStockSearch,
     });
 
+    // map backend pagination to Pagination component format
+    const mapPagination = (backend) => {
+        if (!backend) return null;
+        return {
+            currentPage: backend.currentPage || backend.current_page || 1,
+            totalPages: backend.totalPages || backend.total_pages || 1,
+            totalItems: backend.totalRecords || backend.total_items || backend.total || 0,
+            itemsPerPage: backend.limit || backend.itemsPerPage || 10,
+            hasNextPage: backend.hasNext !== undefined ? backend.hasNext : backend.has_next,
+            hasPreviousPage: backend.hasPrev !== undefined ? backend.hasPrev : backend.has_previous,
+        };
+    };
+
     // fetch main stock summary
     const fetchStockSummary = async (page = 1) => {
         try {
@@ -195,7 +210,7 @@ export default function StockManagement() {
                 }
             });
             setStockSummary(response.data.data);
-            setStockSummaryPagination(response.data.pagination);
+            setStockSummaryPagination(mapPagination(response.data.pagination));
         } catch (err) {
             setError('Failed to fetch stock summary');
             console.error('Error fetching stock summary:', err);
@@ -217,7 +232,7 @@ export default function StockManagement() {
                 }
             });
             setIssuedStock(response.data.data);
-            setIssuedStockPagination(response.data.pagination);
+            setIssuedStockPagination(mapPagination(response.data.pagination));
         } catch (err) {
             setError('Failed to fetch issued stock');
             console.error('Error fetching issued stock:', err);
@@ -239,7 +254,7 @@ export default function StockManagement() {
                 }
             });
             setGrnStock(response.data.data);
-            setGrnStockPagination(response.data.pagination);
+            setGrnStockPagination(mapPagination(response.data.pagination));
         } catch (err) {
             setError('Failed to fetch GRN stock');
             console.error('Error fetching GRN stock:', err);
@@ -284,52 +299,6 @@ export default function StockManagement() {
     if (loading) return <Spinner />;
     if (error) return <div>Error: {error}</div>;
 
-    // Pagination component
-    const PaginationControls = ({ pagination, onPageChange }) => {
-        if (!pagination) return null;
-        
-        return (
-            <div className="pagination-controls">
-                <div className="pagination-info">
-                    <span>
-                        Page {pagination.currentPage} of {pagination.totalPages} 
-                        ({pagination.totalRecords} total rows)
-                    </span>
-                </div>
-                <div className="pagination-buttons">
-                    <button
-                        onClick={() => onPageChange(1)}
-                        disabled={!pagination.hasPrev}
-                        className="pagination-btn"
-                    >
-                        {'<<'}
-                    </button>
-                    <button
-                        onClick={() => onPageChange(pagination.currentPage - 1)}
-                        disabled={!pagination.hasPrev}
-                        className="pagination-btn"
-                    >
-                        {'<'}
-                    </button>
-                    <button
-                        onClick={() => onPageChange(pagination.currentPage + 1)}
-                        disabled={!pagination.hasNext}
-                        className="pagination-btn"
-                    >
-                        {'>'}
-                    </button>
-                    <button
-                        onClick={() => onPageChange(pagination.totalPages)}
-                        disabled={!pagination.hasNext}
-                        className="pagination-btn"
-                    >
-                        {'>>'}
-                    </button>
-                </div>
-            </div>
-        );
-    };
-
     const renderTabContent = () => {
         switch (activeTab) {
             case 'stock-summary':
@@ -373,7 +342,7 @@ export default function StockManagement() {
                                         ))}
                                     </tbody>
                                 </table>
-                                <PaginationControls 
+                                <Pagination 
                                     pagination={stockSummaryPagination} 
                                     onPageChange={handleStockSummaryPageChange} 
                                 />
@@ -422,7 +391,7 @@ export default function StockManagement() {
                                         ))}
                                     </tbody>
                                 </table>
-                                <PaginationControls 
+                                <Pagination 
                                     pagination={issuedStockPagination} 
                                     onPageChange={handleIssuedStockPageChange} 
                                 />
@@ -471,7 +440,7 @@ export default function StockManagement() {
                                         ))}
                                     </tbody>
                                 </table>
-                                <PaginationControls 
+                                <Pagination 
                                     pagination={grnStockPagination} 
                                     onPageChange={handleGrnStockPageChange} 
                                 />
