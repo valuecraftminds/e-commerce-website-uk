@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getFilteredRowModel } from "@tanstack/react-table";
 
 import Spinner from '../components/Spinner';
-import Pagination from '../components/modals/Pagination';
+import Pagination from '../components/Pagination';
 import { AuthContext } from '../context/AuthContext';
 import AddOfferModal from '../components/modals/AddOffersModal';
 import '../styles/ProductOffers.css';

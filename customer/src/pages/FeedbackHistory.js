@@ -6,6 +6,7 @@ import '../styles/FeedbackHistory.css';
 import Spinner from '../components/Spinner';
 import StarRating from "../components/StarRating";
 import { useNotifyModal } from "../context/NotifyModalProvider";
+import Pagination from '../components/Pagination';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -156,28 +157,6 @@ const FeedbackHistory = () => {
     if (page >= 1 && page <= pagination.totalPages) {
       fetchFeedbackHistory(page);
     }
-  };
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    const { totalPages } = pagination;
-    const maxPagesToShow = 5;
-    
-    if (totalPages <= maxPagesToShow) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const start = Math.max(1, currentPage - 2);
-      const end = Math.min(totalPages, start + maxPagesToShow - 1);
-      
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-    }
-    
-    return pages;
   };
 
   if (loading) {
@@ -332,49 +311,17 @@ const FeedbackHistory = () => {
             ))}
           </div>
 
-          {/* Pagination Controls - Only show if using "All" filter */}
-          {pagination.totalPages > 1 && starFilter === 'all' && (
-            <div className="feedback-pagination">
-              <div className="feedback-pagination-info">
-                <p>
-                  Showing page {currentPage} of {pagination.totalPages} 
-                  ({pagination.totalRecords} total reviews)
-                </p>
-              </div>
-              
-              <div className="feedback-pagination-controls">
-                <button 
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={!pagination.hasPreviousPage}
-                  className="feedback-pagination-btn feedback-pagination-prev"
-                >
-                  Previous
-                </button>
-                
-                <div className="feedback-pagination-numbers">
-                  {getPageNumbers().map(pageNum => (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`feedback-pagination-btn feedback-pagination-number ${
-                        pageNum === currentPage ? 'active' : ''
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-                </div>
-                
-                <button 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={!pagination.hasNextPage}
-                  className="feedback-pagination-btn feedback-pagination-next"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+            <Pagination
+              pagination={{
+                currentPage: pagination.currentPage || currentPage,
+                totalPages: pagination.totalPages,
+                totalItems: pagination.totalRecords, // map to expected prop
+                itemsPerPage: pagination.limit, // map to expected prop
+                hasNextPage: pagination.hasNextPage,
+                hasPreviousPage: pagination.hasPreviousPage
+              }}
+              onPageChange={handlePageChange}
+            />
         </>
       )}
     </div>
