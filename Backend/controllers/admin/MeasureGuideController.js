@@ -96,6 +96,13 @@ class MeasureGuideController {
       ORDER BY mc.category_name, sc.category_name
     `;
 
+    const resolvePublicImageUrl = (raw) => {
+      if (!raw) return null;
+      const filename = path.basename(raw); 
+      return `/uploads/measure-guides/${filename}`;
+    };
+    
+
     db.query(sql, [company_code], (err, results) => {
       if (err) {
         console.error('Error fetching measure guides:', err);
@@ -105,9 +112,15 @@ class MeasureGuideController {
         });
       }
 
+
+      const measure_guides = (results || []).map(r => ({
+        ...r,
+        full_image_url: resolvePublicImageUrl(r.image_path),
+      }));
+
       return res.json({
         success: true,
-        measure_guides: results
+        measure_guides
       });
     });
   }
