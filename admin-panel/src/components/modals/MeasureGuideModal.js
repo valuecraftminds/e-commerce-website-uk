@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import ImagePreviewModal from './ImagePreviewModal';
 import '../../styles/MeasureGuideModal.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
@@ -23,6 +24,7 @@ const MeasureGuideModal = ({
     image: null
   });
   const [existingGuide, setExistingGuide] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [allMeasureGuides, setAllMeasureGuides] = useState([]);
 
   // Fetch all measure guides when modal opens
@@ -52,8 +54,11 @@ const MeasureGuideModal = ({
     fetchAllGuides();
   }, [show, companyCode]);
 
-    // Delete measure guide handler
-  const handleDeleteGuide = async (guideId) => {
+  // Delete measure guide handler
+  const handleDeleteGuide = async (guideId, event) => {
+    // Prevent event bubbling to avoid triggering the guide item click
+    event.stopPropagation();
+    
     if (!window.confirm('Are you sure you want to delete this measure guide?')) return;
     setLoading(true);
     setError('');
@@ -80,6 +85,22 @@ const MeasureGuideModal = ({
       setError('Error deleting measure guide: ' + err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle guide item click to show image
+  const handleGuideItemClick = (guide) => {
+    console.log('Guide clicked:', guide);
+    // Check for both possible image URL properties from backend
+    const imageUrl = guide.image_url || guide.full_image_url;
+    console.log('Image URL:', imageUrl);
+    
+    if (imageUrl) {
+      // If it's a relative path, make it absolute
+      const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${BASE_URL}${imageUrl}`;
+      setPreviewImage(fullImageUrl);
+    } else {
+      console.log('No image URL found for guide');
     }
   };
 
@@ -155,6 +176,7 @@ const MeasureGuideModal = ({
         sub_category_id: '',
         image: null
       });
+      setPreviewImage(null); // Reset preview image when modal opens
     }
   }, [show]);
 
@@ -219,6 +241,18 @@ const MeasureGuideModal = ({
 
       if (data.success) {
         setSuccess('Measure guide added successfully!');
+        // Refresh the guides list
+        const updatedResponse = await fetch(`${BASE_URL}/api/admin/measure-guides?company_code=${companyCode}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        const updatedData = await updatedResponse.json();
+        if (updatedData.success) {
+          setAllMeasureGuides(updatedData.measure_guides || []);
+        }
+        
         if (onSave) {
           onSave(data);
         }
@@ -257,27 +291,66 @@ const MeasureGuideModal = ({
           <div className="mb-4">
             <h5>Existing Measure Guides</h5>
             <div className="existing-measure-guides">
-              {allMeasureGuides.map((guide) => (
-                <div key={guide.measure_guide_id} className='existing-guides'>
-                  {guide.image_url && (
-                    <img src={guide.image_url} alt="Guide" />
-                  )}
-                  <div className='main-cat' >{guide.main_category_name || 'Main Category'}</div>
-                  <div className='sub-cat'>{guide.sub_category_name || 'Subcategory'}</div>
-                  <button
-                    type="button"
-                    className='mg-remove-btn'
-                    title="Delete measure guide"
-                    disabled={loading}
-                    onClick={() => handleDeleteGuide(guide.id)}
+              {allMeasureGuides.map((guide) => {
+                // Get the image URL (handle both possible property names)
+                const imageUrl = guide.image_url || guide.full_image_url;
+                const displayImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : `${BASE_URL}${imageUrl}`;
+                
+                return (
+                  <div
+                    key={guide.measure_guide_id || guide.id} 
+                    className='existing-guide-items'
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleGuideItemClick(guide);
+                    }}
+                    title="Click to view full image"
                   >
-                    ×
-                  </button>
-                </div>
-              ))}
+                    {imageUrl && (
+                      <img 
+                        src={displayImageUrl} 
+                        alt="Guide Thumbnail"
+                        className='mg-image' 
+                        onError={(e) => {
+                          console.error('Image failed to load:', displayImageUrl);
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className='main-cat' style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                      {guide.main_category_name || 'Main Category'}
+                    </div>
+                    <div className='sub-cat' style={{ color: '#666', fontSize: '14px' }}>
+                      {guide.sub_category_name || 'Subcategory'}
+                    </div>
+                     <button
+                      type="button"
+                      className='mg-remove-btn'
+                      title="Delete measure guide"
+                      disabled={loading}
+                      onClick={(event) => {
+                        console.log('Delete button clicked');
+                        handleDeleteGuide(guide.id || guide.measure_guide_id, event);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
+
+        {/* Image Preview Modal */}
+        <ImagePreviewModal 
+          show={!!previewImage}
+          onHide={() => setPreviewImage(null)}
+          previewImage={previewImage}
+          setError={setError}
+        />
+        
         <Form>
           <Form.Group className="mb-3">
             <Form.Label>Main Category *</Form.Label>

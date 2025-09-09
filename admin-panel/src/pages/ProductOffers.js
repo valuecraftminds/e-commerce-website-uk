@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getFilteredRowModel } from "@tanstack/react-table";
 
 import Spinner from '../components/Spinner';
+import Pagination from '../components/modals/Pagination';
 import { AuthContext } from '../context/AuthContext';
 import AddOfferModal from '../components/modals/AddOffersModal';
 import '../styles/ProductOffers.css';
@@ -323,12 +324,13 @@ export default function ProductOffers() {
             )}
 
             {/* Pagination */}
+            <Pagination pagination={pagination} onPageChange={handlePageChange} />
+            {/*
             {pagination.totalPages > 1 && (
                 <div className="pf-pagination-container">
                     <div className="pf-pagination-info">
                         Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems} entries
                     </div>
-                    
                     <div className="pf-pagination-controls">
                         <button
                             onClick={() => handlePageChange(1)}
@@ -337,7 +339,6 @@ export default function ProductOffers() {
                         >
                             First
                         </button>
-                        
                         <button
                             onClick={() => handlePageChange(pagination.currentPage - 1)}
                             disabled={!pagination.hasPreviousPage}
@@ -345,7 +346,6 @@ export default function ProductOffers() {
                         >
                             Previous
                         </button>
-
                         <div className="pf-pagination-pages">
                             {[...Array(Math.min(5, pagination.totalPages))].map((_, index) => {
                                 let pageNum;
@@ -358,7 +358,6 @@ export default function ProductOffers() {
                                 } else {
                                     pageNum = pagination.currentPage - 2 + index;
                                 }
-
                                 return (
                                     <button
                                         key={pageNum}
@@ -372,7 +371,6 @@ export default function ProductOffers() {
                                 );
                             })}
                         </div>
-
                         <button
                             onClick={() => handlePageChange(pagination.currentPage + 1)}
                             disabled={!pagination.hasNextPage}
@@ -380,7 +378,6 @@ export default function ProductOffers() {
                         >
                             Next
                         </button>
-                        
                         <button
                             onClick={() => handlePageChange(pagination.totalPages)}
                             disabled={!pagination.hasNextPage}
@@ -391,6 +388,7 @@ export default function ProductOffers() {
                     </div>
                 </div>
             )}
+            */}
 
             {/* AddOffer Modal */}
             <AddOfferModal
