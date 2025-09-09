@@ -94,6 +94,10 @@ export default function StockManagement() {
         columnHelper.accessor('issuing_qty', {
             header: 'Issued Quantity',
             cell: info => info.getValue()
+        }),
+        columnHelper.accessor('issued_at', {
+            header: 'Issued Date',
+            cell: info => new Date(info.getValue()).toLocaleDateString()
         })
     ];
 
@@ -131,6 +135,10 @@ export default function StockManagement() {
         columnHelper.accessor('stock_qty', {
             header: 'Received Quantity',
             cell: info => info.getValue()
+        }),
+        columnHelper.accessor('location_name', {
+            header: 'Location',
+            cell: info => info.getValue() || 'N/A'
         }),
         columnHelper.accessor('created_at', {
             header: 'Received Date',
@@ -478,8 +486,9 @@ export default function StockManagement() {
 
     const tabItems = [
         { id: 'stock-summary', label: 'Stock Summary', icon: PiPackage },
-        { id: 'issued-stock', label: 'Issued Stock', icon: PiArrowUp },
-        { id: 'grn-stock', label: 'GRN Stock', icon: PiArrowDown }
+        { id: 'grn-stock', label: 'GRN Stock', icon: PiArrowDown },
+        { id: 'issued-stock', label: 'Issued Stock', icon: PiArrowUp }
+        
     ];
 
     return (

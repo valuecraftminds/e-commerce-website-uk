@@ -198,6 +198,61 @@ class IssuingController {
     );
   }
 
+  // Get available stock with batch details for issuing modal
+  getAvailableStock(req, res) {
+    const { company_code, style_number, sku } = req.query;
+    
+    if (!company_code || !style_number || !sku) {
+      return res.status(400).json({ error: 'Company code, style number, and SKU are required' });
+    }
+
+    const getStockSql = `
+      SELECT 
+        ms.batch_number, 
+        ms.lot_no, 
+        ms.unit_price, 
+        ms.main_stock_qty, 
+        ms.created_at,
+        ms.location_id,
+        l.location_name,
+        CONCAT(ms.batch_number, ' - ', ms.lot_no) as batch_lot_display
+      FROM main_stock ms
+      LEFT JOIN locations l ON ms.location_id = l.location_id AND ms.company_code = l.company_code
+      WHERE ms.company_code = ? AND ms.style_number = ? AND ms.sku = ? AND ms.main_stock_qty > 0
+      ORDER BY ms.created_at ASC
+    `;
+
+    db.query(getStockSql, [company_code, style_number, sku], (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!results || results.length === 0) {
+        return res.json({
+          success: false,
+          message: 'No available stock found for this SKU',
+          data: []
+        });
+      }
+
+      // First item is automatically selected (FIFO)
+      const selectedStock = results[0];
+      const totalAvailableStock = results.reduce((sum, stock) => sum + stock.main_stock_qty, 0);
+
+      res.json({
+        success: true,
+        data: {
+          available_stocks: results,
+          selected_stock: selectedStock,
+          total_available: totalAvailableStock,
+          batch_numbers: [...new Set(results.map(r => r.batch_number))],
+          lot_numbers: [...new Set(results.map(r => r.lot_no))],
+          unit_prices: [...new Set(results.map(r => r.unit_price))]
+        }
+      });
+    });
+  }
+
   // Issue all items in an order at once
   issueAllOrderItems(req, res) {
     const { order_id } = req.params;
@@ -222,10 +277,11 @@ class IssuingController {
 
         // First, get available stock for this SKU ordered by date (FIFO - First In, First Out)
         const getStockSql = `
-          SELECT batch_number, lot_no, unit_price, main_stock_qty, created_at 
-          FROM main_stock 
-          WHERE company_code = ? AND style_number = ? AND sku = ? AND main_stock_qty > 0
-          ORDER BY created_at ASC
+          SELECT ms.batch_number, ms.lot_no, ms.unit_price, ms.main_stock_qty, ms.created_at, ms.location_id, l.location_name
+          FROM main_stock ms
+          LEFT JOIN locations l ON ms.location_id = l.location_id AND ms.company_code = l.company_code
+          WHERE ms.company_code = ? AND ms.style_number = ? AND ms.sku = ? AND ms.main_stock_qty > 0
+          ORDER BY ms.created_at ASC
         `;
 
         db.query(getStockSql, [company_code, style_number, sku], (err, stockResults) => {
@@ -347,6 +403,142 @@ class IssuingController {
               });
             });
           }
+        });
+      });
+    });
+  }
+
+  // Issue individual item with specific batch selection
+  issueOrderItem(req, res) {
+    const { order_id } = req.params;
+    const { 
+      company_code, 
+      order_item_id, 
+      style_number, 
+      sku, 
+      issuing_qty, 
+      batch_number, 
+      lot_no, 
+      unit_price 
+    } = req.body;
+
+    if (!company_code || !order_id || !order_item_id || !style_number || !sku || !issuing_qty || !batch_number || !lot_no || !unit_price) {
+      return res.status(400).json({ error: 'All fields are required for issuing' });
+    }
+
+    // Start transaction
+    db.beginTransaction((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to start transaction' });
+      }
+
+      // First, verify the stock availability for the specific batch
+      const checkStockSql = `
+        SELECT main_stock_qty 
+        FROM main_stock 
+        WHERE company_code = ? AND style_number = ? AND sku = ? AND batch_number = ? AND lot_no = ? AND unit_price = ?
+      `;
+
+      db.query(checkStockSql, [company_code, style_number, sku, batch_number, lot_no, unit_price], (err, stockResults) => {
+        if (err) {
+          return db.rollback(() => {
+            res.status(500).json({ error: `Failed to check stock: ${err.message}` });
+          });
+        }
+
+        if (!stockResults || stockResults.length === 0) {
+          return db.rollback(() => {
+            res.status(404).json({ error: 'Stock not found for the specified batch' });
+          });
+        }
+
+        const availableStock = stockResults[0].main_stock_qty;
+        if (availableStock < issuing_qty) {
+          return db.rollback(() => {
+            res.status(400).json({ 
+              error: `Insufficient stock. Required: ${issuing_qty}, Available: ${availableStock}` 
+            });
+          });
+        }
+
+        // Insert into stock_issuing (main_stock_qty updated by trigger)
+        const issuingSql = `
+          INSERT INTO stock_issuing (company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty) 
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(issuingSql, [company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty], (err, result) => {
+          if (err) {
+            return db.rollback(() => {
+              res.status(500).json({ error: `Failed to issue item: ${err.message}` });
+            });
+          }
+
+          // Update or create booking record
+          const checkBookingSql = `
+            SELECT booking_id FROM booking WHERE order_item_id = ? AND company_code = ?
+          `;
+
+          db.query(checkBookingSql, [order_item_id, company_code], (err, bookingResults) => {
+            if (err) {
+              return db.rollback(() => {
+                res.status(500).json({ error: `Failed to check booking: ${err.message}` });
+              });
+            }
+
+            if (bookingResults.length > 0) {
+              // Update existing booking status to Issued
+              const updateBookingSql = `
+                UPDATE booking SET status = 'Issued' WHERE booking_id = ?
+              `;
+              db.query(updateBookingSql, [bookingResults[0].booking_id], (err) => {
+                if (err) {
+                  return db.rollback(() => {
+                    res.status(500).json({ error: `Failed to update booking: ${err.message}` });
+                  });
+                }
+                
+                db.commit((err) => {
+                  if (err) {
+                    return db.rollback(() => {
+                      res.status(500).json({ error: 'Failed to commit transaction' });
+                    });
+                  }
+                  res.json({ 
+                    success: true, 
+                    message: `Successfully issued ${issuing_qty} units of ${sku}`,
+                    batch_info: { batch_number, lot_no, unit_price }
+                  });
+                });
+              });
+            } else {
+              // Create new booking record with Issued status
+              const createBookingSql = `
+                INSERT INTO booking (company_code, order_item_id, sku, style_number, ordered_qty, status) 
+                VALUES (?, ?, ?, ?, ?, 'Issued')
+              `;
+              db.query(createBookingSql, [company_code, order_item_id, sku, style_number, issuing_qty], (err) => {
+                if (err) {
+                  return db.rollback(() => {
+                    res.status(500).json({ error: `Failed to create booking: ${err.message}` });
+                  });
+                }
+                
+                db.commit((err) => {
+                  if (err) {
+                    return db.rollback(() => {
+                      res.status(500).json({ error: 'Failed to commit transaction' });
+                    });
+                  }
+                  res.json({ 
+                    success: true, 
+                    message: `Successfully issued ${issuing_qty} units of ${sku}`,
+                    batch_info: { batch_number, lot_no, unit_price }
+                  });
+                });
+              });
+            }
+          });
         });
       });
     });

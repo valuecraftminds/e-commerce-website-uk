@@ -54,7 +54,8 @@ const StockController = {
         FROM main_stock_summary mss
         LEFT JOIN styles s ON mss.style_number = s.style_number AND mss.company_code = s.company_code
         WHERE mss.company_code = ?
-        LIMIT ? OFFSET ?
+        ORDER BY mss.updated_at DESC
+        LIMIT ? OFFSET ? 
       `;
       
       db.query(countSql, [company_code], (err, countResult) => {
@@ -116,10 +117,12 @@ const StockController = {
           si.sku, 
           si.batch_number, 
           si.lot_no, 
-          si.issuing_qty 
+          si.issuing_qty,
+          si.issued_at
         FROM stock_issuing si 
         LEFT JOIN styles s ON si.style_number = s.style_number AND si.company_code = s.company_code
         WHERE si.company_code = ?
+        ORDER BY si.issued_at DESC
         LIMIT ? OFFSET ?
       `;
 
@@ -184,11 +187,15 @@ const StockController = {
           sr.batch_number, 
           sr.lot_no, 
           sr.stock_qty, 
-          sr.created_at 
+          sr.created_at,
+          gi.location_id,
+          l.location_name
         FROM stock_received sr
         LEFT JOIN grn_items gi ON sr.sku = gi.sku AND sr.company_code = gi.company_code
         LEFT JOIN styles s ON sr.style_number = s.style_number AND sr.company_code = s.company_code
+        LEFT JOIN locations l ON gi.location_id = l.location_id AND gi.company_code = l.company_code
         WHERE sr.company_code = ?
+        ORDER BY sr.created_at DESC
         LIMIT ? OFFSET ?
       `;
 
