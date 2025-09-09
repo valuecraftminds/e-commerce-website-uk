@@ -573,7 +573,6 @@ export default function Category() {
             >
               {loading ? (
                 <>
-                  <Spinner as="span" animation="border" size="sm" className="me-2" />
                   Saving...
                 </>
               ) : (

@@ -222,15 +222,7 @@ const StyleTable = ({
           className="search-input"
           onChange={e => table.setGlobalFilter(e.target.value)}
         />
-
-        {/* add how to measure guide */}
-        <button
-          className="btn btn-primary"
-          onClick={() => tableActions.handleMeasureGuide()}
-        >
-          Add Measure Guide
-        </button>
-  </div>
+      </div>
 
   <table className="styles-table">
         <thead>

@@ -701,11 +701,10 @@ export default function AddGRN() {
                                                     )}
                                                 </Form.Group>
                                                 <Button
-                                                    variant="success"
+                                                    variant="primary"
                                                     onClick={handleSubmitGRN}
                                                     disabled={loading || grnItems.length === 0 || !batchNumber.trim() || poDetails.header.status !== 'Approved'}
                                                 >
-                                                    {loading ? <Spinner className="me-2" /> : null}
                                                     {loading ? 'Submitting GRN...' : `Submit GRN (${grnItems.length} items)`}
                                                 </Button>
                                             </div>
@@ -847,7 +846,6 @@ export default function AddGRN() {
                         onClick={handleAddGRNItem}
                         disabled={modalLoading || !modalForm.received_qty}
                     >
-                        {modalLoading ? <Spinner className="me-2" /> : null}
                         {modalLoading ? 'Adding...' : 'Add to GRN'}
                     </Button>
                 </Modal.Footer>
