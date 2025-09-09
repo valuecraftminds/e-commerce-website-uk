@@ -14,6 +14,50 @@ import '../styles/WarehouseGRN.css';
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function AddGRN() {
+        const navigate = useNavigate();
+    const { po_number: poParam } = useParams();
+    const { userData } = useContext(AuthContext);
+    
+    const company_code = userData?.company_code;
+    const warehouse_user_id = userData?.id;
+    
+    // State for PO selection
+    const [selectedPO, setSelectedPO] = useState(poParam || null);
+    const [poDetails, setPODetails] = useState(null);
+    
+    // State for GRN creation
+    const [grnItems, setGRNItems] = useState([]);
+    const [batchNumber, setBatchNumber] = useState('');
+    const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [reference, setReference] = useState('');
+    const [grnStatus, setGrnStatus] = useState('');
+    
+    // State for UI
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
+
+    // State for GRN header status
+    const [headerStatus, setHeaderStatus] = useState('partial');
+
+    // State for GRN header status from backend
+    const [grnHeaderStatus, setGrnHeaderStatus] = useState('');
+    
+    // State for modal
+    const [showModal, setShowModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [modalForm, setModalForm] = useState({
+        received_qty: '',
+        location_id: '',
+        notes: '',
+    });
+    const [modalError, setModalError] = useState('');
+    const [modalLoading, setModalLoading] = useState(false);
+
+    // Add state for locations
+    const [locations, setLocations] = useState([]);
+    const [locationsLoading, setLocationsLoading] = useState(false);
+    
     // Process multiple selected PO items (bulk action)
     const processSelectedPOItems = async () => {
         if (!poDetails || !checkedPOItems.length) {
@@ -87,49 +131,6 @@ export default function AddGRN() {
             prev.includes(idx) ? prev.filter((id) => id !== idx) : [...prev, idx]
         );
     };
-    const navigate = useNavigate();
-    const { po_number: poParam } = useParams();
-    const { userData } = useContext(AuthContext);
-    
-    const company_code = userData?.company_code;
-    const warehouse_user_id = userData?.id;
-    
-    // State for PO selection
-    const [selectedPO, setSelectedPO] = useState(poParam || null);
-    const [poDetails, setPODetails] = useState(null);
-    
-    // State for GRN creation
-    const [grnItems, setGRNItems] = useState([]);
-    const [batchNumber, setBatchNumber] = useState('');
-    const [invoiceNumber, setInvoiceNumber] = useState('');
-    const [reference, setReference] = useState('');
-    const [grnStatus, setGrnStatus] = useState('');
-    
-    // State for UI
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
-
-    // State for GRN header status
-    const [headerStatus, setHeaderStatus] = useState('partial');
-
-    // State for GRN header status from backend
-    const [grnHeaderStatus, setGrnHeaderStatus] = useState('');
-    
-    // State for modal
-    const [showModal, setShowModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [modalForm, setModalForm] = useState({
-        received_qty: '',
-        location_id: '',
-        notes: '',
-    });
-    const [modalError, setModalError] = useState('');
-    const [modalLoading, setModalLoading] = useState(false);
-
-    // Add state for locations
-    const [locations, setLocations] = useState([]);
-    const [locationsLoading, setLocationsLoading] = useState(false);
 
     // Function to check if all items are completed (within tolerance limits)
     const checkAllItemsCompleted = useCallback(() => {
