@@ -22,6 +22,66 @@ const MeasureGuideModal = ({
     sub_category_id: '',
     image: null
   });
+  const [existingGuide, setExistingGuide] = useState(null);
+  const [allMeasureGuides, setAllMeasureGuides] = useState([]);
+
+  // Fetch all measure guides when modal opens
+  useEffect(() => {
+    const fetchAllGuides = async () => {
+      if (show && companyCode) {
+        try {
+          const response = await fetch(`${BASE_URL}/api/admin/measure-guides?company_code=${companyCode}`, {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+          const data = await response.json();
+          if (data.success) {
+            setAllMeasureGuides(data.measure_guides || []);
+          } else {
+            setAllMeasureGuides([]);
+          }
+        } catch (err) {
+          setAllMeasureGuides([]);
+        }
+      } else {
+        setAllMeasureGuides([]);
+      }
+    };
+    fetchAllGuides();
+  }, [show, companyCode]);
+
+    // Delete measure guide handler
+  const handleDeleteGuide = async (guideId) => {
+    if (!window.confirm('Are you sure you want to delete this measure guide?')) return;
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/measure-guides/${guideId}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSuccess('Measure guide deleted successfully!');
+        // Refresh guides list
+        setAllMeasureGuides(prev => prev.filter(g => g.id !== guideId));
+        // If deleted guide is the one currently shown as existing, clear it
+        if (existingGuide && existingGuide.id === guideId) {
+          setExistingGuide(null);
+        }
+        // Remove success label after 1.5s
+        setTimeout(() => setSuccess(''), 1500);
+      } else {
+        setError(data.message || 'Failed to delete measure guide');
+      }
+    } catch (err) {
+      setError('Error deleting measure guide: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch main categories when modal opens
   useEffect(() => {
@@ -182,6 +242,7 @@ const MeasureGuideModal = ({
       size="lg" 
       centered
       backdrop="static"
+      className='measure-guide-modal'
     >
       <Modal.Header closeButton>
         <Modal.Title>{title}</Modal.Title>
@@ -191,6 +252,32 @@ const MeasureGuideModal = ({
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
         
+        {/* Display all existing measure guides */}
+        {allMeasureGuides.length > 0 && (
+          <div className="mb-4">
+            <h5>Existing Measure Guides</h5>
+            <div className="existing-measure-guides">
+              {allMeasureGuides.map((guide) => (
+                <div key={guide.measure_guide_id} className='existing-guides'>
+                  {guide.image_url && (
+                    <img src={guide.image_url} alt="Guide" />
+                  )}
+                  <div className='main-cat' >{guide.main_category_name || 'Main Category'}</div>
+                  <div className='sub-cat'>{guide.sub_category_name || 'Subcategory'}</div>
+                  <button
+                    type="button"
+                    className='mg-remove-btn'
+                    title="Delete measure guide"
+                    disabled={loading}
+                    onClick={() => handleDeleteGuide(guide.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <Form>
           <Form.Group className="mb-3">
             <Form.Label>Main Category *</Form.Label>

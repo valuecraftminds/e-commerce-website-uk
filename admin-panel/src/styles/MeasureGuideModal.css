@@ -1,14 +1,17 @@
-.measure-guide-modal .modal-dialog {
-  max-width: 600px;
-}
-
-.measure-guide-modal .modal-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+.measure-guide-modal{
+  width: fit-content !important;
+  display: flex !important;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1050;
+  background: rgba(0,0,0,0.3); 
 }
 
 .measure-guide-modal .modal-title {
-  color: #343a40;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -74,4 +77,46 @@
 
 .measure-guide-modal .form-control[type="file"]::-webkit-file-upload-button:hover {
   background-color: #e9ecef;
+}
+
+.existing-measure-guides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.existing-guides{
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 2px;
+  width: 110px;
+  text-align: center;
+  background: #fafbfc;
+  position: relative;
+}
+.main-cat{
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sub-cat{
+  font-size: 12px;
+  color: #666;
+}
+
+.mg-remove-btn{
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #dc3545;
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  line-height: 18px;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
 }
