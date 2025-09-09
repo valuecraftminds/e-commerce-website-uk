@@ -6,7 +6,7 @@ import { PiPackage, PiArrowUp, PiArrowDown } from "react-icons/pi";
 import { AuthContext } from '../context/AuthContext';
 import '../styles/StockManagement.css';
 import Spinner from '../components/Spinner';
-import Pagination from '../components/modals/Pagination';
+import Pagination from '../components/Pagination';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 

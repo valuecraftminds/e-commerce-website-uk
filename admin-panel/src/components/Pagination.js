@@ -1,6 +1,7 @@
 import React from 'react';
 
-// Props: pagination (object), onPageChange (function)
+import '../styles/Pagination.css';
+
 export default function Pagination({
     pagination = {
         currentPage: 1,
