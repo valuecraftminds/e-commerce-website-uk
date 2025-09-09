@@ -174,6 +174,37 @@ const FeedbackController = {
                 });
             });
         });
+    },
+
+    // Delete a review
+    deleteReview: (req, res) => {
+        const customer_id = req.user?.id;
+        const { review_id } = req.params;
+        const { company_code } = req.query;
+        
+        if (!company_code) {
+            return res.status(400).json({ error: 'Company code is required' });
+        }
+
+        if (!customer_id) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const sql = `
+            DELETE FROM reviews
+            WHERE review_id = ? AND customer_id = ? AND company_code = ?
+        `;
+
+        db.query(sql, [review_id, customer_id, company_code], (err, result) => {
+            if (err) {
+                console.error('Error deleting review:', err);
+                return res.status(500).json({ error: 'Server error' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Review not found or not authorized' });
+            }
+            res.status(200).json({ message: 'Review deleted successfully' });
+        });
     }
 }
 

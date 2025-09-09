@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/FeedbackHistory.css';
 import Spinner from '../components/Spinner';
 import StarRating from "../components/StarRating";
+import { useNotifyModal } from "../context/NotifyModalProvider";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 const COMPANY_CODE = process.env.REACT_APP_COMPANY_CODE;
@@ -24,6 +25,7 @@ const FeedbackHistory = () => {
     hasPreviousPage: false
   });
   const navigate = useNavigate();
+  const { showNotify } = useNotifyModal();
 
   // Get auth token from logged in user
   const getAuthToken = () => {
@@ -52,8 +54,8 @@ const FeedbackHistory = () => {
     return config;
   }, []);
 
-  const handleRedirect = (style_id) => {
-    navigate(`/product/${style_id}`);
+  const handleRedirect = (style_number) => {
+    navigate(`/product/${style_number}`);
   };
 
   // Fetch feedback history
@@ -83,6 +85,41 @@ const FeedbackHistory = () => {
   useEffect(() => {
     fetchFeedbackHistory(1);
   }, [fetchFeedbackHistory]);
+
+
+  // Delete a review
+  const handleDeleteReview = async (reviewId) => {
+    showNotify({
+      title: "Remove Review",
+      message: "Are you sure you want to remove this review? This action cannot be undone.",
+      type: "warning",
+      customButtons: [
+        {
+          label: "Remove",
+          onClick: async () => {
+            try {
+              setLoading(true);
+              await axios.delete(
+                `${BASE_URL}/api/customer/feedback/remove/${reviewId}`,
+                getAxiosConfig()
+              );
+              // Refresh the feedback list after deletion
+              await fetchFeedbackHistory(currentPage);
+              setError("");
+            } catch (err) {
+              console.error('Error deleting review:', err);
+              setError('Failed to delete the review. Please try again.');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+        {
+          label: "Cancel"
+        }
+      ]
+    });
+  };
 
   // Filter feedback based on star rating
   useEffect(() => {
@@ -267,7 +304,7 @@ const FeedbackHistory = () => {
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
-                        onClick={() => handleRedirect(item.style_id)}
+                        onClick={() => handleRedirect(item.style_number)}
                       />
                     )}
                   </div>
@@ -281,6 +318,14 @@ const FeedbackHistory = () => {
                 <div className="feedback-footer">
                   <div className="feedback-meta">
                     <span className="feedback-review-id">Review #{item.review_id}</span>
+                  </div>
+                  <div>
+                    <button 
+                      className="feedback-remove-btn"
+                      onClick={() => handleDeleteReview(item.review_id)}  
+                    >
+                      Remove Review
+                    </button>
                   </div>
                 </div>
               </div>
