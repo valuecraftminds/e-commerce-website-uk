@@ -492,6 +492,8 @@ getVariantInfo: (req, res) => {
       sv.sku,
       sv.sale_price,
       sv.offer_price,
+      sv.offer_start_date,
+      sv.offer_end_date,
       ss.stock_qty
     FROM style_variants sv
     LEFT JOIN stock_summary ss ON ss.sku = sv.sku

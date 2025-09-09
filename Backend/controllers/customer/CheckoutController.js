@@ -229,7 +229,7 @@ const CheckoutController = {
                 sku,
                 style_number,
                 quantity, 
-                unit_price, 
+                unit_sale_price, 
                 total_price, 
                 created_at, 
                 updated_at
@@ -244,7 +244,7 @@ const CheckoutController = {
               item.sku,
               item.style_number,
               item.quantity,
-              item.unit_price, 
+              item.unit_sale_price, 
               item.total_price, 
               new Date(), 
               new Date()
