@@ -15,18 +15,16 @@ const getCustomerFooter = (req, res) => {
     SELECT 
       cf.footer_id,
       cf.section_title,
-      cf.section_order,
       cfi.item_id,
       cfi.item_title,
       cfi.item_url,
-      cfi.item_order,
       cfi.is_external_link
     FROM custom_footer cf
     LEFT JOIN custom_footer_items cfi ON cf.footer_id = cfi.footer_id
     WHERE cf.company_code = ? 
       AND cf.is_active = TRUE 
       AND (cfi.is_active = TRUE OR cfi.is_active IS NULL)
-    ORDER BY cf.section_order ASC, cfi.item_order ASC
+    ORDER BY cf.footer_id ASC, cfi.item_id ASC
   `;
 
   db.query(query, [company_code], (err, results) => {
@@ -46,7 +44,6 @@ const getCustomerFooter = (req, res) => {
         footerSections[row.footer_id] = {
           footer_id: row.footer_id,
           section_title: row.section_title,
-          section_order: row.section_order,
           items: []
         };
       }
@@ -56,7 +53,6 @@ const getCustomerFooter = (req, res) => {
           item_id: row.item_id,
           item_title: row.item_title,
           item_url: row.item_url,
-          item_order: row.item_order,
           is_external_link: row.is_external_link
         });
       }

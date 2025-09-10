@@ -15,20 +15,18 @@ const getFooterSections = (req, res) => {
     SELECT 
       cf.footer_id,
       cf.section_title,
-      cf.section_order,
       cf.is_active as section_active,
       cf.created_at,
       cf.updated_at,
       cfi.item_id,
       cfi.item_title,
       cfi.item_url,
-      cfi.item_order,
       cfi.is_external_link,
       cfi.is_active as item_active
     FROM custom_footer cf
     LEFT JOIN custom_footer_items cfi ON cf.footer_id = cfi.footer_id
     WHERE cf.company_code = ?
-    ORDER BY cf.section_order ASC, cfi.item_order ASC
+    ORDER BY cf.footer_id ASC, cfi.item_id ASC
   `;
 
   db.query(query, [company_code], (err, results) => {
@@ -48,7 +46,6 @@ const getFooterSections = (req, res) => {
         footerSections[row.footer_id] = {
           footer_id: row.footer_id,
           section_title: row.section_title,
-          section_order: row.section_order,
           section_active: row.section_active,
           created_at: row.created_at,
           updated_at: row.updated_at,
@@ -61,7 +58,6 @@ const getFooterSections = (req, res) => {
           item_id: row.item_id,
           item_title: row.item_title,
           item_url: row.item_url,
-          item_order: row.item_order,
           is_external_link: row.is_external_link,
           item_active: row.item_active
         });
@@ -79,7 +75,7 @@ const getFooterSections = (req, res) => {
 
 // Create new footer section
 const createFooterSection = (req, res) => {
-  const { company_code, section_title, section_order = 1 } = req.body;
+  const { company_code, section_title } = req.body;
 
   if (!company_code || !section_title) {
     return res.status(400).json({
@@ -89,11 +85,11 @@ const createFooterSection = (req, res) => {
   }
 
   const query = `
-    INSERT INTO custom_footer (company_code, section_title, section_order)
-    VALUES (?, ?, ?)
+    INSERT INTO custom_footer (company_code, section_title)
+    VALUES (?, ?)
   `;
 
-  db.query(query, [company_code, section_title, section_order], (err, result) => {
+  db.query(query, [company_code, section_title], (err, result) => {
     if (err) {
       console.error('Error creating footer section:', err);
       return res.status(500).json({
@@ -113,7 +109,7 @@ const createFooterSection = (req, res) => {
 // Update footer section
 const updateFooterSection = (req, res) => {
   const { footer_id } = req.params;
-  const { section_title, section_order, is_active } = req.body;
+  const { section_title, is_active } = req.body;
 
   if (!footer_id) {
     return res.status(400).json({
@@ -124,11 +120,11 @@ const updateFooterSection = (req, res) => {
 
   const query = `
     UPDATE custom_footer 
-    SET section_title = ?, section_order = ?, is_active = ?
+    SET section_title = ?, is_active = ?
     WHERE footer_id = ?
   `;
 
-  db.query(query, [section_title, section_order, is_active, footer_id], (err, result) => {
+  db.query(query, [section_title, is_active, footer_id], (err, result) => {
     if (err) {
       console.error('Error updating footer section:', err);
       return res.status(500).json({
@@ -193,7 +189,6 @@ const createFooterItem = (req, res) => {
     footer_id, 
     item_title, 
     item_url, 
-    item_order = 1, 
     is_external_link = false,
     page_title,
     page_description,
@@ -235,11 +230,11 @@ const createFooterItem = (req, res) => {
   const final_url = is_external_link ? item_url : `/${page_slug}`;
 
   const itemQuery = `
-    INSERT INTO custom_footer_items (footer_id, item_title, item_url, item_order, is_external_link)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO custom_footer_items (footer_id, item_title, item_url, is_external_link)
+    VALUES (?, ?, ?, ?)
   `;
 
-  db.query(itemQuery, [footer_id, item_title, final_url, item_order, is_external_link], (err, result) => {
+  db.query(itemQuery, [footer_id, item_title, final_url, is_external_link], (err, result) => {
     if (err) {
       console.error('Error creating footer item:', err);
       return res.status(500).json({
@@ -292,7 +287,6 @@ const updateFooterItem = (req, res) => {
   const { 
     item_title, 
     item_url, 
-    item_order, 
     is_external_link, 
     is_active,
     page_title,
@@ -310,11 +304,11 @@ const updateFooterItem = (req, res) => {
   // Update the basic item information
   const itemQuery = `
     UPDATE custom_footer_items 
-    SET item_title = ?, item_url = ?, item_order = ?, is_external_link = ?, is_active = ?
+    SET item_title = ?, item_url = ?, is_external_link = ?, is_active = ?
     WHERE item_id = ?
   `;
 
-  db.query(itemQuery, [item_title, item_url, item_order, is_external_link, is_active, item_id], (err, result) => {
+  db.query(itemQuery, [item_title, item_url, is_external_link, is_active, item_id], (err, result) => {
     if (err) {
       console.error('Error updating footer item:', err);
       return res.status(500).json({

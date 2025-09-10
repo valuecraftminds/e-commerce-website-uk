@@ -46,14 +46,12 @@ export default function AddFooter() {
   // Form states
   const [sectionForm, setSectionForm] = useState({
     section_title: '',
-    section_order: 1,
     is_active: true
   });
 
   const [itemForm, setItemForm] = useState({
     item_title: '',
     item_url: '',
-    item_order: 1,
     is_external_link: false,
     is_active: true,
     // New fields for internal pages
@@ -210,7 +208,6 @@ export default function AddFooter() {
   const resetSectionForm = () => {
     setSectionForm({
       section_title: '',
-      section_order: 1,
       is_active: true
     });
     setEditingSection(null);
@@ -220,7 +217,6 @@ export default function AddFooter() {
     setItemForm({
       item_title: '',
       item_url: '',
-      item_order: 1,
       is_external_link: false,
       is_active: true,
       page_title: '',
@@ -236,7 +232,6 @@ export default function AddFooter() {
     setEditingSection(section);
     setSectionForm({
       section_title: section.section_title,
-      section_order: section.section_order,
       is_active: section.section_active
     });
     setShowSectionModal(true);
@@ -254,7 +249,6 @@ export default function AddFooter() {
           setItemForm({
             item_title: item.item_title,
             item_url: item.item_url,
-            item_order: item.item_order,
             is_external_link: item.is_external_link,
             is_active: item.item_active,
             page_title: pageData.page_title || '',
@@ -270,7 +264,6 @@ export default function AddFooter() {
       setItemForm({
         item_title: item.item_title,
         item_url: item.item_url,
-        item_order: item.item_order,
         is_external_link: item.is_external_link,
         is_active: item.item_active,
         page_title: '',
@@ -349,7 +342,6 @@ export default function AddFooter() {
                               {section.section_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </h5>
-                          <small className="text-muted">Order: {section.section_order}</small>
                         </div>
                         <div>
                           <Button 
@@ -384,7 +376,6 @@ export default function AddFooter() {
                               <tr>
                                 <th>Title</th>
                                 <th>URL/Page</th>
-                                <th>Order</th>
                                 <th>Type</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -404,7 +395,6 @@ export default function AddFooter() {
                                       <code>{item.item_url || 'Generated from title'}</code>
                                     </div>
                                   </td>
-                                  <td>{item.item_order}</td>
                                   <td>
                                     <Badge variant={item.is_external_link ? 'warning' : 'info'}>
                                       {item.is_external_link ? 'External' : 'Internal'}
@@ -470,15 +460,6 @@ export default function AddFooter() {
                 onChange={(e) => setSectionForm({...sectionForm, section_title: e.target.value})}
                 required
                 placeholder="e.g., Corporate Info, Customer Service"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Display Order</Form.Label>
-              <Form.Control
-                type="number"
-                value={sectionForm.section_order}
-                onChange={(e) => setSectionForm({...sectionForm, section_order: parseInt(e.target.value)})}
-                min="1"
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -563,16 +544,6 @@ export default function AddFooter() {
                       </Form.Text>
                     </Form.Group>
                   )}
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Display Order</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={itemForm.item_order}
-                      onChange={(e) => setItemForm({...itemForm, item_order: parseInt(e.target.value)})}
-                      min="1"
-                    />
-                  </Form.Group>
 
                   <Form.Group className="mb-3">
                     <Form.Check
