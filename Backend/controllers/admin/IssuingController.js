@@ -121,7 +121,7 @@ class IssuingController {
         oi.sku,
         oi.style_number,
         oi.quantity,
-        oi.unit_price,
+        oi.unit_sale_price,
         oi.total_price,
         oi.created_at,
         sv.color_id,
@@ -308,11 +308,11 @@ class IssuingController {
 
           // Insert into stock_issuing (main_stock_qty updated by trigger)
           const issuingSql = `
-            INSERT INTO stock_issuing (company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO stock_issuing (company_code, order_id, order_item_id, style_number, sku, batch_number, lot_no, unit_price, issuing_qty, location_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
 
-          db.query(issuingSql, [company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty], (err, result) => {
+          db.query(issuingSql, [company_code, order_id, order_item_id, style_number, sku, batch_number, lot_no, unit_price, issuing_qty, selectedStock.location_id], (err, result) => {
             if (err) {
               errors.push(`Failed to issue ${sku}: ${err.message}`);
               return callback(err);
@@ -434,7 +434,7 @@ class IssuingController {
 
       // First, verify the stock availability for the specific batch
       const checkStockSql = `
-        SELECT main_stock_qty 
+        SELECT main_stock_qty, location_id 
         FROM main_stock 
         WHERE company_code = ? AND style_number = ? AND sku = ? AND batch_number = ? AND lot_no = ? AND unit_price = ?
       `;
@@ -453,6 +453,7 @@ class IssuingController {
         }
 
         const availableStock = stockResults[0].main_stock_qty;
+        const stockLocationId = stockResults[0].location_id;
         if (availableStock < issuing_qty) {
           return db.rollback(() => {
             res.status(400).json({ 
@@ -463,11 +464,11 @@ class IssuingController {
 
         // Insert into stock_issuing (main_stock_qty updated by trigger)
         const issuingSql = `
-          INSERT INTO stock_issuing (company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty) 
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO stock_issuing (company_code, order_id, order_item_id, style_number, sku, batch_number, lot_no, unit_price, issuing_qty, location_id) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        db.query(issuingSql, [company_code, style_number, sku, batch_number, lot_no, unit_price, issuing_qty], (err, result) => {
+        db.query(issuingSql, [company_code, order_id, order_item_id, style_number, sku, batch_number, lot_no, unit_price, issuing_qty, stockLocationId], (err, result) => {
           if (err) {
             return db.rollback(() => {
               res.status(500).json({ error: `Failed to issue item: ${err.message}` });
@@ -584,7 +585,9 @@ class IssuingController {
         s.size_name,
         f.fit_name,
         m.material_name,
-        b.status as booking_status
+        b.status as booking_status,
+        si.batch_number,
+        l.location_name
       FROM order_items oi
       LEFT JOIN style_variants sv ON oi.variant_id = sv.variant_id
       LEFT JOIN styles st ON oi.style_number = st.style_number AND st.company_code = oi.company_code
@@ -593,6 +596,8 @@ class IssuingController {
       LEFT JOIN fits f ON sv.fit_id = f.fit_id AND f.company_code = sv.company_code
       LEFT JOIN materials m ON sv.material_id = m.material_id AND m.company_code = sv.company_code
       LEFT JOIN booking b ON oi.order_item_id = b.order_item_id
+      LEFT JOIN stock_issuing si ON oi.order_item_id = si.order_item_id
+      LEFT JOIN locations l ON si.location_id = l.location_id AND l.company_code = si.company_code
       WHERE oi.order_id = ? AND oi.company_code = ?
       ORDER BY oi.order_item_id
     `;
@@ -698,7 +703,7 @@ class IssuingController {
 
   // Generate Picking List PDF Document (Static method)
   static generatePickingListPDF(res, order, items) {
-    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Reduced margin from 50 to 30
     
     // Set response headers
     res.setHeader('Content-Type', 'application/pdf');
@@ -708,132 +713,163 @@ class IssuingController {
     doc.pipe(res);
 
     // Company Header
-    doc.fontSize(16)
+    doc.fontSize(14) // Reduced from 16
        .font('Helvetica-Bold')
-       .text(order.company_name || 'Company Name', 50, 50, { align: 'center' });
+       .text(order.company_name || 'Company Name', 30, 30, { align: 'center' }); // Adjusted position
     
     if (order.company_address) {
-      doc.fontSize(10)
+      doc.fontSize(9) // Reduced from 10
          .font('Helvetica')
-         .text(order.company_address, 50, 75, { align: 'center' });
+         .text(order.company_address, 30, 50, { align: 'center' }); // Adjusted position
     }
 
     // Title
-    doc.fontSize(18)
+    doc.fontSize(16) // Reduced from 18
        .font('Helvetica-Bold')
-       .text('PICKING LIST', 50, 120, { align: 'center' });
+       .text('PICKING LIST', 30, 80, { align: 'center' }); // Adjusted position
 
     // Order Information
-    doc.fontSize(12)
+    doc.fontSize(11) // Reduced from 12
        .font('Helvetica-Bold')
-       .text('Order Information', 50, 160);
+       .text('Order Information', 30, 110); // Adjusted position
 
-    doc.fontSize(10)
+    doc.fontSize(9) // Reduced from 10
        .font('Helvetica')
-       .text(`Order Number: ${order.order_number}`, 50, 180)
-       .text(`Customer: ${order.customer_name}`, 50, 195)
-       .text(`Order Date: ${new Date(order.created_at).toLocaleDateString('en-GB')}`, 50, 210)
-       .text(`Pick Date: ${new Date().toLocaleDateString('en-GB')}`, 400, 180)
-       .text(`Status: ${order.order_status}`, 400, 195);
+       .text(`Order Number: ${order.order_number}`, 30, 125) // Adjusted positions and spacing
+       .text(`Customer: ${order.customer_name}`, 30, 140)
+       .text(`Order Date: ${new Date(order.created_at).toLocaleDateString('en-GB')}`, 30, 155)
+       .text(`Pick Date: ${new Date().toLocaleDateString('en-GB')}`, 350, 125) // Adjusted position
+       .text(`Status: ${order.order_status}`, 350, 140);
 
     // Items Table
-    doc.fontSize(12)
+    doc.fontSize(11) // Reduced from 12
        .font('Helvetica-Bold')
-       .text('Items to Pick', 50, 250);
+       .text('Items to Pick', 30, 180); // Adjusted position
 
-    // Table Headers (improved spacing like purchase order)
-    const tableTop = 280;
-    const col1X = 50;   // #
-    const col2X = 75;   // SKU
-    const col3X = 165;  // Style Name
-    const col4X = 270;  // Color
-    const col5X = 320;  // Size
-    const col6X = 355;  // Fit
-    const col7X = 420;  // Material
-    const col8X = 480;  // Qty
+    // Table Headers (optimized spacing with better column distribution)
+    const tableTop = 200; // Adjusted position
+    const col1X = 30;   // #
+    const col2X = 50;   // SKU
+    const col3X = 130;  // Style Name
+    const col4X = 200;  // Color
+    const col5X = 250;  // Size
+    const col6X = 280;  // Fit
+    const col7X = 310;  // Material
+    const col8X = 370;  // Batch
+    const col9X = 430;  // Location
+    const col10X = 480; // Qty
+    const col11X = 510; // Remarks
 
-    doc.fontSize(10)
+    doc.fontSize(9) // Reduced from 10
        .font('Helvetica-Bold');
 
-    doc.text('#', col1X, tableTop, { width: 20, align: 'left' });
-    doc.text('SKU', col2X, tableTop, { width: 85, align: 'left' });
-    doc.text('Style', col3X, tableTop, { width: 100, align: 'left' });
+    doc.text('#', col1X, tableTop, { width: 15, align: 'left' });
+    doc.text('SKU', col2X, tableTop, { width: 75, align: 'left' });
+    doc.text('Style', col3X, tableTop, { width: 65, align: 'left' });
     doc.text('Color', col4X, tableTop, { width: 45, align: 'left' });
-    doc.text('Size', col5X, tableTop, { width: 30, align: 'left' });
-    doc.text('Fit', col6X, tableTop, { width: 60, align: 'left' });
+    doc.text('Size', col5X, tableTop, { width: 25, align: 'left' });
+    doc.text('Fit', col6X, tableTop, { width: 25, align: 'left' });
     doc.text('Material', col7X, tableTop, { width: 55, align: 'left' });
-    doc.text('Qty', col8X, tableTop, { width: 50, align: 'right' });
+    doc.text('Batch', col8X, tableTop, { width: 55, align: 'left' });
+    doc.text('Location', col9X, tableTop, { width: 45, align: 'left' });
+    doc.text('Qty', col10X, tableTop, { width: 25, align: 'right' });
+    doc.text('Remarks', col11X, tableTop, { width: 55, align: 'left' });
 
     // Draw header line
-    doc.moveTo(50, tableTop + 18)
-       .lineTo(530, tableTop + 18)
+    doc.moveTo(30, tableTop + 15) // Adjusted margins and reduced spacing
+       .lineTo(565, tableTop + 15) // Extended to use full width
        .stroke();
 
     // Table Content
-    let currentY = tableTop + 23;
-    doc.font('Helvetica').fontSize(9);
+    let currentY = tableTop + 18; // Reduced spacing
+    doc.font('Helvetica').fontSize(8); // Reduced from 9
 
     items.forEach((item, index) => {
-      if (currentY > 700) {
+      if (currentY > 720) { // Adjusted for smaller margins
         doc.addPage();
         // Re-draw headers on new page
-        doc.text('#', col1X, tableTop, { width: 20, align: 'left' });
-    doc.text('SKU', col2X, tableTop, { width: 85, align: 'left' });
-    doc.text('Style', col3X, tableTop, { width: 100, align: 'left' });
-    doc.text('Color', col4X, tableTop, { width: 45, align: 'left' });
-    doc.text('Size', col5X, tableTop, { width: 30, align: 'left' });
-    doc.text('Fit', col6X, tableTop, { width: 60, align: 'left' });
-    doc.text('Material', col7X, tableTop, { width: 55, align: 'left' });
-    doc.text('Qty', col8X, tableTop, { width: 50, align: 'right' });
+        doc.fontSize(9).font('Helvetica-Bold');
+        doc.text('#', col1X, 50, { width: 15, align: 'left' }); // Adjusted Y position
+        doc.text('SKU', col2X, 50, { width: 75, align: 'left' });
+        doc.text('Style', col3X, 50, { width: 65, align: 'left' });
+        doc.text('Color', col4X, 50, { width: 45, align: 'left' });
+        doc.text('Size', col5X, 50, { width: 25, align: 'left' });
+        doc.text('Fit', col6X, 50, { width: 25, align: 'left' });
+        doc.text('Material', col7X, 50, { width: 55, align: 'left' });
+        doc.text('Batch', col8X, 50, { width: 55, align: 'left' });
+        doc.text('Location', col9X, 50, { width: 45, align: 'left' });
+        doc.text('Qty', col10X, 50, { width: 25, align: 'right' });
+        doc.text('Remarks', col11X, 50, { width: 55, align: 'left' });
         
-        doc.moveTo(50, 68).lineTo(530, 68).stroke();
-        currentY = 75;
-        doc.font('Helvetica').fontSize(9);
+        doc.moveTo(30, 68).lineTo(565, 68).stroke(); // Adjusted line position and width
+        currentY = 75; // Adjusted starting Y for new page
+        doc.font('Helvetica').fontSize(8);
       }
 
-      // Truncate material name if too long
+      // Truncate long text more aggressively to fit
       const materialName = item.material_name || 'N/A';
-      const truncatedMaterial = materialName.length > 20 ? materialName.substring(0, 20) + '...' : materialName;
+      const truncatedMaterial = materialName.length > 18 ? materialName.substring(0, 18) + '..' : materialName;
+      
+      const styleName = item.style_name || 'N/A';
+      const truncatedStyle = styleName.length > 20 ? styleName.substring(0, 20) + '..' : styleName;
+      
+      const colorName = item.color_name || 'N/A';
+      const truncatedColor = colorName.length > 12 ? colorName.substring(0, 12) + '..' : colorName;
+      
+      const fitName = item.fit_name || 'N/A';
+      const truncatedFit = fitName.length > 8 ? fitName.substring(0, 8) + '..' : fitName;
+      
+      const batchNumber = item.batch_number || 'N/A';
+      const truncatedBatch = batchNumber.length > 18 ? batchNumber.substring(0, 18) + '..' : batchNumber;
+      
+      const locationName = item.location_name || 'N/A';
+      const truncatedLocation = locationName.length > 12 ? locationName.substring(0, 12) + '..' : locationName;
+      
+      const skuName = item.sku || 'N/A';
+      const truncatedSku = skuName.length > 22 ? skuName.substring(0, 22) + '..' : skuName;
 
-      doc.text((index + 1).toString(), col1X, currentY, { width: 20, align: 'left' });
-      doc.text(item.sku || 'N/A', col2X, currentY, { width: 85, align: 'left' });
-      doc.text(item.style_name || 'N/A', col3X, currentY, { width: 100, align: 'left' });
-      doc.text(item.color_name || 'N/A', col4X, currentY, { width: 45, align: 'left' });
-      doc.text(item.size_name || 'N/A', col5X, currentY, { width: 30, align: 'left' });
-      doc.text(item.fit_name || 'N/A', col6X, currentY, { width: 60, align: 'left' });
+      doc.text((index + 1).toString(), col1X, currentY, { width: 15, align: 'left' });
+      doc.text(truncatedSku, col2X, currentY, { width: 75, align: 'left' });
+      doc.text(truncatedStyle, col3X, currentY, { width: 65, align: 'left' });
+      doc.text(truncatedColor, col4X, currentY, { width: 45, align: 'left' });
+      doc.text(item.size_name || 'N/A', col5X, currentY, { width: 25, align: 'left' });
+      doc.text(truncatedFit, col6X, currentY, { width: 25, align: 'left' });
       doc.text(truncatedMaterial, col7X, currentY, { width: 55, align: 'left' });
-      doc.text(item.quantity.toString(), col8X, currentY, { width: 50, align: 'right' });
+      doc.text(truncatedBatch, col8X, currentY, { width: 55, align: 'left' });
+      doc.text(truncatedLocation, col9X, currentY, { width: 45, align: 'left' });
+      doc.text(item.quantity.toString(), col10X, currentY, { width: 25, align: 'right' });
+      doc.text('_______', col11X, currentY, { width: 55, align: 'left' });
 
-      currentY += 18;
+      currentY += 15; // Reduced row spacing from 18 to 15
     });
-
+    currentY += 5;
     // Draw bottom line
-    doc.moveTo(50, currentY)
-       .lineTo(530, currentY)
+    doc.moveTo(30, currentY)
+       .lineTo(565, currentY)
        .stroke();
 
     // Summary
     const totalItems = items.length;
     const totalQuantity = items.reduce((sum, item) => sum + parseInt(item.quantity || 0), 0);
 
-    currentY += 20;
-    doc.fontSize(12)
+    currentY += 15; // Reduced spacing
+    doc.fontSize(11) // Reduced from 12
        .font('Helvetica-Bold')
        .text(`Total Items: ${totalItems}`, 400, currentY);
 
-    currentY += 15;
+    currentY += 12; // Reduced spacing
     doc.text(`Total Quantity: ${totalQuantity}`, 400, currentY);
 
     // Signature section
-    currentY += 80;
-    doc.fontSize(10)
+    currentY += 60; // Reduced spacing
+    doc.fontSize(9) // Reduced from 10
        .font('Helvetica')
-       .text('Picked By: ____________________', 50, currentY)
-       .text('Date: ____________________', 300, currentY);
+       .text('Picked By: ____________________', 30, currentY)
+       .text('Date: ____________________', 250, currentY);
 
-    currentY += 30;
-    doc.text('Verified By: ____________________', 50, currentY)
-       .text('Date: ____________________', 300, currentY);
+    currentY += 25; // Reduced spacing
+    doc.text('Verified By: ____________________', 30, currentY)
+       .text('Date: ____________________', 250, currentY);
 
     // Finalize the PDF
     doc.end();
