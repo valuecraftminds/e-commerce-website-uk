@@ -22,6 +22,10 @@ export default function Shop() {
   const [error, setError] = useState(null);
   const [exchangeRates, setExchangeRates] = useState({});
   const navigate = useNavigate();
+  const [offerProducts, setOfferProducts] = useState([]);
+  const [offerLoading, setOfferLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
 
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
@@ -48,6 +52,60 @@ export default function Shop() {
     };
     fetchExchangeRates();
   }, []);
+
+  // fetch offer products
+  useEffect(() => {
+    const fetchOfferProducts = async () => {
+      try {
+        setOfferLoading(true);
+
+        const response = await axios.get(`${BASE_URL}/api/customer/offers`, {
+          params: {company_code: COMPANY_CODE}
+        });
+
+        // Group products by style_id and select the best offer (minimum offer_price)
+        const groupedProducts = {};
+        response.data.forEach(product => {
+          const styleId = product.style_id;
+          
+          if (!groupedProducts[styleId]) {
+            groupedProducts[styleId] = product;
+          } else {
+            // If current product has lower offer_price, replace it
+            if (product.offer_price < groupedProducts[styleId].offer_price) {
+              groupedProducts[styleId] = product;
+            }
+          }
+        });
+
+        // Convert back to array
+        const uniqueProducts = Object.values(groupedProducts);
+        setOfferProducts(uniqueProducts);
+      } catch (error) { 
+        console.error('Error fetching offer products:', error);
+      } finally{
+        setOfferLoading(false);
+      }
+    };
+    fetchOfferProducts();
+  }, []);
+
+  // Timer effect for real-time updates
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Filter active offer products 
+  const activeOfferProducts = offerProducts.filter(
+    (p) =>
+      p.offer_end_date &&
+      new Date(p.offer_end_date) > currentTime &&
+      Number(p.offer_price) > 0
+  );
 
   // Fetch categories on mount
   useEffect(() => {
@@ -318,7 +376,8 @@ export default function Shop() {
                   )}
                   
                   <div className="shop-product-price">
-                     {product.offer_price && product.offer_price !== 0 ? (
+                    {product.offer_price && product.offer_price !== 0 && 
+                    activeOfferProducts.some(p => p.style_id === product.style_id) ? (
                       <>
                         <span className="me-2">
                           {formatPrice(product.offer_price)}
@@ -329,10 +388,7 @@ export default function Shop() {
                       </>
                     ) : (
                       <>
-                        <span>{formatPrice(product.sale_price)}</span>
-                        <small className="text-muted d-block" style={{fontSize: '0.75rem'}}>
-                          Starting from
-                        </small>
+                    <span>{formatPrice(product.sale_price)}</span>
                       </>
                     )}
                   </div>
