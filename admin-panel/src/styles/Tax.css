@@ -1,0 +1,40 @@
+.tax-form {
+  max-width: 400px;
+  margin: 50px auto 50px auto;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 2px solid black;
+}
+
+.tax-table {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tax-table th,
+.tax-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tax-table th {
+  background: #e9ecef;
+}
+
+.tax-update-btn {
+  min-width: 80px;
+  transition: all 0.3 ease;
+}
+
+.tax-title {
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: #343a40;
+}

@@ -1,5 +1,5 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Alert, Badge, Button, Card, Col, Container, Form, Modal, Row, Table } from 'react-bootstrap';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Alert, Badge, Button, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
@@ -35,7 +35,7 @@ export default function AddGRN() {
     const [headerStatus, setHeaderStatus] = useState('partial');
 
     // State for GRN header status from backend
-    const [grnHeaderStatus, setGrnHeaderStatus] = useState('');
+    const [, setGrnHeaderStatus] = useState('');
 
     // Add state for locations
     const [locations, setLocations] = useState([]);
@@ -239,20 +239,6 @@ const handleAddItemFromRow = async (item) => {
             handleSelectPO(poParam);
         }
     }, [poParam, handleSelectPO]);
-
-    // Clear all states
-    const clearAllStates = () => {
-        setSelectedPO(null);
-        setPODetails(null);
-        setGRNItems([]);
-        setBatchNumber('');
-        setInvoiceNumber('');
-        setReference('');
-        setGrnStatus('');
-        setError('');
-        setSuccess('');
-        navigate('/warehouse/add-grn');
-    };
 
     // Fetch locations for dropdown
     useEffect(() => {
@@ -534,10 +520,6 @@ const handleAddItemFromRow = async (item) => {
                                                 </thead>
                                                 <tbody>
                                                     {poDetails.items.map((item, idx) => {
-                                                        const orderedQty = item.ordered_qty;
-                                                        const toleranceLimit = item.tolerance_limit || 0;
-                                                        const minQty = Math.max(0, orderedQty - (orderedQty * toleranceLimit / 100));
-                                                        const maxQty = orderedQty + (orderedQty * toleranceLimit / 100);
                                                         const receivedQty = item.total_received || 0;
                                                         const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading;
                                                         
