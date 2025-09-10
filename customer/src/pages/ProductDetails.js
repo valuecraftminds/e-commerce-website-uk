@@ -671,32 +671,31 @@ const getCurrentPrice = () => {
 
               <div className="mb-3">
                 <div className="mb-3">
-                <h4>Select Size:</h4>
-                {product.all_sizes && product.all_sizes.length > 0 ? (
-                  product.all_sizes.map((sizeObj) => (
-                    <button
-                      key={sizeObj.size_id}
-                      onClick={() => {
-                        if (sizeObj.available) {
-                          setSelectedSize(sizeObj.size_name);
-                          setSelectedColor('');
-                          setSelectedColorName('');
-                          setSelectedVariant(null);
-                        }
-                      }}
-                      disabled={!sizeObj.available}
-                      className={`me-2 mb-2 btn-size ${
-                        selectedSize === sizeObj.size_name ? 'selected' : ''
-                      } ${!sizeObj.available ? 'unavailable' : ''}`}
-                      title={sizeObj.available ? `Select ${sizeObj.size_name}` : `${sizeObj.size_name} - Not available`}
-                    >
-                      {sizeObj.size_name}
-                    </button>
-                  ))
-                ) : (
-                  <h5>Sizes not available</h5>
-                )}
-              </div>
+                  <h4>Select Size:</h4>
+                  {product.all_sizes && product.all_sizes.length > 0 ? (
+                    product.all_sizes
+                      .filter(sizeObj => (product.available_sizes || []).includes(sizeObj.size_name))
+                      .map((sizeObj) => (
+                        <button
+                          key={sizeObj.size_id}
+                          onClick={() => {
+                            setSelectedSize(sizeObj.size_name);
+                            setSelectedColor('');
+                            setSelectedColorName('');
+                            setSelectedVariant(null);
+                          }}
+                          className={`me-2 mb-2 btn-size ${
+                            selectedSize === sizeObj.size_name ? 'selected' : ''
+                          }`}
+                          title={`Select ${sizeObj.size_name}`}
+                        >
+                          {sizeObj.size_name}
+                        </button>
+                      ))
+                  ) : (
+                    <h5>Sizes not available</h5>
+                  )}
+                </div>
 
                 {/* Color selection */}
                 <div className="mb-3">
@@ -722,30 +721,21 @@ const getCurrentPrice = () => {
                     <h6>Please select a size first</h6>
                   )}
                 </div>
-              </div>
-
-              {/* Stock Status Display */}
-              {/* {selectedSize && selectedColor && (
+              </div>              
+              {selectedVariant && selectedVariant.stock_qty === 0 && (
                 <div className="mb-3 stock-status">
-                  {checkingStock ? (
-                    <div className="text-info">
-                      <i className="fas fa-spinner fa-spin"></i> Checking availability...
-                    </div>
-                  ) : stockError ? (
-                    <Alert 
-                      variant={stockStatus === 'out_of_stock' ? 'danger' : 'warning'}
-                      className="py-2"
-                    >
-                      {stockError}
-                    </Alert>
-                  ) : stockStatus === 'in_stock' && selectedVariant && (
-                    <div className="text-success">
-                      <i className="fas fa-check-circle"></i> {selectedVariant.stock_qty} items are in stock 
-                    </div>
-                  )}
+                  <div className="alert alert-danger py-2">
+                    Out of stock
+                  </div>
                 </div>
-              )} */}
-              
+              )}
+              {selectedVariant && selectedVariant.stock_qty > 0 && selectedVariant.stock_qty < 6 && (
+                <div className="mb-3 stock-status">
+                  <div className="alert alert-warning py-2">
+                    Only available {selectedVariant.stock_qty} items
+                  </div>
+                </div>
+              )}
               <div className="mb-3">
                 <h5>Quantity:</h5>
                 <input

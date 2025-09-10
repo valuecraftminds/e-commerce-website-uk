@@ -167,11 +167,11 @@ const productController = {
           m.description AS material_description,
           ss.stock_qty
         FROM styles s
-        LEFT JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
+        INNER JOIN style_variants sv ON s.style_number = sv.style_number AND sv.is_active = 1
+        INNER JOIN stock_summary ss ON sv.sku = ss.sku
         LEFT JOIN sizes sz ON sv.size_id = sz.size_id
         LEFT JOIN colors c ON sv.color_id = c.color_id
         LEFT JOIN materials m ON sv.material_id = m.material_id
-        LEFT JOIN stock_summary ss ON sv.sku = ss.sku
         WHERE s.style_number = ? 
         AND s.company_code = ?
         AND s.approved = 'yes'
