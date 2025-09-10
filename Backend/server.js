@@ -66,6 +66,7 @@ const bannerRoutes = require('./routes/admin/Banner');
 const footerRoutes = require('./routes/admin/Footer');
 const SizeGuideRoutes = require('./routes/admin/SizeGuideRoutes');
 const MeasureGuideRoutes = require('./routes/admin/MeasureGuideRoutes');
+const TaxRoutes = require('./routes/admin/TaxRoutes');
 
 
 // Route bindings
@@ -109,6 +110,7 @@ app.use('/api/admin/banners', bannerRoutes);
 app.use('/api/admin/footer', footerRoutes);
 app.use('/api/admin/size-guide', SizeGuideRoutes);
 app.use('/api/admin', MeasureGuideRoutes);
+app.use('/api/admin/tax', TaxRoutes);
 
 
 // Default route
