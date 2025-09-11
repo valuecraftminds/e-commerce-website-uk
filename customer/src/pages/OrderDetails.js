@@ -483,7 +483,7 @@ export default function OrderDetails() {
                                                     </div>
                                                     <div className="pricing-row">
                                                         <span className="label">Unit:</span>
-                                                        <span className="value">{formatPrice(item.unit_price)}</span>
+                                                        <span className="value">{formatPrice(item.unit_sale_price)}</span>
                                                     </div>
                                                     {item.variant?.offer_price && item.variant.offer_price < item.variant.price && (
                                                         <div className="pricing-row offer">
