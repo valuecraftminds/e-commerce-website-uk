@@ -72,11 +72,20 @@ export default function OrderDetails() {
     try {
       const stockPromises = items.map(async item => {
         try {
-          const response = await fetch(`${BASE_URL}/api/admin/stock/get-stock-summary?company_code=${company_code}&style_number=${item.style_number}&sku=${item.sku}`);
+          const response = await fetch(`${BASE_URL}/api/admin/issuing/available-stock?company_code=${company_code}&style_number=${item.style_number}&sku=${item.sku}`);
           const data = await response.json();
+          
+          // Calculate total stock from available_stocks array
+          let totalStock = 0;
+          if (data?.success && data?.data?.available_stocks && Array.isArray(data.data.available_stocks)) {
+            totalStock = data.data.available_stocks.reduce((sum, stock) => {
+              return sum + (parseInt(stock.main_stock_qty) || 0);
+            }, 0);
+          }
+          
           return {
             sku: item.sku,
-            stock_qty: data?.stock_qty ?? 0
+            stock_qty: totalStock
           };
         } catch (error) {
           console.error(`Failed to fetch stock for ${item.sku}:`, error);
