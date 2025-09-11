@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import logo from '../assets/logo.png';
 import SearchSidebar from "./SearchSidebar";
 import Sidebar from './Sidebar';
 import UserMenu from "./UserMenu";
@@ -181,7 +180,7 @@ export default function NavigationBar({ onSidebarStateChange }) {
             {/* Left side */}
             <Navbar.Brand href="/" className="navbar-brand-mobile">
               <img
-                  src={companyLogo || logo}
+                  src={companyLogo}
                   alt="Logo"
                   className="navbar-logo"
               />

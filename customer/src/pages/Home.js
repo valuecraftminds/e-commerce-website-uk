@@ -3,7 +3,6 @@ import { useContext, useEffect, useState, useCallback } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import DataFile from "../assets/DataFile";
 import { CountryContext } from "../context/CountryContext";
 import StarRating from "../components/StarRating";
 import BackToTop from "../components/BackToTop";
@@ -297,11 +296,10 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <img
-            src={DataFile.banner[3].image}
-            className="home-banner-img"
-            alt={`${DataFile.banner[3].category} banner`}
-          />
+          <div className="home-banner-placeholder">
+            <h2>Welcome to Our Store</h2>
+            <p>Discover our latest collections and offers!</p>
+          </div>
         )}
       </div>
 
