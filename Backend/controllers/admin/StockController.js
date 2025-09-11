@@ -2,7 +2,7 @@ const db = require('../../config/database');
 
 const StockController = {
   searchStock: async (req, res) => {
-    const { company_code, style_number, sku, type } = req.query || req.body || req.params;
+    const { company_code, style_number, style_name, type } = req.query || req.body || req.params;
 
     if (!company_code) {
       return res.status(400).json({ success: false, message: 'company_code is required' });
@@ -15,6 +15,29 @@ const StockController = {
       let limit = parseInt(req.query.limit) || 100;
       let page = parseInt(req.query.page) || 1;
       let offset = (page - 1) * limit;
+
+      // Helper to build search condition
+      function buildSearchCondition(tableAlias) {
+        if (style_number && style_name) {
+          // Use OR if both provided
+          return {
+            clause: ` AND ( ${tableAlias}.style_number LIKE ? OR s.name LIKE ? )`,
+            values: [`%${style_number}%`, `%${style_name}%`]
+          };
+        } else if (style_number) {
+          return {
+            clause: ` AND ${tableAlias}.style_number LIKE ?`,
+            values: [`%${style_number}%`]
+          };
+        } else if (style_name) {
+          return {
+            clause: ` AND s.name LIKE ?`,
+            values: [`%${style_name}%`]
+          };
+        } else {
+          return { clause: '', values: [] };
+        }
+      }
 
       if (type === 'issued') {
         sql = `
@@ -31,15 +54,9 @@ const StockController = {
           LEFT JOIN styles s ON si.style_number = s.style_number AND si.company_code = s.company_code
           WHERE si.company_code = ?
         `;
-
-        if (style_number) {
-          sql += ' AND si.style_number LIKE ?';
-          params.push(`%${style_number}%`);
-        }
-        if (sku) {
-          sql += ' AND si.sku LIKE ?';
-          params.push(`%${sku}%`);
-        }
+        const searchCond = buildSearchCondition('si');
+        sql += searchCond.clause;
+        params.push(...searchCond.values);
         orderBy = ' ORDER BY si.issued_at DESC';
       } else if (type === 'grn') {
         sql = `
@@ -61,14 +78,9 @@ const StockController = {
           LEFT JOIN locations l ON gi.location_id = l.location_id AND gi.company_code = l.company_code
           WHERE sr.company_code = ?
         `;
-        if (style_number) {
-          sql += ' AND sr.style_number LIKE ?';
-          params.push(`%${style_number}%`);
-        }
-        if (sku) {
-          sql += ' AND sr.sku LIKE ?';
-          params.push(`%${sku}%`);
-        }
+        const searchCond = buildSearchCondition('sr');
+        sql += searchCond.clause;
+        params.push(...searchCond.values);
         orderBy = ' ORDER BY sr.created_at DESC';
       } else {
         // default to main
@@ -84,13 +96,15 @@ const StockController = {
           LEFT JOIN styles s ON mss.style_number = s.style_number AND mss.company_code = s.company_code
           WHERE mss.company_code = ?
         `;
-        if (style_number) {
+        if (style_number && style_name) {
+          sql += ' AND ( mss.style_number LIKE ? OR LOWER(TRIM(s.name)) LIKE LOWER(?) )';
+          params.push(`%${style_number}%`, `%${style_name.trim()}%`);
+        } else if (style_number) {
           sql += ' AND mss.style_number LIKE ?';
           params.push(`%${style_number}%`);
-        }
-        if (sku) {
-          sql += ' AND mss.sku LIKE ?';
-          params.push(`%${sku}%`);
+        } else if (style_name) {
+          sql += ' AND LOWER(TRIM(s.name)) LIKE LOWER(?)';
+          params.push(`%${style_name.trim()}%`);
         }
         orderBy = ' ORDER BY mss.updated_at DESC';
       }
