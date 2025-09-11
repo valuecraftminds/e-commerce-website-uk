@@ -30,59 +30,7 @@ export default function ProductOffers() {
         hasNextPage: false,
         hasPreviousPage: false
     });
-
-    // Filter and sort data based on sort option
-    const filteredAndSortedData = useMemo(() => {
-        let filtered = [...data];
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
-
-        switch (sortOption) {
-            case 'active_offers':
-                filtered = filtered.filter(item => {
-                    const hasOffer = item.offer_price && Number(item.offer_price) > 0;
-                    const startDate = item.offer_start_date ? new Date(item.offer_start_date) : null;
-                    const endDate = item.offer_end_date ? new Date(item.offer_end_date) : null;
-                    
-                    if (!hasOffer) return false;
-                    
-                    const isActive = (!startDate || startDate <= currentDate) && 
-                                   (!endDate || endDate >= currentDate);
-                    return isActive;
-                });
-                // Sort by offer price descending
-                filtered.sort((a, b) => (Number(b.offer_price) || 0) - (Number(a.offer_price) || 0));
-                break;
-                
-            case 'upcoming_offers':
-                filtered = filtered.filter(item => {
-                    const hasOffer = item.offer_price && Number(item.offer_price) > 0;
-                    const startDate = item.offer_start_date ? new Date(item.offer_start_date) : null;
-                    
-                    return hasOffer && startDate && startDate > currentDate;
-                });
-                // Sort by start date ascending
-                filtered.sort((a, b) => new Date(a.offer_start_date) - new Date(b.offer_start_date));
-                break;
-
-            case 'expired_offers':
-                filtered = filtered.filter(item => {
-                    const hasOffer = item.offer_price && Number(item.offer_price) > 0;
-                    const endDate = item.offer_end_date ? new Date(item.offer_end_date) : null;
-                    
-                    return hasOffer && endDate && endDate < currentDate;
-                });
-                // Sort by end date descending (most recently expired first)
-                filtered.sort((a, b) => new Date(b.offer_end_date) - new Date(a.offer_end_date));
-                break;
-                
-            default: 
-                // Show all products without any filtering
-                break;
-        }
-
-        return filtered;
-    }, [data, sortOption]);
+    const filteredAndSortedData = data;
 
     // Define table columns
     const columns = useMemo(
@@ -159,8 +107,8 @@ export default function ProductOffers() {
     );
 
 
-    // Fetch product data
-    const fetchProducts = async (page = 1, search = '') => {
+    // Fetch product data 
+    const fetchProducts = async (page = 1, search = '', filterType = 'all') => {
         try {
             setLoading(true);
             let url = `${BASE_URL}/api/admin/offers/product-details`;
@@ -169,10 +117,14 @@ export default function ProductOffers() {
                 page: page,
                 limit: 10
             };
-            // searching
+            // search
             if (search && search.trim() !== '') {
                 url = `${BASE_URL}/api/admin/offers/search`;
                 params.searchInput = search;
+                // filter
+            } else if (filterType && filterType !== 'all') {
+                url = `${BASE_URL}/api/admin/offers/filter`;
+                params.filter = filterType;
             }
             const response = await axios.get(url, { params });
             setData(response.data.products || response.data || []);
@@ -195,15 +147,23 @@ export default function ProductOffers() {
         return () => clearTimeout(debounceTimeout.current);
     }, [globalFilter]);
 
-    // Fetch products when debouncedFilter changes
+    // Fetch products when debouncedFilter or sortOption changes
     useEffect(() => {
-        fetchProducts(1, debouncedFilter);
-    }, [debouncedFilter]);
+        if (debouncedFilter && debouncedFilter.trim() !== '') {
+            fetchProducts(1, debouncedFilter, 'all');
+        } else {
+            fetchProducts(1, '', sortOption);
+        }
+    }, [debouncedFilter, sortOption]);
 
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
-            fetchProducts(newPage, debouncedFilter);
+            if (debouncedFilter && debouncedFilter.trim() !== '') {
+                fetchProducts(newPage, debouncedFilter, 'all');
+            } else {
+                fetchProducts(newPage, '', sortOption);
+            }
         }
     };
 
