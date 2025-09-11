@@ -20,7 +20,6 @@ export default function OfferPage() {
   const [offerError, setOfferError] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-
   const currencySymbols = { US: '$', UK: '£', SL: 'LKR' };
   const { country } = useContext(CountryContext);
 
@@ -28,7 +27,7 @@ export default function OfferPage() {
     navigate(`/product/${styleNumber}`);
   };
 
-// fetch items with offer_price
+  // fetch items with offer_price
   useEffect(() => {
     const fetchOfferProducts = async () => {
       try {
@@ -134,13 +133,19 @@ export default function OfferPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const activeOfferProducts = offerProducts.filter(
-  (p) =>
-    p.offer_end_date &&
-    new Date(p.offer_end_date) > currentTime &&
-    Number(p.offer_price) > 0
-);
-
+  // Filter to show only active offers (started AND not ended)
+  const activeOfferProducts = offerProducts.filter((p) => {
+    // Check if offer has valid dates and offer_price
+    if (!p.offer_start_date || !p.offer_end_date || Number(p.offer_price) <= 0) {
+      return false;
+    }
+    
+    const startDate = new Date(p.offer_start_date);
+    const endDate = new Date(p.offer_end_date);
+    
+    // Offer must have started AND not yet ended
+    return startDate <= currentTime && endDate > currentTime;
+  });
 
   return (
       <>
@@ -219,7 +224,7 @@ export default function OfferPage() {
                           <span className="current-price">
                             {formatPrice(product.offer_price)}
                           </span>
-                                  <span className="original-price">
+                          <span className="original-price">
                             {formatPrice(product.sale_price)}
                           </span>
                         </div>
@@ -262,9 +267,9 @@ export default function OfferPage() {
 
                         {product.category_name && (
                             <div className="offer-product-category">
-                    <span className="offer-category-badge">
-                      {product.category_name}
-                    </span>
+                              <span className="offer-category-badge">
+                                {product.category_name}
+                              </span>
                             </div>
                         )}
                       </div>

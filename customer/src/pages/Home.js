@@ -198,13 +198,19 @@ export default function Home() {
   }, []);
 
 
-  // Filter and limit displayed offer products
-  const activeOfferProducts = offerProducts.filter(
-    (p) =>
-      p.offer_end_date &&
-      new Date(p.offer_end_date) > currentTime &&
-      Number(p.offer_price) > 0
-  );
+  // Filter to show only active offers (started AND not ended)
+  const activeOfferProducts = offerProducts.filter((p) => {
+    // Check if offer has valid dates and offer_price
+    if (!p.offer_start_date || !p.offer_end_date || Number(p.offer_price) <= 0) {
+      return false;
+    }
+    
+    const startDate = new Date(p.offer_start_date);
+    const endDate = new Date(p.offer_end_date);
+    
+    // Offer must have started AND not yet ended
+    return startDate <= currentTime && endDate > currentTime;
+  });
 
   const displayedProducts = activeOfferProducts.slice(0, displayLimit);
 

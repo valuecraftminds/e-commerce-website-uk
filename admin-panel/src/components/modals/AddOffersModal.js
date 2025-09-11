@@ -3,6 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import '../../styles/AddOfferModal.css';
 import { Modal } from 'react-bootstrap';
+import moment from 'moment';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -22,10 +23,8 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
         if (isOpen && product) {
             setFormData({
                 offer_price: product.offer_price || '',
-                offer_start_date: product.offer_start_date ? 
-                    new Date(product.offer_start_date).toISOString().split('T')[0] : '',
-                offer_end_date: product.offer_end_date ? 
-                    new Date(product.offer_end_date).toISOString().split('T')[0] : ''
+                offer_start_date: product.offer_start_date ? moment(product.offer_start_date) : null,
+                offer_end_date: product.offer_end_date ? moment(product.offer_end_date) : null
             });
             setError('');
             setSuccess('');
@@ -39,7 +38,15 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
             ...prev,
             [name]: value
         }));
-        // Clear error when user starts typing
+        if (error) setError('');
+    };
+
+    // For react-datetime
+    const handleDateChange = (name, value) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
         if (error) setError('');
     };
 
@@ -67,10 +74,9 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
         }
 
         if (formData.offer_start_date && formData.offer_end_date) {
-            const startDate = new Date(formData.offer_start_date);
-            const endDate = new Date(formData.offer_end_date);
-            
-            if (endDate <= startDate) {
+            const startDate = moment(formData.offer_start_date);
+            const endDate = moment(formData.offer_end_date);
+            if (!endDate.isAfter(startDate)) {
                 setError('End date must be after start date');
                 return false;
             }
@@ -94,7 +100,11 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                 sku: product.sku,
                 company_code: userData?.company_code,
                 ...formData,
-                offer_price: parseFloat(formData.offer_price)
+                offer_price: parseFloat(formData.offer_price),
+                offer_start_date: formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD') : null,
+                offer_end_date: formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD') : null
+                // offer_start_date: formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD HH:mm') : null,
+                // offer_end_date: formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD HH:mm') : null
             };
 
             const response = await axios.post(
@@ -163,19 +173,12 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
     const handleClose = () => {
         setFormData({
             offer_price: '',
-            offer_start_date: '',
-            offer_end_date: ''
+            offer_start_date: null,
+            offer_end_date: null
         });
         setError('');
         setSuccess('');
         onClose();
-    };
-
-    // Handle backdrop click
-    const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) {
-            handleClose();
-        }
     };
 
     if (!isOpen || !product) return null;
@@ -251,10 +254,22 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                                 type="date"
                                 id="offer_start_date"
                                 name="offer_start_date"
-                                value={formData.offer_start_date}
+                                value={formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD') : ''}
                                 onChange={handleInputChange}
                                 disabled={loading}
                             />
+                            {/*
+                            <label htmlFor="offer_start_date">
+                                Start Date & Time
+                            </label>
+                            <Datetime
+                                value={formData.offer_start_date}
+                                onChange={date => handleDateChange('offer_start_date', date)}
+                                dateFormat="YYYY-MM-DD"
+                                timeFormat="HH:mm"
+                                inputProps={{ id: 'offer_start_date', name: 'offer_start_date', disabled: loading }}
+                            />
+                            */}
                         </div>
                         <div className="offer-form-group">
                             <label htmlFor="offer_end_date">
@@ -264,10 +279,22 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                                 type="date"
                                 id="offer_end_date"
                                 name="offer_end_date"
-                                value={formData.offer_end_date}
+                                value={formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD') : ''}
                                 onChange={handleInputChange}
                                 disabled={loading}
                             />
+                            {/*
+                            <label htmlFor="offer_end_date">
+                                End Date & Time
+                            </label>
+                            <Datetime
+                                value={formData.offer_end_date}
+                                onChange={date => handleDateChange('offer_end_date', date)}
+                                dateFormat="YYYY-MM-DD"
+                                timeFormat="HH:mm"
+                                inputProps={{ id: 'offer_end_date', name: 'offer_end_date', disabled: loading }}
+                            />
+                            */}
                         </div>
                     </div>
 
