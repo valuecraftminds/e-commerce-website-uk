@@ -197,7 +197,7 @@ export default function StockManagement() {
         };
     };
 
-    // fetch main stock summary using search
+    // fetch main stock summary using /search
     const fetchStockSummary = async (page = 1, search = '') => {
         try {
             setLoading(true);
@@ -208,7 +208,8 @@ export default function StockManagement() {
                     page: page,
                     limit: 10,
                     type: 'main',
-                    style_number: search || undefined
+                    style_number: search || undefined,
+                    style_name: search || undefined
                 }
             });
             setStockSummary(response.data.data);
@@ -232,7 +233,8 @@ export default function StockManagement() {
                     page: page,
                     limit: 10,
                     type: 'issued',
-                    style_number: search || undefined
+                    style_number: search || undefined,
+                    style_name: search || undefined
                 }
             });
             setIssuedStock(response.data.data);
@@ -256,7 +258,8 @@ export default function StockManagement() {
                     page: page,
                     limit: 10,
                     type: 'grn',
-                    style_number: search || undefined
+                    style_number: search || undefined,
+                    style_name: search || undefined
                 }
             });
             setGrnStock(response.data.data);
