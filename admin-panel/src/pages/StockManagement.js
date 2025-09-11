@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import {useReactTable, createColumnHelper, getCoreRowModel, flexRender, getFilteredRowModel } from "@tanstack/react-table";
 import { PiPackage, PiArrowUp, PiArrowDown } from "react-icons/pi";
@@ -197,16 +197,18 @@ export default function StockManagement() {
         };
     };
 
-    // fetch main stock summary
-    const fetchStockSummary = async (page = 1) => {
+    // fetch main stock summary using search
+    const fetchStockSummary = async (page = 1, search = '') => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axios.get(`${BASE_URL}/api/admin/stock/main-stock-summary`, {
-                params: { 
+            const response = await axios.get(`${BASE_URL}/api/admin/stock/search`, {
+                params: {
                     company_code: userData?.company_code,
                     page: page,
-                    limit: 10
+                    limit: 10,
+                    type: 'main',
+                    style_number: search || undefined
                 }
             });
             setStockSummary(response.data.data);
@@ -219,16 +221,18 @@ export default function StockManagement() {
         }
     };
 
-    // fetch issued stock data
-    const fetchIssuedStock = async (page = 1) => {
+    // fetch issued stock data using /search
+    const fetchIssuedStock = async (page = 1, search = '') => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axios.get(`${BASE_URL}/api/admin/stock/issued-stock`, {
-                params: { 
+            const response = await axios.get(`${BASE_URL}/api/admin/stock/search`, {
+                params: {
                     company_code: userData?.company_code,
                     page: page,
-                    limit: 10
+                    limit: 10,
+                    type: 'issued',
+                    style_number: search || undefined
                 }
             });
             setIssuedStock(response.data.data);
@@ -241,16 +245,18 @@ export default function StockManagement() {
         }
     };
 
-    // fetch GRN stock data
-    const fetchGrnStock = async (page = 1) => {
+    // fetch GRN stock data using /search
+    const fetchGrnStock = async (page = 1, search = '') => {
         try {
             setLoading(true);
             setError(null);
-            const response = await axios.get(`${BASE_URL}/api/admin/stock/grn-stock`, {
-                params: { 
+            const response = await axios.get(`${BASE_URL}/api/admin/stock/search`, {
+                params: {
                     company_code: userData?.company_code,
                     page: page,
-                    limit: 10
+                    limit: 10,
+                    type: 'grn',
+                    style_number: search || undefined
                 }
             });
             setGrnStock(response.data.data);
@@ -267,34 +273,74 @@ export default function StockManagement() {
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);
         if (tabId === 'stock-summary') {
-            fetchStockSummary(stockSummaryPage);
+            fetchStockSummary(stockSummaryPage, stockSummarySearch);
         } else if (tabId === 'issued-stock') {
-            fetchIssuedStock(issuedStockPage);
+            fetchIssuedStock(issuedStockPage, issuedStockSearch);
         } else if (tabId === 'grn-stock') {
-            fetchGrnStock(grnStockPage);
+            fetchGrnStock(grnStockPage, grnStockSearch);
         }
     };
 
     // Pagination handlers
     const handleStockSummaryPageChange = (newPage) => {
         setStockSummaryPage(newPage);
-        fetchStockSummary(newPage);
+        fetchStockSummary(newPage, stockSummarySearch);
     };
 
     const handleIssuedStockPageChange = (newPage) => {
         setIssuedStockPage(newPage);
-        fetchIssuedStock(newPage);
+        fetchIssuedStock(newPage, issuedStockSearch);
     };
 
     const handleGrnStockPageChange = (newPage) => {
         setGrnStockPage(newPage);
-        fetchGrnStock(newPage);
+        fetchGrnStock(newPage, grnStockSearch);
     };
 
+    // Fetch initial data for each tab
     useEffect(() => {
         if (!userData?.company_code) return;
         fetchStockSummary();
+        fetchIssuedStock();
+        fetchGrnStock();
     }, [userData?.company_code]);
+
+    // Debounce helpers
+    function useDebouncedEffect(effect, deps, delay) {
+        const callback = useRef();
+        useEffect(() => { callback.current = effect; }, [effect]);
+        useEffect(() => {
+            const handler = setTimeout(() => { callback.current && callback.current(); }, delay);
+            return () => clearTimeout(handler);
+        }, [...deps, delay]);
+    }
+
+    // Debounced search effect for stock summary (min 3 chars or empty)
+    useDebouncedEffect(() => {
+        if (!userData?.company_code) return;
+        setStockSummaryPage(1);
+        if (stockSummarySearch.length === 0 || stockSummarySearch.length >= 3) {
+            fetchStockSummary(1, stockSummarySearch);
+        }
+    }, [stockSummarySearch], 400);
+
+    // Debounced search effect for issued stock (min 3 chars or empty)
+    useDebouncedEffect(() => {
+        if (!userData?.company_code) return;
+        setIssuedStockPage(1);
+        if (issuedStockSearch.length === 0 || issuedStockSearch.length >= 3) {
+            fetchIssuedStock(1, issuedStockSearch);
+        }
+    }, [issuedStockSearch], 400);
+
+    // Debounced search effect for GRN stock (min 3 chars or empty)
+    useDebouncedEffect(() => {
+        if (!userData?.company_code) return;
+        setGrnStockPage(1);
+        if (grnStockSearch.length === 0 || grnStockSearch.length >= 3) {
+            fetchGrnStock(1, grnStockSearch);
+        }
+    }, [grnStockSearch], 400);
 
     if (loading) return <Spinner />;
     if (error) return <div>Error: {error}</div>;
