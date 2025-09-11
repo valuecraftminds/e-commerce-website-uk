@@ -557,7 +557,7 @@ const createTransporter = () => {
   { text: 'Color',    x: margin + 200, width: 60,  align: 'left' },
   { text: 'Qty',      x: margin + 260, width: 30,  align: 'right' },
   { text: 'Price',    x: margin + 290, width: 55,  align: 'right' },
-  { text: 'Subtotal', x: margin + 365, width: 65,  align: 'right' }
+  { text: 'Subtotal', x: margin + 390, width: 65,  align: 'right' }
 ];
   
   // Table header background
@@ -599,7 +599,7 @@ const createTransporter = () => {
   doc.text(item.size_name || 'N/A',   margin + 155, currentY + textPadding, { width: 40,  align: 'left' });
   doc.text(item.color_name || 'N/A',  margin + 200, currentY + textPadding, { width: 60,  ellipsis: true, align: 'left' });
   doc.text(item.quantity.toString(),  margin + 260, currentY + textPadding, { width: 30,  align: 'right' });
-  doc.text(parseFloat(item.unit_price).toFixed(2), margin + 290, currentY + textPadding, { width: 55, align: 'right' });
+  doc.text(parseFloat(item.unit_sale_price).toFixed(2), margin + 290, currentY + textPadding, { width: 55, align: 'right' });
   doc.text(parseFloat(item.total_price).toFixed(2), margin + 365, currentY + textPadding, { width: 65, align: 'right' });
 
     currentY += rowHeight;

@@ -40,7 +40,6 @@ const PaymentMethodsRoutes = require('./routes/customer/PaymentMethodsRoutes');
 const wishlistRoutes = require('./routes/customer/WishlistRoutes');
 const OrdersHistoryRoutes = require('./routes/customer/OrdersHistoryRoutes');
 const FeedbackRoutes = require('./routes/customer/FeedbackRoutes');
-const InvoiceRoutes = require('./routes/customer/InvoiceRoutes');
 const customerBannerRoutes = require('./routes/customer/Banner');
 const customerFooterRoutes = require('./routes/customer/Footer');
 
@@ -83,7 +82,6 @@ app.use('/api/customer/payment-methods', PaymentMethodsRoutes);
 app.use('/api/customer/wishlist', wishlistRoutes);
 app.use('/api/customer/orders', OrdersHistoryRoutes);
 app.use('/api/customer/feedback', FeedbackRoutes);
-app.use('/api/customer/invoices', InvoiceRoutes);
 app.use('/api/customer/banners', customerBannerRoutes);
 app.use('/api/customer', customerFooterRoutes);
 

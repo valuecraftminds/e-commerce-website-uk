@@ -404,7 +404,7 @@ const OrdersHistoryController = {
             SELECT 
                 oi.order_item_id,
                 oi.quantity,
-                oi.unit_price,
+                oi.unit_sale_price,
                 oi.total_price,
                 oi.variant_id,
                 sv.sku,
@@ -481,7 +481,7 @@ const OrdersHistoryController = {
                         items: itemResults.map(item => ({
                             order_item_id: item.order_item_id,
                             quantity: item.quantity,
-                            unit_price: item.unit_price,
+                            unit_sale_price: item.unit_sale_price,
                             total_price: item.total_price,
                             booking_status: item.booking_status,
                             variant: {
