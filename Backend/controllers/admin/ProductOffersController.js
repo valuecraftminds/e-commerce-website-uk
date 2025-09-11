@@ -182,7 +182,7 @@ class ProductOffersController{
     }
 
     // Filter product offers by type with pagination
-    filterProductOffers(req, res) {
+filterProductOffers(req, res) {
     const { company_code, page = 1, limit = 10, filter = 'all' } = req.query;
 
     if (!company_code) {
@@ -193,24 +193,24 @@ class ProductOffersController{
     const limitNumber = parseInt(limit);
     const offset = (pageNumber - 1) * limitNumber;
 
-    // Full datetime string for current moment
-    const currentDateTimeStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // Get current date in YYYY-MM-DD format (date only, no time)
+    const currentDate = new Date().toISOString().split('T')[0];
 
     let whereClause = 'ms.company_code = ?';
     let params = [company_code];
 
     if (filter === 'active_offers') {
         // Active: started already AND not yet ended
-        whereClause += ' AND sv.offer_start_date <= ? AND sv.offer_end_date >= ?';
-        params.push(currentDateTimeStr, currentDateTimeStr);
+        whereClause += ' AND DATE(sv.offer_start_date) <= ? AND DATE(sv.offer_end_date) >= ?';
+        params.push(currentDate, currentDate);
     } else if (filter === 'upcoming_offers') {
         // Upcoming: start date is in the future
-        whereClause += ' AND sv.offer_start_date > ?';
-        params.push(currentDateTimeStr);
+        whereClause += ' AND DATE(sv.offer_start_date) > ?';
+        params.push(currentDate);
     } else if (filter === 'expired_offers') {
         // Expired: end date is in the past
-        whereClause += ' AND sv.offer_end_date < ?';
-        params.push(currentDateTimeStr);
+        whereClause += ' AND DATE(sv.offer_end_date) < ?';
+        params.push(currentDate);
     }
 
     // Count query
@@ -252,6 +252,7 @@ class ProductOffersController{
             ORDER BY ms.created_at DESC
             LIMIT ? OFFSET ?
         `;
+        
         db.query(dataSql, [...params, limitNumber, offset], (error, results) => {
             if (error) {
                 console.error('Error fetching filtered product offers:', error);

@@ -192,10 +192,10 @@ export default function ProductOffers() {
 
     // Handle modal close and refresh data
     const handleModalClose = () => {
-        setIsModalOpen(false);
-        setSelectedProduct(null);
-        // Optionally refresh data after modal closes
-        fetchProducts(pagination.currentPage);
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+    setSortOption('all'); // Set filter to All Products
+    fetchProducts(1, '', 'all');
     };
 
     if (loading) {
