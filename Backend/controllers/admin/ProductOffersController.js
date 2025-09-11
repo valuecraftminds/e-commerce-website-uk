@@ -80,7 +80,7 @@ class ProductOffersController{
                 });
             });
         });
-    };
+    }
 
     createOffer(req, res) {
         const { company_code, sku, offer_price, offer_start_date, offer_end_date } = req.body;
@@ -140,6 +140,44 @@ class ProductOffersController{
             }
 
             res.json({ success: true, message: 'Offer removed successfully.' });
+        });
+    }
+
+    // search products by style name or style number
+    searchProducts(req, res) {
+        const { company_code, searchInput } = req.query;
+
+        // Validate input
+        if (!company_code || !searchInput) {
+            return res.status(400).json({ error: 'Missing required query parameters: company_code and searchInput are required.' });
+        }
+        const searchTerm = `%${searchInput}%`;
+        const sql = `
+            SELECT
+                    ms.style_number,
+                    ms.sku,
+                    s.name AS style_name,
+                    ms.batch_number,
+                    ms.lot_no,
+                    sv.unit_price,
+                    ms.main_stock_qty,
+                    ms.created_at,
+                    sv.sale_price,
+                    sv.offer_price,
+                    sv.offer_start_date,
+                    sv.offer_end_date
+                FROM main_stock ms
+                JOIN styles s ON ms.style_number = s.style_number
+                JOIN style_variants sv ON ms.sku = sv.sku
+                WHERE ms.company_code = ? AND (s.name LIKE ? OR ms.style_number LIKE ?)
+                ORDER BY ms.created_at DESC
+        `;
+        db.query(sql, [company_code, searchTerm, searchTerm], (error, results) => {
+            if (error) {
+                console.error('Error searching products:', error);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            res.json(results);
         });
     }
 }

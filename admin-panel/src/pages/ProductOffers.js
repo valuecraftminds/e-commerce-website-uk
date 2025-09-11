@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useContext } from 'react';
+import React, { useState, useEffect, useMemo, useContext, useRef } from 'react';
 import axios from 'axios';
 import { useReactTable, createColumnHelper, getCoreRowModel, flexRender, getFilteredRowModel } from "@tanstack/react-table";
 
@@ -17,6 +17,8 @@ export default function ProductOffers() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
+    const [debouncedFilter, setDebouncedFilter] = useState('');
+    const debounceTimeout = useRef();
     const [sortOption, setSortOption] = useState('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -156,34 +158,52 @@ export default function ProductOffers() {
         []
     );
 
-    // Fetch product data from backend
-    const fetchProducts = async (page = 1) => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/admin/offers/product-details`, {
-          params: { 
-            company_code: userData?.company_code,
-            page: page,
-            limit: 10
-          }
-        });
-        setData(response.data.products || []);
-        setPagination(response.data.pagination || {});
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
+
+    // Fetch product data
+    const fetchProducts = async (page = 1, search = '') => {
+        try {
+            setLoading(true);
+            let url = `${BASE_URL}/api/admin/offers/product-details`;
+            let params = {
+                company_code: userData?.company_code,
+                page: page,
+                limit: 10
+            };
+            // searching
+            if (search && search.trim() !== '') {
+                url = `${BASE_URL}/api/admin/offers/search`;
+                params.searchInput = search;
+            }
+            const response = await axios.get(url, { params });
+            setData(response.data.products || response.data || []);
+            setPagination(response.data.pagination || {});
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            setData([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
+
+    // Debounce globalFilter changes
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = setTimeout(() => {
+            setDebouncedFilter(globalFilter);
+        }, 600);
+        return () => clearTimeout(debounceTimeout.current);
+    }, [globalFilter]);
+
+    // Fetch products when debouncedFilter changes
+    useEffect(() => {
+        fetchProducts(1, debouncedFilter);
+    }, [debouncedFilter]);
+
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
-            fetchProducts(newPage);
+            fetchProducts(newPage, debouncedFilter);
         }
     };
 
@@ -325,70 +345,6 @@ export default function ProductOffers() {
 
             {/* Pagination */}
             <Pagination pagination={pagination} onPageChange={handlePageChange} />
-            {/*
-            {pagination.totalPages > 1 && (
-                <div className="pf-pagination-container">
-                    <div className="pf-pagination-info">
-                        Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems} entries
-                    </div>
-                    <div className="pf-pagination-controls">
-                        <button
-                            onClick={() => handlePageChange(1)}
-                            disabled={!pagination.hasPreviousPage}
-                            className="pf-pagination-btn pf-pagination-first"
-                        >
-                            First
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(pagination.currentPage - 1)}
-                            disabled={!pagination.hasPreviousPage}
-                            className="pf-pagination-btn pf-pagination-prev"
-                        >
-                            Previous
-                        </button>
-                        <div className="pf-pagination-pages">
-                            {[...Array(Math.min(5, pagination.totalPages))].map((_, index) => {
-                                let pageNum;
-                                if (pagination.totalPages <= 5) {
-                                    pageNum = index + 1;
-                                } else if (pagination.currentPage <= 3) {
-                                    pageNum = index + 1;
-                                } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                                    pageNum = pagination.totalPages - 4 + index;
-                                } else {
-                                    pageNum = pagination.currentPage - 2 + index;
-                                }
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => handlePageChange(pageNum)}
-                                        className={`pf-pagination-btn ${
-                                            pageNum === pagination.currentPage ? 'pf-pagination-active' : ''
-                                        }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <button
-                            onClick={() => handlePageChange(pagination.currentPage + 1)}
-                            disabled={!pagination.hasNextPage}
-                            className="pf-pagination-btn pf-pagination-next"
-                        >
-                            Next
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(pagination.totalPages)}
-                            disabled={!pagination.hasNextPage}
-                            className="pf-pagination-btn pf-pagination-last"
-                        >
-                            Last
-                        </button>
-                    </div>
-                </div>
-            )}
-            */}
 
             {/* AddOffer Modal */}
             <AddOfferModal
