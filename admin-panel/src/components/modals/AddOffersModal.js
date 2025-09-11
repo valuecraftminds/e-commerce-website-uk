@@ -3,9 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import '../../styles/AddOfferModal.css';
 import { Modal } from 'react-bootstrap';
-import Datetime from 'react-datetime';
 import moment from 'moment';
-import 'react-datetime/css/react-datetime.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -103,8 +101,10 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                 company_code: userData?.company_code,
                 ...formData,
                 offer_price: parseFloat(formData.offer_price),
-                offer_start_date: formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD HH:mm') : null,
-                offer_end_date: formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD HH:mm') : null
+                offer_start_date: formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD') : null,
+                offer_end_date: formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD') : null
+                // offer_start_date: formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD HH:mm') : null,
+                // offer_end_date: formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD HH:mm') : null
             };
 
             const response = await axios.post(
@@ -248,6 +248,18 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                     <div className="offer-form-row">
                         <div className="offer-form-group">
                             <label htmlFor="offer_start_date">
+                                Start Date
+                            </label>
+                            <input
+                                type="date"
+                                id="offer_start_date"
+                                name="offer_start_date"
+                                value={formData.offer_start_date ? moment(formData.offer_start_date).format('YYYY-MM-DD') : ''}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                            />
+                            {/*
+                            <label htmlFor="offer_start_date">
                                 Start Date & Time
                             </label>
                             <Datetime
@@ -257,8 +269,21 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                                 timeFormat="HH:mm"
                                 inputProps={{ id: 'offer_start_date', name: 'offer_start_date', disabled: loading }}
                             />
+                            */}
                         </div>
                         <div className="offer-form-group">
+                            <label htmlFor="offer_end_date">
+                                End Date
+                            </label>
+                            <input
+                                type="date"
+                                id="offer_end_date"
+                                name="offer_end_date"
+                                value={formData.offer_end_date ? moment(formData.offer_end_date).format('YYYY-MM-DD') : ''}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                            />
+                            {/*
                             <label htmlFor="offer_end_date">
                                 End Date & Time
                             </label>
@@ -269,6 +294,7 @@ const AddOfferModal = ({ isOpen, onClose, product, onOfferUpdated }) => {
                                 timeFormat="HH:mm"
                                 inputProps={{ id: 'offer_end_date', name: 'offer_end_date', disabled: loading }}
                             />
+                            */}
                         </div>
                     </div>
 

@@ -182,97 +182,97 @@ class ProductOffersController{
     }
 
     // Filter product offers by type with pagination
-filterProductOffers(req, res) {
-    const { company_code, page = 1, limit = 10, filter = 'all' } = req.query;
+    filterProductOffers(req, res) {
+        const { company_code, page = 1, limit = 10, filter = 'all' } = req.query;
 
-    if (!company_code) {
-        return res.status(400).json({ error: 'Company code is required.' });
-    }
-
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-    const offset = (pageNumber - 1) * limitNumber;
-
-    // Get current date in YYYY-MM-DD format (date only, no time)
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    let whereClause = 'ms.company_code = ?';
-    let params = [company_code];
-
-    if (filter === 'active_offers') {
-        // Active: started already AND not yet ended
-        whereClause += ' AND DATE(sv.offer_start_date) <= ? AND DATE(sv.offer_end_date) >= ?';
-        params.push(currentDate, currentDate);
-    } else if (filter === 'upcoming_offers') {
-        // Upcoming: start date is in the future
-        whereClause += ' AND DATE(sv.offer_start_date) > ?';
-        params.push(currentDate);
-    } else if (filter === 'expired_offers') {
-        // Expired: end date is in the past
-        whereClause += ' AND DATE(sv.offer_end_date) < ?';
-        params.push(currentDate);
-    }
-
-    // Count query
-    const countSql = `
-        SELECT COUNT(*) as total
-        FROM main_stock ms
-        JOIN styles s ON ms.style_number = s.style_number
-        JOIN style_variants sv ON ms.sku = sv.sku
-        WHERE ${whereClause}
-    `;
-
-    db.query(countSql, params, (countError, countResults) => {
-        if (countError) {
-            console.error('Error counting filtered products:', countError);
-            return res.status(500).json({ error: 'Internal server error' });
+        if (!company_code) {
+            return res.status(400).json({ error: 'Company code is required.' });
         }
-        const totalItems = countResults[0].total;
-        const totalPages = Math.ceil(totalItems / limitNumber);
 
-        // Data query
-        const dataSql = `
-            SELECT
-                ms.style_number,
-                ms.sku,
-                s.name AS style_name,
-                ms.batch_number,
-                ms.lot_no,
-                sv.unit_price,
-                ms.main_stock_qty,
-                ms.created_at,
-                sv.sale_price,
-                sv.offer_price,
-                sv.offer_start_date,
-                sv.offer_end_date
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const offset = (pageNumber - 1) * limitNumber;
+
+        // Get current date in YYYY-MM-DD format
+        const currentDate = new Date().toISOString().split('T')[0];
+
+        let whereClause = 'ms.company_code = ?';
+        let params = [company_code];
+
+        // Date only comparisons for filtering
+        if (filter === 'active_offers') {
+            // Active: started already AND not yet ended
+            whereClause += ' AND DATE(sv.offer_start_date) <= ? AND DATE(sv.offer_end_date) >= ?';
+            params.push(currentDate, currentDate);
+        } else if (filter === 'upcoming_offers') {
+            // Upcoming: start date is in the future
+            whereClause += ' AND DATE(sv.offer_start_date) > ?';
+            params.push(currentDate);
+        } else if (filter === 'expired_offers') {
+            // Expired: end date is in the past
+            whereClause += ' AND DATE(sv.offer_end_date) < ?';
+            params.push(currentDate);
+        }
+
+        // Count query
+        const countSql = `
+            SELECT COUNT(*) as total
             FROM main_stock ms
             JOIN styles s ON ms.style_number = s.style_number
             JOIN style_variants sv ON ms.sku = sv.sku
             WHERE ${whereClause}
-            ORDER BY ms.created_at DESC
-            LIMIT ? OFFSET ?
         `;
-        
-        db.query(dataSql, [...params, limitNumber, offset], (error, results) => {
-            if (error) {
-                console.error('Error fetching filtered product offers:', error);
+
+        db.query(countSql, params, (countError, countResults) => {
+            if (countError) {
+                console.error('Error counting filtered products:', countError);
                 return res.status(500).json({ error: 'Internal server error' });
             }
-            res.json({
-                products: results,
-                pagination: {
-                    currentPage: pageNumber,
-                    totalPages: totalPages,
-                    totalItems: totalItems,
-                    itemsPerPage: limitNumber,
-                    hasNextPage: pageNumber < totalPages,
-                    hasPreviousPage: pageNumber > 1
+            const totalItems = countResults[0].total;
+            const totalPages = Math.ceil(totalItems / limitNumber);
+
+            // Data query
+            const dataSql = `
+                SELECT
+                    ms.style_number,
+                    ms.sku,
+                    s.name AS style_name,
+                    ms.batch_number,
+                    ms.lot_no,
+                    sv.unit_price,
+                    ms.main_stock_qty,
+                    ms.created_at,
+                    sv.sale_price,
+                    sv.offer_price,
+                    sv.offer_start_date,
+                    sv.offer_end_date
+                FROM main_stock ms
+                JOIN styles s ON ms.style_number = s.style_number
+                JOIN style_variants sv ON ms.sku = sv.sku
+                WHERE ${whereClause}
+                ORDER BY ms.created_at DESC
+                LIMIT ? OFFSET ?
+            `;
+            
+            db.query(dataSql, [...params, limitNumber, offset], (error, results) => {
+                if (error) {
+                    console.error('Error fetching filtered product offers:', error);
+                    return res.status(500).json({ error: 'Internal server error' });
                 }
+                res.json({
+                    products: results,
+                    pagination: {
+                        currentPage: pageNumber,
+                        totalPages: totalPages,
+                        totalItems: totalItems,
+                        itemsPerPage: limitNumber,
+                        hasNextPage: pageNumber < totalPages,
+                        hasPreviousPage: pageNumber > 1
+                    }
+                });
             });
         });
-    });
-}
-
+    }
 }
 
 module.exports = new ProductOffersController();
