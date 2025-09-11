@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 
-import DataFile from "../assets/DataFile";
 import '../styles/Shop.css';
 import { CountryContext } from "../context/CountryContext";
 import StarRating from "../components/StarRating";
@@ -315,17 +314,11 @@ export default function Shop() {
               ))}
             </div>
           ) : (
-            // Fallback to static banners from DataFile if no admin banners exist
-            DataFile.banner
-              .filter((item) => item.category === currentCategory)
-              .map((item) => (
-                <img
-                  key={item.id}
-                  src={item.image}
-                  className="shop-banner-img"
-                  alt={`${currentCategory} banner`}
-                />  
-              ))
+            // Fallback placeholder
+            <div className="shop-banner-placeholder">
+              <h2>{currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)} Collection</h2>
+              <p>Explore our exclusive range of {currentCategory} products!</p>
+            </div>
           )}
         </div>
       )}
