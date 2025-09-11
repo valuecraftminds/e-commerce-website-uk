@@ -181,6 +181,22 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
     return `${symbol}${convertedPrice}`;
   };
 
+  // Fetch tax rate from backend using country and company_code
+  const fetchTaxRate = useCallback(async (country, companyCode) => {
+    if (!country || !companyCode) return 0;
+    try {
+      const { data } = await api.get(`${BASE_URL}/api/customer/checkout/get-tax/${country}`);
+      return data?.tax_rate || 0;
+    } catch (e) {
+      console.error('Error fetching tax rate:', e);
+      return 0;
+    }
+  }, [api]);
+
+  // Store tax rate in state
+  const [taxRate, setTaxRate] = useState(0);
+  console.log('Current tax rate:', taxRate);
+
   // reset on open + fetch addresses
   useEffect(() => {
     if (!show) return;
@@ -341,6 +357,12 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
         return;
       }
 
+      // Fetch tax rate using shippingData.country and COMPANY_CODE
+      const countryToFetch = shippingData.country;
+      const companyCode = COMPANY_CODE;
+      const rate = await fetchTaxRate(countryToFetch, companyCode);
+      setTaxRate(rate);
+
       // proceed to payment step
       setStep('payment');
       setError('');
@@ -368,8 +390,8 @@ const CheckoutModal = ({ show, value: product, onHide, onSubmit, isDirectBuy, se
 
   // 2. Calculate tax function
   const calculateTax = (subtotal) => {
-    const TAX_RATE = 0.08; // fixed tax rate
-    return subtotal * TAX_RATE;
+    const rate = Number(taxRate) || 0;
+    return subtotal * (rate / 100);
   };
 
   const handlePaymentSubmit = async (e) => {
@@ -961,10 +983,11 @@ return (
                               </span>
                             </div>
                             <div className="d-flex justify-content-between mb-3">
-                              <span>Tax:</span>
+                              <span>
+                                Tax ({taxRate !== undefined ? `${Number(taxRate) || 0}%` : 'calculating...'}):
+                              </span>
                               <span className="fw-bold">{formatPrice(tax)}</span>
                             </div>
-                            
                             <hr style={{borderColor: 'rgba(255,255,255,0.3)'}} />
                                 
                             <div className="d-flex justify-content-between mb-4">

@@ -503,6 +503,35 @@ const CheckoutController = {
         });
       });
     });
+  },
+
+  // get tax rate based on country
+  getTaxRate: (req, res) => {
+    const { company_code } = req.query;
+    const { country } = req.params || req.query || req.body;
+
+    if (!company_code) {
+      return res.status(400).json({ error: 'Company code is required' });
+    }
+
+    if (!country) {
+      return res.status(400).json({ error: 'Country is required' });
+    }
+
+    const taxQuery = 'SELECT tax_rate FROM tax WHERE company_code = ? AND country = ?';
+
+    db.query(taxQuery, [company_code, country], (err, results) => {
+      if (err) {
+        console.error('Error fetching tax rate:', err);
+        return res.status(500).json({ error: 'Failed to fetch tax rate' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'No tax rate found for the specified country' });
+      }
+
+      res.status(200).json({ tax_rate: results[0].tax_rate });
+    });
   }
 };
 

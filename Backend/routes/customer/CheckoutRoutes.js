@@ -5,5 +5,6 @@ const { checkCompanyCode } = require('../../middleware/customer/CustomerValidati
 const { optionalAuth } = require('../../middleware/customer/CustomerAuth');
 
 router.post('/submit-checkout', checkCompanyCode, optionalAuth, checkoutController.submitCheckout);
+router.get('/get-tax/:country', checkCompanyCode, optionalAuth, checkoutController.getTaxRate);
 
 module.exports = router;
