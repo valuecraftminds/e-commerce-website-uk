@@ -31,3 +31,18 @@
 .card-header {
     font-weight: 600;
 }
+
+.table-headings {
+    background-color: #e9ecef;
+    height: 48px !important;
+    text-align: center;
+}
+
+.table-data{
+    height: 48px !important;
+}
+
+/* Right align for numeric columns */
+.table-data.number-col, .table-headings.number-col {
+    text-align: right;
+}

@@ -1,6 +1,9 @@
+.text-end {
+    text-align: right !important;
+}
 .stock-management {
     padding: 20px;
-    max-width: 1200px;
+    max-width: 100% !important;
     margin: 0 auto;
 }
 
@@ -313,4 +316,21 @@
 .error-state {
     color: #dc3545;
     font-size: 16px;
+}
+
+.stock-summary-table,
+.issued-stock-table,
+.grn-stock-table,
+th {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+}
+
+.stock-summary-table,
+.issued-stock-table,
+.grn-stock-table,
+ td{
+    font-size: 13px !important;
+    font-weight: 500 !important;
 }

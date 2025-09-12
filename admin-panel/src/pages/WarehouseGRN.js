@@ -4,12 +4,10 @@ import { Alert, Button, Col, Container, Row, Table, Form, Card, Nav } from 'reac
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
-// For purchase orders table
 
-
+import '../styles/WarehouseGRNNew.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-
 
 export default function WarehouseGRN() {
   const { userData } = useContext(AuthContext);
@@ -333,7 +331,7 @@ export default function WarehouseGRN() {
                 </div>
               ) : (
                 <div className="table-responsive">
-                  <Table striped bordered hover>
+                  <Table striped bordered hover className='grn-po-table'>
                     <thead>
                       <tr>
                         <th>PO Number</th>
@@ -357,11 +355,11 @@ export default function WarehouseGRN() {
                           <tr key={po.po_number} style={{ cursor: 'pointer' }} onClick={() => handleSelectPO(po.po_number)}>
                             <td>{po.po_number}</td>
                             <td>{po.supplier_name || 'Unknown Supplier'}</td>
-                            <td>{po.total_quantity || 0}</td>
-                            <td>{po.total_styles || 0}</td>
-                            <td>${parseFloat(po.total_cost || 0).toFixed(2)}</td>
-                            <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}%</td>
-                           
+                            <td className='numbers-col'>{po.total_quantity || 0}</td>
+                            <td className='numbers-col'>{po.total_styles || 0}</td>
+                            <td className='numbers-col'>${parseFloat(po.total_cost || 0).toFixed(2)}</td>
+                            <td className='numbers-col'>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}%</td>
+
                             {(activeTab === 'partial' || activeTab === 'completed') && <td>{po.latest_grn_date ? new Date(po.latest_grn_date).toLocaleDateString() : '-'}</td>}
                           </tr>
                         ))
@@ -462,7 +460,7 @@ export default function WarehouseGRN() {
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : (
-        <Table striped bordered hover responsive>
+        <Table striped bordered hover responsive className='grn-history-table'>
           <thead>
             <tr>
               <th>GRN ID</th>
@@ -487,8 +485,8 @@ export default function WarehouseGRN() {
                   <td>{new Date(grn.received_date).toLocaleDateString()}</td>
                   <td>{grn.status}</td>
                   <td>{grn.batch_number || '-'}</td>
-                  <td>{grn.total_items || grn.items_count || '-'}</td>
-                  <td>{grn.total_qty || '-'}</td>
+                  <td className='numbers-col'>{grn.total_items || grn.items_count || '-'}</td>
+                  <td className='numbers-col'>{grn.total_qty || '-'}</td>
                 </tr>
               ))
             )}

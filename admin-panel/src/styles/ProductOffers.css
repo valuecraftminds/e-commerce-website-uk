@@ -345,3 +345,19 @@
   background-color: #fee2e2;
   color: #991b1b;
 }
+
+.text-end {
+  text-align: right !important;
+}
+
+.pf-table-container th {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 10px !important;
+}
+
+.pf-table-container td {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 10px !important;
+}

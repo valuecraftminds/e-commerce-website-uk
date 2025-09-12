@@ -1,0 +1,34 @@
+.approve-table{
+    width:100% !important;
+    padding: 2rem;
+}
+
+.container{
+    width: 83vw !important;
+    max-width: 100vw !important;
+    background: white;
+    border-radius: 10px !important;
+    margin: 20px !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    padding: 20px !important;
+}
+
+.approve-table th{
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.approve-table td{
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.app-btn{
+    padding: 10px !important;
+    margin: 0 !important;
+}
+
+.view-btn{
+    padding: 10px !important;
+    margin: 0 0 0 20px !important;
+}

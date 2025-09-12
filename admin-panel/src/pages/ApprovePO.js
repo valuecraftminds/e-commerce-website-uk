@@ -5,6 +5,8 @@ import { FaCheck, FaEye } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
+import '../styles/ApprovePO.css';
+
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export default function ApprovePO() {
@@ -54,7 +56,7 @@ export default function ApprovePO() {
   }
 
   return (
-    <div className="container mt-4">
+    <div className="container">
       <h2>Approve Purchase Orders</h2>
       <div className="mb-3">
         <Button
@@ -77,7 +79,7 @@ export default function ApprovePO() {
       {loading ? (
         <div className="text-center my-4"><Spinner animation="border" /></div>
       ) : (
-        <Table striped bordered hover>
+        <Table striped bordered hover className='approve-table'>
           <thead>
             <tr>
               <th>PO Number</th>
@@ -106,9 +108,9 @@ export default function ApprovePO() {
                   <tr key={po.po_number}>
                     <td>{po.po_number}</td>
                     <td>{po.supplier_name}</td>
-                    <td>{po.total_quantity}</td>
-                    <td>{po.total_styles}</td>
-                    <td>{po.total_cost}</td>
+                    <td className='number-col'>{po.total_quantity}</td>
+                    <td className='number-col'>{po.total_styles}</td>
+                    <td className='number-col'>{po.total_cost}</td>
                     <td>{new Date(po.created_at).toLocaleDateString()}</td>
                     <td>
                       <span className={
@@ -124,21 +126,20 @@ export default function ApprovePO() {
                         <Button
                           variant="success"
                           size="sm"
-                          className="me-2"
+                          className="me-2 app-btn"
                           onClick={() => handleApprove(po.po_number)}
                           disabled={approving === po.po_number}
                         >
                           {approving === po.po_number ? <Spinner size="sm" /> : <FaCheck />} Approve
                         </Button>
                       ) : (
-                        <Button variant="success" size="sm" className="me-2" disabled>
-                          <FaCheck /> Approved
-                        </Button>
+                        <p> </p>
                       )}
                       <Button
-                        variant="info"
+                        variant="primary"
                         size="sm"
                         onClick={() => handleView(po.po_number)}
+                        className='view-btn'
                       >
                         <FaEye /> View
                       </Button>

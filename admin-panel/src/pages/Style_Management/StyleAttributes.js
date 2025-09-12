@@ -347,9 +347,9 @@ export default function StyleAttributes() {
                 <p className="text-muted text-center">No {title.toLowerCase()} added yet.</p>
               ) : (
                 <Table responsive striped size="sm" className="table-organized">
-                  <thead>
+                  <thead className='color-thead'>
                     <tr style={{ verticalAlign: 'middle' }}>
-                      <th style={{ width: '40px' }}>#</th>
+                      <th style={{ width: '40px'}}>#</th>
                       {type === 'colors' && <th style={{ width: '20%' }}>Preview</th>}
                       <th style={{ minWidth: '120px' }}>Name</th>
                       {type === 'colors' && <th style={{ minWidth: '40%' }}>Code</th>}
@@ -558,7 +558,7 @@ export default function StyleAttributes() {
             <div>
               <p>Select {modalType} to add to this style:</p>
               <Table responsive striped size="sm" className="table-organized">
-                <thead>
+                <thead className='color-thead'>
                   <tr style={{ verticalAlign: 'middle' }}>
                     <th style={{ width: '60px' }}>Select</th>
                     <th style={{ minWidth: '120px' }}>Name</th>

@@ -706,3 +706,10 @@
 .variant-buttons {
   margin-right: 1rem;
 }
+.color-thead{
+  border: none !important;
+}
+
+.th{
+  border: none !important;
+}

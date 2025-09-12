@@ -72,6 +72,17 @@
   table th {
     white-space: nowrap;
     background: #f8f9fa;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    vertical-align: middle;
+    height: 48px;
+  }
+
+  table td {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    vertical-align: middle;
   }
 
   .form-group {

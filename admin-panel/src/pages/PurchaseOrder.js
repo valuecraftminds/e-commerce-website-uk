@@ -221,7 +221,7 @@ export default function PurchaseOrder() {
           </Button>
         </div>
 
-        <Table striped bordered hover>
+        <Table striped bordered hover className="po-table">
           <thead>
             <tr>
               <th>PO Number</th>
@@ -248,10 +248,10 @@ export default function PurchaseOrder() {
                 <tr key={po.po_number}>
                   <td>{po.po_number}</td>
                   <td>{po.supplier_name || 'Unknown Supplier'}</td>
-                  <td>{po.total_quantity || 0}</td>
-                  <td>{po.total_styles || 0}</td>
-                  <td>{po.total_cost || "0.00"}</td>
-                  <td>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}</td>
+                  <td className='cols-with-number'>{po.total_quantity || 0}</td>
+                  <td className='cols-with-number'>{po.total_styles || 0}</td>
+                  <td className='cols-with-number'>{po.total_cost || "0.00"}</td>
+                  <td className='cols-with-number'>{po.tolerance_limit !== undefined ? po.tolerance_limit : 0}</td>
                   <td>
                     <span className={`badge ${po.status === 'Pending' ? 'bg-warning text-dark' : 
                       po.status === 'Approved' ? 'bg-success' : 'bg-secondary'}`}>

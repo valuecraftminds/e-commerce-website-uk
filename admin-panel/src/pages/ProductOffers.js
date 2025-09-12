@@ -58,14 +58,17 @@ export default function ProductOffers() {
             columnHelper.accessor('unit_price', {
                 header: 'Unit Price',
                 cell: info => `$${info.getValue() || 0}`,
+                meta: { className: 'text-end' }
             }),
             columnHelper.accessor('sale_price', {
                 header: 'Sale Price',
                 cell: info => `$${info.getValue() || 0}`,
+                meta: { className: 'text-end' }
             }),
             columnHelper.accessor('main_stock_qty', {
                 header: 'Stock Quantity',
                 cell: info => info.getValue(),
+                meta: { className: 'text-end' }
             }),
             columnHelper.accessor('created_at', {
                 header: 'Stock Received Date',
@@ -73,6 +76,7 @@ export default function ProductOffers() {
             }),
             columnHelper.accessor('offer_price', {
                 header: 'Offer Price',
+                meta: { className: 'text-end' },
                 cell: info => {
                   const val = info.getValue();
                   return val && Number(val) !== 0 ? `$${val}` : '-';
@@ -210,7 +214,7 @@ export default function ProductOffers() {
     }
 
     return (
-        <div className="pf-product-offers-container">
+    <div className="pf-product-offers-container">
             <h1 className="pf-product-offers-header">Product Offers</h1>
 
             {/* Filter Controls */}
@@ -267,25 +271,36 @@ export default function ProductOffers() {
                                     title="Click to add/edit offer"
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    {row.getVisibleCells().map((cell, index) => (
-                                        <td
-                                            key={cell.id}
-                                            className={`pf-table-cell ${
-                                                index === 0 ? 'pf-index-cell' :
-                                                cell.column.id === 'style_number' ? 'pf-style-number-cell' :
-                                                cell.column.id === 'unit_price' || cell.column.id === 'sale_price' ? 'pf-price-cell' :
-                                                cell.column.id === 'offer_price' ? 'pf-offer-price-cell' :
-                                                cell.column.id === 'main_stock_qty' ? 'pf-stock-cell' :
-                                                cell.column.id === 'created_at' || cell.column.id === 'offer_start_date' || cell.column.id === 'offer_end_date' ? 'pf-date-cell' :
-                                                ''
-                                            }`}
-                                        >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </td>
-                                    ))}
+                                    {row.getVisibleCells().map((cell, index) => {
+                                        // Columns to align right
+                                        const rightAlignColumns = [
+                                            'unit_price',
+                                            'sale_price',
+                                            'offer_price',
+                                            'main_stock_qty'
+                                        ];
+                                        const isRightAligned = rightAlignColumns.includes(cell.column.id);
+                                        return (
+                                            <td
+                                                key={cell.id}
+                                                className={`pf-table-cell ${
+                                                    index === 0 ? 'pf-index-cell' :
+                                                    cell.column.id === 'style_number' ? 'pf-style-number-cell' :
+                                                    cell.column.id === 'unit_price' || cell.column.id === 'sale_price' ? 'pf-price-cell' :
+                                                    cell.column.id === 'offer_price' ? 'pf-offer-price-cell' :
+                                                    cell.column.id === 'main_stock_qty' ? 'pf-stock-cell' :
+                                                    cell.column.id === 'created_at' || cell.column.id === 'offer_start_date' || cell.column.id === 'offer_end_date' ? 'pf-date-cell' :
+                                                    ''
+                                                }${isRightAligned ? ' pf-align-right' : ''}`}
+                                                style={isRightAligned ? { textAlign: 'right' } : {}}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </td>
+                                        );
+                                    })}
                                 </tr>
                             ))}
                         </tbody>

@@ -112,3 +112,22 @@
     font-weight: 600;
     color: #0d6efd;
 }
+
+.cols-with-number {
+    text-align: right !important;
+}
+
+.po-table td {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.po-table th {
+    height: 48px !important;
+    vertical-align: middle;
+    background-color: #e9ecef;
+    text-align: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+

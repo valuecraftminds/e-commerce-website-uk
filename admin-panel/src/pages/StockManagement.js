@@ -58,7 +58,8 @@ export default function StockManagement() {
         }),
         columnHelper.accessor('stock_qty', {
             header: 'Stock Quantity',
-            cell: info => info.getValue()
+            cell: info => info.getValue(),
+            meta: { className: 'text-end' }
         }),
         columnHelper.accessor('updated_at', {
             header: 'Last Updated',
@@ -95,7 +96,8 @@ export default function StockManagement() {
         }),
         columnHelper.accessor('issuing_qty', {
             header: 'Issued Quantity',
-            cell: info => info.getValue()
+            cell: info => info.getValue(),
+            meta: { className: 'text-end' }
         }),
         columnHelper.accessor('issued_at', {
             header: 'Issued Date',
@@ -136,7 +138,8 @@ export default function StockManagement() {
         }),
         columnHelper.accessor('stock_qty', {
             header: 'Received Quantity',
-            cell: info => info.getValue()
+            cell: info => info.getValue(),
+            meta: { className: 'text-end' }
         }),
         columnHelper.accessor('location_name', {
             header: 'Location',
@@ -367,7 +370,7 @@ export default function StockManagement() {
                         </div>
                         {stockSummary && (
                             <>
-                                <table>
+                                <table className='stock-summary-table'>
                                     <thead>
                                         {table.getHeaderGroups().map(headerGroup => (
                                             <tr key={headerGroup.id}>
@@ -382,11 +385,14 @@ export default function StockManagement() {
                                     <tbody>
                                         {table.getRowModel().rows.map(row => (
                                             <tr key={row.id}>
-                                                {row.getVisibleCells().map(cell => (
-                                                    <td key={cell.id}>
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </td>
-                                                ))}
+                                                {row.getVisibleCells().map(cell => {
+                                                    const className = cell.column.columnDef.meta?.className || '';
+                                                    return (
+                                                        <td key={cell.id} className={className}>
+                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -431,11 +437,14 @@ export default function StockManagement() {
                                     <tbody>
                                         {issuedStockTable.getRowModel().rows.map(row => (
                                             <tr key={row.id}>
-                                                {row.getVisibleCells().map(cell => (
-                                                    <td key={cell.id}>
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </td>
-                                                ))}
+                                                {row.getVisibleCells().map(cell => {
+                                                    const className = cell.column.columnDef.meta?.className || '';
+                                                    return (
+                                                        <td key={cell.id} className={className}>
+                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
                                     </tbody>
@@ -480,11 +489,14 @@ export default function StockManagement() {
                                     <tbody>
                                         {grnStockTable.getRowModel().rows.map(row => (
                                             <tr key={row.id}>
-                                                {row.getVisibleCells().map(cell => (
-                                                    <td key={cell.id}>
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </td>
-                                                ))}
+                                                {row.getVisibleCells().map(cell => {
+                                                    const className = cell.column.columnDef.meta?.className || '';
+                                                    return (
+                                                        <td key={cell.id} className={className}>
+                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
                                     </tbody>

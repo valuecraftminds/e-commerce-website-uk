@@ -593,7 +593,6 @@ export default function Style() {
         )}
       </div>
 
-      {/* Replace old modals with new component imports */}
       <StyleFormModal 
         show={showStyleModal}
         onHide={() => setShowStyleModal(false)}

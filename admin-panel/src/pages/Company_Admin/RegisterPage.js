@@ -10,7 +10,7 @@ import '../../styles/RegisterPage.css';
 const BASE_URL = process.env.REACT_APP_API_URL;
 
 const sidebarOptionsList = [
-  { label: 'User Management', value: 'users' },
+  // { label: 'User Management', value: 'users' },
   { label: 'Categories', value: 'category' },
   { label: 'Styles', value: 'style' },
   {
@@ -334,10 +334,7 @@ export default function RegisterPage() {
           >
             ← Back
           </Button>
-
           <Card.Body>
-            <h2 className="register-title">{id ? 'Edit User' : 'Add New User'}</h2>
-            
             {successMsg && (
               <div className="mb-3 text-success text-center fw-semibold">
                 {successMsg}
@@ -348,226 +345,222 @@ export default function RegisterPage() {
                 {errorMsg}
               </Alert>
             )}
-
-            <Form className="register-form" onSubmit={handleSubmit}>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label htmlFor="name">Full Name</Form.Label>
-                    <Form.Control
-                      id="name"
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleNameChange}
-                      placeholder="Enter full name"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label htmlFor="email">Email Address</Form.Label>
-                    <Form.Control
-                      id="email"
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter email address"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3 phone-input-group">
-                    <Form.Label htmlFor="phone">Phone Number</Form.Label>
-                    <PhoneInput
-                      country={'gb'}
-                      value={formData.phone}
-                      onChange={handlePhoneChange}
-                      inputProps={{
-                        name: 'phone',
-                        required: true,
-                        className: `form-control${phoneError ? ' is-invalid' : ''}`,
-                        style: { width: '100%', height: '48px', fontSize: '1rem', borderRadius: '12px', backgroundColor: '#f7fafc', border: '2px solid #e2e8f0', paddingLeft: '48px' }
-                      }}
-                      enableSearch={true}
-                      countryCodeEditable={false}
-                      dropdownStyle={{ fontSize: '1rem', zIndex: 9999 }}
-                      buttonStyle={{ borderRadius: '12px 0 0 12px', border: '2px solid #e2e8f0', height: '48px', background: '#f7fafc' }}
-                      searchStyle={{ fontSize: '1rem' }}
-                    />
-                    {phoneError && (
-                      <div className="invalid-feedback d-block">{phoneError}</div>
-                    )}
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label htmlFor="role">Role</Form.Label>
-                    <Form.Control
-                      type="text"
-                      id="role"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      required
-                      placeholder="Enter role"
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              {!id && (
-                <Row>
-                  <Col>
-                    <Form.Group className="mb-3">
-                      <Form.Label htmlFor="password">Password</Form.Label>
-                      <InputGroup>
+            <div className="register-flex-row">
+              <div className="register-form-section">
+                <Form className="register-form" onSubmit={handleSubmit}>
+                  <h2 className="register-title">{id ? 'Edit User' : 'Add New User'}</h2>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label htmlFor="name">Full Name</Form.Label>
                         <Form.Control
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleChange}
-                          placeholder="Enter password"
-                          onFocus={() => setShowRules(true)}
-                          onBlur={() => setShowRules(false)}
+                          id="name"
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleNameChange}
+                          placeholder="Enter full name"
                           required
                         />
-                        <Button
-                          variant="outline-secondary"
-                          onClick={() => setShowPassword(!showPassword)}
-                          style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
-                        >
-                          {showPassword ? <FaEyeSlash /> : <FaEye />}
-                        </Button>
-                      </InputGroup>
-                      {showRules && (
-                        <div className='password-rules'>
-                          <small>Password requirements:</small>
-                          <ul className='list-unstyled ms-2'>
-                            <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
-                              {passwordRules.length ? '✅' : '❌'} 8-12 characters
-                            </li>
-                            <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
-                              {passwordRules.uppercase ? '✅' : '❌'} At least one uppercase letter 
-                            </li>
-                            <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
-                              {passwordRules.lowercase ? '✅' : '❌'} At least one lowercase letter
-                            </li>
-                            <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
-                              {passwordRules.number ? '✅' : '❌'} At least one number  
-                            </li>
-                            <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
-                              {passwordRules.specialChar ? '✅' : '❌'} At least one special character 
-                            </li>
-                          </ul>
-                        </div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group className="mb-3">
-                      <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
-                      <InputGroup>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label htmlFor="email">Email Address</Form.Label>
                         <Form.Control
-                          id="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
+                          id="email"
+                          type="email"
+                          name="email"
+                          value={formData.email}
                           onChange={handleChange}
-                          placeholder="Confirm your password"
-                          isInvalid={!!passwordError}
+                          placeholder="Enter email address"
                           required
                         />
-                        <Button
-                          variant="outline-secondary"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
-                        >
-                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                        </Button>
-                      </InputGroup>
-                      {passwordError && (
-                        <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
-                          {passwordError}
-                        </Form.Control.Feedback>
-                      )}
-                    </Form.Group>
-                  </Col>
-                </Row>
-              )}
-
-              {formData.role !== 'VCM_Admin' && formData.role !== 'Company_Admin' && (
-                <Row>
-                  <Col>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Sidebar Options</Form.Label>
-                      <div>
-                        {sidebarOptionsList.map(opt =>
-                          opt.dropdown ? (
-                            <div key={opt.value} style={{ marginBottom: 8 }}>
-                              <Form.Check
-                                type="checkbox"
-                                label={<b>{opt.label}</b>}
-                                checked={isDropdownChecked(opt)}
-                                onChange={() => handleDropdownChange(opt)}
-                                style={{ 
-                                  opacity: hasSelectedSubItems(opt) && !isDropdownFullyChecked(opt) ? 0.6 : 1 
-                                }}
-                              />
-                              <div style={{ marginLeft: 24 }}>
-                                {opt.items.map(sub => (
-                                  <Form.Check
-                                    key={sub.value}
-                                    type="checkbox"
-                                    label={sub.label}
-                                    checked={sideBarOptions.includes(sub.value)}
-                                    onChange={() => handleSidebarOptionChange(sub.value)}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <Form.Check
-                              key={opt.value}
-                              type="checkbox"
-                              label={opt.label}
-                              checked={sideBarOptions.includes(opt.value)}
-                              onChange={() => handleSidebarOptionChange(opt.value)}
-                            />
-                          )
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3 phone-input-group">
+                        <Form.Label htmlFor="phone">Phone Number</Form.Label>
+                        <PhoneInput
+                          country={'gb'}
+                          value={formData.phone}
+                          onChange={handlePhoneChange}
+                          inputProps={{
+                            name: 'phone',
+                            required: true,
+                            className: `form-control${phoneError ? ' is-invalid' : ''}`,
+                            style: { width: '100%', height: '48px', fontSize: '1rem', borderRadius: '12px', backgroundColor: '#f7fafc', border: '2px solid #e2e8f0', paddingLeft: '48px' }
+                          }}
+                          enableSearch={true}
+                          countryCodeEditable={false}
+                          dropdownStyle={{ fontSize: '1rem', zIndex: 9999 }}
+                          buttonStyle={{ borderRadius: '12px 0 0 12px', border: '2px solid #e2e8f0', height: '48px', background: '#f7fafc' }}
+                          searchStyle={{ fontSize: '1rem' }}
+                        />
+                        {phoneError && (
+                          <div className="invalid-feedback d-block">{phoneError}</div>
                         )}
-                      </div>
-                    </Form.Group>
-                  </Col>
-                </Row>
-              )}
-
-              <div className="text-center">
-                <Button 
-                  type="submit" 
-                  className="register-btn"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      {id ? 'Updating...' : 'Registering...'}
-                    </>
-                  ) : (
-                    id ? 'Update User' : 'Register User'
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label htmlFor="role">Role</Form.Label>
+                        <Form.Control
+                          type="text"
+                          id="role"
+                          name="role"
+                          value={formData.role}
+                          onChange={handleChange}
+                          required
+                          placeholder="Enter role"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {!id && (
+                    <Row>
+                      <Col>
+                        <Form.Group className="mb-3">
+                          <Form.Label htmlFor="password">Password</Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              id="password"
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              value={formData.password}
+                              onChange={handleChange}
+                              placeholder="Enter password"
+                              onFocus={() => setShowRules(true)}
+                              onBlur={() => setShowRules(false)}
+                              required
+                            />
+                            <Button
+                              variant="outline-secondary"
+                              onClick={() => setShowPassword(!showPassword)}
+                              style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
+                            >
+                              {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </Button>
+                          </InputGroup>
+                          {showRules && (
+                            <div className='password-rules'>
+                              <small>Password requirements:</small>
+                              <ul className='list-unstyled ms-2'>
+                                <li style={{ color: passwordRules.length ? '#28a745' : '#dc3545' }}>
+                                  {passwordRules.length ? '✅' : '❌'} 8-12 characters
+                                </li>
+                                <li style={{ color: passwordRules.uppercase ? '#28a745' : '#dc3545' }}>
+                                  {passwordRules.uppercase ? '✅' : '❌'} At least one uppercase letter 
+                                </li>
+                                <li style={{ color: passwordRules.lowercase ? '#28a745' : '#dc3545' }}>
+                                  {passwordRules.lowercase ? '✅' : '❌'} At least one lowercase letter
+                                </li>
+                                <li style={{ color: passwordRules.number ? '#28a745' : '#dc3545' }}>
+                                  {passwordRules.number ? '✅' : '❌'} At least one number  
+                                </li>
+                                <li style={{ color: passwordRules.specialChar ? '#28a745' : '#dc3545' }}>
+                                  {passwordRules.specialChar ? '✅' : '❌'} At least one special character 
+                                </li>
+                              </ul>
+                            </div>
+                          )}
+                        </Form.Group>
+                      </Col>
+                      <Col>
+                        <Form.Group className="mb-3">
+                          <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              id="confirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              name="confirmPassword"
+                              value={formData.confirmPassword}
+                              onChange={handleChange}
+                              placeholder="Confirm your password"
+                              isInvalid={!!passwordError}
+                              required
+                            />
+                            <Button
+                              variant="outline-secondary"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              style={{ border: '1px solid #ced4da', borderLeft: 'none' }}
+                            >
+                              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                            </Button>
+                          </InputGroup>
+                          {passwordError && (
+                            <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
+                              {passwordError}
+                            </Form.Control.Feedback>
+                          )}
+                        </Form.Group>
+                      </Col>
+                    </Row>
                   )}
-                </Button>
+                  <div className="text-center">
+                    <Button 
+                      type="submit" 
+                      className="register-btn"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          {id ? 'Updating...' : 'Registering...'}
+                        </>
+                      ) : (
+                        id ? 'Update User' : 'Register User'
+                      )}
+                    </Button>
+                  </div>
+                </Form>
               </div>
-            </Form>
+              {formData.role !== 'VCM_Admin' && formData.role !== 'Company_Admin' && (
+                <div className="sidebar-options-section">
+                  <Form.Group className="mb-3">
+                    <Form.Label className='sidebar-label'> <h3>Sidebar Options </h3></Form.Label>
+                    <div>
+                      {sidebarOptionsList.map(opt =>
+                        opt.dropdown ? (
+                          <div key={opt.value} style={{ marginBottom: 8 }}>
+                            <Form.Check
+                              type="checkbox"
+                              label={<b>{opt.label}</b>}
+                              checked={isDropdownChecked(opt)}
+                              onChange={() => handleDropdownChange(opt)}
+                              style={{ 
+                                opacity: hasSelectedSubItems(opt) && !isDropdownFullyChecked(opt) ? 0.6 : 1 
+                              }}
+                            />
+                            <div style={{ marginLeft: 24 }}>
+                              {opt.items.map(sub => (
+                                <Form.Check
+                                  key={sub.value}
+                                  type="checkbox"
+                                  label={sub.label}
+                                  checked={sideBarOptions.includes(sub.value)}
+                                  onChange={() => handleSidebarOptionChange(sub.value)}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <Form.Check
+                            key={opt.value}
+                            type="checkbox"
+                            label={opt.label}
+                            checked={sideBarOptions.includes(opt.value)}
+                            onChange={() => handleSidebarOptionChange(opt.value)}
+                          />
+                        )
+                      )}
+                    </div>
+                  </Form.Group>
+                </div>
+              )}
+            </div>
           </Card.Body>
         </Card>
       </Container>
