@@ -1,9 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Container, Button, Modal, Form, InputGroup } from 'react-bootstrap';
-import { FaEye, FaPalette } from 'react-icons/fa';
+import { Container } from 'react-bootstrap';
+import { FaPalette } from 'react-icons/fa';
 import axios from 'axios';
+
 import StyleAttributeTable from '../../components/StyleAttributeTable';
 import { AuthContext } from '../../context/AuthContext';
+import ColorPaletteModal from '../../components/modals/ColorPickerModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -21,45 +23,48 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
   });
 
   // CSS Colors API modal state
-  const [showCssColorsModal, setShowCssColorsModal] = useState(false);
-  const [cssColors, setCssColors] = useState([]);
-  const [cssColorsLoading, setCssColorsLoading] = useState(false);
-  const [cssColorsError, setCssColorsError] = useState('');
-  const [cssColorsSearch, setCssColorsSearch] = useState('');
+  // const [showCssColorsModal, setShowCssColorsModal] = useState(false);
+  // const [cssColors, setCssColors] = useState([]);
+  // const [cssColorsLoading, setCssColorsLoading] = useState(false);
+  // const [cssColorsError, setCssColorsError] = useState('');
+  // const [cssColorsSearch, setCssColorsSearch] = useState('');
+  // Color Picker (Palette) modal state
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
   // Fetch CSS colors from API
-  const fetchCssColors = async () => {
-    setCssColorsLoading(true);
-    setCssColorsError('');
-    try {
-      const res = await axios.get('https://www.csscolorsapi.com/api/colors/');
-      const data = res.data;
-      if (data && data.colors) {
-        setCssColors(data.colors);
-      } else {
-        setCssColorsError('Failed to load colors');
-      }
-    } catch (err) {
-      setCssColorsError('Failed to fetch colors');
-    }
-    setCssColorsLoading(false);
-  };
+  // const fetchCssColors = async () => {
+  //   setCssColorsLoading(true);
+  //   setCssColorsError('');
+  //   try {
+  //     const res = await axios.get('https://www.csscolorsapi.com/api/colors/');
+  //     const data = res.data;
+  //     if (data && data.colors) {
+  //       setCssColors(data.colors);
+  //     } else {
+  //       setCssColorsError('Failed to load colors');
+  //     }
+  //   } catch (err) {
+  //     setCssColorsError('Failed to fetch colors');
+  //   }
+  //   setCssColorsLoading(false);
+  // };
 
   // Open modal and fetch colors if not already loaded
-  const handleOpenCssColorsModal = () => {
-    setShowCssColorsModal(true);
-    if (cssColors.length === 0) {
-      fetchCssColors();
-    }
-  };
+  // const handleOpenCssColorsModal = () => {
+  //   setShowCssColorsModal(true);
+  //   if (cssColors.length === 0) {
+  //     fetchCssColors();
+  //   }
+  // };
 
   // Select a color from modal
-  const handleSelectCssColor = (color) => {
-    setFormData({
-      color_name: color.name,
-      color_code: color.hex.startsWith('#') ? color.hex : `#${color.hex}`
-    });
-    setShowCssColorsModal(false);
-  };
+  // const handleSelectCssColor = (color) => {
+  //   setFormData({
+  //     color_name: color.name,
+  //     color_code: color.hex.startsWith('#') ? color.hex : `#${color.hex}`
+  //   });
+  //   setShowCssColorsModal(false);
+  // };
 
   const columns = [
     { key: 'color_name', label: 'Color Name' },
@@ -189,8 +194,25 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
 
   return (
     <Container>
-      {/* Add from CSS Colors Button */}
+      {/* Color Palette Picker */}
       <div className="mb-2" style={{ textAlign: 'right' }}>
+        <FaPalette 
+          className="action-icon me-2 text-primary"
+          onClick={() => setShowColorPicker(true)}
+          title="Select from Color Palette"
+          style={{ cursor: 'pointer' }}
+        />
+        <span 
+          className="text-primary" 
+          style={{ cursor: 'pointer' }} 
+          onClick={() => setShowColorPicker(true)}
+        >
+          Select from Color Palette
+        </span>
+      </div>
+
+      {/* Add from CSS Colors Button */}
+      {/* <div className="mb-2" style={{ textAlign: 'right' }}>
         <FaPalette 
           className="action-icon me-2 text-primary"
           onClick={handleOpenCssColorsModal}
@@ -200,7 +222,7 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
         <span className="text-primary" style={{ cursor: 'pointer' }} onClick={handleOpenCssColorsModal}>
           Add from CSS Colors
         </span>
-      </div>
+      </div> */}
       <StyleAttributeTable 
         title="Colors"
         items={colors}
@@ -219,7 +241,7 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
       />
 
       {/* CSS Colors Modal */}
-      <Modal show={showCssColorsModal} onHide={() => setShowCssColorsModal(false)} size="lg">
+      {/* <Modal show={showCssColorsModal} onHide={() => setShowCssColorsModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Select a CSS Color</Modal.Title>
         </Modal.Header>
@@ -276,7 +298,15 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
             Close
           </Button>
         </Modal.Footer>
-      </Modal>
+      </Modal> */}
+
+      {/* Color Palette Modal */}
+      <ColorPaletteModal 
+        showColorPicker={showColorPicker}
+        setShowColorPicker={setShowColorPicker}
+        formData={formData}
+        setFormData={setFormData}
+      />
     </Container>
   );
 };
