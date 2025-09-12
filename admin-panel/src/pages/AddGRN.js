@@ -1,5 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Alert, Badge, Button, Card, Col, Container, Form, Row, Table } from 'react-bootstrap';
+
+// import AddNoteModal from '../components/modals/AddNoteModal';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
@@ -42,6 +44,9 @@ export default function AddGRN() {
     const [locationsLoading, setLocationsLoading] = useState(false);
 
     const [rowData, setRowData] = useState({});
+
+    // State for note modal
+    // const [noteModal, setNoteModal] = useState({ show: false, sku: null });
 
     // Function to check if all items are completed (within tolerance limits)
     const checkAllItemsCompleted = useCallback(() => {
@@ -511,11 +516,12 @@ const handleAddItemFromRow = async (item) => {
                                                         <th>SKU</th>
                                                         <th>Unit Price</th>
                                                         <th>Ordered Qty</th>
-                                                        <th>Max Qty (with tolerance)</th>
+                                                        <th>Max Qty<br/>(with tolerance)</th>
                                                         <th>Total Received</th>
                                                         <th>Remaining Qty</th>
                                                         <th>Location</th>
                                                         <th>Lot No</th>
+                                                        <th>Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -543,10 +549,10 @@ const handleAddItemFromRow = async (item) => {
                                                         })();
 
                                                         return (
-                                                            <tr 
-                                                                key={item.sku}
-                                                                className={canReceive ? 'table-row-clickable' : 'table-row-disabled'}
-                                                            >
+                                                                <tr 
+                                                                    key={item.sku}
+                                                                    className={canReceive ? 'table-row-clickable' : 'table-row-disabled'}
+                                                                >
                                                                 <td>{item.style_number}</td>
                                                                 <td>{item.sku}</td>
                                                                 <td>{item.unit_price}</td>
@@ -600,28 +606,41 @@ const handleAddItemFromRow = async (item) => {
                                                                 </td>
                                                                 <td>
                                                                     {canReceive ? (
-                                                                        <div className="d-flex align-items-center">
-                                                                            <Form.Control
-                                                                                type="text"
-                                                                                size="sm"
-                                                                                value={previewLotNo}
-                                                                                readOnly
-                                                                                disabled
-                                                                                style={{ width: '90px', marginRight: '5px' }}
-                                                                                className="font-monospace"
-                                                                            />
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="primary"
-                                                                                onClick={() => handleAddItemFromRow(item)}
-                                                                                disabled={!getRowData(item.sku, 'location_id')}
-                                                                            >
-                                                                                Add
-                                                                            </Button>
-                                                                        </div>
+                                                                        <Form.Control
+                                                                            type="text"
+                                                                            size="sm"
+                                                                            value={previewLotNo}
+                                                                            readOnly
+                                                                            disabled
+                                                                            style={{ width: '90px' }}
+                                                                            className="font-monospace"
+                                                                        />
                                                                     ) : (
                                                                         '-'
                                                                     )}
+                                                                </td>
+                                                                <td>
+                                                                    {canReceive ? (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="primary"
+                                                                            onClick={() => handleAddItemFromRow(item)}
+                                                                            disabled={!getRowData(item.sku, 'location_id')}
+                                                                        >
+                                                                            Add
+                                                                        </Button>
+                                                                    ) : (
+                                                                        '-'
+                                                                    )}
+
+                                                                    {/* <Button
+                                                                        size="sm"
+                                                                        variant="secondary"
+                                                                        // onClick={() => handleAddNote(item)}
+                                                                    >
+                                                                        {getRowData(item.sku, 'notes') ? 'Edit Note' : '+ Note'}
+                                                                    </Button> */}
+                                                                    
                                                                 </td>
                                                             </tr>
                                                         );

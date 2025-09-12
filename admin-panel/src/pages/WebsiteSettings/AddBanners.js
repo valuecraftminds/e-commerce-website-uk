@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaImage } from 'react-icons/fa';
+import {FaEdit, FaTrash, FaImage } from 'react-icons/fa';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import Spinner from '../../components/Spinner';
