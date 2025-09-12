@@ -350,8 +350,9 @@ export default function StyleAttributes() {
                   <thead>
                     <tr style={{ verticalAlign: 'middle' }}>
                       <th style={{ width: '40px' }}>#</th>
+                      {type === 'colors' && <th style={{ width: '20%' }}>Preview</th>}
                       <th style={{ minWidth: '120px' }}>Name</th>
-                      {type === 'colors' && <th style={{ minWidth: '80px' }}>Code</th>}
+                      {type === 'colors' && <th style={{ minWidth: '40%' }}>Code</th>}
                       {(type === 'materials' || type === 'fits') && <th style={{ minWidth: '120px' }}>Description</th>}
                       <th style={{ width: '70px' }}>Action</th>
                     </tr>
@@ -360,6 +361,18 @@ export default function StyleAttributes() {
                     {items.map((item, index) => (
                       <tr key={index} style={{ verticalAlign: 'middle', height: '36px' }}>
                         <td>{index + 1}</td>
+                        {type === 'colors' && (
+                          <td>
+                            <span style={{
+                              display: 'inline-block',
+                              width: '100%',
+                              height: 24,
+                              border: '1px solid #ccc',
+                              background: item.color_code || '#fff',
+                              verticalAlign: 'middle'
+                            }} title={item.color_code} />
+                          </td>
+                        )}
                         <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {type === 'colors' ? item.color_name :
                            type === 'materials' ? item.material_name :
@@ -755,6 +768,8 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
 
   // Only show new combinations (not already in DB) for adding
   const newCombinations = React.useMemo(() => {
+    if (!style) return []; // to avoid runtime err
+
     return combinations.filter(combo => {
       const sku = generateSku(style.style_number, combo[0], combo[1], combo[2], combo[3]);
       return !existingSkuMap[sku];

@@ -2,8 +2,10 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import { FaPalette } from 'react-icons/fa';
 import axios from 'axios';
+import { Row, Col, Card, Button, Form, Table, Spinner as RBSpinner, Alert } from 'react-bootstrap';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
-import StyleAttributeTable from '../../components/StyleAttributeTable';
+import '../../styles/ColorManagement.css';
 import { AuthContext } from '../../context/AuthContext';
 import ColorPaletteModal from '../../components/modals/ColorPickerModal';
 
@@ -66,10 +68,10 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
   //   setShowCssColorsModal(false);
   // };
 
-  const columns = [
-    { key: 'color_name', label: 'Color Name' },
-    { key: 'color_code', label: 'Color Code' }
-  ];
+  // const columns = [
+  //   { key: 'color_name', label: 'Color Name' },
+  //   { key: 'color_code', label: 'Color Code' }
+  // ];
 
   const fetchColors = useCallback(async () => {
     setLoading(true);
@@ -153,38 +155,38 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
     setLoading(false);
   };
 
-  const handleEdit = (color) => {
-    setIsEditing(true);
-    setEditingId(color.color_id);
-    setFormData({
-      color_name: color.color_name,
-      color_code: color.color_code
-    });
-  };
+  // const handleEdit = (color) => {
+  //   setIsEditing(true);
+  //   setEditingId(color.color_id);
+  //   setFormData({
+  //     color_name: color.color_name,
+  //     color_code: color.color_code
+  //   });
+  // };
 
-  const handleDelete = async (colorId) => {
-    if (!colorId) {
-      setError('Invalid color ID');
-      return;
-    }
+  // const handleDelete = async (colorId) => {
+  //   if (!colorId) {
+  //     setError('Invalid color ID');
+  //     return;
+  //   }
 
-    if (window.confirm('Are you sure you want to delete this color?')) {
-      try {
-        const response = await fetch(`${BASE_URL}/api/admin/colors/delete-colors/${colorId}`, {
-          method: 'DELETE'
-        });
-        const data = await response.json();
-        if (data.success) {
-          setSuccess('Color deleted successfully');
-          fetchColors();
-        } else {
-          setError(data.message);
-        }
-      } catch (err) {
-        setError('Error deleting color');
-      }
-    }
-  };
+  //   if (window.confirm('Are you sure you want to delete this color?')) {
+  //     try {
+  //       const response = await fetch(`${BASE_URL}/api/admin/colors/delete-colors/${colorId}`, {
+  //         method: 'DELETE'
+  //       });
+  //       const data = await response.json();
+  //       if (data.success) {
+  //         setSuccess('Color deleted successfully');
+  //         fetchColors();
+  //       } else {
+  //         setError(data.message);
+  //       }
+  //     } catch (err) {
+  //       setError('Error deleting color');
+  //     }
+  //   }
+  // };
 
   const resetForm = () => {
     setFormData({ color_name: '', color_code: '' });
@@ -194,23 +196,6 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
 
   return (
     <Container>
-      {/* Color Palette Picker */}
-      <div className="mb-2" style={{ textAlign: 'right' }}>
-        <FaPalette 
-          className="action-icon me-2 text-primary"
-          onClick={() => setShowColorPicker(true)}
-          title="Select from Color Palette"
-          style={{ cursor: 'pointer' }}
-        />
-        <span 
-          className="text-primary" 
-          style={{ cursor: 'pointer' }} 
-          onClick={() => setShowColorPicker(true)}
-        >
-          Select from Color Palette
-        </span>
-      </div>
-
       {/* Add from CSS Colors Button */}
       {/* <div className="mb-2" style={{ textAlign: 'right' }}>
         <FaPalette 
@@ -223,22 +208,124 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
           Add from CSS Colors
         </span>
       </div> */}
-      <StyleAttributeTable 
-        title="Colors"
-        items={colors}
-        columns={columns}
-        formData={formData}
-        setFormData={setFormData}
-        handleSubmit={handleSubmit}
-        handleEdit={handleEdit}
-        handleDelete={handleDelete}
-        isEditing={isEditing}
-        loading={loading}
-        error={error}
-        success={success}
-        onCancel={resetForm}
-        embedded={embedded}
-      />
+
+      {/* Add new color */}
+      <Card>
+        <Card.Header className="d-flex justify-content-between align-items-center">
+          <h5>Add New Color</h5>
+        </Card.Header>
+        <Card.Body>
+          {error && <Alert variant="danger">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
+          <Form onSubmit={handleSubmit} className="mb-3">
+            <Row className="align-items-end">
+              <Col md={5} sm={12} className="mb-2">
+                <Form.Group controlId="colorName">
+                  <Form.Label>Color Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter color name"
+                    value={formData.color_name}
+                    onChange={e => setFormData({ ...formData, color_name: e.target.value })}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4} sm={12} className="mb-2">
+                <Form.Group controlId="colorCode">
+                  <Form.Label>Color Code</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter color code"
+                    value={formData.color_code}
+                    onChange={e => setFormData({ ...formData, color_code: e.target.value })}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3} sm={12} className="mb-2">
+                <Button type="submit" variant={isEditing ? "warning" : "primary"} className="me-2" disabled={loading}>
+                  {loading ? <RBSpinner animation="border" size="sm" /> : isEditing ? "Update" : "Add"}
+                </Button>
+                {isEditing && (
+                  <Button variant="secondary" onClick={resetForm} disabled={loading}>
+                    Cancel
+                  </Button>
+                )}
+              </Col>
+            </Row>
+          </Form>
+          <h6 className="or-h6"> OR </h6>
+          {/* Color Palette Picker */}
+          <div className="mb-2 color-picker">
+            <FaPalette 
+              className="action-icon me-2 text-primary"
+              onClick={() => setShowColorPicker(true)}
+              title="Select from Color Palette"
+              style={{ cursor: 'pointer' }}
+            />
+            <span 
+              className="text-primary" 
+              style={{ cursor: 'pointer' }} 
+              onClick={() => setShowColorPicker(true)}
+            >
+              Select from Color Palette
+            </span>
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* Existing color list */}
+      <Card>
+        <Card.Header>
+          <h5>Existing Color List</h5>
+        </Card.Header>
+        <Card.Body>
+          <Table responsive striped bordered hover size="sm" className="table-organized">
+            <thead>
+              <tr style={{ verticalAlign: 'middle' }}>
+                <th style={{ minWidth: '30%' }}>Color Name</th>
+                <th style={{ minWidth: '20%' }}>Color Code</th>
+                <th style={{ width: '20%' }}>Preview</th>
+                {/* <th style={{ width: '30%' }}>Actions</th> */}
+              </tr>
+            </thead>
+            <tbody>
+              {colors.length === 0 ? (
+                <tr><td colSpan={4} className="text-center">No colors found.</td></tr>
+              ) : (
+                colors.map(item => (
+                  <tr key={item.color_id || item.id} style={{ verticalAlign: 'middle', height: '34px' }}>
+                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.color_name}</td>
+                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.color_code}</td>
+                    <td>
+                      <span style={{ display: 'inline-block', width: '100%', height: 30, background: item.color_code, border: '1px solid #ccc' }}></span>
+                    </td>
+                    {/* <td>
+                      <span
+                        className="action-icon me-2 text-warning"
+                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
+                        title="Edit"
+                        onClick={() => handleEdit(item)}
+                      >
+                        <FaEdit />
+                      </span>
+                      <span
+                        className="action-icon text-danger"
+                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
+                        title="Delete"
+                        onClick={() => handleDelete(item.color_id || item.id)}
+                      >
+                        <FaTrash />
+                      </span>
+                    </td> */}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
 
       {/* CSS Colors Modal */}
       {/* <Modal show={showCssColorsModal} onHide={() => setShowCssColorsModal(false)} size="lg">
