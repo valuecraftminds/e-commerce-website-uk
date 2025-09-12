@@ -47,7 +47,7 @@ const ColorPickerModal = ({ showColorPicker, setShowColorPicker, formData, setFo
                 if (!formData.color_code) return '-';
                 const ntcResult = ntc.name(formData.color_code);
                 return ntcResult[1];
-              }, [formData.color_code])}
+              }, [formData.color_code])} 
             </div>
           </div>
         </Modal.Body>

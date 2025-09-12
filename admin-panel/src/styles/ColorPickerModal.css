@@ -2,6 +2,19 @@
     width: 100% !important;
 }
 
+/* Responsive styles */
+@media (max-width: 600px) {
+    .chrome-picker {
+        width: 95vw !important;
+        min-width: unset !important;
+        max-width: 100vw !important;
+    }
+    .cp-color-code {
+        font-size: 1em;
+        word-break: break-all;
+    }
+}
+
 .cp-color-code {
     font-weight: bold;
     font-size: 1.2em;
