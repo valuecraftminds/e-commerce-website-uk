@@ -160,7 +160,7 @@ class BannerController {
     const { category } = req.query;
     const { company_code } = req.query;
     
-    console.log('getBanners called with:', { category, company_code });
+    // console.log('getBanners called with:', { category, company_code });
     
     if (!company_code) {
       return res.status(400).json({ 
@@ -172,8 +172,8 @@ class BannerController {
     let sql, params;
 
     if (category === 'home') {
-      // Special case for home page - get banners where category_id IS NULL
-      console.log('Fetching home banners (category_id IS NULL)');
+      // get banners where category_id IS NULL for home page
+      // console.log('Fetching home banners (category_id IS NULL)');
       sql = `
         SELECT 
           banner_id as id,
@@ -231,8 +231,8 @@ class BannerController {
         });
       }
       
-      console.log('Banner query results:', results);
-      console.log('Number of banners found:', results.length);
+      // console.log('Banner query results:', results);
+      // console.log('Number of banners found:', results.length);
       
       res.json({ 
         success: true, 

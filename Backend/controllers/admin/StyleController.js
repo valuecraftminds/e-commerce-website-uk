@@ -10,7 +10,7 @@ const StyleController = {
       return res.status(400).json({ success: false, message: 'Company code is required' });
     }
 
-    console.log('Fetching styles for company:', company_code);
+    // console.log('Fetching styles for company:', company_code);
 
     const sql = `
       SELECT 
@@ -33,7 +33,7 @@ const StyleController = {
           error: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
       }
-      console.log(`Found ${results.length} styles`);
+      // console.log(`Found ${results.length} styles`);
       res.json({ success: true, styles: results });
     });
   },

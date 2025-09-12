@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Form, Button, Table, Modal, Alert, Badge, Tabs, Tab } from 'react-bootstrap';
 import axios from 'axios';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaExternalLinkAlt, FaFileAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaExternalLinkAlt, FaFileAlt } from 'react-icons/fa';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/FooterManagement.css';
