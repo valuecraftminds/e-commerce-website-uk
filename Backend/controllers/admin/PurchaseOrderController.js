@@ -745,13 +745,29 @@ const PurchaseOrderController = {
     generatePDF(res, po_number, header, company, items) {
         // Generate PDF
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        
+
         // Set response headers
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="PO-${po_number}.pdf"`);
-        
+
         // Pipe the PDF to the response
         doc.pipe(res);
+
+        // Add watermark if PO is pending
+        if (header.status && header.status.toLowerCase() === 'pending') {
+            doc.save();
+            doc.rotate(-30, { origin: [300, 400] });
+            doc.fontSize(60)
+                .fillColor('red')
+                .opacity(0.2)
+                .font('Helvetica-Bold')
+                .text('Not Approved', 60, 300, {
+                    align: 'center',
+                    width: 500
+                });
+            doc.opacity(1).fillColor('black').rotate(30, { origin: [300, 400] });
+            doc.restore();
+        }
 
         // Company Header
         doc.fontSize(16)

@@ -3,7 +3,7 @@
   flex-direction: row;
   gap: 2.5rem;
   align-items: flex-start;
-  width: 100%;
+  width: 100% !important;
 }
 
 .register-form-section {
@@ -38,7 +38,6 @@
 .register-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #e9ecef 100%);
-  padding: 2rem;
   width: 100% !important;
 }
 
@@ -47,7 +46,7 @@
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 8px 25px rgba(0, 0, 0, 0.06);
   margin: 0 !important;
-  max-width: 100% !important;
+  width: 100% !important;
   border: 1px solid #f1f3f4;
   overflow: hidden;
   backdrop-filter: blur(10px);

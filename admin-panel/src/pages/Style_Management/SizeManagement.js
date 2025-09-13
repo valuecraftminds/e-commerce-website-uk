@@ -2,9 +2,10 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Table, Spinner as RBSpinner, Alert } from 'react-bootstrap';
 import { AuthContext } from '../../context/AuthContext';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 
+import '../../styles/SizeManagement.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -171,7 +172,7 @@ const SizeManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCance
 
   return (
     <Container>
-      <Card className="mb-4">
+      <Card className="mb-4 add-size-range">
         <Card.Header>
           <h5>{editingRangeId ? 'Edit Size Range' : 'Add Size Range'}</h5>
         </Card.Header>
@@ -228,7 +229,7 @@ const SizeManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCance
         </Card.Body>
       </Card>
 
-      <Card>
+      <Card className='size-range-list'>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h5>Size Range List</h5>
         </Card.Header>

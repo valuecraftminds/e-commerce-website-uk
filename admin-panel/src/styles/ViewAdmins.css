@@ -14,26 +14,29 @@
   font-weight: 700;
   margin-bottom: 1.5rem;
 
-  /* Gradient text effect */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-table {
+.company-admin-table {
   border-collapse: collapse;
   width: 100%;
-  font-weight: bold;
+  font-size: 13px !important;
+  border-radius: 20px !important;
 }
 
 th, td, tr {
-  text-align: left;
   border: 1px solid #9c9999;
 }
 
 th.table-header {
-    background-color: #667eea;
     text-align: center;
+    font-weight: 700 !important;
+}
+
+.company-admin-table td{
+  font-weight: 500 !important;
 }
 
 tbody tr:hover td {
@@ -44,14 +47,6 @@ tbody tr:hover td {
 
 button{
   color: white;
-}
-
-DeleteAdmin {
-  background-color: #ff4d4d;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
 }
 
 
