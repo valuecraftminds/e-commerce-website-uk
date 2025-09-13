@@ -10,7 +10,9 @@ import ColorManagement from './ColorManagement';
 import SizeManagement from './SizeManagement';
 import MaterialManagement from './MaterialManagement';
 import FitManagement from './FitManagement';
+
 import SizeGuideModal from '../../components/modals/SizeGuideModal';
+import MeasureGuideModal from '../../components/modals/MeasureGuideModal';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -51,6 +53,8 @@ export default function StyleAttributes() {
 
   // Size Guide Modal state
   const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
+  // Measure Guide Modal state
+  const [showMeasureGuideModal, setShowMeasureGuideModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState('colors');
   const company_code = userData?.company_code;
@@ -217,6 +221,20 @@ export default function StyleAttributes() {
     setTimeout(() => setSuccess(''), 3000);
   };
 
+  // Measure Guide Modal handlers
+  const handleOpenMeasureGuideModal = () => {
+    setShowMeasureGuideModal(true);
+  };
+
+  const handleCloseMeasureGuideModal = () => {
+    setShowMeasureGuideModal(false);
+  };
+
+  const handleMeasureGuideSuccess = (message) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
   // Render two-column layout: left = Add New, right = Add Existing (table + assign)
   const renderAttributeSection = (title, items, type) => (
     <Row className="mb-4">
@@ -273,13 +291,17 @@ export default function StyleAttributes() {
               <FaPlus size={14} className="me-2" />
               Add Size Guide
             </Button>
-              {/* add how to measure guide */}
-        <button
-          className="btn btn-primary"
-          // onClick={() => tableActions.handleMeasureGuide()}
-        >
-          Add Measure Guide
-        </button>
+
+            {/* add how to measure guide */}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleOpenMeasureGuideModal}
+            >
+              <FaPlus size={16} className="me-2" />
+              Add Measure Guide
+            </Button>
+
             <Button 
               variant="primary" 
               className='add-style-btn'
@@ -317,6 +339,15 @@ export default function StyleAttributes() {
                     <Table bordered size="sm" className="mb-0">
                       <thead>
                         <tr>
+                        {/* Measure Guide Modal */}
+                        <MeasureGuideModal
+                          show={showMeasureGuideModal}
+                          onHide={handleCloseMeasureGuideModal}
+                          onSave={handleMeasureGuideSuccess}
+                          title={`Add Measure Guide - ${style?.name || 'Loading...'}`}
+                          companyCode={company_code}
+                          styleNumber={styleNumber}
+                        />
                           <th>#</th>
                           <th>Size Name</th>
                         </tr>
@@ -1130,5 +1161,3 @@ function SkuVariantGenerator({ style, styleColors, styleSizes, styleMaterials, s
     </div>
   );
 }
-
-

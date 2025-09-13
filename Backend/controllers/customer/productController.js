@@ -594,25 +594,15 @@ getVariantInfo: (req, res) => {
     }
 
     const sql = `
-      WITH s AS (
-        SELECT category_id
-        FROM styles
-        WHERE style_number = ?
-        LIMIT 1
-      )
       SELECT
         mg.id,
         mg.company_code,
-        mg.sub_category_id,
+        mg.style_number,
         mg.image_path,
         mg.created_at,
-        mg.updated_at,
-        c.category_name AS category_name
+        mg.updated_at
       FROM measure_guides mg
-      JOIN s ON mg.sub_category_id = s.category_id
-      JOIN categories c ON c.category_id = mg.sub_category_id
-      WHERE mg.company_code = ?
-      ORDER BY c.category_name
+      WHERE mg.company_code = ? AND mg.style_number = ?
     `;
 
      const resolvePublicImageUrl = (raw) => {
@@ -622,7 +612,7 @@ getVariantInfo: (req, res) => {
     };
 
 
-    db.query(sql, [style_number, company_code], (err, rows) => {
+    db.query(sql, [company_code, style_number], (err, rows) => {
       if (err) {
         console.error('Error fetching measure guides:', err);
         return res.status(500).json({ success: false, message: 'Database error' });

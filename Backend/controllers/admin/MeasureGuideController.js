@@ -5,23 +5,23 @@ const path = require('path');
 class MeasureGuideController {
   // Add new measure guide
   static addMeasureGuide(req, res) {
-    const { company_code, main_category_id, sub_category_id } = req.body;
+    const { company_code, style_number } = req.body;
     const image = req.file;
 
-    if (!company_code || !main_category_id || !sub_category_id || !image) {
+    if (!company_code || !style_number || !image) {
       return res.status(400).json({
         success: false,
-        message: 'Company code, main category, subcategory, and image are required'
+        message: 'Company code, style_number and image are required'
       });
     }
 
-    // Check if measure guide already exists for this company and subcategory
+    // Check if measure guide already exists for this company and style
     const checkSql = `
       SELECT id FROM measure_guides 
-      WHERE company_code = ? AND sub_category_id = ?
+      WHERE company_code = ? AND style_number = ?
     `;
 
-    db.query(checkSql, [company_code, sub_category_id], (err, results) => {
+    db.query(checkSql, [company_code, style_number], (err, results) => {
       if (err) {
         console.error('Error checking existing measure guide:', err);
         return res.status(500).json({
@@ -39,13 +39,13 @@ class MeasureGuideController {
 
       // Insert new measure guide
       const insertSql = `
-        INSERT INTO measure_guides (company_code, main_category_id, sub_category_id, image_path, created_at)
-        VALUES (?, ?, ?, ?, NOW())
+        INSERT INTO measure_guides (company_code, style_number, image_path, created_at)
+        VALUES (?, ?, ?, NOW())
       `;
 
       const imagePath = image.filename;
 
-      db.query(insertSql, [company_code, main_category_id, sub_category_id, imagePath], (err, result) => {
+      db.query(insertSql, [company_code, style_number, imagePath], (err, result) => {
         if (err) {
           console.error('Error adding measure guide:', err);
           // Delete uploaded file if database insert fails
@@ -70,7 +70,7 @@ class MeasureGuideController {
 
   // Get measure guides by company
   static getMeasureGuides(req, res) {
-    const { company_code } = req.query;
+    const { company_code } = req.query || req.params || req.body;
 
     if (!company_code) {
       return res.status(400).json({
@@ -80,20 +80,18 @@ class MeasureGuideController {
     }
 
     const sql = `
-      SELECT 
+       SELECT
         mg.id,
         mg.company_code,
-        mg.main_category_id,
-        mg.sub_category_id,
+        mg.style_number,
         mg.image_path,
         mg.created_at,
-        mc.category_name as main_category_name,
-        sc.category_name as sub_category_name
+        mg.updated_at,
+        s.style_number,
+        s.name AS style_name
       FROM measure_guides mg
-      JOIN categories mc ON mg.main_category_id = mc.category_id
-      JOIN categories sc ON mg.sub_category_id = sc.category_id
+      JOIN styles s ON mg.style_number = s.style_number
       WHERE mg.company_code = ?
-      ORDER BY mc.category_name, sc.category_name
     `;
 
     const resolvePublicImageUrl = (raw) => {

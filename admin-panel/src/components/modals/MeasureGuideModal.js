@@ -10,17 +10,14 @@ const MeasureGuideModal = ({
   onHide, 
   onSave, 
   title = "Add Measure Guide",
-  companyCode 
+  companyCode,
+  styleNumber
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [mainCategories, setMainCategories] = useState([]);
-  const [subCategories, setSubCategories] = useState([]);
-  const [loadingSubcategories, setLoadingSubcategories] = useState(false);
   const [formData, setFormData] = useState({
-    main_category_id: '',
-    sub_category_id: '',
+    style_number: styleNumber || '',
     image: null
   });
   const [existingGuide, setExistingGuide] = useState(null);
@@ -120,48 +117,8 @@ const MeasureGuideModal = ({
           'Content-Type': 'application/json'
         }
       });
-
-      const data = await response.json();
-      if (data.success) {
-        // Filter only main categories (those without parent_id)
-        const mainCats = data.categories.filter(cat => !cat.parent_id);
-        setMainCategories(mainCats || []);
-      } else {
-        setError('Failed to fetch categories');
-      }
     } catch (err) {
       setError('Error fetching categories: ' + err.message);
-    }
-  };
-
-  // Fetch subcategories when main category changes
-  const fetchSubCategories = async (mainCategoryId) => {
-    if (!mainCategoryId) {
-      setSubCategories([]);
-      return;
-    }
-
-    setLoadingSubcategories(true);
-    try {
-      const response = await fetch(`${BASE_URL}/api/admin/categories/subcategories/${mainCategoryId}?company_code=${companyCode}`, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setSubCategories(data.subcategories || []);
-      } else {
-        setError('Failed to fetch subcategories');
-        setSubCategories([]);
-      }
-    } catch (err) {
-      setError('Error fetching subcategories: ' + err.message);
-      setSubCategories([]);
-    } finally {
-      setLoadingSubcategories(false);
     }
   };
 
@@ -170,32 +127,13 @@ const MeasureGuideModal = ({
     if (show) {
       setError('');
       setSuccess('');
-      setSubCategories([]);
       setFormData({
-        main_category_id: '',
-        sub_category_id: '',
-        image: null
+        image: null,
+        styleNumber: styleNumber || ''
       });
       setPreviewImage(null); // Reset preview image when modal opens
     }
-  }, [show]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // If main category changes, fetch subcategories and reset subcategory selection
-    if (name === 'main_category_id') {
-      setFormData(prev => ({
-        ...prev,
-        sub_category_id: '' // Reset subcategory when main category changes
-      }));
-      fetchSubCategories(value);
-    }
-  };
+  }, [show, styleNumber]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -207,29 +145,17 @@ const MeasureGuideModal = ({
 
   const handleSave = async () => {
     // Validate required fields
-    if (!formData.main_category_id) {
-      setError('Please select a main category');
-      return;
-    }
-
-    if (!formData.sub_category_id) {
-      setError('Please select a subcategory');
-      return;
-    }
-
-    if (!formData.image) {
+      if (!formData.image) {
       setError('Please select an image');
       return;
     }
-
     setLoading(true);
     setError('');
 
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('company_code', companyCode);
-      formDataToSend.append('main_category_id', formData.main_category_id);
-      formDataToSend.append('sub_category_id', formData.sub_category_id);
+      formDataToSend.append('style_number', formData.styleNumber);
       formDataToSend.append('image', formData.image);
 
       const response = await fetch(`${BASE_URL}/api/admin/measure-guides`, {
@@ -254,7 +180,7 @@ const MeasureGuideModal = ({
         }
         
         if (onSave) {
-          onSave(data);
+          onSave('Measure guide added successfully!');
         }
         setTimeout(() => {
           onHide();
@@ -292,13 +218,19 @@ const MeasureGuideModal = ({
             <h5>Existing Measure Guides</h5>
             <div className="existing-measure-guides">
               {allMeasureGuides.map((guide) => {
-                // Get the image URL (handle both possible property names)
-                const imageUrl = guide.image_url || guide.full_image_url;
-                const displayImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : `${BASE_URL}${imageUrl}`;
-                
+                const imageUrl = guide?.full_image_url || guide?.image_url || guide?.image_path;
+                let displayImageUrl = '';
+                if (guide?.full_image_url) {
+                  displayImageUrl = guide.full_image_url;
+                } else if (guide?.image_path) {
+                  displayImageUrl = `${BASE_URL}/uploads/measure-guides/${guide.image_path}`;
+                } else if (guide?.image_url) {
+                  displayImageUrl = guide.image_url.startsWith('http') ? guide.image_url : `${BASE_URL}${guide.image_url}`;
+                }
+
                 return (
                   <div
-                    key={guide.measure_guide_id || guide.id} 
+                    key={guide.measure_guide_id || guide.id}
                     className='existing-guide-items'
                     onClick={(e) => {
                       e.preventDefault();
@@ -307,24 +239,21 @@ const MeasureGuideModal = ({
                     }}
                     title="Click to view full image"
                   >
-                    {imageUrl && (
-                      <img 
-                        src={displayImageUrl} 
-                        alt="Guide Thumbnail"
-                        className='mg-image' 
+                    {displayImageUrl && (
+                      <img
+                        src={displayImageUrl}
+                        className='mg-image'
                         onError={(e) => {
                           console.error('Image failed to load:', displayImageUrl);
                           e.target.style.display = 'none';
                         }}
                       />
                     )}
-                    <div className='main-cat' style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                      {guide.main_category_name || 'Main Category'}
+                    <div className='style'>
+                      {guide.style_name}
                     </div>
-                    <div className='sub-cat' style={{ color: '#666', fontSize: '14px' }}>
-                      {guide.sub_category_name || 'Subcategory'}
-                    </div>
-                     <button
+
+                    <button
                       type="button"
                       className='mg-remove-btn'
                       title="Delete measure guide"
@@ -352,48 +281,6 @@ const MeasureGuideModal = ({
         />
         
         <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Main Category *</Form.Label>
-            <Form.Select
-              name="main_category_id"
-              value={formData.main_category_id}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Select a main category</option>
-              {mainCategories.map((category) => (
-                <option key={category.category_id} value={category.category_id}>
-                  {category.category_name}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Subcategory *</Form.Label>
-            <Form.Select
-              name="sub_category_id"
-              value={formData.sub_category_id}
-              onChange={handleInputChange}
-              required
-              disabled={!formData.main_category_id || loadingSubcategories}
-            >
-              <option value="">
-                {loadingSubcategories ? 'Loading subcategories...' : 'Select a subcategory'}
-              </option>
-              {subCategories.map((subcategory) => (
-                <option key={subcategory.category_id} value={subcategory.category_id}>
-                  {subcategory.category_name}
-                </option>
-              ))}
-            </Form.Select>
-            {!formData.main_category_id && (
-              <Form.Text className="text-muted">
-                Please select a main category first
-              </Form.Text>
-            )}
-          </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Measure Guide Image *</Form.Label>
             <Form.Control

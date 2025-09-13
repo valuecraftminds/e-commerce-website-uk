@@ -11,17 +11,12 @@ export default function MeasureGuideModal({
   baseUrl = "",
 }) {
   const titleFor = (guide) => {
-    if (guide?.category_name) return guide.category_name;
-    if (guide?.main_category_name || guide?.sub_category_name) {
-      return `${guide?.main_category_name || ""}${
-        guide?.main_category_name && guide?.sub_category_name ? " - " : ""
-      }${guide?.sub_category_name || ""}`;
-    }
+    if (guide?.style_number) return guide.style_number;
     return "How To Measure";
-    };
+  };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered className="measure-modal">
+    <Modal show={show} onHide={onHide} size="xl" centered className="measure-modal">
       <Modal.Header className="mg-header" closeButton>
         <Modal.Title>How To Measure</Modal.Title>
       </Modal.Header>
@@ -33,13 +28,19 @@ export default function MeasureGuideModal({
           <div className="measure-guides-modal">
             {measureGuides.map((guide) => (
               <div>
-                {guide?.full_image_url ? (
+                {guide?.full_image_url || guide?.image_path ? (
                   <>
                     <img
-                      src={`${baseUrl}${guide.full_image_url}`}
+                      src={`${baseUrl}/uploads/measure-guides/${guide.image_path}`}
                       alt={`${titleFor(guide)} measure guide`}
-                      style={{ maxWidth: "100%", height: "auto", marginBottom: "10px" }}
+                      className="img-fluid"
+                      onLoad={(e) => {
+                        console.log('Image loaded successfully:', e.currentTarget.src);
+                        console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                      }}
                       onError={(e) => {
+                        console.log('Image failed to load:', e.currentTarget.src);
+                        console.log('Error event:', e);
                         e.currentTarget.style.display = "none";
                       }}
                     />
