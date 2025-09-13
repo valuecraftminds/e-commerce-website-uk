@@ -273,6 +273,13 @@ export default function StyleAttributes() {
               <FaPlus size={14} className="me-2" />
               Add Size Guide
             </Button>
+              {/* add how to measure guide */}
+        <button
+          className="btn btn-primary"
+          // onClick={() => tableActions.handleMeasureGuide()}
+        >
+          Add Measure Guide
+        </button>
             <Button 
               variant="primary" 
               className='add-style-btn'
@@ -329,7 +336,7 @@ export default function StyleAttributes() {
             )}
           </Accordion>
         ) : (
-          <Card>
+          <Card className='assigned-attributes'>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Assigned {title}</h5>
               <Button 
@@ -347,9 +354,9 @@ export default function StyleAttributes() {
                 <p className="text-muted text-center">No {title.toLowerCase()} added yet.</p>
               ) : (
                 <Table responsive striped size="sm" className="table-organized">
-                  <thead>
+                  <thead className='color-thead'>
                     <tr style={{ verticalAlign: 'middle' }}>
-                      <th style={{ width: '40px' }}>#</th>
+                      <th style={{ width: '40px'}}>#</th>
                       {type === 'colors' && <th style={{ width: '20%' }}>Preview</th>}
                       <th style={{ minWidth: '120px' }}>Name</th>
                       {type === 'colors' && <th style={{ minWidth: '40%' }}>Code</th>}
@@ -557,8 +564,10 @@ export default function StyleAttributes() {
           ) : (
             <div>
               <p>Select {modalType} to add to this style:</p>
-              <Table responsive striped size="sm" className="table-organized">
-                <thead>
+              {/* <Table responsive striped size="sm" className="table-organized"> */}
+              <div className="table-responsive">
+                <Table striped size="sm" className="table-organized">
+                <thead className='color-thead'>
                   <tr style={{ verticalAlign: 'middle' }}>
                     <th style={{ width: '60px' }}>Select</th>
                     <th style={{ minWidth: '120px' }}>Name</th>
@@ -626,6 +635,7 @@ export default function StyleAttributes() {
                   })()}
                 </tbody>
               </Table>
+              </div>
             </div>
           )}
         </Modal.Body>

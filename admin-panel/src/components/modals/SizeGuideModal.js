@@ -9,6 +9,13 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
     const [sizeData, setSizeData] = useState({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [initialContent, setInitialContent] = useState('');
+    const DEFAULT_MEASUREMENTS = ['Bust', 'Chest', 'Waist', 'Hips', 'Height', 'Collar Size'];
+    const LOCAL_STORAGE_KEY = 'sizeGuideMeasurements';
+    const [measurements, setMeasurements] = useState(() => {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        return saved ? JSON.parse(saved) : DEFAULT_MEASUREMENTS;
+    });
+    const [newMeasurementName, setNewMeasurementName] = useState('');
     
     const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -29,7 +36,7 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
     const sizeTypes = getSizeTypes();
 
     // Size guide measurements for the first column
-    const measurements = ['Bust', 'Chest', 'Waist', 'Hips', 'Height', 'Collar Size'];
+        // measurements is now a state variable
 
     // Fetch existing size guide content
     const fetchSizeGuide = useCallback(async () => {
@@ -108,10 +115,16 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
     useEffect(() => {
         if (isOpen) {
             setError('');
+            // Load measurements from localStorage if available
+            const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (saved) {
+                setMeasurements(JSON.parse(saved));
+            } else {
+                setMeasurements(DEFAULT_MEASUREMENTS);
+            }
             // Fetch existing size guide data when modal opens
             fetchSizeGuide();
         }
-        // Note: We don't reset data when modal closes to preserve user changes
         // Data will be refreshed when modal opens again
     }, [isOpen, fetchSizeGuide]);
 
@@ -369,6 +382,41 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                        {/* Add Row input/button below the table */}
+                        <div className="mb-3 d-flex align-items-center">
+                            <input
+                                type="text"
+                                className="form-control form-control-sm me-2"
+                                style={{ maxWidth: 200 }}
+                                placeholder="Add new measurement (e.g. Sleeve)"
+                                value={newMeasurementName}
+                                onChange={e => {
+                                    // Capitalize first letter of each word
+                                    const value = e.target.value.replace(/\b\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+                                    setNewMeasurementName(value);
+                                }}
+                                disabled={loading}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-success btn-sm"
+                                disabled={loading || !newMeasurementName.trim() || measurements.includes(newMeasurementName.trim())}
+                                onClick={() => {
+                                    const name = newMeasurementName.trim();
+                                    if (!name || measurements.includes(name)) return;
+                                    const updated = [...measurements, name];
+                                    setMeasurements(updated);
+                                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+                                    setSizeData(prev => ({
+                                        ...prev,
+                                        [name]: Object.fromEntries(sizeTypes.map(size => [size, '']))
+                                    }));
+                                    setNewMeasurementName('');
+                                }}
+                            >
+                                + Add Row
+                            </button>
                         </div>
 
                         <div className="mt-4">

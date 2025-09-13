@@ -1,6 +1,7 @@
 import { Button, Card, Form, Table } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
+import '../styles/StyleAttributeTable.css';
 
 const StyleAttributeTable = ({ 
   title,
@@ -18,13 +19,9 @@ const StyleAttributeTable = ({
 }) => {
 
 
-
-
-
   return (
     <div className="management-container">
- 
-      <Card className="mb-4">
+      <Card className="mb-4 add-style-attribute">
         <Card.Header>
           <h5>{isEditing ? `Edit ${title}` : `Add New ${title}`}</h5>
         </Card.Header>
@@ -65,7 +62,7 @@ const StyleAttributeTable = ({
       {error && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      <Card>
+      <Card className='general-list'>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h5>General {title} List</h5>
         </Card.Header>

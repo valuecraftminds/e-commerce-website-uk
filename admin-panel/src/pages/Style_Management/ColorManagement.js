@@ -195,7 +195,7 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
   };
 
   return (
-    <Container>
+    <Container className='color-container'>
       {/* Add from CSS Colors Button */}
       {/* <div className="mb-2" style={{ textAlign: 'right' }}>
         <FaPalette 
@@ -210,8 +210,8 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
       </div> */}
 
       {/* Add new color */}
-      <Card>
-        <Card.Header className="d-flex justify-content-between align-items-center">
+      <Card className="add-color">
+        <Card.Header >
           <h5>Add New Color</h5>
         </Card.Header>
         <Card.Body>
@@ -276,7 +276,7 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
       </Card>
 
       {/* Existing color list */}
-      <Card>
+      <Card className="existing-color">
         <Card.Header>
           <h5>Existing Color List</h5>
         </Card.Header>

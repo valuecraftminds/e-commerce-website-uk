@@ -82,7 +82,7 @@ export default function ViewAdmins() {
 
       {!loading && !errorMsg && (
         <div className="table-responsive">
-          <Table className="align-middle text-center">
+          <Table className="align-middle company-admin-table" hover>
             <thead>
               <tr>
                 <th className='table-header'>#</th>

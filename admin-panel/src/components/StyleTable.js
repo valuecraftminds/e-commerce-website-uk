@@ -12,6 +12,7 @@ import Spinner from './Spinner';
 import { FaEdit, FaTrash, FaCogs, FaEye, FaEyeSlash, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 import { useRef, useEffect } from 'react';
+import '../styles/StyleTable.css';
 
 const StyleTable = ({ 
   styles, 

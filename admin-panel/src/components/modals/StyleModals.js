@@ -383,12 +383,20 @@ export const VariantFormModal = ({
       {
         header: `Unit price (${currency})`,
         accessorKey: 'unit_price',
-        cell: ({ getValue }) => `${getValue()}`
+        cell: ({ getValue }) => (
+          <div style={{ textAlign: 'right' }}>
+            {getValue()}
+          </div>
+        )
       },
       {
         header: `Sale price (${currency})`,
         accessorKey: 'sale_price',
-        cell: ({ getValue }) => `${getValue()}`
+        cell: ({ getValue }) => (
+          <div style={{ textAlign: 'right' }}>
+            {getValue()}
+          </div>
+        )
       },
       {
         header: 'Status',

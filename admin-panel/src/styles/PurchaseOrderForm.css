@@ -1,13 +1,18 @@
-.styles-table th {
+.product-info-table th {
     height: 48px !important;
     vertical-align: middle;
-    background-color: #e9ecef;
     text-align: center !important;
     font-size: 13px !important;
     font-weight: 700 !important;
 }
 
-.styles-table td {
-    font-size: 13px !important;
-    font-weight: 500 !important;
+.product-info-table th.number-col,
+.product-info-table td.number-col {
+    text-align: right !important;
 }
+
+.product-info-table td {
+    font-size: 13px !important;
+    background-color: #e9ecef !important;
+    font-weight: 500 !important;
+}  

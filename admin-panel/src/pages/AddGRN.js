@@ -512,6 +512,17 @@ const handleAddItemFromRow = async (item) => {
                                             <Table striped bordered hover responsive className="mb-4">
                                                 <thead>
                                                     <tr>
+
+                                                        <th className='table-headings'>Style Code</th>
+                                                        <th className='table-headings'>SKU</th>
+                                                        <th className='table-headings'>Unit Price</th>
+                                                        <th className='table-headings'>Ordered Qty</th>
+                                                        <th className='table-headings'>Max Qty (with tolerance)</th>
+                                                        <th className='table-headings'>Total Received</th>
+                                                        <th className='table-headings'>Remaining Qty</th>
+                                                        <th className='table-headings'>Location</th>
+                                                        <th className='table-headings'>Lot No</th>
+
                                                         <th>Style Code</th>
                                                         <th>SKU</th>
                                                         <th>Unit Price</th>
@@ -522,6 +533,7 @@ const handleAddItemFromRow = async (item) => {
                                                         <th>Location</th>
                                                         <th>Lot No</th>
                                                         <th>Actions</th>
+
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -549,6 +561,16 @@ const handleAddItemFromRow = async (item) => {
                                                         })();
 
                                                         return (
+
+                                                            <tr 
+                                                                key={item.sku}
+                                                                className={canReceive ? 'table-row-clickable' : 'table-row-disabled'}
+                                                            >
+                                                                <td className='table-data'>{item.style_number}</td>
+                                                                <td className='table-data'>{item.sku}</td>
+                                                                <td className='table-data number-col'>{item.unit_price}</td>
+                                                                <td className='table-data number-col'>
+
                                                                 <tr 
                                                                     key={item.sku}
                                                                     className={canReceive ? 'table-row-clickable' : 'table-row-disabled'}
@@ -557,6 +579,7 @@ const handleAddItemFromRow = async (item) => {
                                                                 <td>{item.sku}</td>
                                                                 <td>{item.unit_price}</td>
                                                                 <td>
+
                                                                     {canReceive ? (
                                                                         <Form.Control
                                                                             type="number"
@@ -572,19 +595,19 @@ const handleAddItemFromRow = async (item) => {
                                                                         item.ordered_qty
                                                                     )}
                                                                 </td>
-                                                                <td>
+                                                                <td className='table-data number-col'>
                                                                     {item.max_qty}
                                                                     {item.tolerance_limit > 0 && (
                                                                         <small className="text-muted"> (+{item.tolerance_limit}%)</small>
                                                                     )}
                                                                 </td>
-                                                                <td>{receivedQty}</td>
-                                                                <td>
+                                                                <td className='table-data number-col'>{receivedQty}</td>
+                                                                <td className='table-data number-col'>
                                                                     <Badge bg={canReceive ? 'success' : 'secondary'}>
                                                                         {item.remaining_qty}
                                                                     </Badge>
                                                                 </td>
-                                                                <td>
+                                                                <td className='table-data'>
                                                                     {canReceive ? (
                                                                         <Form.Select
                                                                             size="sm"
@@ -604,7 +627,7 @@ const handleAddItemFromRow = async (item) => {
                                                                         '-'
                                                                     )}
                                                                 </td>
-                                                                <td>
+                                                                <td className='table-data'>
                                                                     {canReceive ? (
                                                                         <Form.Control
                                                                             type="text"

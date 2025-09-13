@@ -1,0 +1,27 @@
+.add-variant-table th{
+    height: 48px !important;
+    vertical-align: middle;
+    background-color: #e9ecef;
+    text-align: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.add-variant-table td {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.number-col {
+    text-align: right !important;
+}
+
+.set-all-quantity-input{
+    max-width: 16% !important;
+    border-radius: 10px !important;
+    margin-right: 10px !important;
+    vertical-align: middle !important;
+}
+.add-all-button {
+    border-radius: 10px !important;
+}

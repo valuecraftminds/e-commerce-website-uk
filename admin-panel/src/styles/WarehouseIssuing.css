@@ -1,0 +1,14 @@
+.issue-table th{
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.issue-table td{
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.numbers-col{
+    text-align: right !important;
+}
+

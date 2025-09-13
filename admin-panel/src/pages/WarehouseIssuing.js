@@ -87,7 +87,7 @@ export default function WarehouseIssuing() {
       </Nav>
       
       {loading ? <Spinner animation="border" /> : error ? <Alert variant="danger">{error}</Alert> : (
-        <Table striped bordered hover size="sm">
+        <Table striped bordered hover size="sm" className='issue-table'>
           <thead>
             <tr>
               <th>#</th>
@@ -111,8 +111,8 @@ export default function WarehouseIssuing() {
                 <td>{idx + 1}</td>
                 <td>{order.order_number}</td>
                 <td>{order.customer_name}</td>
-                <td>${parseFloat(order.total_amount || 0).toFixed(2)}</td>
-                <td>{order.total_items}</td>
+                <td className='numbers-col'>${parseFloat(order.total_amount || 0).toFixed(2)}</td>
+                <td className='numbers-col'>{order.total_items}</td>
                 <td>
                   {activeTab === 'pending' 
                     ? new Date(order.created_at).toLocaleDateString()

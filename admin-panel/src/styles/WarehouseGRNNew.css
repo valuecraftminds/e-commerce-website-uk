@@ -1,0 +1,24 @@
+.grn-po-table th{
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.grn-po-table td {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.numbers-col{
+    text-align: right !important;
+}
+
+.grn-history-table th{
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.grn-history-table td {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+

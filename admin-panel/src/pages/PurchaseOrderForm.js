@@ -6,6 +6,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
 import PoVariantsModal from '../components/modals/PoVariantsModal';
 import { AuthContext } from '../context/AuthContext';
+import '../styles/PurchaseOrderForm.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -545,7 +546,7 @@ export default function PurchaseOrderForm() {
             <Col>
               <h6>Items</h6>
               <div className="table-responsive">
-                <Table striped bordered hover>
+                <Table striped bordered hover className='product-info-table'>
                   <thead>
                     <tr>
                       <th>#</th>
@@ -593,9 +594,9 @@ export default function PurchaseOrderForm() {
                             />
                           )}
                         </td>
-                        <td>{item.available_stock_qty !== undefined && item.available_stock_qty !== null ? item.available_stock_qty : '-'}</td>
-                        <td>${(item.unit_price).toFixed(2)}</td>
-                        <td>${(item.total_price).toFixed(2)}</td>
+                        <td className='number-col'>{item.available_stock_qty !== undefined && item.available_stock_qty !== null ? item.available_stock_qty : '-'}</td>
+                        <td className='number-col'>${(item.unit_price).toFixed(2)}</td>
+                        <td className='number-col'>${(item.total_price).toFixed(2)}</td>
                         <td>
                           <Button variant="danger" size="sm" onClick={() => handleRemoveItem(item.sku)}>
                             <FaTrash />
@@ -604,13 +605,21 @@ export default function PurchaseOrderForm() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot>
+                  {/* <tfoot>
                     <tr className="table-info">
-                      <th colSpan="10" className="text-end">Total:</th>
+                       <th colSpan="9" className="text-end">Total:</th> 
                       <th>${(poItems.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseInt(item.quantity)), 0) || 0).toFixed(2)}</th>
                       <th></th>
                     </tr>
-                  </tfoot>
+                  </tfoot> */}
+                  <tfoot>
+                  <tr className="table-info">
+                    <th colSpan="9"></th>
+                    <th className="text-end">Total</th>
+                    <th className='number-col'>${(poItems.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseInt(item.quantity)), 0) || 0).toFixed(2)}</th>
+                    <th></th>
+                  </tr>
+                </tfoot>
                 </Table>
               </div>
             </Col>
