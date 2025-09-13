@@ -158,7 +158,8 @@ export default function ProductDetails() {
       const response = await axios.get(`${BASE_URL}/api/customer/measure-guide/${style_number}`, {
         params: { company_code: COMPANY_CODE }
       });
-      console.log('Measure guides response:', response.data);
+      console.log('BASE_URL:', BASE_URL);
+console.log('Full API URL:', `${BASE_URL}/api/customer/measure-guide/${style_number}`);;
       if (response.data.success) {
         setMeasureGuides(response.data.measure_guides || []);
       }

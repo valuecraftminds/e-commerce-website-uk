@@ -82,9 +82,10 @@
 .existing-guide-items{
   border: 1px solid #eee;
   border-radius: 6px;
-  padding: 2px;
-  width: 110px;
+  height: 150px !important;
+  width: 100px;
   text-align: center;
+  font-weight: 600 !important;
   background: #fafbfc;
   position: relative;
   cursor: pointer;
@@ -98,21 +99,8 @@
 .mg-image{
   width: 100px;
   height: 100px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 4px;
-  margin-bottom: 6px;
-  background: white;
-  padding: 4px;
-}
-
-.main-cat{
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.sub-cat{
-  font-size: 12px;
-  color: #666;
 }
 
 .mg-remove-btn{
