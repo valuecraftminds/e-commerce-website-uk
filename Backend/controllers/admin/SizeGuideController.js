@@ -114,7 +114,70 @@ const SizeGuideController = {
         message: 'Size guide deleted successfully' 
       });
     });
+  },
+
+  getAllSizeGuides(req, res) {
+    const { company_code, current_style_number } = req.query;
+
+    if (!company_code) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company code is required'
+      });
+    }
+
+    let query, queryParams;
+
+    if (current_style_number) {
+      // Get styles with the same size ranges as current style
+      query = `
+        SELECT DISTINCT
+          sg.style_number, 
+          sg.size_guide_content, 
+          sg.created_at, 
+          sg.updated_at,
+          s.name AS style_name
+        FROM size_guides sg
+        JOIN styles s ON sg.style_number = s.style_number
+        JOIN style_size_ranges ssr1 ON s.style_number = ssr1.style_number
+        WHERE sg.company_code = ? 
+        AND ssr1.size_range_id IN (
+          SELECT ssr2.size_range_id 
+          FROM style_size_ranges ssr2 
+          WHERE ssr2.style_number = ?
+        )
+        AND sg.style_number != ?`;
+      queryParams = [company_code, current_style_number, current_style_number];
+    } else {
+      // Fallback to get all size guides
+      query = `
+        SELECT 
+          sg.style_number, 
+          sg.size_guide_content, 
+          sg.created_at, 
+          sg.updated_at,
+          s.name AS style_name
+        FROM size_guides sg
+        JOIN styles s ON sg.style_number = s.style_number
+        WHERE sg.company_code = ?`;
+      queryParams = [company_code];
+    }
+
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching size guides:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error fetching size guides'
+        });
+      }
+      res.json({
+        success: true,
+        size_guides: results
+      });
+    });
   }
+
 };
 
 module.exports = SizeGuideController;
