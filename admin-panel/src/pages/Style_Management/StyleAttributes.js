@@ -337,7 +337,7 @@ export default function StyleAttributes() {
           </Accordion>
         ) : (
           <Card className='assigned-attributes'>
-            <Card.Header className="d-flex justify-content-between align-items-center">
+            <Card.Header className="justify-content-between align-items-center">
               <h5 className="mb-0">Assigned {title}</h5>
               <Button 
                 variant="primary" 

@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Form } from 'react-bootstrap';
 import { Modal } from 'react-bootstrap';
 
 import '../../styles/SizeGuideModal.css';
 
 const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRangeSizes = {}, styleNumber, companyCode, onSuccess }) => {
+    const [existingStyleNumbers, setExistingStyleNumbers] = useState([]);
+    const [selectedStyleNumber, setSelectedStyleNumber] = useState(styleNumber || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [sizeData, setSizeData] = useState({});
@@ -18,6 +21,66 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
     const [newMeasurementName, setNewMeasurementName] = useState('');
     
     const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+    // Fetch all existing size guide style numbers for the company
+    useEffect(() => {
+        if (!isOpen || !companyCode) return;
+        const fetchExistingStyleNumbers = async () => {
+            try {
+                const res = await fetch(`http://localhost:8081/api/admin/size-guide/get-all?company_code=${companyCode}&current_style_number=${styleNumber}`);
+                const data = await res.json();
+                if (data.success && Array.isArray(data.size_guides)) {
+                    setExistingStyleNumbers(data.size_guides.map(g => ({ style_number: g.style_number, style_name: g.style_name })));
+                } else if (Array.isArray(data)) {
+                    // fallback if API returns array directly
+                    setExistingStyleNumbers(data.map(g => ({ style_number: g.style_number, style_name: g.style_name })));
+                } else {
+                    setExistingStyleNumbers([]);
+                }
+            } catch (e) {
+                setExistingStyleNumbers([]);
+            }
+        };
+        fetchExistingStyleNumbers();
+    }, [isOpen, companyCode, styleNumber]);
+
+    // When user selects a style number from dropdown, update selectedStyleNumber and fetch its guide
+    useEffect(() => {
+        if (selectedStyleNumber && selectedStyleNumber !== styleNumber) {
+            // Fetch and fill table with selected style's size guide
+            const fetchAndFill = async () => {
+                try {
+                    setLoading(true);
+                    const response = await fetch(`${BASE_URL}/api/admin/size-guide/${selectedStyleNumber}?company_code=${companyCode}`);
+                    const data = await response.json();
+                    if (data.success && data.size_guide_content) {
+                        setInitialContent(data.size_guide_content);
+                        // Parse and fill table
+                        const parsed = parseExistingSizeGuide(data.size_guide_content);
+                        // Fill sizeData with parsed data for current measurements and sizeTypes
+                        const currentSizeTypes = getSizeTypes();
+                        const initialData = {};
+                        measurements.forEach(measurement => {
+                            initialData[measurement] = {};
+                            currentSizeTypes.forEach(size => {
+                                initialData[measurement][size] = parsed[measurement]?.[size] || '';
+                            });
+                        });
+                        setSizeData(initialData);
+                    } else {
+                        setInitialContent('');
+                        setSizeData({});
+                    }
+                } catch (err) {
+                    setInitialContent('');
+                    setSizeData({});
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchAndFill();
+        }
+    }, [selectedStyleNumber]);
 
     // Get size types from assigned ranges - flatten all sizes from all ranges
     const getSizeTypes = () => {
@@ -314,7 +377,7 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
     };
 
     return (
-        <Modal 
+    <Modal 
             show={isOpen} 
             onHide={handleClose}
             size="xl"
@@ -350,9 +413,24 @@ const SizeGuideModal = ({ isOpen, onClose, title = "Add Size Guide", assignedRan
                                 <strong>No sizes found!</strong> Please assign size ranges to your style first before creating a size guide.
                             </div>
                         )}
-                        <div className="alert alert-info mb-4" role="alert">
+                        {/* <div className="alert alert-info mb-4" role="alert">
                             <strong> Measurements should be in inches </strong>  
-                        </div>
+                        </div> */}
+                         {/* Dropdown for existing size guide style numbers */}
+                <div className="mb-3 px-3 pt-3">
+                    <Form.Group controlId="existingSizeGuidesDropdown">
+                        <Form.Label>Select Existing Size Guide</Form.Label>
+                        <Form.Select
+                            value={selectedStyleNumber}
+                            onChange={e => setSelectedStyleNumber(e.target.value)}
+                        >
+                            <option value="">-- Select Style --</option>
+                            {existingStyleNumbers.map(obj => (
+                                <option key={obj.style_number} value={obj.style_number}>{obj.style_name || obj.style_number}</option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+                </div>
                         <div className="table-responsive">
                             <table className="table table-bordered table-hover">
                                 <thead className="table-primary">

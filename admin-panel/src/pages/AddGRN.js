@@ -397,7 +397,7 @@ const handleAddItemFromRow = async (item) => {
     }, [invoiceNumber, selectedPO]);
 
     return (
-        <Container fluid className="warehouse-grn-container">
+    <Container fluid className="warehouse-grn-container">
             {/* Alerts */}
             {success && (
                 <Alert variant="success" dismissible onClose={() => setSuccess('')}>
@@ -512,7 +512,6 @@ const handleAddItemFromRow = async (item) => {
                                             <Table striped bordered hover responsive className="mb-4">
                                                 <thead>
                                                     <tr>
-
                                                         <th className='table-headings'>Style Code</th>
                                                         <th className='table-headings'>SKU</th>
                                                         <th className='table-headings'>Unit Price</th>
@@ -522,25 +521,13 @@ const handleAddItemFromRow = async (item) => {
                                                         <th className='table-headings'>Remaining Qty</th>
                                                         <th className='table-headings'>Location</th>
                                                         <th className='table-headings'>Lot No</th>
-
-                                                        <th>Style Code</th>
-                                                        <th>SKU</th>
-                                                        <th>Unit Price</th>
-                                                        <th>Ordered Qty</th>
-                                                        <th>Max Qty<br/>(with tolerance)</th>
-                                                        <th>Total Received</th>
-                                                        <th>Remaining Qty</th>
-                                                        <th>Location</th>
-                                                        <th>Lot No</th>
                                                         <th>Actions</th>
-
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {poDetails.items.map((item, idx) => {
                                                         const receivedQty = item.total_received || 0;
                                                         const canReceive = item.remaining_qty > 0 && poDetails.header.status === 'Approved' && (headerStatus !== 'completed') && !loading;
-                                                        
                                                         // Generate preview lot number for this specific row
                                                         const previewLotNo = (() => {
                                                             const usedLots = new Set(
@@ -559,9 +546,7 @@ const handleAddItemFromRow = async (item) => {
                                                             }
                                                             return `LOT-${String(next).padStart(3, '0')}`;
                                                         })();
-
                                                         return (
-
                                                             <tr 
                                                                 key={item.sku}
                                                                 className={canReceive ? 'table-row-clickable' : 'table-row-disabled'}
@@ -570,16 +555,6 @@ const handleAddItemFromRow = async (item) => {
                                                                 <td className='table-data'>{item.sku}</td>
                                                                 <td className='table-data number-col'>{item.unit_price}</td>
                                                                 <td className='table-data number-col'>
-
-                                                                <tr 
-                                                                    key={item.sku}
-                                                                    className={canReceive ? 'table-row-clickable' : 'table-row-disabled'}
-                                                                >
-                                                                <td>{item.style_number}</td>
-                                                                <td>{item.sku}</td>
-                                                                <td>{item.unit_price}</td>
-                                                                <td>
-
                                                                     {canReceive ? (
                                                                         <Form.Control
                                                                             type="number"
@@ -655,15 +630,6 @@ const handleAddItemFromRow = async (item) => {
                                                                     ) : (
                                                                         '-'
                                                                     )}
-
-                                                                    {/* <Button
-                                                                        size="sm"
-                                                                        variant="secondary"
-                                                                        // onClick={() => handleAddNote(item)}
-                                                                    >
-                                                                        {getRowData(item.sku, 'notes') ? 'Edit Note' : '+ Note'}
-                                                                    </Button> */}
-                                                                    
                                                                 </td>
                                                             </tr>
                                                         );
@@ -771,6 +737,6 @@ const handleAddItemFromRow = async (item) => {
                     )}
                 </Col>
             </Row>
-       </Container>
+    </Container>
     );
 }

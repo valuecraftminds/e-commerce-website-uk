@@ -10,6 +10,7 @@ import { useMemo, useState } from 'react';
 import DeleteModal from './modals/DeleteModal';
 import Spinner from './Spinner';
 import { FaEdit, FaTrash, FaCogs, FaEye, FaEyeSlash, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FcApprove, FcDisapprove  } from "react-icons/fc";
 
 import { useRef, useEffect } from 'react';
 import '../styles/StyleTable.css';
@@ -93,13 +94,55 @@ const StyleTable = ({
         )
       },
       {
-        header: 'Actions',
-        maxWidth: 200,
+        // make this into two lines
+        header: 'Publish',
+        maxWidth: 80,
         cell: ({ row }) => {
           const style = row.original;
           const isView = style.is_view === 'yes';
           // Get error message from parent (Style.js)
           const errorMsg = typeof tableActions.getIsViewError === 'function' ? tableActions.getIsViewError(style.style_id) : '';
+          return (
+            <div className="table-visibility">
+              {isView ? (
+                <FaEye
+                  className="action-icon me-2 text-success"
+                  title="Set Not Viewable"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (typeof tableActions.handleToggleIsView === 'function') {
+                      await tableActions.handleToggleIsView(style, !isView);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  size={16}
+                />
+              ) : (
+                <FaEyeSlash
+                  className="action-icon me-2 text-muted"
+                  title="Set Viewable"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (typeof tableActions.handleToggleIsView === 'function') {
+                      await tableActions.handleToggleIsView(style, !isView);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  size={16}
+                />
+              )}
+              {errorMsg && (
+                <div style={{ color: 'red', fontSize: 12, marginTop: 2 }}>{errorMsg}</div>
+              )}
+            </div>
+          );
+        }
+      },
+      {
+        header: 'Actions',
+        maxWidth: 160,
+        cell: ({ row }) => {
+          const style = row.original;
           return (
             <div className="table-actions">
               <FaEdit
@@ -132,36 +175,6 @@ const StyleTable = ({
                 style={{ cursor: 'pointer' }}
                 size={16}
               />
-              {isView ? (
-                <FaEye
-                  className="action-icon me-2 text-success"
-                  title="Set Not Viewable"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (typeof tableActions.handleToggleIsView === 'function') {
-                      await tableActions.handleToggleIsView(style, !isView);
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                  size={16}
-                />
-              ) : (
-                <FaEyeSlash
-                  className="action-icon me-2 text-muted"
-                  title="Set Viewable"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (typeof tableActions.handleToggleIsView === 'function') {
-                      await tableActions.handleToggleIsView(style, !isView);
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                  size={16}
-                />
-              )}
-              {errorMsg && (
-                <div style={{ color: 'red', fontSize: 12, marginTop: 2 }}>{errorMsg}</div>
-              )}
             </div>
           );
         }

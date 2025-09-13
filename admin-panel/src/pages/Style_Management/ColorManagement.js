@@ -3,7 +3,6 @@ import { Container } from 'react-bootstrap';
 import { FaPalette } from 'react-icons/fa';
 import axios from 'axios';
 import { Row, Col, Card, Button, Form, Table, Spinner as RBSpinner, Alert } from 'react-bootstrap';
-import { FaEdit, FaTrash } from 'react-icons/fa';
 
 import '../../styles/ColorManagement.css';
 import { AuthContext } from '../../context/AuthContext';
@@ -24,54 +23,7 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
     color_code: ''
   });
 
-  // CSS Colors API modal state
-  // const [showCssColorsModal, setShowCssColorsModal] = useState(false);
-  // const [cssColors, setCssColors] = useState([]);
-  // const [cssColorsLoading, setCssColorsLoading] = useState(false);
-  // const [cssColorsError, setCssColorsError] = useState('');
-  // const [cssColorsSearch, setCssColorsSearch] = useState('');
-  // Color Picker (Palette) modal state
   const [showColorPicker, setShowColorPicker] = useState(false);
-
-  // Fetch CSS colors from API
-  // const fetchCssColors = async () => {
-  //   setCssColorsLoading(true);
-  //   setCssColorsError('');
-  //   try {
-  //     const res = await axios.get('https://www.csscolorsapi.com/api/colors/');
-  //     const data = res.data;
-  //     if (data && data.colors) {
-  //       setCssColors(data.colors);
-  //     } else {
-  //       setCssColorsError('Failed to load colors');
-  //     }
-  //   } catch (err) {
-  //     setCssColorsError('Failed to fetch colors');
-  //   }
-  //   setCssColorsLoading(false);
-  // };
-
-  // Open modal and fetch colors if not already loaded
-  // const handleOpenCssColorsModal = () => {
-  //   setShowCssColorsModal(true);
-  //   if (cssColors.length === 0) {
-  //     fetchCssColors();
-  //   }
-  // };
-
-  // Select a color from modal
-  // const handleSelectCssColor = (color) => {
-  //   setFormData({
-  //     color_name: color.name,
-  //     color_code: color.hex.startsWith('#') ? color.hex : `#${color.hex}`
-  //   });
-  //   setShowCssColorsModal(false);
-  // };
-
-  // const columns = [
-  //   { key: 'color_name', label: 'Color Name' },
-  //   { key: 'color_code', label: 'Color Code' }
-  // ];
 
   const fetchColors = useCallback(async () => {
     setLoading(true);
@@ -196,18 +148,6 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
 
   return (
     <Container className='color-container'>
-      {/* Add from CSS Colors Button */}
-      {/* <div className="mb-2" style={{ textAlign: 'right' }}>
-        <FaPalette 
-          className="action-icon me-2 text-primary"
-          onClick={handleOpenCssColorsModal}
-          title="Add from CSS Colors"
-          style={{ cursor: 'pointer' }}
-        />
-        <span className="text-primary" style={{ cursor: 'pointer' }} onClick={handleOpenCssColorsModal}>
-          Add from CSS Colors
-        </span>
-      </div> */}
 
       {/* Add new color */}
       <Card className="add-color">
@@ -326,66 +266,6 @@ const ColorManagement = ({ embedded, styleNumber, companyCode, onSuccess, onCanc
           </Table>
         </Card.Body>
       </Card>
-
-      {/* CSS Colors Modal */}
-      {/* <Modal show={showCssColorsModal} onHide={() => setShowCssColorsModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Select a CSS Color</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <InputGroup className="mb-3">
-            <Form.Control
-              placeholder="Search color name or hex..."
-              value={cssColorsSearch}
-              onChange={e => setCssColorsSearch(e.target.value)}
-            />
-          </InputGroup>
-          {cssColorsLoading ? (
-            <div>Loading colors...</div>
-          ) : cssColorsError ? (
-            <div className="text-danger">{cssColorsError}</div>
-          ) : (
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-              <table className="table table-sm table-hover">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Hex</th>
-                    <th>Preview</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cssColors
-                    .filter(c =>
-                      c.name.toLowerCase().includes(cssColorsSearch.toLowerCase()) ||
-                      c.hex.toLowerCase().includes(cssColorsSearch.toLowerCase())
-                    )
-                    .map((color, idx) => (
-                      <tr key={color.hex + color.name + idx}>
-                        <td>{color.name}</td>
-                        <td>#{color.hex.toUpperCase()}</td>
-                        <td>
-                          <span style={{ display: 'inline-block', width: 30, height: 20, background: `#${color.hex}` }}></span>
-                        </td>
-                        <td>
-                          <Button size="sm" variant="success" onClick={() => handleSelectCssColor(color)}>
-                            Select
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCssColorsModal(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
 
       {/* Color Palette Modal */}
       <ColorPaletteModal 

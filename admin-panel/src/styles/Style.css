@@ -713,3 +713,14 @@
 .th{
   border: none !important;
 }
+
+
+.assigned-attributes {
+  margin-left: 10px;
+  width: 90% !important;
+  margin-top: 20px;
+}
+
+.color-type .assigned-attributes {
+  margin-left: 0 !important;
+}
